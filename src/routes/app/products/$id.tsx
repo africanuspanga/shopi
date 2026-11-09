@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { ProductForm } from '#/components/product-form'
-import { Page, TopBar } from '#/components/ui'
+import { Page } from '#/components/ui'
 import { getMyProduct } from '#/lib/api/merchant'
 import { useT } from '#/lib/i18n'
 
@@ -17,9 +17,8 @@ function EditProduct() {
   const t = useT()
   const product = Route.useLoaderData()
   return (
-    <Page nav>
-      <TopBar back="/app/products" title={t('Hariri bidhaa', 'Edit product')} />
-      <ProductForm key={product.id} product={product} />
+    <Page nav wide>
+      <ProductForm key={product.id} product={product} title={t('Edit product')} back="/app/products" />
     </Page>
   )
 }

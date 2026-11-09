@@ -1,219 +1,178 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import {
-  ArrowRight,
-  ArrowUpRight,
-  BarChart3,
-  Banknote,
-  Check,
-  ChevronDown,
-  Link2,
-  MapPin,
-  MessageCircle,
-  Package,
-  ReceiptText,
-  ShieldCheck,
-  Smartphone,
-  Store,
-} from 'lucide-react'
-import type { ReactNode } from 'react'
-import { Arch, Lattice, Rosette } from '#/components/motifs'
-import { CATEGORIES } from '#/lib/format'
-
+import { ArrowRight, Banknote, ChartColumn, Check, ChevronDown, CircleCheck, ImageDown, Link2, MapPin, Menu, Ruler, ShieldCheck, Smartphone, X } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { WhatsAppIcon } from '#/components/brand-icons'
+import { BioPreview, LinkPreview, MiniStore, NewOrderCard, OrderPreview, PaymentSlip, Phone, ProductPreview, SmsBubble } from '#/components/showcase'
+import { Wordmark } from '#/components/ui'
+import { useT } from '#/lib/i18n'
 
 export const Route = createFileRoute('/')({ component: Landing })
 
-/** The landing page is English only for now (owner, 2026-11-06). Swahili strings stay beside each line for later. */
-const en = (_sw: string, english: string) => english
-
-
 function Landing() {
-  const t = en
+  const t = useT()
   const { session } = Route.useRouteContext()
   const start = session.user ? (session.shop ? '/app' : '/onboard') : '/signup'
-  const startLabel = session.shop ? t('Nenda kwenye duka', 'Go to my shop') : t('Fungua duka bure', 'Open your shop free')
+  const startLabel = session.shop ? t('Go to my shop') : t('Open your shop free')
 
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-[#efeeeb] text-[#0e0e0e]">
-      <div className="mx-auto max-w-[1280px] px-3 pt-3 md:px-5 md:pt-5">
-        <Nav start={start} signedIn={!!session.user} />
-        <Hero start={start} startLabel={startLabel} />
-        <Strip />
-      </div>
+    <div className="min-h-dvh overflow-x-clip bg-page text-ink">
+      <Nav start={start} signedIn={!!session.user} hasShop={!!session.shop} />
+      <Hero start={start} startLabel={startLabel} />
       <Steps />
       <Payments />
       <Orders />
       <Dashboard />
-      <Everything />
+      <Features />
       <Pricing start={start} />
       <Faq />
-      <Closing start={start} startLabel={startLabel} />
-      <footer className="mx-auto flex max-w-[1280px] flex-col items-center gap-3 px-4 pt-4 pb-10 text-center text-xs text-[#6b6b6b] md:px-5">
-        <Rosette size={14} className="text-[#0e0e0e]" />
-        <p>RIZK · Risk to get Rizk · © {new Date().getFullYear()} Driftmark Technologies Limited · Dar es Salaam</p>
-      </footer>
+      <Finale start={start} startLabel={startLabel} signedIn={!!session.user} />
     </div>
   )
 }
 
-function Panel({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-[28px] bg-white ${className}`}>{children}</div>
+function Container({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <div className={`mx-auto w-full max-w-[1280px] px-4 md:px-10 ${className}`}>{children}</div>
 }
 
-function Section({ children, id, className = '' }: { children: ReactNode; id?: string; className?: string }) {
+function H2({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <h2 className={`display text-[36px] md:text-[52px] lg:text-[60px] ${className}`}>{children}</h2>
+}
+
+function Lead({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <p className={`max-w-[34rem] text-[17px] leading-relaxed text-ink-2 md:text-[18px] ${className}`}>{children}</p>
+}
+
+/* ---------- Nav: a floating capsule; on phones its menu opens as a floating card ---------- */
+
+function Nav({ start, signedIn, hasShop }: { start: string; signedIn: boolean; hasShop: boolean }) {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+  const links = [
+    ['#how', t('How it works')],
+    ['#pay', t('Payments')],
+    ['#pricing', t('Pricing')],
+    ['#faq', t('Questions')],
+  ]
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
   return (
-    <section id={id} className={`mx-auto max-w-[1280px] scroll-mt-24 px-3 pt-16 md:px-5 md:pt-24 ${className}`}>
-      {children}
-    </section>
-  )
-}
-
-function Eyebrow({ children }: { children: ReactNode }) {
-  return (
-    <p className="inline-flex items-center gap-2 border-b border-black/15 pb-1.5 text-[13px] font-medium tracking-[0.08em] uppercase">
-      <span className="h-2 w-2 rounded-full bg-[#0e0e0e]" />
-      {children}
-    </p>
-  )
-}
-
-function Display({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <h2 className={`font-display text-[44px] leading-[0.95] tracking-[-0.01em] md:text-[68px] ${className}`}>{children}</h2>
-}
-
-/* ---------- Nav ---------- */
-
-function Nav({ start, signedIn }: { start: string; signedIn: boolean }) {
-  const t = en
-  return (
-    <header className="sticky top-3 z-40 rounded-[22px] bg-white/90 p-2 backdrop-blur md:top-5">
-      <div className="flex items-center gap-2">
-        <Link to="/" className="flex h-11 items-center gap-2 rounded-[14px] border border-black/10 bg-[#f6f5f3] px-3.5">
-          <Rosette size={16} className="[--rosette-hole:#f6f5f3]" />
-          <span className="font-display text-[24px] leading-none">Rizk</span>
-        </Link>
-        <nav className="mx-auto hidden items-center gap-1 text-[15px] md:flex">
-          {[
-            ['#how', t('Inavyofanya kazi', 'How it works')],
-            ['#pay', t('Malipo', 'Payments')],
-            ['#pricing', t('Bei', 'Pricing')],
-            ['#faq', t('Maswali', 'FAQ')],
-          ].map(([href, label]) => (
-            <a key={href} href={href} className="rounded-full px-3.5 py-1.5 hover:bg-[#f2f1ee]">
-              {label}
-            </a>
-          ))}
-        </nav>
-        <div className="ml-auto flex items-center gap-2 md:ml-0">
-          {!signedIn && (
-            <Link to="/login" className="hidden px-2 text-[15px] sm:block">
-              {t('Ingia', 'Log in')}
-            </Link>
-          )}
-          <Link to={start} className="flex h-11 items-center gap-2 rounded-[14px] bg-[#0e0e0e] px-4 text-[15px] font-semibold text-white">
-            {signedIn ? t('Duka langu', 'My shop') : t('Fungua duka', 'Open shop')}
-            <ArrowRight size={16} />
+    <>
+      {open && <button type="button" aria-label={t('Close menu')} className="fade fixed inset-0 z-40 bg-ink/20 md:hidden" onClick={() => setOpen(false)} />}
+      <div className="pointer-events-none sticky top-0 z-50 px-3 pt-3 md:px-6 md:pt-4">
+        <header className="pointer-events-auto mx-auto flex h-14 max-w-[1180px] items-center gap-2 rounded-full bg-card/92 pr-2 pl-5 shadow-[0_1px_2px_rgb(10_10_10/0.05),0_12px_32px_-14px_rgb(10_10_10/0.22)] ring-1 ring-line backdrop-blur-xl md:h-16 md:pl-7">
+          <Link to="/" aria-label="RIZK" className="shrink-0" onClick={() => setOpen(false)}>
+            <Wordmark className="h-[15px] w-auto md:h-[17px]" />
           </Link>
-        </div>
+          <nav className="mx-auto hidden items-center gap-1 text-[14px] text-ink-2 md:flex" aria-label={t('Sections')}>
+            {links.map(([href, label]) => (
+              <a key={href} href={href} className="rounded-full px-3.5 py-2 transition-colors hover:bg-page hover:text-ink">
+                {label}
+              </a>
+            ))}
+          </nav>
+          <div className="ml-auto flex items-center gap-1 md:ml-0">
+            {!signedIn && (
+              <Link to="/login" className="hidden rounded-full px-4 py-2 text-[14px] font-medium text-ink-2 transition-colors hover:text-ink md:block">
+                {t('Log in')}
+              </Link>
+            )}
+            <Link to={start} className="btn btn-sm h-10 px-4">
+              {hasShop ? t('My shop') : t('Open your shop')}
+            </Link>
+            <button
+              type="button"
+              aria-label={open ? t('Close menu') : t('Open menu')}
+              aria-expanded={open}
+              aria-controls="site-menu"
+              onClick={() => setOpen(!open)}
+              className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-page md:hidden"
+            >
+              {open ? <X size={20} strokeWidth={1.75} /> : <Menu size={20} strokeWidth={1.75} />}
+            </button>
+          </div>
+        </header>
+        {open && (
+          <div id="site-menu" className="sheet-up pointer-events-auto mx-auto mt-2 max-w-[1180px] rounded-[28px] bg-card p-2 shadow-[var(--shadow-float)] ring-1 ring-line md:hidden">
+            <nav className="flex flex-col" aria-label={t('Sections')}>
+              {links.map(([href, label]) => (
+                <a key={href} href={href} onClick={() => setOpen(false)} className="flex h-14 items-center justify-between rounded-[20px] px-4 text-[17px] font-medium transition-colors active:bg-page">
+                  {label}
+                  <ArrowRight size={18} strokeWidth={1.5} className="text-faint" />
+                </a>
+              ))}
+            </nav>
+            <div className="mt-1 grid grid-cols-2 gap-2 border-t border-line p-2 pt-3">
+              {signedIn ? (
+                <Link to={start} className="btn col-span-2" onClick={() => setOpen(false)}>
+                  {hasShop ? t('Go to my shop') : t('Finish my shop')}
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login" className="btn btn-ghost" onClick={() => setOpen(false)}>
+                    {t('Log in')}
+                  </Link>
+                  <Link to={start} className="btn" onClick={() => setOpen(false)}>
+                    {t('Open your shop')}
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
-    </header>
+    </>
   )
 }
 
 /* ---------- Hero ---------- */
 
 function Hero({ start, startLabel }: { start: string; startLabel: string }) {
-  const t = en
+  const t = useT()
   return (
-    <div className="mt-3 grid grid-cols-1 gap-3 md:mt-5 md:grid-cols-[1.05fr_1fr] md:gap-5">
-      {/* Words */}
-      <Panel className="flex min-w-0 flex-col p-6 md:p-12">
-        <div className="pt-4 md:pt-10">
-          <Eyebrow>{t('Kwa wauzaji wa mitandaoni', 'For social sellers')}</Eyebrow>
-          <h1 className="mt-6 font-display text-[64px] leading-[0.9] tracking-[-0.015em] md:text-[112px]">
-            Risk to get <em className="italic">Rizk.</em>
+    <section className="relative">
+      <Container className="grid items-center gap-12 pt-10 pb-16 md:pt-16 lg:min-h-[calc(100dvh-72px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,500px)] lg:gap-16 lg:pt-6 lg:pb-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
+        <div className="rise">
+          <h1 className="display text-[44px] text-balance sm:text-[60px] lg:text-[74px] xl:text-[84px]">
+            {t('Stop answering')} <span className="whitespace-nowrap">“bei gani?”</span> {t('in your DMs')}
           </h1>
-          <p className="mt-6 max-w-[500px] text-[17px] leading-relaxed text-[#4a4a4a]">
-            {t(
-              'Duka la mtandaoni linaloishi kwenye link moja. Wateja wanaagiza wenyewe, wanalipa Lipa Namba yako au cash wakipokea, na wewe unaona kila oda sehemu moja.',
-              'An online shop that lives in one link. Buyers order by themselves, pay your Lipa Namba or cash on delivery, and you see every order in one place.',
-            )}
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-5">
-            <Link to={start} className="flex h-14 items-center gap-3 rounded-[16px] bg-[#0e0e0e] pr-5 pl-2 text-white">
-              <span className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-white/12">
-                <Store size={19} />
-              </span>
-              <span className="text-left leading-tight">
-                <span className="block text-[11px] text-white/60">{t('Dakika 5 tu', 'Just 5 minutes')}</span>
-                <span className="block text-[16px] font-semibold">{startLabel}</span>
-              </span>
+          <Lead className="mt-6 md:mt-8">
+            {t('RIZK turns your Instagram, TikTok and WhatsApp into a shop with one link. Buyers see your prices and sizes, order by themselves, and pay your Lipa Namba or cash on delivery.')}
+          </Lead>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center md:mt-10">
+            <Link to={start} className="btn btn-lg">
+              {startLabel} <ArrowRight size={18} strokeWidth={1.75} />
             </Link>
-            <a href="#how" className="flex items-center gap-1.5 border-b border-black/30 pb-1 text-[15px] font-medium">
-              {t('Ona inavyofanya kazi', 'See how it works')} <ArrowRight size={16} />
+            <a href="#how" className="btn btn-lg btn-ghost bg-transparent">
+              {t('See how it works')}
             </a>
           </div>
+          <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-[14px] text-ink-2">
+            {[t('Free to start'), t('No commission on sales'), t('Ready in 5 minutes')].map((x) => (
+              <li key={x} className="flex items-center gap-2">
+                <Check size={15} strokeWidth={2} className="text-ink" /> {x}
+              </li>
+            ))}
+          </ul>
         </div>
-
-        <div className="flex-1" />
-        <div className="mt-12 flex items-center gap-4 rounded-[20px] border border-black/10 p-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0e0e0e] text-white">
-            <ReceiptText size={19} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-semibold">{t('Oda zinakuja kamili', 'Orders arrive complete')}</p>
-            <p className="text-[13px] text-[#6b6b6b]">{t('Jina, namba, eneo na alama ya karibu', 'Name, number, area and a nearby landmark')}</p>
-          </div>
-          <ShieldCheck size={22} className="hidden shrink-0 sm:block" />
-        </div>
-      </Panel>
-
-      {/* Product, framed by a door arch on a lattice screen */}
-      <div className="relative overflow-hidden rounded-[28px] bg-[#0e0e0e] px-6 pt-14 text-white md:pt-16">
-        <Lattice size={46} stroke="#fff" opacity={0.13} />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#0e0e0e] to-transparent" />
-        <Arch dark className="relative mx-auto h-[520px] w-[290px] md:h-[600px] md:w-[320px]">
-          <div className="h-full bg-[#1b1b1b] p-2 pt-16">
-            <div className="h-full overflow-hidden rounded-t-[130px] rounded-b-[18px] bg-[#fafaf9] pt-14">
-              <img
-                src="/images/rizk-seller-dashboard-phone.webp"
-                width={780}
-                height={1328}
-                alt="Rizk seller dashboard on a phone: sales today, orders to confirm and send, and new orders"
-                className="w-full"
-                fetchPriority="high"
-              />
-            </div>
-          </div>
-        </Arch>
-        <div className="absolute right-4 bottom-6 left-4 z-10 mx-auto flex max-w-[330px] items-center gap-3 rounded-full bg-white py-2 pr-4 pl-2 text-[#0e0e0e] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0e0e0e] text-white">
-            <Check size={17} strokeWidth={3} />
-          </span>
-          <span className="text-[14px] leading-tight">
-            <b>{t('Malipo yamekaguliwa', 'Payment checked')}</b>
-            <span className="block text-[12px] text-[#6b6b6b]">{t('Kiasi, jina na muamala', 'Amount, name and transaction')}</span>
-          </span>
-        </div>
-      </div>
-    </div>
+        <HeroVisual />
+      </Container>
+    </section>
   )
 }
 
-/* ---------- Strip ---------- */
-
-function Strip() {
-  const items = CATEGORIES.filter((c) => c.id !== 'other').map((c) => c.en)
-  const row = [...items, ...items]
+function HeroVisual() {
   return (
-    <div className="mt-3 overflow-hidden rounded-[22px] bg-white/60 py-6 md:mt-5">
-      <div className="flex w-max animate-[marquee_45s_linear_infinite] items-center gap-10 motion-reduce:animate-none">
-        {[...row, ...row].map((c, i) => (
-          <span key={i} className="flex items-center gap-10 font-display text-[30px] whitespace-nowrap text-[#0e0e0e]/45 md:text-[36px]">
-            {c}
-            <Rosette size={12} className="text-[#0e0e0e]/35 [--rosette-hole:#f6f6f4]" />
-          </span>
-        ))}
-      </div>
+    <div className="rise-2 relative mx-auto h-[600px] w-full max-w-[360px] sm:h-[680px] sm:max-w-[560px]">
+      <Phone className="absolute top-0 left-1/2 h-[600px] w-[300px] -translate-x-1/2 sm:h-[660px] sm:w-[328px]">
+        <MiniStore />
+      </Phone>
+      <NewOrderCard className="absolute top-[300px] -left-2 hidden sm:block lg:-left-12" />
+      <PaymentSlip className="absolute -right-2 bottom-[120px] hidden sm:block lg:-right-10" />
     </div>
   )
 }
@@ -221,314 +180,329 @@ function Strip() {
 /* ---------- How it works ---------- */
 
 function Steps() {
-  const t = en
+  const t = useT()
   const steps = [
-    [Store, t('Fungua duka', 'Open your shop'), t('Jina, link na WhatsApp yako. Weka Lipa Namba na maeneo ya delivery.', 'Your name, link and WhatsApp. Add your Lipa Namba and delivery areas.')],
-    [Package, t('Weka bidhaa', 'Add products'), t('Piga picha kwa simu, weka bei na idadi. Picha zinapunguzwa ili wateja watumie bando kidogo.', 'Snap a photo, set price and stock. Photos are shrunk so buyers spend less data.')],
-    [Link2, t('Shiriki na uuze', 'Share and sell'), t('Weka link kwenye bio ya Instagram, TikTok na status ya WhatsApp.', 'Put the link in your Instagram and TikTok bio and your WhatsApp status.')],
-  ] as const
+    { title: t('Open your shop'), body: t('Pick a name and a link. Add your WhatsApp, your Lipa Namba and the areas you deliver to.'), visual: <LinkPreview /> },
+    { title: t('Add your products'), body: t('Snap a photo, set the price, sizes and stock. Photos shrink on upload, so buyers spend less data.'), visual: <ProductPreview /> },
+    { title: t('Share your link'), body: t('Put it in your Instagram and TikTok bio and your WhatsApp status. Orders reach you complete.'), visual: <BioPreview /> },
+  ]
   return (
-    <Section id="how">
-      <div className="grid gap-6 md:grid-cols-[1fr_1.4fr] md:items-end">
-        <div>
-          <Eyebrow>{t('Inavyofanya kazi', 'How it works')}</Eyebrow>
-          <Display className="mt-5">{t('Hatua tatu hadi mauzo ya kwanza.', 'Three steps to your first sale.')}</Display>
+    <section id="how" className="scroll-mt-24 py-20 md:py-32">
+      <Container>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] lg:items-end">
+          <H2>{t('Three steps to your first order')}</H2>
+          <Lead>{t('No website, no developer, no laptop. You set it up on your phone, the same day.')}</Lead>
         </div>
-      </div>
-      <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-5">
-        {steps.map(([Icon, title, body], i) => (
-          <Panel key={title} className="p-6 md:p-8">
-            <div className="flex items-start justify-between">
-              <Arch className="h-16 w-12" frame={false}>
-                <div className="flex h-full items-end justify-center bg-[#0e0e0e] pb-3 text-white">
-                  <Icon size={20} />
-                </div>
-              </Arch>
-              <span className="font-display text-[56px] leading-none text-[#0e0e0e]/15">0{i + 1}</span>
-            </div>
-            <h3 className="mt-8 font-display text-[32px] leading-none">{title}</h3>
-            <p className="mt-3 text-[15px] leading-relaxed text-[#4a4a4a]">{body}</p>
-          </Panel>
-        ))}
-      </div>
-    </Section>
+        <ol className="mt-12 grid gap-4 md:mt-16 md:grid-cols-3 md:gap-5">
+          {steps.map((s, i) => (
+            <li key={s.title} className="flex flex-col rounded-[28px] bg-card p-3">
+              <div className="flex h-[220px] items-center justify-center rounded-[20px] bg-page px-5">{s.visual}</div>
+              <div className="px-4 pt-6 pb-5">
+                <p className="meta">{t('Step {n}', { n: i + 1 })}</p>
+                <h3 className="title mt-2 text-[22px]">{s.title}</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{s.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </Container>
+    </section>
   )
 }
 
 /* ---------- Payments ---------- */
 
 function Payments() {
-  const t = en
+  const t = useT()
   return (
-    <Section id="pay">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-        <Panel className="p-6 md:p-12">
-          <Eyebrow>{t('Malipo', 'Payments')}</Eyebrow>
-          <Display className="mt-5">{t('Kila shilingi inaenda kwako.', 'Every shilling goes to you.')}</Display>
-          <p className="mt-5 text-[16px] leading-relaxed text-[#4a4a4a]">
-            {t(
-              'Mteja analipa Lipa Namba yako moja kwa moja, kisha anabandika SMS ya malipo. RIZK inakagua kiasi, jina na namba ya muamala, na haikubali muamala uliotumika kwenye oda nyingine. Wewe unathibitisha kwa kubofya mara moja.',
-              'The buyer pays your Lipa Namba, then pastes the payment confirmation SMS. RIZK checks the amount, the name and the transaction ID, and refuses one already used on another order. You confirm with one tap.',
-            )}
-          </p>
-          <ul className="mt-8 divide-y divide-black/10 border-y border-black/10">
-            {[
-              [Smartphone, t('Lipa Namba yako, na ukaguzi wa SMS', 'Your own Lipa Namba, with an SMS check')],
-              [Banknote, t('Cash wakati wa kupokea, ukitaka', 'Cash on delivery, if you want it')],
-              [ShieldCheck, t('RIZK haishiki pesa yako hata siku moja', 'RIZK never holds your money')],
-            ].map(([Icon, label]) => {
-              const I = Icon as typeof Smartphone
-              return (
-                <li key={label as string} className="flex items-center gap-3 py-3.5 text-[15px]">
-                  <I size={18} /> {label as string}
-                </li>
-              )
-            })}
-          </ul>
-        </Panel>
-        <div className="relative overflow-hidden rounded-[28px] bg-[#0e0e0e] p-6 text-white md:p-12">
-          <Lattice size={52} stroke="#fff" opacity={0.08} />
-          <div className="relative">
-            <p className="text-[13px] tracking-[0.08em] text-white/50 uppercase">{t('SMS ya mteja', 'Buyer’s SMS')}</p>
-            <p className="mt-3 rounded-[18px] border border-white/15 bg-white/5 px-5 py-4 font-mono text-[13px] leading-relaxed text-white/85">
-              QK48ZX91 Imethibitishwa. Tsh63,000.00 imelipwa kwa ZURI FASHION tarehe 6/11/26 saa 4:12 PM.
+    <section id="pay" className="scroll-mt-24 px-2 md:px-4">
+      <div className="mx-auto max-w-[1400px] rounded-[32px] bg-ink py-16 text-white md:rounded-[40px] md:py-28">
+        <Container className="grid gap-14 lg:grid-cols-2 lg:items-center lg:gap-20">
+          <div>
+            <H2>{t('Every shilling goes straight to you')}</H2>
+            <p className="mt-6 max-w-[34rem] text-[17px] leading-relaxed text-white/70 md:text-[18px]">
+              {t('Buyers pay your own Lipa Namba, the way they already pay sellers. Then they paste the confirmation SMS. RIZK checks the amount, the name and the transaction ID, and refuses an SMS already used on another order. You confirm with one tap.')}
             </p>
-            <div className="mt-6 space-y-0 divide-y divide-white/10">
+            <ul className="mt-10 divide-y divide-white/10 border-y border-white/10">
               {[
-                t('Kiasi kinalingana na oda', 'Amount matches the order'),
-                t('Jina ni la duka lako', 'Name is your shop’s'),
-                t('Namba ya muamala haijatumika', 'Transaction ID never used before'),
-              ].map((x) => (
-                <p key={x} className="flex items-center gap-3 py-3.5 text-[15px]">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#0e0e0e]">
-                    <Check size={14} strokeWidth={3} />
-                  </span>
-                  {x}
-                </p>
-              ))}
-            </div>
-            <div className="mt-6 rounded-[16px] bg-white py-4 text-center text-[15px] font-semibold text-[#0e0e0e]">{t('Nimepokea malipo', 'Payment received')}</div>
+                [Smartphone, t('Your own Lipa Namba, on any network')],
+                [Banknote, t('Cash on delivery when you want it')],
+                [ShieldCheck, t('RIZK never holds your money')],
+              ].map(([Icon, label]) => {
+                const I = Icon as typeof Smartphone
+                return (
+                  <li key={label as string} className="flex items-center gap-4 py-4 text-[16px]">
+                    <I size={20} strokeWidth={1.5} className="shrink-0 text-white/60" /> {label as string}
+                  </li>
+                )
+              })}
+            </ul>
           </div>
-        </div>
+          <div className="mx-auto w-full max-w-[440px]">
+            <p className="text-[13px] text-white/50">{t('The buyer’s SMS, pasted on their order page')}</p>
+            <div className="mt-3">
+              <SmsBubble />
+            </div>
+            <div className="mt-6 rounded-[24px] bg-card p-6 text-ink">
+              <div className="flex items-baseline justify-between">
+                <p className="text-[15px] font-semibold">{t('RIZK checked it')}</p>
+                <p className="code text-[12px] text-muted">#HAN8RG</p>
+              </div>
+              <ul className="mt-4 space-y-3 text-[14px]">
+                {[t('Amount matches the order'), t('Paid to your shop’s name'), t('Transaction never used before')].map((x) => (
+                  <li key={x} className="flex items-center gap-3">
+                    <CircleCheck size={18} strokeWidth={1.75} className="shrink-0 text-ok" /> {x}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6 flex h-12 items-center justify-center rounded-full bg-ink text-[15px] font-medium text-white">{t('Payment received')}</div>
+            </div>
+          </div>
+        </Container>
       </div>
-    </Section>
+    </section>
   )
 }
 
 /* ---------- Orders ---------- */
 
 function Orders() {
-  const t = en
-  const statuses = [t('Imepokelewa', 'Received'), t('Imethibitishwa', 'Confirmed'), t('Njiani', 'On the way'), t('Imefika', 'Delivered')]
+  const t = useT()
   return (
-    <Section>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr] md:gap-5">
-        <Panel className="order-2 p-6 md:order-1 md:p-10">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-display text-[32px] leading-none">Baraka Mollel</p>
-              <p className="mt-1 text-sm text-[#6b6b6b]">+255 713 456 789</p>
-            </div>
-            <span className="rounded-full border border-black/15 px-3 py-1 font-mono text-xs">#8UU3RE</span>
-          </div>
-          <p className="mt-4 flex items-center gap-2 text-[15px]">
-            <MapPin size={16} /> <b>Mikocheni</b> · {t('karibu na Shell', 'near the Shell station')}
-          </p>
-          <div className="mt-7 flex items-center">
-            {statuses.map((s, i) => (
-              <div key={s} className="flex flex-1 items-center last:flex-none">
-                <div className="flex flex-col items-center gap-1.5">
-                  <span className={`flex h-8 w-8 items-center justify-center rounded-full ${i < 3 ? 'bg-[#0e0e0e] text-white' : 'border border-black/20 text-[#6b6b6b]'}`}>
-                    {i < 2 ? <Check size={15} strokeWidth={3} /> : <span className="text-xs font-semibold">{i + 1}</span>}
-                  </span>
-                  <span className="w-16 text-center text-[11px] text-[#6b6b6b]">{s}</span>
-                </div>
-                {i < statuses.length - 1 && <div className={`mx-1 mb-5 h-px flex-1 ${i < 2 ? 'bg-[#0e0e0e]' : 'bg-black/15'}`} />}
-              </div>
+    <section className="py-20 md:py-32">
+      <Container className="grid gap-14 lg:grid-cols-2 lg:items-center lg:gap-20">
+        <div className="order-2 flex justify-center rounded-[32px] bg-well px-4 py-10 md:py-14 lg:order-1">
+          <OrderPreview />
+        </div>
+        <div className="order-1 lg:order-2">
+          <H2>{t('Orders arrive complete. No ten questions')}</H2>
+          <Lead className="mt-6">
+            {t('Every order comes with the buyer’s name, number, area, a landmark the rider can find, and the size they picked. The buyer gets a page to follow it, and your stock goes down by itself.')}
+          </Lead>
+          <ul className="mt-8 space-y-3 text-[15px]">
+            {[t('One tap to call or WhatsApp the buyer'), t('Statuses the buyer can see: confirmed, on the way, delivered'), t('Sold out shows by itself when stock runs out')].map((x) => (
+              <li key={x} className="flex items-start gap-3">
+                <Check size={18} strokeWidth={2} className="mt-0.5 shrink-0" /> {x}
+              </li>
             ))}
-          </div>
-          <div className="mt-7 grid grid-cols-2 gap-3">
-            <div className="rounded-[14px] border border-black/15 py-3.5 text-center text-sm font-semibold">{t('Piga', 'Call')}</div>
-            <div className="flex items-center justify-center gap-2 rounded-[14px] bg-[#0e0e0e] py-3.5 text-center text-sm font-semibold text-white">
-              <MessageCircle size={16} /> WhatsApp
-            </div>
-          </div>
-        </Panel>
-        <Panel className="order-1 p-6 md:order-2 md:p-12">
-          <Eyebrow>{t('Oda', 'Orders')}</Eyebrow>
-          <Display className="mt-5">{t('Oda kamili. Bila kuuliza mara kumi.', 'Complete orders. No ten questions.')}</Display>
-          <p className="mt-5 text-[16px] leading-relaxed text-[#4a4a4a]">
-            {t(
-              'Kila oda inakuja na jina, namba, eneo, alama ya karibu na bidhaa zote. Mteja anapata ukurasa wa kufuatilia oda yake, na kitufe cha kukutumia oda kwa WhatsApp. Stock inapungua yenyewe ukithibitisha.',
-              'Every order comes with the name, number, area, a nearby landmark and every item. The buyer gets a page to follow the order and a button to send it to you on WhatsApp. Stock goes down by itself when you confirm.',
-            )}
-          </p>
-        </Panel>
-      </div>
-    </Section>
+          </ul>
+        </div>
+      </Container>
+    </section>
   )
 }
 
 /* ---------- Dashboard ---------- */
 
 function Dashboard() {
-  const t = en
+  const t = useT()
   return (
-    <Section>
-      <div className="text-center">
-        <Eyebrow>{t('Dashibodi', 'Dashboard')}</Eyebrow>
-        <Display className="mx-auto mt-5 max-w-[760px]">{t('Biashara yako, kwa namba.', 'Your business, in numbers.')}</Display>
-        <p className="mx-auto mt-5 max-w-[560px] text-[16px] text-[#4a4a4a]">
-          {t('Mauzo, oda, wageni na bidhaa zinazopendwa. Pia unajua wateja wametoka Instagram, TikTok au WhatsApp.', 'Sales, orders, visitors and your best products. You also see whether buyers came from Instagram, TikTok or WhatsApp.')}
-        </p>
-      </div>
-      <div className="relative mx-auto mt-10 max-w-[1100px] overflow-hidden rounded-[28px] bg-[#0e0e0e] p-2 md:p-3">
-        <Lattice size={46} stroke="#fff" opacity={0.1} />
-        <img
-          src="/images/rizk-seller-dashboard-desktop.webp"
-          width={1600}
-          height={1111}
-          loading="lazy"
-          alt="Rizk seller dashboard on a laptop: sales today, new orders, and the last 7 days of sales, orders, visitors and conversion"
-          className="relative w-full rounded-[20px]"
-        />
-      </div>
-      <p className="mt-3 text-center text-xs text-[#6b6b6b]">{t('Duka la mfano, Zuri Fashion. Namba ni za mfano.', 'Demo shop, Zuri Fashion. Example data.')}</p>
-    </Section>
+    <section className="pb-20 md:pb-32">
+      <Container>
+        <div className="mx-auto max-w-[760px] text-center">
+          <H2>{t('Your business, in numbers')}</H2>
+          <Lead className="mx-auto mt-6">{t('Sales today and this week, orders that need you, visits, shares and your best sellers. On your phone or on a laptop.')}</Lead>
+        </div>
+        <div className="relative mx-auto mt-12 max-w-[1120px] md:mt-16">
+          <img
+            src="/images/rizk-seller-dashboard-desktop.webp"
+            width={1920}
+            height={1200}
+            loading="lazy"
+            alt={t('RIZK seller dashboard on a laptop: sales today, orders that need you, the last 7 days and best sellers')}
+            className="w-full rounded-[20px] shadow-[0_1px_2px_rgb(10_10_10/0.06),0_40px_80px_-40px_rgb(10_10_10/0.35)] ring-1 ring-line md:rounded-[28px]"
+          />
+          <img
+            src="/images/rizk-seller-dashboard-phone.webp"
+            width={780}
+            height={1688}
+            loading="lazy"
+            alt=""
+            className="absolute -right-6 -bottom-12 hidden w-[230px] rounded-[36px] border-[8px] border-[#0b0b0b] shadow-[0_40px_80px_-30px_rgb(10_10_10/0.5)] lg:block"
+          />
+        </div>
+        <p className="mt-6 text-center text-[13px] text-muted lg:mt-16">{t('Demo shop with example data')}</p>
+      </Container>
+    </section>
   )
 }
 
 /* ---------- Everything else ---------- */
 
-function Everything() {
-  const t = en
+function Features() {
+  const t = useT()
   const items = [
-    [Link2, t('Link yako', 'Your own link'), 'rizk.tz/dukalako'],
-    [Package, t('Bidhaa na stock', 'Products and stock'), t('Picha 6, bei, punguzo, idadi', '6 photos, price, sale, stock')],
-    [Smartphone, 'Lipa Namba', t('Ukaguzi wa SMS ya malipo', 'Payment SMS check')],
-    [Banknote, t('Cash ukipokea', 'Cash on delivery'), t('Washa au zima', 'Turn on or off')],
-    [MapPin, 'Delivery', t('Maeneo na bei zako', 'Your areas and fees')],
-    [ReceiptText, t('Oda', 'Orders'), t('Hatua kwa hatua', 'Step by step')],
-    [MessageCircle, 'WhatsApp', t('Oda na maswali moja kwa moja', 'Orders and questions in your chats')],
-    [BarChart3, t('Takwimu', 'Analytics'), t('Wageni, mauzo, vyanzo', 'Visitors, sales, sources')],
+    [Link2, t('Your own link'), 'rizk.tz/dukalako'],
+    [Ruler, t('Sizes and stock'), t('Buyers pick a size, sold out shows by itself')],
+    [Smartphone, 'Lipa Namba', t('With a check of the payment SMS')],
+    [Banknote, t('Cash on delivery'), t('Turn it on or off')],
+    [MapPin, t('Delivery areas'), t('Your areas, your fees')],
+    [WhatsAppIcon, 'WhatsApp', t('Every buyer one tap away')],
+    [ChartColumn, t('Your numbers'), t('Sales, visits, shares, best sellers')],
+    [ImageDown, t('Light photos'), t('Shrunk on upload to save buyers data')],
   ] as const
   return (
-    <Section>
-      <Eyebrow>{t('Na kila kitu kingine', 'And everything else')}</Eyebrow>
-      <Display className="mt-5 max-w-[760px]">{t('Zana za duka kubwa, kwenye simu yako.', 'Big-store tools, on your phone.')}</Display>
-      <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
-        {items.map(([Icon, title, sub]) => (
-          <Panel key={title} className="p-5 md:p-6">
-            <Icon size={22} />
-            <p className="mt-6 text-[16px] font-semibold">{title}</p>
-            <p className="mt-1 text-[13px] text-[#6b6b6b]">{sub}</p>
-          </Panel>
-        ))}
-      </div>
-      <p className="mt-5 flex items-center gap-2 text-sm text-[#6b6b6b]">
-        <Rosette size={12} className="text-[#0e0e0e] [--rosette-hole:#efeeeb]" />
-        {t('Inakuja hivi karibuni: Rizko, msaidizi wa AI anayejibu wateja, na kura za bidhaa bora za wiki.', 'Coming soon: Rizko, an AI assistant that answers buyers, and weekly best-product votes.')}
-      </p>
-    </Section>
+    <section className="py-20 md:py-28">
+      <Container>
+        <H2 className="max-w-[720px]">{t('Everything a small shop needs')}</H2>
+        <div className="mt-12 grid gap-x-10 border-t border-line sm:grid-cols-2 lg:grid-cols-4">
+          {items.map(([Icon, title, sub]) => (
+            <div key={title} className="flex gap-4 border-b border-line py-6">
+              <Icon size={20} strokeWidth={1.5} className="mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[15px] font-medium">{title}</p>
+                <p className="mt-1 text-[14px] leading-5 text-muted">{sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-8 text-[14px] text-muted">{t('Coming next: Rizko, an assistant that answers buyers’ questions, and weekly best-product votes.')}</p>
+      </Container>
+    </section>
   )
 }
 
 /* ---------- Pricing ---------- */
 
 function Pricing({ start }: { start: string }) {
-  const t = en
+  const t = useT()
   return (
-    <Section id="pricing">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-        <Panel className="p-6 md:p-12">
-          <Eyebrow>{t('Bei', 'Pricing')}</Eyebrow>
-          <Display className="mt-5">{t('Anza bure. Leo.', 'Start free. Today.')}</Display>
-          <p className="mt-5 text-[16px] text-[#4a4a4a]">{t('Hakuna kamisheni kwenye mauzo yako. Tutatangaza vifurushi vya kulipia mapema kabla havijaanza.', 'No commission on your sales. We will announce paid plans well before they start.')}</p>
-        </Panel>
-        <div className="relative overflow-hidden rounded-[28px] bg-[#0e0e0e] p-6 text-white md:p-12">
-          <Lattice size={52} stroke="#fff" opacity={0.08} />
-          <div className="relative">
-            <p className="text-[15px] text-white/60">{t('Wauzaji wa kwanza', 'Early sellers')}</p>
-            <p className="mt-2 font-display text-[72px] leading-none">
-              TSh 0 <span className="font-sans text-[16px] text-white/50">/ {t('mwezi', 'month')}</span>
+    <section id="pricing" className="scroll-mt-24 py-20 md:py-28">
+      <Container className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-20">
+        <div>
+          <H2>{t('Free while we launch')}</H2>
+          <Lead className="mt-6">{t('No commission on your sales, ever. We will announce paid plans well before they start, and early sellers hear first.')}</Lead>
+        </div>
+        <div className="rounded-[32px] bg-card p-3">
+          <div className="rounded-[24px] bg-page p-6 md:p-8">
+            <p className="text-[15px] font-medium">{t('Early sellers')}</p>
+            <p className="mt-3 flex items-baseline gap-2">
+              <span className="display text-[64px] md:text-[80px]">TSh 0</span>
+              <span className="text-[15px] text-muted">/ {t('month')}</span>
             </p>
-            <ul className="mt-8 divide-y divide-white/10 border-y border-white/10">
-              {[
-                t('Duka lako kwenye rizk.tz/jina', 'Your shop at rizk.tz/name'),
-                t('Lipa Namba na cash wakati wa kupokea', 'Lipa Namba and cash on delivery'),
-                t('Oda, stock na delivery', 'Orders, stock and delivery'),
-                t('Dashibodi na takwimu', 'Dashboard and analytics'),
-                t('Kiswahili na Kiingereza', 'Swahili and English'),
-              ].map((x) => (
-                <li key={x} className="flex items-center gap-3 py-3 text-[15px]">
-                  <Check size={16} strokeWidth={3} /> {x}
-                </li>
-              ))}
-            </ul>
-            <Link to={start} className="mt-8 flex h-14 items-center justify-center gap-2 rounded-[16px] bg-white text-[16px] font-semibold text-[#0e0e0e]">
-              {t('Anza bure', 'Start free')} <ArrowUpRight size={18} />
+          </div>
+          <ul className="space-y-3 px-6 pt-6 text-[15px] md:px-8">
+            {[t('Your shop at rizk.tz/yourname'), t('Lipa Namba and cash on delivery'), t('Orders, sizes, stock and delivery areas'), t('Dashboard with your numbers')].map((x) => (
+              <li key={x} className="flex items-center gap-3">
+                <Check size={17} strokeWidth={2} className="shrink-0" /> {x}
+              </li>
+            ))}
+          </ul>
+          <div className="p-6 md:p-8">
+            <Link to={start} className="btn btn-lg w-full">
+              {t('Open your shop free')}
             </Link>
           </div>
         </div>
-      </div>
-    </Section>
+      </Container>
+    </section>
   )
 }
 
 /* ---------- FAQ ---------- */
 
 function Faq() {
-  const t = en
+  const t = useT()
   const qs = [
-    [t('RIZK inagharimu kiasi gani?', 'What does RIZK cost?'), t('Ni bure kuanza, na hatuchukui kamisheni kwenye mauzo yako. Tutatangaza vifurushi vya kulipia mapema kabla havijaanza.', 'It is free to start and we take no commission on your sales. We will announce paid plans well before they start.')],
-    [t('Napokeaje pesa?', 'How do I get paid?'), t('Mteja analipa Lipa Namba au namba yako moja kwa moja, au cash akipokea mzigo. Pesa haipiti kwetu.', 'The buyer pays your Lipa Namba or cash on delivery, the way they already pay sellers today. The money never passes through us.')],
-    [t('Nitajuaje kama mteja amelipa kweli?', 'How do I know a buyer really paid?'), t('Mteja anabandika SMS ya malipo. Tunakagua kiasi, jina na namba ya muamala, na tunakataa muamala uliotumika tayari. Bado angalia simu yako kabla ya kuthibitisha.', 'The buyer pastes the payment SMS. We check the amount, name and transaction ID and refuse one already used. Still check your phone before you confirm.')],
-    [t('Nahitaji website au programmer?', 'Do I need a website or a developer?'), t('Hapana. Unafungua duka kwenye simu yako kwa dakika chache, na unapata link ya kushiriki.', 'No. You open the shop on your phone in a few minutes and get a link to share.')],
-    [t('Nani anafanya delivery?', 'Who does the delivery?'), t('Kwa sasa wewe, na boda yako. Unaweka maeneo yako na bei ya delivery kila eneo, na mteja anachagua wakati wa kuagiza.', 'For now you do, with your own boda. You set your areas and a fee for each, and the buyer picks one when ordering.')],
-    [t('Naweza kuuza nini?', 'What can I sell?'), t('Nguo, viatu, vipodozi, manukato, elektroniki, chakula na zaidi. Bidhaa haramu haziruhusiwi.', 'Clothes, shoes, cosmetics, perfumes, electronics, food and more. Illegal goods are not allowed.')],
+    [t('What does RIZK cost?'), t('It is free to start and we take no commission on your sales. We will announce paid plans well before they start.')],
+    [t('How do I get paid?'), t('The buyer pays your Lipa Namba or pays cash on delivery, the way they already pay sellers today. The money never passes through RIZK.')],
+    [t('How do I know a buyer really paid?'), t('The buyer pastes the payment SMS. We check the amount, the name and the transaction ID, and refuse one already used. Still check your phone before you confirm.')],
+    [t('Do I need a website or a developer?'), t('No. You open the shop on your phone in a few minutes and get a link to share.')],
+    [t('Who does the delivery?'), t('You do, with your own rider. You set your areas and a fee for each, and the buyer picks one when ordering.')],
+    [t('What can I sell?'), t('Clothes, shoes, cosmetics, perfumes, electronics, food and more. Illegal goods are not allowed.')],
   ]
   return (
-    <Section id="faq">
-      <div className="grid gap-6 md:grid-cols-[1fr_1.5fr] md:gap-5">
-        <div className="md:pt-4">
-          <Eyebrow>{t('Maswali', 'Questions')}</Eyebrow>
-          <Display className="mt-5">{t('Vizuri kujua.', 'Good to know.')}</Display>
-        </div>
-        <Panel className="divide-y divide-black/10 px-6 md:px-8">
+    <section id="faq" className="scroll-mt-24 py-20 md:py-28">
+      <Container className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-20">
+        <H2>{t('Good to know')}</H2>
+        <div className="border-t border-line">
           {qs.map(([q, a]) => (
-            <details key={q} className="group py-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[17px] font-medium">
+            <details key={q} className="group border-b border-line">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-[17px] font-medium md:text-[18px] [&::-webkit-details-marker]:hidden">
                 {q}
-                <ChevronDown size={18} className="shrink-0 transition group-open:rotate-180" />
+                <ChevronDown size={20} strokeWidth={1.5} className="shrink-0 text-muted transition-transform duration-200 group-open:rotate-180" />
               </summary>
-              <p className="mt-3 text-[15px] leading-relaxed text-[#4a4a4a]">{a}</p>
+              <p className="-mt-2 max-w-[60ch] pb-6 text-[16px] leading-relaxed text-ink-2">{a}</p>
             </details>
           ))}
-        </Panel>
-      </div>
-    </Section>
+        </div>
+      </Container>
+    </section>
   )
 }
 
-/* ---------- Closing ---------- */
+/* ---------- Closing and footer: one dark block that ends on the logo ---------- */
 
-function Closing({ start, startLabel }: { start: string; startLabel: string }) {
-  const t = en
+function Finale({ start, startLabel, signedIn }: { start: string; startLabel: string; signedIn: boolean }) {
+  const t = useT()
+  const cols: { title: string; links: [string, string][] }[] = [
+    {
+      title: t('Product'),
+      links: [
+        ['#how', t('How it works')],
+        ['#pay', t('Payments')],
+        ['#pricing', t('Pricing')],
+        ['#faq', t('Questions')],
+      ],
+    },
+    {
+      title: t('Sellers'),
+      links: [[start, signedIn ? t('My shop') : t('Open a shop')], ...(signedIn ? [] : ([['/login', t('Log in')]] as [string, string][]))],
+    },
+  ]
   return (
-    <Section className="pb-10">
-      <div className="relative overflow-hidden rounded-[28px] bg-[#0e0e0e] px-6 py-16 text-center text-white md:py-24">
-        <Lattice size={52} stroke="#fff" opacity={0.1} />
-        <div className="relative">
-          <Rosette size={22} className="mx-auto [--rosette-hole:#0e0e0e]" />
-          <h2 className="mx-auto mt-6 max-w-[820px] font-display text-[48px] leading-[0.95] md:text-[84px]">
-            Risk to get <em>Rizk.</em>
+    <section className="px-2 pb-2 md:px-4 md:pb-4">
+      <div className="mx-auto max-w-[1400px] overflow-hidden rounded-[32px] bg-ink text-white md:rounded-[40px]">
+        <div className="px-6 pt-20 pb-20 text-center md:pt-32 md:pb-28">
+          <h2 className="display text-[52px] sm:text-[80px] lg:text-[112px]">
+            Risk to get Rizk<span className="text-moto">.</span>
           </h2>
-          <p className="mt-5 text-[17px] text-white/65">{t('Wateja wako tayari wako kwenye simu. Fungua duka lako leo.', 'Your buyers are already on their phones. Open your shop today.')}</p>
-          <Link to={start} className="mt-9 inline-flex h-14 items-center gap-2 rounded-[16px] bg-white px-7 text-[16px] font-semibold text-[#0e0e0e]">
-            {startLabel} <ArrowRight size={18} />
+          <p className="mx-auto mt-6 max-w-[30rem] text-[17px] text-white/65 md:text-[18px]">{t('Your buyers are already on their phones. Open your shop today and share the link tonight.')}</p>
+          <Link to={start} className="btn btn-lg mt-10 bg-white text-ink hover:bg-white/90">
+            {startLabel} <ArrowRight size={18} strokeWidth={1.75} />
           </Link>
         </div>
+
+        <footer className="border-t border-white/10">
+          <div className="mx-auto grid max-w-[1280px] gap-10 px-6 py-14 sm:grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1.2fr] md:px-10">
+            <p className="max-w-[22rem] text-[15px] leading-relaxed text-white/60">{t('An online shop in one link, for sellers on Instagram, TikTok and WhatsApp in Tanzania.')}</p>
+            {cols.map((c) => (
+              <div key={c.title}>
+                <p className="text-[13px] text-white/40">{c.title}</p>
+                <ul className="mt-4 space-y-3 text-[15px]">
+                  {c.links.map(([href, label]) => (
+                    <li key={label}>
+                      {href.startsWith('#') ? (
+                        <a href={href} className="text-white/75 transition-colors hover:text-white">
+                          {label}
+                        </a>
+                      ) : (
+                        <Link to={href} className="text-white/75 transition-colors hover:text-white">
+                          {label}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <div>
+              <p className="text-[13px] text-white/40">{t('Company')}</p>
+              <ul className="mt-4 space-y-3 text-[15px] text-white/75">
+                <li>Driftmark Technologies Limited</li>
+                <li>Dar es Salaam, Tanzania</li>
+              </ul>
+            </div>
+          </div>
+          <div className="mx-auto flex max-w-[1280px] flex-col gap-2 border-t border-white/10 px-6 py-6 text-[13px] text-white/40 md:flex-row md:justify-between md:px-10">
+            <p>© {new Date().getFullYear()} Driftmark Technologies Limited</p>
+            <p>{t('RIZK never holds buyers’ money. Sellers are paid directly.')}</p>
+          </div>
+          <div aria-hidden className="px-4 pt-6 pb-4 md:px-10 md:pt-10 md:pb-10">
+            <Wordmark className="block h-auto w-full text-white" title="" />
+          </div>
+        </footer>
       </div>
-    </Section>
+    </section>
   )
 }

@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 
+/** Lines are keyed by product and size, like "abc123" or "abc123|M". */
 type Cart = Record<string, number>
 const key = (shopId: string) => `rizk_cart_${shopId}`
+
+export const lineKey = (productId: string, size?: string | null) => (size ? `${productId}|${size}` : productId)
+export function parseLine(line: string) {
+  const i = line.indexOf('|')
+  return i < 0 ? { productId: line, size: null } : { productId: line.slice(0, i), size: line.slice(i + 1) }
+}
 
 function read(shopId: string): Cart {
   try {
@@ -36,8 +43,9 @@ export function useCart(shopId: string) {
   return {
     cart,
     count: Object.values(cart).reduce((s, q) => s + q, 0),
-    set: (id: string, qty: number) => update({ ...cart, [id]: qty }),
-    add: (id: string, qty = 1) => update({ ...cart, [id]: (cart[id] ?? 0) + qty }),
+    lines: Object.entries(cart).map(([line, qty]) => ({ line, qty, ...parseLine(line) })),
+    set: (line: string, qty: number) => update({ ...cart, [line]: qty }),
+    add: (line: string, qty = 1) => update({ ...cart, [line]: (cart[line] ?? 0) + qty }),
     clear: () => update({}),
   }
 }

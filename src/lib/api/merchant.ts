@@ -1,7 +1,8 @@
 import { createServerFn } from '@tanstack/react-start'
 import { requireShop, requireUser } from '#/server/auth'
 import { all, db, first, newId, now, run } from '#/server/db'
-import { CATEGORIES, RESERVED_SLUGS, normalizePhone, slugify, type OrderStatus } from '#/lib/format'
+import { moveStock, sizesTotal } from '#/server/stock'
+import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, normalizePhone, parseSizes, productSlug, slugify, type OrderStatus, type Size } from '#/lib/format'
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
 const int = (v: unknown) => {
@@ -115,6 +116,16 @@ export const updateShop = createServerFn({ method: 'POST' })
 
 /* ---------- Dashboard ---------- */
 
+/** What the menu shows on every screen: payments to check and orders to send. */
+export const getNavCounts = createServerFn({ method: 'GET' }).handler(async () => {
+  const { shop } = await requireShop()
+  const row = await first<{ to_check: number | null; to_send: number | null }>(
+    `SELECT SUM(status = 'payment_claimed') to_check, SUM(status = 'confirmed') to_send FROM orders WHERE shop_id = ?`,
+    shop.id,
+  )
+  return { toCheck: row?.to_check ?? 0, toSend: row?.to_send ?? 0 }
+})
+
 export const getDashboard = createServerFn({ method: 'GET' }).handler(async () => {
   const { shop } = await requireShop()
   const since = now() - 7 * 86400_000
@@ -122,7 +133,7 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
   // Days are counted in Tanzania time (UTC+3).
   const TZ = 3 * 3600_000
   const todayStart = Math.floor((now() + TZ) / 86400_000) * 86400_000 - TZ
-  const [sales, visits, open, recent, top, productCount, setup, prev, daily, counts, today, queue] = await Promise.all([
+  const [sales, visits, open, recent, top, productCount, setup, prev, daily, counts, today, queue, shares] = await Promise.all([
     first<{ n: number; total: number }>(
       `SELECT COUNT(*) n, COALESCE(SUM(total), 0) total FROM orders
        WHERE shop_id = ? AND created_at > ? AND status IN ('confirmed','dispatched','delivered')`,
@@ -192,11 +203,15 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
       todayStart,
     ),
     first<{ to_confirm: number; to_send: number; on_the_way: number }>(
-      `SELECT SUM(status IN ('awaiting_payment','payment_claimed')) to_confirm,
+      `SELECT SUM(status = 'payment_claimed') to_confirm,
          SUM(status = 'confirmed') to_send, SUM(status = 'dispatched') on_the_way
        FROM orders WHERE shop_id = ? AND created_at > ?`,
       shop.id,
       now() - 30 * 86400_000,
+    ),
+    all<{ product_id: string; n: number }>(
+      `SELECT product_id, COUNT(*) n FROM events WHERE shop_id = ? AND type = 'share' AND product_id IS NOT NULL GROUP BY product_id`,
+      shop.id,
     ),
   ])
   const todayDay = Math.floor((now() + TZ) / 86400_000)
@@ -219,7 +234,11 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
     visits: { shop: visits?.shop ?? 0, product: visits?.product ?? 0, share: visits?.share ?? 0 },
     openOrders: open?.n ?? 0,
     recent,
-    top: top.map((p) => ({ ...p, image: (JSON.parse(p.images) as string[])[0] ?? null })),
+    top: top.map((p) => ({
+      ...p,
+      image: (JSON.parse(p.images) as string[])[0] ?? null,
+      shares: shares.find((s) => s.product_id === p.id)?.n ?? 0,
+    })),
     setup: {
       products: (productCount?.n ?? 0) > 0,
       payment: !!setup?.lipa_number,
@@ -233,24 +252,24 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
 
 export type ProductRow = {
   id: string
+  slug: string | null
   name: string
   description: string
   price: number
   compare_price: number | null
   stock: number | null
   images: string[]
+  sizes: Size[] | null
   active: number
   views: number
 }
 
-const toProduct = (r: Omit<ProductRow, 'images'> & { images: string }): ProductRow => ({
-  ...r,
-  images: JSON.parse(r.images),
-})
+type ProductDbRow = Omit<ProductRow, 'images' | 'sizes'> & { images: string; sizes: string | null }
+const toProduct = (r: ProductDbRow): ProductRow => ({ ...r, images: JSON.parse(r.images), sizes: parseSizes(r.sizes) })
 
 export const listMyProducts = createServerFn({ method: 'GET' }).handler(async () => {
   const { shop } = await requireShop()
-  const rows = await all<Omit<ProductRow, 'images'> & { images: string }>(
+  const rows = await all<ProductDbRow>(
     'SELECT * FROM products WHERE shop_id = ? ORDER BY created_at DESC',
     shop.id,
   )
@@ -261,13 +280,23 @@ export const getMyProduct = createServerFn({ method: 'GET' })
   .validator((d: { id: string }) => d)
   .handler(async ({ data }) => {
     const { shop } = await requireShop()
-    const row = await first<Omit<ProductRow, 'images'> & { images: string }>(
+    const row = await first<ProductDbRow>(
       'SELECT * FROM products WHERE id = ? AND shop_id = ?',
       data.id,
       shop.id,
     )
     return row ? toProduct(row) : null
   })
+
+/** A link name for a product that no other product in the shop uses: gauni-la-jua, then gauni-la-jua-2. */
+async function uniqueProductSlug(shopId: string, name: string, exceptId = '') {
+  const base = productSlug(name)
+  const taken = new Set(
+    (await all<{ slug: string }>('SELECT slug FROM products WHERE shop_id = ? AND slug IS NOT NULL AND id != ?', shopId, exceptId)).map((r) => r.slug),
+  )
+  if (!taken.has(base) && !RESERVED_PRODUCT_SLUGS.has(base)) return base
+  for (let i = 2; ; i++) if (!taken.has(`${base}-${i}`)) return `${base}-${i}`
+}
 
 export const saveProduct = createServerFn({ method: 'POST' })
   .validator(
@@ -278,6 +307,7 @@ export const saveProduct = createServerFn({ method: 'POST' })
       price: number | string
       compare_price?: number | string | null
       stock?: number | string | null
+      sizes?: { label: string; stock: number | string | null }[] | null
       images: string[]
       active: boolean
     }) => d,
@@ -289,23 +319,35 @@ export const saveProduct = createServerFn({ method: 'POST' })
     if (!name) return { error: 'name' as const }
     if (!price) return { error: 'price' as const }
     const compare = data.compare_price ? int(data.compare_price) || null : null
-    const stock = data.stock === '' || data.stock == null ? null : int(data.stock)
+    const count = (v: number | string | null | undefined) => (v === '' || v == null ? null : int(v))
+    const sizes: Size[] = []
+    for (const s of data.sizes ?? []) {
+      const label = str(s.label, 20)
+      if (label && !sizes.some((x) => x.label.toLowerCase() === label.toLowerCase())) sizes.push({ label, stock: count(s.stock) })
+    }
+    // With sizes, the product's stock is their total.
+    const stock = sizes.length ? sizesTotal(sizes) : count(data.stock)
+    const sizesJson = sizes.length ? JSON.stringify(sizes.slice(0, 20)) : null
     const images = JSON.stringify((data.images ?? []).slice(0, 6).map((k) => str(k, 100)))
     if (data.id) {
+      // The link name stays when a product is renamed, so links already shared keep working.
+      const current = await first<{ slug: string | null }>('SELECT slug FROM products WHERE id = ? AND shop_id = ?', data.id, shop.id)
+      const slug = current?.slug ?? (await uniqueProductSlug(shop.id, name, data.id))
       await run(
-        `UPDATE products SET name = ?, description = ?, price = ?, compare_price = ?, stock = ?, images = ?, active = ?
+        `UPDATE products SET name = ?, description = ?, price = ?, compare_price = ?, stock = ?, sizes = ?, images = ?, active = ?, slug = ?
          WHERE id = ? AND shop_id = ?`,
-        name, str(data.description, 2000), price, compare, stock, images, data.active ? 1 : 0, data.id, shop.id,
+        name, str(data.description, 2000), price, compare, stock, sizesJson, images, data.active ? 1 : 0, slug, data.id, shop.id,
       )
-      return { ok: true as const, id: data.id }
+      return { ok: true as const, id: data.id, slug }
     }
     const id = newId()
+    const slug = await uniqueProductSlug(shop.id, name)
     await run(
-      `INSERT INTO products (id, shop_id, name, description, price, compare_price, stock, images, active, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      id, shop.id, name, str(data.description, 2000), price, compare, stock, images, data.active ? 1 : 0, now(),
+      `INSERT INTO products (id, shop_id, slug, name, description, price, compare_price, stock, sizes, images, active, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id, shop.id, slug, name, str(data.description, 2000), price, compare, stock, sizesJson, images, data.active ? 1 : 0, now(),
     )
-    return { ok: true as const, id }
+    return { ok: true as const, id, slug }
   })
 
 export const deleteProduct = createServerFn({ method: 'POST' })
@@ -350,7 +392,7 @@ export type OrderDetail = OrderListRow & {
   txn_id: string | null
   payment_check: string | null
   paid_claimed_at: number | null
-  lines: { name: string; price: number; qty: number; image: string | null }[]
+  lines: { name: string; price: number; qty: number; image: string | null; variant: string | null }[]
 }
 
 export const getOrder = createServerFn({ method: 'GET' })
@@ -364,7 +406,7 @@ export const getOrder = createServerFn({ method: 'GET' })
     )
     if (!order) return null
     const lines = await all<OrderDetail['lines'][number]>(
-      'SELECT name, price, qty, image FROM order_items WHERE order_id = ?',
+      'SELECT name, price, qty, image, variant FROM order_items WHERE order_id = ?',
       order.id,
     )
     return { ...order, lines, items: lines.reduce((s, l) => s + l.qty, 0) } as OrderDetail
@@ -398,21 +440,7 @@ export const setOrderStatus = createServerFn({ method: 'POST' })
       data.id,
     )
     // Stock comes back when a confirmed order is cancelled.
-    if (data.status === 'cancelled' && ['confirmed', 'dispatched'].includes(order.status)) {
-      await run(
-        `UPDATE products SET stock = stock + (SELECT SUM(qty) FROM order_items WHERE order_id = ? AND product_id = products.id)
-         WHERE stock IS NOT NULL AND id IN (SELECT product_id FROM order_items WHERE order_id = ?)`,
-        data.id,
-        data.id,
-      )
-    }
-    if (data.status === 'confirmed' && order.status !== 'confirmed') {
-      await run(
-        `UPDATE products SET stock = MAX(0, stock - (SELECT SUM(qty) FROM order_items WHERE order_id = ? AND product_id = products.id))
-         WHERE stock IS NOT NULL AND id IN (SELECT product_id FROM order_items WHERE order_id = ?)`,
-        data.id,
-        data.id,
-      )
-    }
+    if (data.status === 'cancelled' && ['confirmed', 'dispatched'].includes(order.status)) await moveStock(data.id, 1)
+    if (data.status === 'confirmed' && order.status !== 'confirmed') await moveStock(data.id, -1)
     return { ok: true }
   })

@@ -1,6 +1,8 @@
 import { createServerFn } from '@tanstack/react-start'
+import { getRequestUrl } from '@tanstack/react-start/server'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
-import { normalizePhone, type OrderStatus } from '#/lib/format'
+import { normalizePhone, parseSizes, type OrderStatus, type Size } from '#/lib/format'
+import { moveStock } from '#/server/stock'
 import { namesMatch, parsePaymentSms, type PaymentCheck } from '#/lib/payment-sms'
 
 export type PublicShop = {
@@ -23,12 +25,16 @@ export type PublicShop = {
 }
 export type PublicProduct = {
   id: string
+  /** Readable link name, unique in the shop. Null for products saved before links existed. */
+  slug: string | null
   name: string
   description: string
   price: number
   compare_price: number | null
   stock: number | null
+  sizes: Size[] | null
   images: string[]
+  created_at: number
 }
 
 const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram, tiktok, facebook, location, hours,
@@ -40,8 +46,8 @@ export const getStorefront = createServerFn({ method: 'GET' })
     const shop = await first<PublicShop>(`SELECT ${SHOP_COLS} FROM shops WHERE slug = ? AND status = 'active'`, data.slug)
     if (!shop) return null
     const [products, areas] = await Promise.all([
-      all<Omit<PublicProduct, 'images'> & { images: string }>(
-        `SELECT id, name, description, price, compare_price, stock, images FROM products
+      all<Omit<PublicProduct, 'images' | 'sizes'> & { images: string; sizes: string | null }>(
+        `SELECT id, slug, name, description, price, compare_price, stock, sizes, images, created_at FROM products
          WHERE shop_id = ? AND active = 1 ORDER BY created_at DESC`,
         shop.id,
       ),
@@ -53,7 +59,9 @@ export const getStorefront = createServerFn({ method: 'GET' })
     return {
       shop,
       areas,
-      products: products.map((p) => ({ ...p, images: JSON.parse(p.images) as string[] })),
+      products: products.map((p) => ({ ...p, images: JSON.parse(p.images) as string[], sizes: parseSizes(p.sizes) })),
+      // Link previews (WhatsApp, Instagram) need absolute image URLs.
+      origin: getRequestUrl().origin,
     }
   })
 
@@ -80,10 +88,11 @@ export const placeOrder = createServerFn({ method: 'POST' })
   .validator(
     (d: {
       shopId: string
-      items: { productId: string; qty: number }[]
+      items: { productId: string; qty: number; size?: string | null }[]
       name: string
       phone: string
       areaId: string
+      areaOther?: string
       landmark: string
       note: string
       payment: 'lipa' | 'cod'
@@ -106,8 +115,8 @@ export const placeOrder = createServerFn({ method: 'POST' })
     const wanted = (data.items ?? []).filter((i) => i.qty > 0).slice(0, 30)
     if (!wanted.length) return { error: 'empty' as const }
     const ids = wanted.map((i) => i.productId)
-    const products = await all<{ id: string; name: string; price: number; stock: number | null; images: string }>(
-      `SELECT id, name, price, stock, images FROM products WHERE shop_id = ? AND active = 1
+    const products = await all<{ id: string; name: string; price: number; stock: number | null; sizes: string | null; images: string }>(
+      `SELECT id, name, price, stock, sizes, images FROM products WHERE shop_id = ? AND active = 1
        AND id IN (${ids.map(() => '?').join(',')})`,
       shop.id,
       ...ids,
@@ -117,10 +126,18 @@ export const placeOrder = createServerFn({ method: 'POST' })
       const p = products.find((x) => x.id === item.productId)
       if (!p) return { error: 'gone' as const }
       const qty = Math.min(99, Math.max(1, Math.round(item.qty)))
-      if (p.stock != null && p.stock < qty) return { error: 'stock' as const, product: p.name }
-      lines.push({ p, qty })
+      const sizes = parseSizes(p.sizes)
+      const size = sizes ? sizes.find((s) => s.label === item.size) : null
+      if (sizes && !size) return { error: 'size' as const, product: p.name }
+      const left = size ? size.stock : p.stock
+      if (left != null && left < qty) return { error: 'stock' as const, product: size ? `${p.name} (${size.label})` : p.name }
+      lines.push({ p, qty, variant: size?.label ?? null })
     }
-    const area = data.areaId
+    // "My area is not listed": the seller agrees the fee with the buyer on WhatsApp.
+    const other = data.areaId === 'other' ? String(data.areaOther ?? '').trim().slice(0, 60) : ''
+    const area = other
+      ? { name: `${other} (fee to agree)`, fee: 0 }
+      : data.areaId
       ? await first<{ name: string; fee: number }>(
           'SELECT name, fee FROM delivery_areas WHERE id = ? AND shop_id = ?',
           data.areaId,
@@ -146,18 +163,13 @@ export const placeOrder = createServerFn({ method: 'POST' })
         ),
       ...lines.map((l) =>
         db()
-          .prepare('INSERT INTO order_items (order_id, product_id, name, price, qty, image) VALUES (?, ?, ?, ?, ?, ?)')
-          .bind(id, l.p.id, l.p.name, l.p.price, l.qty, (JSON.parse(l.p.images) as string[])[0] ?? null),
+          .prepare('INSERT INTO order_items (order_id, product_id, name, price, qty, image, variant) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .bind(id, l.p.id, l.p.name, l.p.price, l.qty, (JSON.parse(l.p.images) as string[])[0] ?? null, l.variant),
       ),
     ])
     if (payment === 'cod') {
       // Cash on delivery is confirmed at once, so stock is held now.
-      await run(
-        `UPDATE products SET stock = MAX(0, stock - (SELECT SUM(qty) FROM order_items WHERE order_id = ? AND product_id = products.id))
-         WHERE stock IS NOT NULL AND id IN (SELECT product_id FROM order_items WHERE order_id = ?)`,
-        id,
-        id,
-      )
+      await moveStock(id, -1)
     }
     return { ok: true as const, code }
   })
@@ -175,7 +187,7 @@ export type TrackedOrder = {
   payment_check: string | null
   created_at: number
   shop: { slug: string; name: string; logo_key: string | null; whatsapp: string; lipa_number: string; lipa_name: string; lipa_network: string }
-  lines: { name: string; price: number; qty: number; image: string | null }[]
+  lines: { name: string; price: number; qty: number; image: string | null; variant: string | null }[]
 }
 
 export const getTrackedOrder = createServerFn({ method: 'GET' })
@@ -192,7 +204,7 @@ export const getTrackedOrder = createServerFn({ method: 'GET' })
         'SELECT slug, name, logo_key, whatsapp, lipa_number, lipa_name, lipa_network FROM shops WHERE id = ?',
         order.shop_id,
       ),
-      all<TrackedOrder['lines'][number]>('SELECT name, price, qty, image FROM order_items WHERE order_id = ?', order.id),
+      all<TrackedOrder['lines'][number]>('SELECT name, price, qty, image, variant FROM order_items WHERE order_id = ?', order.id),
     ])
     const { id: _id, shop_id: _s, ...rest } = order
     return { ...rest, shop: shop!, lines } as TrackedOrder

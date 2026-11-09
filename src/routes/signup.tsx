@@ -1,6 +1,7 @@
 import { Link, createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
-import { ErrorText, Field, Page, TopBar } from '#/components/ui'
+import { AuthLayout, PasswordInput, StepBar } from '#/components/auth'
+import { ErrorText, Field, TextLink } from '#/components/ui'
 import { signup } from '#/lib/api/session'
 import { useT } from '#/lib/i18n'
 
@@ -8,6 +9,7 @@ export const Route = createFileRoute('/signup')({
   beforeLoad: ({ context }) => {
     if (context.session.user) throw redirect({ to: context.session.shop ? '/app' : '/onboard' })
   },
+  head: () => ({ meta: [{ title: 'Open your shop · RIZK' }] }),
   component: Signup,
 })
 
@@ -18,16 +20,24 @@ function Signup() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const errors = {
-    name: t('Andika jina lako.', 'Enter your name.'),
-    phone: t('Namba ya simu si sahihi. Mfano: 0754 123 456', 'That phone number looks wrong. Example: 0754 123 456'),
-    password: t('Nenosiri liwe na herufi 6 au zaidi.', 'Use at least 6 characters for the password.'),
-    exists: t('Namba hii ina akaunti tayari. Ingia.', 'This number already has an account. Log in.'),
+    name: t('Enter your name.'),
+    phone: t('That phone number looks wrong. Example: 0754 123 456'),
+    password: t('Use at least 6 characters for the password.'),
+    exists: t('This number already has a shop. Log in instead.'),
   }
   return (
-    <Page>
-      <TopBar back="/" title={t('Fungua akaunti', 'Create account')} sub={t('Hatua ya 1 kati ya 2', 'Step 1 of 2')} />
+    <AuthLayout
+      topRight={
+        <Link to="/login" className="text-[14px] font-medium text-ink-2 transition-colors hover:text-ink">
+          {t('Log in')}
+        </Link>
+      }
+    >
+      <StepBar step={1} of={2} />
+      <h1 className="title mt-6 text-[32px] md:text-[38px]">{t('Open your shop')}</h1>
+      <p className="mt-2 text-[15px] text-muted">{t('First, your account. Your shop comes next.')}</p>
       <form
-        className="card space-y-4 p-5"
+        className="mt-8 space-y-4"
         onSubmit={async (e) => {
           e.preventDefault()
           setBusy(true)
@@ -39,26 +49,23 @@ function Signup() {
           router.navigate({ to: '/onboard' })
         }}
       >
-        <Field label={t('Jina lako', 'Your name')}>
+        <Field label={t('Your name')}>
           <input className="input" autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </Field>
-        <Field label={t('Namba ya simu', 'Phone number')}>
+        <Field label={t('Phone number')} hint={t('You log in with this number')}>
           <input className="input" type="tel" inputMode="tel" autoComplete="tel" placeholder="0754 123 456" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         </Field>
-        <Field label={t('Nenosiri', 'Password')}>
-          <input className="input" type="password" autoComplete="new-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+        <Field label={t('Password')} hint={t('At least 6 characters')}>
+          <PasswordInput autoComplete="new-password" value={form.password} onChange={(password) => setForm({ ...form, password })} />
         </Field>
         <ErrorText>{error}</ErrorText>
-        <button className="btn w-full" disabled={busy}>
-          {busy ? t('Subiri...', 'Please wait...') : t('Endelea', 'Continue')}
+        <button className="btn btn-lg w-full" disabled={busy}>
+          {busy ? t('Creating your account') : t('Continue')}
         </button>
       </form>
-      <p className="mt-6 text-center text-[15px] text-muted">
-        {t('Una akaunti?', 'Have an account?')}{' '}
-        <Link to="/login" className="font-bold text-ink underline">
-          {t('Ingia', 'Log in')}
-        </Link>
+      <p className="mt-8 text-[14px] text-muted">
+        {t('Already have a shop?')} <TextLink to="/login">{t('Log in')}</TextLink>
       </p>
-    </Page>
+    </AuthLayout>
   )
 }
