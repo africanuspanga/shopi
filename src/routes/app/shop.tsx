@@ -1,6 +1,7 @@
 import { createFileRoute, useBlocker, useRouter } from '@tanstack/react-router'
 import { Camera, Check, Copy, LogOut, Plus, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
+import { useHideFloatingNav } from '#/components/floating-nav'
 import { ErrorText, Field, LangSwitch, Page, ShopAvatar, Switch, Toast, TopBar } from '#/components/ui'
 import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
@@ -33,6 +34,8 @@ function ShopSettings() {
   const logoRef = useRef<HTMLInputElement>(null)
   const set = (k: keyof typeof s) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setS({ ...s, [k]: e.target.value })
   const dirty = JSON.stringify({ shop: s, areas }) !== JSON.stringify(initial.current)
+  // On phones the save bar takes the bottom capsule's place while there is something to save.
+  useHideFloatingNav(dirty || !!error)
 
   useBlocker({
     shouldBlockFn: () => dirty && !window.confirm(t('Leave without saving your shop changes?')),
@@ -99,7 +102,7 @@ function ShopSettings() {
                 <span className="code truncate text-[15px] text-ink-2">rizk.tz/{s.slug}</span>
                 <button
                   type="button"
-                  className="flex shrink-0 items-center gap-1.5 text-[13px] font-medium"
+                  className="-my-2 -mr-2 flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2.5 text-[13px] font-medium transition-colors hover:bg-well"
                   onClick={async () => {
                     try {
                       await navigator.clipboard.writeText(`https://rizk.tz/${s.slug}`)
@@ -191,7 +194,7 @@ function ShopSettings() {
                   placeholder="Mikocheni"
                   onChange={(e) => setAreas(areas.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))}
                 />
-                <span className={`input flex h-11 items-center gap-1.5 px-3 ${a.name.trim() && a.fee === '' && error ? 'shadow-[inset_0_0_0_1.5px_var(--color-bad)]' : ''}`}>
+                <label className={`input flex h-11 items-center gap-1.5 px-3 ${a.name.trim() && a.fee === '' && error ? 'shadow-[inset_0_0_0_1.5px_var(--color-bad)]' : ''}`}>
                   <span className="text-[13px] text-muted">TSh</span>
                   <input
                     className="tnum min-w-0 flex-1 bg-transparent outline-none"
@@ -201,7 +204,7 @@ function ShopSettings() {
                     placeholder="3,000"
                     onChange={(e) => setAreas(areas.map((x, j) => (j === i ? { ...x, fee: e.target.value.replace(/\D/g, '').slice(0, 7) } : x)))}
                   />
-                </span>
+                </label>
                 <button type="button" className="icon-btn" aria-label={t('Remove area')} onClick={() => setAreas(areas.filter((_, j) => j !== i))}>
                   <X size={16} strokeWidth={1.75} />
                 </button>
@@ -258,7 +261,7 @@ function ShopSettings() {
       </div>
 
       {(dirty || error) && (
-        <div className="fixed inset-x-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-30 px-4 pb-3 md:bottom-0 md:left-[248px] md:px-10 md:pb-6">
+        <div className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(12px,env(safe-area-inset-bottom))] md:left-[248px] md:px-10 md:pb-6">
           <div className="rise mx-auto flex max-w-[1160px] flex-col gap-3 rounded-[20px] bg-ink p-3 pl-5 text-white shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
             <p className="flex-1 text-[14px]">{error ? <span className="text-[#ffb59c]">{error}</span> : t('You have unsaved changes')}</p>
             <div className="flex gap-2">

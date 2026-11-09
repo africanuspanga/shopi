@@ -101,30 +101,32 @@ function Orders() {
                   params={{ id: o.id }}
                   className="block px-5 py-4 transition-colors hover:bg-page lg:grid lg:grid-cols-[110px_minmax(0,1.3fr)_minmax(0,1fr)_70px_90px_130px_130px] lg:items-center lg:gap-x-6 lg:px-6 lg:py-3.5"
                 >
-                  {/* Phone: two lines. Desktop: a table row. */}
-                  <div className="flex items-start justify-between gap-4 lg:contents">
-                    <div className="min-w-0 lg:order-2">
-                      <p className="truncate text-[15px] font-medium lg:text-[14px]">{o.customer_name}</p>
-                      <p className="mt-0.5 truncate text-[13px] text-muted lg:hidden">
-                        <span className="code">#{o.code}</span> · {timeAgo(o.created_at, lang)} · {o.area || t('No area')}
-                      </p>
-                      <p className="meta mt-0.5 hidden lg:block">{o.customer_phone}</p>
+                  {/* Phone: who and how much, then where it stands. The code is on the order page and in search. */}
+                  <div className="lg:hidden">
+                    <div className="flex items-baseline justify-between gap-4">
+                      <p className="min-w-0 truncate text-[15px] font-medium">{o.customer_name}</p>
+                      <p className="tnum shrink-0 text-[15px] font-medium">{tzs(o.total)}</p>
                     </div>
-                    <div className="shrink-0 text-right lg:order-6">
-                      <p className="tnum text-[15px] font-medium lg:text-[14px]">{tzs(o.total)}</p>
-                      <p className="mt-1 lg:hidden">
-                        <StatusPill status={o.status} />
-                      </p>
+                    <div className="mt-1 flex h-6 items-center gap-3">
+                      <StatusPill status={o.status} />
+                      <p className="min-w-0 flex-1 truncate text-[13px] text-muted">{o.area || t('No area')}</p>
+                      <p className="meta shrink-0">{timeAgo(o.created_at, lang)}</p>
                     </div>
                   </div>
-                  <div className="hidden lg:order-1 lg:block">
+                  {/* Desktop: a table row. */}
+                  <div className="hidden lg:block">
                     <p className="code text-[13px]">#{o.code}</p>
                     <p className="meta mt-0.5">{timeAgo(o.created_at, lang)}</p>
                   </div>
-                  <p className="hidden truncate text-[14px] text-ink-2 lg:order-3 lg:block">{o.area || '—'}</p>
-                  <p className="tnum hidden text-[14px] text-ink-2 lg:order-4 lg:block">{o.items}</p>
-                  <p className="hidden text-[14px] text-ink-2 lg:order-5 lg:block">{o.payment_method === 'cod' ? t('Cash') : 'Lipa'}</p>
-                  <div className="hidden lg:order-7 lg:block">
+                  <div className="hidden min-w-0 lg:block">
+                    <p className="truncate text-[14px] font-medium">{o.customer_name}</p>
+                    <p className="meta mt-0.5">{o.customer_phone}</p>
+                  </div>
+                  <p className="hidden truncate text-[14px] text-ink-2 lg:block">{o.area || '—'}</p>
+                  <p className="tnum hidden text-[14px] text-ink-2 lg:block">{o.items}</p>
+                  <p className="hidden text-[14px] text-ink-2 lg:block">{o.payment_method === 'cod' ? t('Cash') : 'Lipa'}</p>
+                  <p className="tnum hidden text-right text-[14px] font-medium lg:block">{tzs(o.total)}</p>
+                  <div className="hidden lg:block">
                     <StatusPill status={o.status} />
                   </div>
                 </Link>

@@ -5,7 +5,7 @@ import { ShareActions, prettyUrl } from '#/components/share'
 import { Tag } from '#/components/shop'
 import { ErrorText, Field, Img, Switch, Toast, TopBar } from '#/components/ui'
 import { deleteProduct, saveProduct, type ProductRow } from '#/lib/api/merchant'
-import { trackEvent } from '#/lib/api/store'
+import { track } from '#/lib/analytics'
 import { SIZE_PRESETS, tzs } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 import { uploadImage } from '#/lib/upload'
@@ -138,7 +138,7 @@ export function ProductForm({ product, title, back }: { product?: ProductRow; ti
                     type="button"
                     aria-label={t('Remove photo')}
                     onClick={() => setImages(images.filter((x) => x !== k))}
-                    className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-card/95 shadow-[0_1px_2px_rgb(10_10_10/0.15)] transition-colors hover:bg-card"
+                    className="absolute top-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-card/95 shadow-[0_1px_2px_rgb(10_10_10/0.15)] transition-colors hover:bg-card"
                   >
                     <X size={14} strokeWidth={2} />
                   </button>
@@ -349,7 +349,7 @@ function SendCard({ product }: { product: ProductRow }) {
           url={url}
           title={product.name}
           text={t('Hi, here is {name} for {price}. You can order it here:', { name: product.name, price: tzs(product.price) })}
-          onShared={() => trackEvent({ data: { shopId: shop.id, productId: product.id, type: 'share', source: 'seller' } })}
+          onShared={(how) => track('seller_share', { shopId: shop.id, productId: product.id, detail: how })}
         />
       </div>
     </section>

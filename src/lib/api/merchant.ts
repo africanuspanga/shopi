@@ -141,7 +141,9 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
       since,
     ),
     first<{ shop: number; product: number; share: number }>(
-      `SELECT SUM(type = 'view_shop') shop, SUM(type = 'view_product') product, SUM(type = 'share') share
+      `SELECT COUNT(DISTINCT CASE WHEN type IN ('view_shop','view_product') THEN session_id END)
+           + COALESCE(SUM(session_id IS NULL AND type = 'view_shop'), 0) shop,
+         SUM(type = 'view_product') product, SUM(type = 'share') share
        FROM events WHERE shop_id = ? AND created_at > ?`,
       shop.id,
       since,
@@ -175,7 +177,9 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
          (SELECT COALESCE(SUM(total), 0) FROM orders WHERE shop_id = ?1 AND created_at BETWEEN ?2 AND ?3
             AND status IN ('confirmed','dispatched','delivered')) total,
          (SELECT COUNT(*) FROM orders WHERE shop_id = ?1 AND created_at BETWEEN ?2 AND ?3) orders,
-         (SELECT COUNT(*) FROM events WHERE shop_id = ?1 AND type = 'view_shop' AND created_at BETWEEN ?2 AND ?3) visits`,
+         (SELECT COUNT(DISTINCT CASE WHEN type IN ('view_shop','view_product') THEN session_id END)
+            + COALESCE(SUM(session_id IS NULL AND type = 'view_shop'), 0)
+          FROM events WHERE shop_id = ?1 AND created_at BETWEEN ?2 AND ?3) visits`,
       shop.id,
       before,
       since,

@@ -2,10 +2,12 @@ import { createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { Check, MapPin, Share2, Store } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
-import { BagBar, BagButton, FactPills, ProductCard, QuickAddSheet, ShopFacts, ShopFooter, ShopTopBar, SocialLinks, onSale } from '#/components/shop'
+import { BagButton, FactPills, ProductCard, QuickAddSheet, ShopFacts, ShopFooter, ShopTopBar, SocialLinks, onSale } from '#/components/shop'
+import { ShopNav } from '#/components/shop-nav'
 import { Chips, Empty, LangSwitch, ShopAvatar, Toast } from '#/components/ui'
-import { trackEvent, type PublicProduct } from '#/lib/api/store'
-import { lineKey, trafficSource, useCart } from '#/lib/cart'
+import type { PublicProduct } from '#/lib/api/store'
+import { track } from '#/lib/analytics'
+import { lineKey, useCart } from '#/lib/cart'
 import { waLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 import { shareLink, useOrigin } from '#/lib/share'
@@ -26,18 +28,17 @@ function Storefront() {
   const url = `${useOrigin()}/${shop.slug}`
 
   useEffect(() => {
-    trackEvent({ data: { shopId: shop.id, type: 'view_shop', source: trafficSource() } })
+    track('view_shop', { shopId: shop.id })
   }, [shop.id])
 
   const isNew = (p: (typeof products)[number]) => Date.now() - p.created_at < NEW_DAYS * 86400_000
   const counts = { new: products.filter(isNew).length, sale: products.filter(onSale).length }
   const shown = filter === 'sale' ? products.filter(onSale) : filter === 'new' ? products.filter(isNew) : products
-  const total = cart.lines.reduce((s, l) => s + (products.find((p) => p.id === l.productId)?.price ?? 0) * l.qty, 0)
   const showFilters = products.length > 0 && ((counts.new > 0 && counts.new < products.length) || counts.sale > 0)
 
   function addToBag(p: PublicProduct, size: string | null) {
     cart.add(lineKey(p.id, size))
-    trackEvent({ data: { shopId: shop.id, productId: p.id, type: 'add_to_cart', source: trafficSource() } })
+    track('add_to_cart', { shopId: shop.id, productId: p.id, detail: 'quick' })
     setQuick(null)
     setAdded(size ? t('{name}, size {size}, is in your bag', { name: p.name, size }) : t('{name} is in your bag', { name: p.name }))
     setTimeout(() => setAdded(''), 2200)
@@ -49,11 +50,11 @@ function Storefront() {
       setCopied(true)
       setTimeout(() => setCopied(false), 1800)
     }
-    trackEvent({ data: { shopId: shop.id, type: 'share', source: 'shop' } })
+    track('share', { shopId: shop.id, detail: how === 'copied' ? 'copy' : 'native' })
   }
 
   return (
-    <div className={`min-h-dvh bg-card ${cart.count ? 'pb-24 md:pb-0' : ''}`}>
+    <div className="min-h-dvh bg-card pb-28 md:pb-0">
       <ShopTopBar
         shop={shop}
         right={
@@ -62,7 +63,9 @@ function Storefront() {
             <button type="button" className="icon-btn hidden sm:inline-flex" aria-label={t('Share shop')} onClick={share}>
               <Share2 size={17} strokeWidth={1.6} />
             </button>
-            <BagButton shopSlug={shop.slug} count={cart.count} />
+            <span className="hidden md:block">
+              <BagButton shopSlug={shop.slug} count={cart.count} />
+            </span>
           </>
         }
       />
@@ -85,7 +88,13 @@ function Storefront() {
             {shop.bio && <p className="mt-4 max-w-[58ch] text-[15px] leading-relaxed text-ink-2 md:mt-6 md:text-[17px]">{shop.bio}</p>}
             <div className="mt-5 flex flex-wrap items-center gap-2 md:mt-8">
               {shop.whatsapp && (
-                <a className="btn btn-sm h-10 px-4" href={waLink(shop.whatsapp, t('Hi {shop}, I found your shop on RIZK.', { shop: shop.name }))} target="_blank" rel="noreferrer">
+                <a
+                  className="btn btn-sm h-10 px-4"
+                  href={waLink(shop.whatsapp, t('Hi {shop}, I found your shop on RIZK.', { shop: shop.name }))}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => track('whatsapp_click', { shopId: shop.id, detail: 'shop' })}
+                >
                   <WhatsAppMark size={18} /> <span className="sm:hidden">WhatsApp</span>
                   <span className="hidden sm:inline">{t('Message on WhatsApp')}</span>
                 </a>
@@ -139,7 +148,7 @@ function Storefront() {
       </main>
 
       <ShopFooter shop={shop} />
-      <BagBar shopSlug={shop.slug} count={cart.count} total={total} />
+      <ShopNav shop={shop} areas={areas} products={products} count={cart.count} onShare={share} />
       <QuickAddSheet key={quick?.id ?? 'none'} shopSlug={shop.slug} p={quick} onClose={() => setQuick(null)} onAdd={(size) => quick && addToBag(quick, size)} />
       <Toast show={copied}>{t('Link copied')}</Toast>
       <Toast show={!!added}>

@@ -5,7 +5,7 @@ import { Tag } from '#/components/shop'
 import { ShareActions, prettyUrl } from '#/components/share'
 import { Chips, Img, Page, Sheet, TopBar } from '#/components/ui'
 import { listMyProducts, type ProductRow } from '#/lib/api/merchant'
-import { trackEvent } from '#/lib/api/store'
+import { track } from '#/lib/analytics'
 import { tzs } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 import { useOrigin } from '#/lib/share'
@@ -90,10 +90,10 @@ function Products() {
                 {!p.active ? <Tag>{t('Hidden')}</Tag> : out(p) ? <Tag>{t('Sold out')}</Tag> : low(p) ? <Tag hot>{t('{n} left', { n: p.stock! })}</Tag> : null}
               </div>
             </div>
-            <p className="mt-3 truncate px-0.5 text-[14px] font-medium">{p.name}</p>
+            <p className="mt-3 line-clamp-2 px-0.5 text-[14px] leading-5 font-medium">{p.name}</p>
             <p className="tnum px-0.5 text-[14px] text-ink-2">{tzs(p.price)}</p>
             <p className="meta mt-1 px-0.5">
-              {p.stock == null ? t('Not counted') : t('{n} in stock', { n: p.stock })} · {t('{n} views', { n: p.views >= 1000 ? `${(p.views / 1000).toFixed(1).replace(/\.0$/, '')}k` : p.views })}
+              {p.stock == null ? t('Not counted') : t('{n} left', { n: p.stock })} · {t('{n} views', { n: p.views >= 1000 ? `${(p.views / 1000).toFixed(1).replace(/\.0$/, '')}k` : p.views })}
             </p>
           </Link>
           {p.active && !out(p) && (
@@ -130,7 +130,7 @@ function Products() {
                 url={`${origin}/${shop.slug}/${sharing.slug ?? sharing.id}`}
                 title={sharing.name}
                 text={t('Hi, here is {name} for {price}. You can order it here:', { name: sharing.name, price: tzs(sharing.price) })}
-                onShared={() => trackEvent({ data: { shopId: shop.id, productId: sharing.id, type: 'share', source: 'seller' } })}
+                onShared={(how) => track('seller_share', { shopId: shop.id, productId: sharing.id, detail: how })}
               />
             </div>
           </>

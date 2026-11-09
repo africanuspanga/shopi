@@ -37,7 +37,7 @@ export function TopBar({ title, sub, back, right }: { title: ReactNode; sub?: Re
       {back && <BackButton to={back} />}
       <div className="min-w-0 flex-1">
         <h1 className="title truncate text-[24px] md:text-[30px]">{title}</h1>
-        {sub && <p className="mt-1 truncate text-[14px] text-muted">{sub}</p>}
+        {sub && <p className="mt-1 line-clamp-2 text-[14px] text-pretty text-muted">{sub}</p>}
       </div>
       {right && <div className="flex shrink-0 items-center gap-2">{right}</div>}
     </header>
@@ -250,6 +250,12 @@ export function Empty({ icon, title, body, action }: { icon?: ReactNode; title: 
       {action && <div className="mt-6">{action}</div>}
     </div>
   )
+}
+
+/** Touch a chart and slide sideways to read each bar; vertical swipes still scroll the page. */
+export function scrubIndex(e: { clientX: number; currentTarget: HTMLElement }, count: number) {
+  const r = e.currentTarget.getBoundingClientRect()
+  return Math.min(count - 1, Math.max(0, Math.floor(((e.clientX - r.left) / r.width) * count)))
 }
 
 /** Short confirmation at the bottom of the screen, gone after a moment. */

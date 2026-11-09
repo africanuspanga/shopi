@@ -1,7 +1,11 @@
 /**
  * Gives the sample shop "Zee's Store" six months of history, after it was onboarded by hand through the UI.
- * It keeps the real account, shop settings, products and photos, and only backfills the past:
- * the shop's start date, when each dress was added, orders, visits, shares and product views.
+ * It keeps the real account, shop settings, products and photos, and only fills in the past (and today so far):
+ * the shop's start date, when each dress was added, visits, orders, taps and shares.
+ *
+ * Visits follow Analytics v2: each visit is a session from one visitor (some come back), from one source
+ * (Instagram, TikTok, WhatsApp...), sometimes through a tagged link, on a phone, mostly in Dar. Each order comes from a
+ * visit that looked at the dress, added it to the bag and started checkout, so the funnel adds up.
  * Everything here is fictional. Safe to run again: it replaces what it made last time.
  *
  *   node scripts/seed-zee-history.mjs        # local database only
@@ -32,7 +36,13 @@ let seed = 20261108
 const rand = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296)
 const pick = (a) => a[Math.floor(rand() * a.length)]
 const between = (a, b) => a + Math.floor(rand() * (b - a + 1))
-const id = () => 'zh' + Array.from({ length: 14 }, () => '0123456789abcdefghijklmnopqrstuvwxyz'[Math.floor(rand() * 36)]).join('')
+const weighted = (pairs) => {
+  let r = rand() * pairs.reduce((s, [, w]) => s + w, 0)
+  for (const [v, w] of pairs) if ((r -= w) < 0) return v
+  return pairs[0][0]
+}
+const id = (p = 'zh') => p + Array.from({ length: 14 }, () => '0123456789abcdefghijklmnopqrstuvwxyz'[Math.floor(rand() * 36)]).join('')
+const uuid = () => Array.from({ length: 32 }, () => '0123456789abcdef'[Math.floor(rand() * 16)]).join('')
 const code = () => Array.from({ length: 6 }, () => '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(rand() * 32)]).join('')
 const q = (v) => (v == null ? 'NULL' : typeof v === 'number' ? String(v) : `'${String(v).replace(/'/g, "''")}'`)
 
@@ -57,21 +67,29 @@ for (const p of products) {
   p.views = 0
 }
 const live = (daysAgo) => products.filter((p) => p.addedAgo >= daysAgo)
-const weighted = (list) => {
-  let r = rand() * list.reduce((s, p) => s + p.weight, 0)
-  for (const p of list) if ((r -= p.weight) < 0) return p
-  return list[0]
-}
+const pickProduct = (list) => weighted(list.map((p) => [p, p.weight]))
 
 const NAMES = ['Neema Kileo', 'Rehema Mushi', 'Fatma Ali', 'Halima Omari', 'Grace Mwakyusa', 'Zawadi Mrema', 'Saida Hassan', 'Joyce Lyimo', 'Mariam Juma', 'Esther Swai', 'Khadija Nassor', 'Upendo Massawe', 'Asha Bakari', 'Tumaini Shayo', 'Lulu Mbwambo', 'Rose Temba', 'Aisha Mohamed', 'Happy Mwakalinga', 'Witness Urio', 'Salma Abdallah', 'Agnes Mollel', 'Mwanaisha Kombo', 'Pendo Kimaro', 'Bahati Ngowi']
 const LANDMARKS = ['karibu na Shell', 'jirani na msikiti', 'nyuma ya shule ya msingi', 'geti jeusi, nyumba ya pili', 'mbele ya duka la dawa', 'karibu na kituo cha daladala', 'ghorofa ya tatu, mlango 12', 'karibu na Mlimani City']
-const SOURCES = [['instagram', 50], ['tiktok', 22], ['whatsapp', 20], ['direct', 8]]
-const source = () => {
-  let r = rand() * 100
-  for (const [s, w] of SOURCES) if ((r -= w) < 0) return s
-  return 'direct'
+
+// Where visits come from, and the seller's tagged links on each channel.
+const SOURCES = [['instagram', 50], ['tiktok', 22], ['whatsapp', 20], ['direct', 6], ['google', 2]]
+const TAGS = { instagram: ['instagram-bio', 0.4], whatsapp: ['whatsapp-status', 0.3], tiktok: ['tiktok-bio', 0.25] }
+const LINKS = [['instagram-bio', 'Instagram bio', 150], ['whatsapp-status', 'WhatsApp status', 120], ['tiktok-bio', 'TikTok bio', 60]]
+const DEVICES = [['android', 76], ['iphone', 19], ['computer', 4], ['tablet', 1]]
+const CITIES = [['Dar es Salaam', 88], ['Arusha', 3], ['Dodoma', 3], ['Mwanza', 3], ['Zanzibar', 3]]
+// Visits through the day, Tanzania time: lunch and evening peaks.
+const HOURS = Array.from({ length: 24 }, (_, h) => [h, h < 6 ? 0.3 : h < 9 ? 1 : h < 12 ? 2 : h < 15 ? 3.2 : h < 18 ? 2.4 : h < 23 ? 4.2 : 1.2])
+
+// Visitors: about a third of visits are people who came before.
+const visitors = []
+const visitor = () => {
+  if (visitors.length > 20 && rand() < 0.34) return pick(visitors)
+  const v = { id: uuid(), device: weighted(DEVICES), city: weighted(CITIES) }
+  visitors.push(v)
+  return v
 }
-// Loyal buyers come back: about a third of orders are from someone who has bought before.
+// Buyers: about a third of orders are from someone who has bought before.
 const buyers = []
 const buyer = () => {
   if (buyers.length > 8 && rand() < 0.33) return pick(buyers)
@@ -83,80 +101,131 @@ const buyer = () => {
 const sql = [
   `DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders WHERE shop_id = '${shop.id}' AND id LIKE 'zh%');`,
   `DELETE FROM orders WHERE shop_id = '${shop.id}' AND id LIKE 'zh%';`,
-  `DELETE FROM events WHERE shop_id = '${shop.id}' AND created_at < ${startOfToday};`,
+  `DELETE FROM events WHERE shop_id = '${shop.id}';`,
+  `DELETE FROM links WHERE shop_id = '${shop.id}';`,
   `UPDATE shops SET slug = '${SLUG}', created_at = ${startOfToday - DAYS * DAY + 10 * 3600_000} WHERE id = '${shop.id}';`,
   `UPDATE users SET created_at = ${startOfToday - DAYS * DAY + 9 * 3600_000} WHERE id = '${shop.owner_id}';`,
+  ...LINKS.map(([tag, label, ago]) => `INSERT INTO links (shop_id, tag, label, created_at) VALUES ('${shop.id}', '${tag}', '${label}', ${startOfToday - ago * DAY + 12 * 3600_000});`),
 ]
 const orders = []
 const items = []
 const events = []
 const codes = new Set()
+const ev = (s, type, t, productId = null, detail = null) =>
+  events.push(`('${shop.id}', ${q(productId)}, '${type}', '${s.source}', ${t}, '${s.visitor.id}', '${s.id}', ${q(s.tag)}, ${q(detail)}, '${s.visitor.device}', ${q(s.visitor.city)})`)
+
+/** One visit: lands on the shop or straight on a product, looks around, maybe adds to the bag and checks out. */
+function session(dayStart, daysAgo, latest, { orders: wantsOrder = false } = {}) {
+  const hour = weighted(HOURS)
+  let t = dayStart + hour * 3600_000 + Math.floor(rand() * 3600_000)
+  if (t > latest) t = dayStart + Math.floor(rand() * Math.max(1, latest - dayStart))
+  const source = weighted(SOURCES)
+  const tagRule = TAGS[source]
+  const tag = tagRule && rand() < tagRule[1] && LINKS.find(([x, , ago]) => x === tagRule[0] && ago >= daysAgo) ? tagRule[0] : null
+  const s = { id: uuid(), visitor: visitor(), source, tag, start: t }
+  const list = live(daysAgo)
+  const seen = new Set()
+  const view = (p) => {
+    ev(s, 'view_product', (t += between(20, 90) * 1000), p.id)
+    if (!seen.has(p.id)) p.views++
+    seen.add(p.id)
+  }
+  if (rand() < 0.78) ev(s, 'view_shop', t)
+  else view(pickProduct(list))
+  const looks = wantsOrder ? between(1, 3) : weighted([[0, 30], [1, 32], [2, 20], [3, 12], [4, 6]])
+  for (let k = 0; k < looks; k++) view(pickProduct(list))
+  let chosen = null
+  if (seen.size && (wantsOrder || rand() < 0.22)) {
+    chosen = list.find((p) => seen.has(p.id)) ?? pickProduct(list)
+    ev(s, 'add_to_cart', (t += between(30, 120) * 1000), chosen.id, rand() < 0.35 ? 'quick' : 'page')
+    if (wantsOrder || rand() < 0.5) ev(s, 'checkout_start', (t += between(20, 90) * 1000))
+  }
+  if (rand() < 0.05) ev(s, 'whatsapp_click', (t += 15_000), seen.size ? [...seen][0] : null, weighted([['shop', 60], ['product', 30], ['footer', 10]]))
+  if (rand() < 0.025) ev(s, 'social_click', (t += 15_000), null, weighted([['instagram', 70], ['tiktok', 25], ['facebook', 5]]))
+  if (rand() < 0.035) ev(s, 'share', (t += 15_000), seen.size ? [...seen][0] : null, weighted([['whatsapp', 70], ['copy', 20], ['native', 10]]))
+  return { ...s, end: t, chosen }
+}
+
+function order(s, daysAgo, { status, method, b, product, size } = {}) {
+  const list = live(daysAgo)
+  const lines = [{ p: product ?? s.chosen ?? pickProduct(list), qty: rand() < 0.9 ? 1 : 2 }]
+  if (!product && rand() < 0.28) {
+    const extra = pickProduct(list)
+    if (extra !== lines[0].p) lines.push({ p: extra, qty: 1 })
+  }
+  const who = b ?? buyer()
+  const created = s.end + between(2, 9) * 60_000
+  const subtotal = lines.reduce((sum, l) => sum + l.p.price * l.qty, 0)
+  const fee = who.area?.fee ?? 0
+  const total = subtotal + fee
+  const pay = method ?? (rand() < 0.58 ? 'lipa' : 'cod')
+  const st = status ?? (daysAgo >= 3 ? (rand() < 0.94 ? 'delivered' : 'cancelled') : pick(['delivered', 'delivered', 'dispatched', 'confirmed']))
+  const paid = pay === 'lipa' && !['cancelled', 'awaiting_payment'].includes(st)
+  let c = code()
+  while (codes.has(c)) c = code()
+  codes.add(c)
+  const txn = paid ? (code() + code()).slice(0, 10) : null
+  const sms = paid ? `${txn} Confirmed. Tsh${total.toLocaleString('en-US')}.00 paid to ZEES STORE. New balance is Tsh${between(5, 90) * 1000}.` : null
+  const check = paid ? JSON.stringify({ parsed: { txnId: txn, amount: total, name: 'ZEES STORE' }, amount: 'ok', name: 'ok', txn: 'ok' }) : null
+  const oid = id()
+  orders.push(
+    `(${q(oid)}, '${shop.id}', '${c}', ${q(who.name)}, ${q(who.phone)}, ${q(who.area?.name ?? '')}, ${q(who.landmark ?? pick(LANDMARKS))}, '', ${subtotal}, ${fee}, ${total}, '${pay}', '${st}', ${q(sms)}, ${q(txn)}, ${q(check)}, ${paid ? created + 900_000 : 'NULL'}, ${created}, ${created + between(2, 30) * 3600_000}, '${s.source}', ${q(s.tag)}, '${s.visitor.id}', '${s.id}')`,
+  )
+  // M and L sell most, like real dress shops.
+  const sizeFor = (p) => size ?? (p.sizes.length === 1 ? p.sizes[0].label : pick([...p.sizes, ...p.sizes.filter((x) => x.label === 'M' || x.label === 'L')]).label)
+  for (const l of lines) items.push(`(${q(oid)}, '${l.p.id}', ${q(l.p.name)}, ${l.p.price}, ${l.qty}, ${q(l.p.image)}, ${q(sizeFor(l.p))})`)
+  // Many buyers tap "Message on WhatsApp" on their order page.
+  if (rand() < 0.4) ev(s, 'whatsapp_click', created + 60_000, null, 'order')
+}
 
 for (let d = DAYS; d >= 1; d--) {
   const dayStart = startOfToday - d * DAY
   const weekday = new Date(dayStart + TZ).getUTCDay()
   const weekend = weekday === 5 || weekday === 6 ? 1.4 : weekday === 0 ? 0.8 : 1
-  const growth = 0.5 + 4.2 * ((DAYS - d) / DAYS) ** 1.3 // ~0.5 a day at launch, ~4.5 a day now
+  const growth = 0.5 + 4.2 * ((DAYS - d) / DAYS) ** 1.3 // about 0.5 orders a day at launch, about 4.5 now
   const payday = new Date(dayStart + TZ).getUTCDate() >= 25 || new Date(dayStart + TZ).getUTCDate() <= 2 ? 1.3 : 1
   const target = Math.max(0, Math.round(growth * weekend * payday * (0.6 + rand() * 0.8)))
   const visits = Math.round(target * between(16, 26) + between(8, 30) * (1 + growth / 3))
-  const list = live(d)
+  const latest = dayStart + DAY - 1
+  for (let v = 0; v < visits - target; v++) session(dayStart, d, latest)
+  for (let o = 0; o < target; o++) order(session(dayStart, d, latest, { orders: true }), d)
+  if (rand() < 0.3) ev({ id: uuid(), visitor: { id: shop.owner_id.padEnd(16, '0'), device: 'android', city: 'Dar es Salaam' }, source: 'direct', tag: null }, 'seller_share', dayStart + 11 * 3600_000, pickProduct(live(d)).id, pick(['whatsapp', 'copy']))
+}
 
-  for (let v = 0; v < visits; v++) {
-    const t = dayStart + 7 * 3600_000 + Math.floor(rand() * 16 * 3600_000)
-    const s = source()
-    events.push(`('${shop.id}', NULL, 'view_shop', '${s}', ${t})`)
-    for (let k = between(0, 3); k > 0; k--) {
-      const p = weighted(list)
-      p.views++
-      events.push(`('${shop.id}', '${p.id}', 'view_product', '${s}', ${t + k * 25_000})`)
-    }
-    if (rand() < 0.05) events.push(`('${shop.id}', ${q(weighted(list).id)}, 'share', '${s}', ${t + 90_000})`)
-  }
-
-  for (let o = 0; o < target; o++) {
-    const created = dayStart + 8 * 3600_000 + Math.floor(rand() * 14 * 3600_000)
-    const lines = []
-    for (let n = rand() < 0.72 ? 1 : rand() < 0.75 ? 2 : 3; n > 0; n--) {
-      const p = weighted(list)
-      if (!lines.some((l) => l.p === p)) lines.push({ p, qty: rand() < 0.9 ? 1 : 2 })
-    }
-    const b = buyer()
-    const subtotal = lines.reduce((s, l) => s + l.p.price * l.qty, 0)
-    const fee = b.area?.fee ?? 0
-    const total = subtotal + fee
-    const method = rand() < 0.58 ? 'lipa' : 'cod'
-    let status = d >= 3 ? (rand() < 0.94 ? 'delivered' : 'cancelled') : pick(['delivered', 'delivered', 'dispatched', 'confirmed'])
-    const paid = method === 'lipa' && status !== 'cancelled'
-    let c = code()
-    while (codes.has(c)) c = code()
-    codes.add(c)
-    const txn = paid ? (code() + code()).slice(0, 10) : null
-    const sms = paid ? `${txn} Imethibitishwa. Tsh${total.toLocaleString('en-US')}.00 imelipwa kwa ZEES STORE. Salio jipya ni Tsh${between(5, 90) * 1000}.` : null
-    const check = paid ? JSON.stringify({ parsed: { txnId: txn, amount: total, name: 'ZEES STORE' }, amount: 'ok', name: 'ok', txn: 'ok' }) : null
-    const oid = id()
-    orders.push(
-      `(${q(oid)}, '${shop.id}', '${c}', ${q(b.name)}, ${q(b.phone)}, ${q(b.area?.name ?? '')}, ${q(pick(LANDMARKS))}, '', ${subtotal}, ${fee}, ${total}, '${method}', '${status}', ${q(sms)}, ${q(txn)}, ${q(check)}, ${paid ? created + 900_000 : 'NULL'}, ${created}, ${created + between(2, 30) * 3600_000})`,
-    )
-    // M and L sell most, like real dress shops.
-    const sizeFor = (p) => (p.sizes.length === 1 ? p.sizes[0].label : pick([...p.sizes, ...p.sizes.filter((s) => s.label === 'M' || s.label === 'L')]).label)
-    for (const l of lines) items.push(`(${q(oid)}, '${l.p.id}', ${q(l.p.name)}, ${l.p.price}, ${l.qty}, ${q(l.p.image)}, ${q(sizeFor(l.p))})`)
-    events.push(`('${shop.id}', '${lines[0].p.id}', 'add_to_cart', '${source()}', ${created - 150_000})`)
+// Today so far: visits up to now, and four orders in different states for the demo.
+{
+  const latest = NOW - 60_000
+  const hoursSoFar = Math.max(1, (NOW - startOfToday) / 3600_000)
+  for (let v = 0; v < Math.round(hoursSoFar * 4.5); v++) session(startOfToday, 0, latest)
+  const P = (name) => products.find((p) => p.name === name)
+  const A = (name) => areas.find((a) => a.name === name)
+  const at = (h, m) => Math.min(latest - 600_000, startOfToday + (h * 60 + m) * 60_000)
+  const today = [
+    { name: 'Fatma Ali', phone: '+255786554411', area: A('Kariakoo & Posta'), landmark: 'mbele ya duka la dawa', product: P('Gauni la Moto (Strapless)'), size: 'S', method: 'lipa', status: 'awaiting_payment', t: at(9, 42) },
+    { name: 'Rehema Mushi', phone: '+255765112233', area: A('Masaki & Oysterbay'), landmark: 'ghorofa ya tatu, mlango 12', product: P('Kaftani ya Bahari'), size: 'Free size', method: 'lipa', status: 'confirmed', t: at(11, 20) },
+    { name: 'Neema Kileo', phone: '+255754321987', area: A('Sinza & Mwenge'), landmark: 'karibu na kituo cha daladala', product: P('Gauni la Zumaridi'), size: 'L', method: 'cod', status: 'confirmed', t: at(13, 5) },
+    { name: 'Lulu Mbwambo', phone: '+255713456789', area: A('Kinondoni & Mikocheni'), landmark: 'Mikocheni B, karibu na Shoppers Plaza, geti la bluu', product: P('Gauni la Jua'), size: 'M', method: 'lipa', status: 'payment_claimed', t: at(16, 47) },
+  ]
+  for (const o of today) {
+    if (!o.product) continue
+    const s = session(startOfToday, 0, o.t, { orders: true })
+    s.end = Math.min(s.end, o.t)
+    order(s, 0, { status: o.status, method: o.method, b: o, product: o.product, size: o.size })
   }
 }
 
 for (const p of products) {
   const total = p.sizes.reduce((s, x) => s + x.stock, 0)
-  sql.push(`UPDATE products SET created_at = ${startOfToday - p.addedAgo * DAY + 11 * 3600_000}, views = views + ${p.views}, sizes = ${q(JSON.stringify(p.sizes))}, stock = ${total} WHERE id = '${p.id}';`)
+  sql.push(`UPDATE products SET created_at = ${startOfToday - p.addedAgo * DAY + 11 * 3600_000}, views = ${p.views}, sizes = ${q(JSON.stringify(p.sizes))}, stock = ${total} WHERE id = '${p.id}';`)
 }
 const chunk = (rows, head) => {
   for (let i = 0; i < rows.length; i += 200) sql.push(`${head} VALUES ${rows.slice(i, i + 200).join(',\n')};`)
 }
-chunk(orders, 'INSERT INTO orders (id, shop_id, code, customer_name, customer_phone, area, landmark, note, subtotal, delivery_fee, total, payment_method, status, payment_sms, txn_id, payment_check, paid_claimed_at, created_at, updated_at)')
+chunk(orders, 'INSERT INTO orders (id, shop_id, code, customer_name, customer_phone, area, landmark, note, subtotal, delivery_fee, total, payment_method, status, payment_sms, txn_id, payment_check, paid_claimed_at, created_at, updated_at, source, link_tag, visitor_id, session_id)')
 chunk(items, 'INSERT INTO order_items (order_id, product_id, name, price, qty, image, variant)')
-chunk(events, 'INSERT INTO events (shop_id, product_id, type, source, created_at)')
+chunk(events, 'INSERT INTO events (shop_id, product_id, type, source, created_at, visitor_id, session_id, link_tag, detail, device, city)')
 
 const file = join(OUT, 'zee-history.sql')
 writeFileSync(file, sql.join('\n'))
 execFileSync('npx', ['wrangler', 'd1', 'execute', 'rizk', '--local', '--file', file], { stdio: ['ignore', 'ignore', 'inherit'] })
-console.log(`Zee's Store: ${orders.length} orders, ${events.length} events over ${DAYS} days -> rizk.tz/${SLUG}`)
+console.log(`Zee's Store: ${orders.length} orders, ${events.length} events, ${visitors.length} visitors over ${DAYS} days and today -> rizk.tz/${SLUG}`)

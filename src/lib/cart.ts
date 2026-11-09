@@ -49,23 +49,3 @@ export function useCart(shopId: string) {
     clear: () => update({}),
   }
 }
-
-/** Where the buyer came from: in-app browsers announce themselves in the user agent. */
-export function trafficSource() {
-  if (typeof window === 'undefined') return ''
-  const param = new URLSearchParams(window.location.search).get('s')
-  if (param) return param.slice(0, 20)
-  const ua = navigator.userAgent
-  if (/Instagram/i.test(ua)) return 'instagram'
-  if (/musical_ly|TikTok|BytedanceWebview/i.test(ua)) return 'tiktok'
-  if (/FBAN|FBAV|FB_IAB/i.test(ua)) return 'facebook'
-  if (/WhatsApp/i.test(ua) || /whatsapp/i.test(document.referrer)) return 'whatsapp'
-  if (document.referrer) {
-    try {
-      return new URL(document.referrer).hostname.replace(/^www\./, '').slice(0, 20)
-    } catch {
-      return ''
-    }
-  }
-  return 'direct'
-}

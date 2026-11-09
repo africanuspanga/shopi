@@ -1,4 +1,5 @@
 import { Outlet, createFileRoute, notFound } from '@tanstack/react-router'
+import { ignoreShop } from '#/lib/analytics'
 import { getStorefront } from '#/lib/api/store'
 import { imgUrl } from '#/lib/format'
 
@@ -35,5 +36,13 @@ export const Route = createFileRoute('/$shop')({
       </a>
     </div>
   ),
-  component: Outlet,
+  component: ShopLayout,
 })
+
+function ShopLayout() {
+  const { session } = Route.useRouteContext()
+  const { shop } = Route.useLoaderData()
+  // Set during render, before the pages below send their first event. Idempotent.
+  if (session.shop?.id === shop.id) ignoreShop(shop.id)
+  return <Outlet />
+}

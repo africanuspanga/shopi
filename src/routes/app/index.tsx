@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { ArrowRight, ArrowUpRight, Check, ChevronRight, Copy, ReceiptText, Share2 } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, ReceiptText, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { Delta, Empty, Img, LangSwitch, Money, Page, ShopAvatar, StatusPill, Toast } from '#/components/ui'
+import { Delta, Empty, Img, LangSwitch, Money, Page, ShopAvatar, StatusPill, Toast, scrubIndex } from '#/components/ui'
 import { getDashboard } from '#/lib/api/merchant'
 import { timeAgo, tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
@@ -62,6 +62,9 @@ function Dashboard() {
         <button type="button" className="btn btn-sm hidden md:inline-flex" onClick={share}>
           <Share2 size={15} strokeWidth={1.75} /> {t('Share link')}
         </button>
+        <Link to="/app/analytics" className="icon-btn md:hidden" aria-label={t('Analytics')}>
+          <ChartColumn size={18} strokeWidth={1.6} />
+        </Link>
         <a href={`/${shop.slug}`} target="_blank" rel="noreferrer" className="icon-btn md:hidden" aria-label={t('View shop')}>
           <ArrowUpRight size={18} strokeWidth={1.6} />
         </a>
@@ -173,8 +176,14 @@ function Dashboard() {
         </section>
 
         {/* Last 7 days */}
+        <div className="-mb-1 flex items-baseline justify-between px-1 pt-2 lg:col-span-12">
+          <h2 className="text-[15px] font-semibold">{t('Last 7 days')}</h2>
+          <Link to="/app/analytics" className="-my-2 flex items-center gap-1 py-2 text-[13px] text-muted transition-colors hover:text-ink">
+            {t('All numbers')} <ArrowRight size={14} strokeWidth={1.75} />
+          </Link>
+        </div>
         <section className="card grid grid-cols-2 lg:col-span-12 lg:grid-cols-4">
-          <Stat label={t('Sales')} value={tzs(d.sales.total)} foot={<Delta now={d.sales.total} before={d.prev.total} label={vs7} />} className="border-r border-b border-line lg:border-b-0" />
+          <Stat label={t('Sales')} value={<Money value={d.sales.total} cur="text-[0.62em] text-muted" />} foot={<Delta now={d.sales.total} before={d.prev.total} label={vs7} />} className="border-r border-b border-line lg:border-b-0" />
           <Stat label={t('Orders')} value={n(d.counts.all)} foot={<Delta now={d.counts.all} before={d.prev.orders} label={vs7} />} className="border-b border-line lg:border-r lg:border-b-0" />
           <Stat label={t('Shop visits')} value={n(d.visits.shop)} foot={<Delta now={d.visits.shop} before={d.prev.visits} label={vs7} />} className="border-r border-line" />
           <Stat label={t('Visits that ordered')} value={`${conversion}%`} foot={<Delta now={conversion} before={prevConversion} label={vs7} />} />
@@ -185,7 +194,7 @@ function Dashboard() {
         <section className="card p-6 lg:col-span-4">
           <div className="flex items-baseline justify-between">
             <h2 className="text-[15px] font-semibold">{t('Best sellers')}</h2>
-            <Link to="/app/products" className="text-[13px] text-muted transition-colors hover:text-ink">
+            <Link to="/app/products" className="-my-2 flex items-center gap-1 py-2 text-[13px] text-muted transition-colors hover:text-ink">
               {t('All products')}
             </Link>
           </div>
@@ -223,7 +232,7 @@ function Dashboard() {
         <section className="card overflow-hidden lg:col-span-12">
           <div className="flex items-baseline justify-between px-6 pt-5 pb-3">
             <h2 className="text-[15px] font-semibold">{t('Latest orders')}</h2>
-            <Link to="/app/orders" className="flex items-center gap-1 text-[13px] text-muted transition-colors hover:text-ink">
+            <Link to="/app/orders" className="-my-2 flex items-center gap-1 py-2 text-[13px] text-muted transition-colors hover:text-ink">
               {t('All orders')} <ArrowRight size={14} strokeWidth={1.75} />
             </Link>
           </div>
@@ -247,10 +256,21 @@ function Dashboard() {
                   key={o.id}
                   to="/app/orders/$id"
                   params={{ id: o.id }}
-                  className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-x-3 px-6 py-3 transition-colors hover:bg-page md:grid-cols-[44px_minmax(0,1.4fr)_minmax(0,1fr)_140px_120px] md:gap-x-6"
+                  className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-x-3 px-6 py-3 transition-colors hover:bg-page md:grid-cols-[44px_minmax(0,1.4fr)_minmax(0,1fr)_140px_120px] md:gap-x-6"
                 >
                   <Img k={o.image} alt="" className="h-11 w-11 rounded-[10px]" />
-                  <div className="min-w-0">
+                  {/* Phone: name and total, then status and time, so the name keeps its room. */}
+                  <div className="min-w-0 md:hidden">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="min-w-0 truncate text-[14px] font-medium">{o.customer_name}</p>
+                      <p className="tnum shrink-0 text-[14px] font-medium">{tzs(o.total)}</p>
+                    </div>
+                    <div className="flex h-6 items-center justify-between gap-3">
+                      <StatusPill status={o.status} />
+                      <p className="meta shrink-0">{timeAgo(o.created_at, lang)}</p>
+                    </div>
+                  </div>
+                  <div className="hidden min-w-0 md:block">
                     <p className="truncate text-[14px] font-medium">{o.customer_name}</p>
                     <p className="meta mt-0.5 truncate">
                       #{o.code} · {timeAgo(o.created_at, lang)}
@@ -260,12 +280,7 @@ function Dashboard() {
                   <div className="hidden md:block">
                     <StatusPill status={o.status} />
                   </div>
-                  <div className="text-right">
-                    <p className="tnum text-[14px] font-medium">{tzs(o.total)}</p>
-                    <div className="mt-0.5 md:hidden">
-                      <StatusPill status={o.status} />
-                    </div>
-                  </div>
+                  <p className="tnum hidden text-right text-[14px] font-medium md:block">{tzs(o.total)}</p>
                 </Link>
               ))}
             </div>
@@ -292,7 +307,7 @@ function TodoRow({ f, count, label, sub, signal = false }: { f: 'check' | 'send'
   )
 }
 
-function Stat({ label, value, foot, className = '' }: { label: string; value: string; foot?: ReactNode; className?: string }) {
+function Stat({ label, value, foot, className = '' }: { label: string; value: ReactNode; foot?: ReactNode; className?: string }) {
   return (
     <div className={`p-5 md:p-6 ${className}`}>
       <p className="text-[13px] text-muted md:text-[14px]">{label}</p>
@@ -354,7 +369,11 @@ function SalesChart({ days, total, className = '' }: { days: { day: number; tota
               <span className="meta absolute -top-2 -left-10 w-8 text-right text-[11px]">{compact(step * i)}</span>
             </div>
           ))}
-          <div className="absolute inset-0 flex items-end gap-2 md:gap-4">
+          <div
+            className="absolute inset-0 flex touch-pan-y items-end gap-2 md:gap-4"
+            onPointerDown={(e) => e.pointerType !== 'mouse' && setSel(scrubIndex(e, days.length))}
+            onPointerMove={(e) => e.pointerType !== 'mouse' && setSel(scrubIndex(e, days.length))}
+          >
             {days.map((d, i) => {
               const today = i === days.length - 1
               return (

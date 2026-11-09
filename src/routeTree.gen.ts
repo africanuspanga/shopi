@@ -18,8 +18,11 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ShopIndexRouteImport } from './routes/$shop/index'
 import { Route as ShopProductRouteImport } from './routes/$shop/$product'
 import { Route as ShopCheckoutRouteImport } from './routes/$shop/checkout'
+import { Route as ApiERouteImport } from './routes/api/e'
+import { Route as ApiExportRouteImport } from './routes/api/export'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as AppIndexRouteImport } from './routes/app/index'
+import { Route as AppAnalyticsRouteImport } from './routes/app/analytics'
 import { Route as AppShopRouteImport } from './routes/app/shop'
 import { Route as ImgSplatRouteImport } from './routes/img/$'
 import { Route as OCodeRouteImport } from './routes/o/$code'
@@ -75,6 +78,16 @@ const ShopCheckoutRoute = ShopCheckoutRouteImport.update({
   path: '/checkout',
   getParentRoute: () => ShopRouteRoute,
 } as any)
+const ApiERoute = ApiERouteImport.update({
+  id: '/api/e',
+  path: '/api/e',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExportRoute = ApiExportRouteImport.update({
+  id: '/api/export',
+  path: '/api/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUploadRoute = ApiUploadRouteImport.update({
   id: '/api/upload',
   path: '/api/upload',
@@ -83,6 +96,11 @@ const ApiUploadRoute = ApiUploadRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppShopRoute = AppShopRouteImport.update({
@@ -140,7 +158,10 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/$shop/$product': typeof ShopProductRoute
   '/$shop/checkout': typeof ShopCheckoutRoute
+  '/api/e': typeof ApiERoute
+  '/api/export': typeof ApiExportRoute
   '/api/upload': typeof ApiUploadRoute
+  '/app/analytics': typeof AppAnalyticsRoute
   '/app/shop': typeof AppShopRoute
   '/img/$': typeof ImgSplatRoute
   '/o/$code': typeof OCodeRoute
@@ -160,7 +181,10 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/$shop/$product': typeof ShopProductRoute
   '/$shop/checkout': typeof ShopCheckoutRoute
+  '/api/e': typeof ApiERoute
+  '/api/export': typeof ApiExportRoute
   '/api/upload': typeof ApiUploadRoute
+  '/app/analytics': typeof AppAnalyticsRoute
   '/app/shop': typeof AppShopRoute
   '/img/$': typeof ImgSplatRoute
   '/o/$code': typeof OCodeRoute
@@ -183,7 +207,10 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/$shop/$product': typeof ShopProductRoute
   '/$shop/checkout': typeof ShopCheckoutRoute
+  '/api/e': typeof ApiERoute
+  '/api/export': typeof ApiExportRoute
   '/api/upload': typeof ApiUploadRoute
+  '/app/analytics': typeof AppAnalyticsRoute
   '/app/shop': typeof AppShopRoute
   '/img/$': typeof ImgSplatRoute
   '/o/$code': typeof OCodeRoute
@@ -207,7 +234,10 @@ export interface FileRouteTypes {
     | '/signup'
     | '/$shop/$product'
     | '/$shop/checkout'
+    | '/api/e'
+    | '/api/export'
     | '/api/upload'
+    | '/app/analytics'
     | '/app/shop'
     | '/img/$'
     | '/o/$code'
@@ -227,7 +257,10 @@ export interface FileRouteTypes {
     | '/signup'
     | '/$shop/$product'
     | '/$shop/checkout'
+    | '/api/e'
+    | '/api/export'
     | '/api/upload'
+    | '/app/analytics'
     | '/app/shop'
     | '/img/$'
     | '/o/$code'
@@ -249,7 +282,10 @@ export interface FileRouteTypes {
     | '/signup'
     | '/$shop/$product'
     | '/$shop/checkout'
+    | '/api/e'
+    | '/api/export'
     | '/api/upload'
+    | '/app/analytics'
     | '/app/shop'
     | '/img/$'
     | '/o/$code'
@@ -270,6 +306,8 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OnboardRoute: typeof OnboardRoute
   SignupRoute: typeof SignupRoute
+  ApiERoute: typeof ApiERoute
+  ApiExportRoute: typeof ApiExportRoute
   ApiUploadRoute: typeof ApiUploadRoute
   ImgSplatRoute: typeof ImgSplatRoute
   OCodeRoute: typeof OCodeRoute
@@ -340,6 +378,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopCheckoutRouteImport
       parentRoute: typeof ShopRouteRoute
     }
+    '/api/e': {
+      id: '/api/e'
+      path: '/api/e'
+      fullPath: '/api/e'
+      preLoaderRoute: typeof ApiERouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/export': {
+      id: '/api/export'
+      path: '/api/export'
+      fullPath: '/api/export'
+      preLoaderRoute: typeof ApiExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/upload': {
       id: '/api/upload'
       path: '/api/upload'
@@ -352,6 +404,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/analytics': {
+      id: '/app/analytics'
+      path: '/analytics'
+      fullPath: '/app/analytics'
+      preLoaderRoute: typeof AppAnalyticsRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/app/shop': {
@@ -439,6 +498,7 @@ const ShopRouteRouteWithChildren = ShopRouteRoute._addFileChildren(
 )
 
 interface AppRouteRouteChildren {
+  AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppShopRoute: typeof AppShopRoute
   AppIndexRoute: typeof AppIndexRoute
   AppOrdersIdRoute: typeof AppOrdersIdRoute
@@ -449,6 +509,7 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppAnalyticsRoute: AppAnalyticsRoute,
   AppShopRoute: AppShopRoute,
   AppIndexRoute: AppIndexRoute,
   AppOrdersIdRoute: AppOrdersIdRoute,
@@ -469,6 +530,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OnboardRoute: OnboardRoute,
   SignupRoute: SignupRoute,
+  ApiERoute: ApiERoute,
+  ApiExportRoute: ApiExportRoute,
   ApiUploadRoute: ApiUploadRoute,
   ImgSplatRoute: ImgSplatRoute,
   OCodeRoute: OCodeRoute,

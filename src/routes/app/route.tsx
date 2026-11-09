@@ -1,5 +1,6 @@
 import { Link, Outlet, createFileRoute, redirect, useLocation } from '@tanstack/react-router'
-import { ArrowUpRight, House, Package, Plus, ReceiptText, Store } from 'lucide-react'
+import { ArrowUpRight, ChartColumn, House, Package, Plus, ReceiptText, Store } from 'lucide-react'
+import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { ShopAvatar, Wordmark } from '#/components/ui'
 import { getNavCounts } from '#/lib/api/merchant'
 import { useT } from '#/lib/i18n'
@@ -48,7 +49,14 @@ function OrdersBadge({ dot = false }: { dot?: boolean }) {
 
 function Sidebar() {
   const t = useT()
-  const tabs = useTabs()
+  const [home, orders, products, shopTab] = useTabs()
+  const tabs = [
+    home,
+    orders,
+    { to: '/app/analytics', icon: ChartColumn, label: t('Analytics'), match: (p: string) => p.startsWith('/app/analytics') },
+    products,
+    shopTab,
+  ]
   const { shop } = Route.useRouteContext()
   const path = useLocation({ select: (l) => l.pathname })
   return (
@@ -100,44 +108,21 @@ function Sidebar() {
   )
 }
 
-/** Phones: a floating black capsule. The current tab sits on a raised pill with its icon in Moto; + adds a product. */
+/** Phones: the floating black capsule (components/floating-nav.tsx); + adds a product. */
 function BottomNav() {
   const t = useT()
-  const tabs = useTabs()
+  const [home, orders, products, shopTab] = useTabs()
   const path = useLocation({ select: (l) => l.pathname })
-  const items = [tabs[0], tabs[1], null, tabs[2], tabs[3]]
+  const tab = (x: typeof home) => (
+    <NavTab key={x.to} to={x.to} icon={x.icon} label={x.label} active={x.match(path)} badge={x.to === '/app/orders' && !x.match(path) ? <OrdersBadge dot /> : undefined} />
+  )
   return (
-    <nav aria-label={t('Main')} className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(12px,env(safe-area-inset-bottom))] md:hidden">
-      <div className="pointer-events-auto mx-auto grid h-[68px] max-w-[440px] grid-cols-5 items-center gap-1 rounded-full bg-ink p-1.5 text-white shadow-[0_0_0_5px_rgb(10_10_10/0.06),0_20px_44px_-14px_rgb(10_10_10/0.6)] ring-1 ring-white/10">
-        {items.map((tab) => {
-          if (!tab)
-            return (
-              <Link
-                key="add"
-                to="/app/products/new"
-                aria-label={t('Add product')}
-                className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-ink transition-transform duration-150 active:scale-90"
-              >
-                <Plus size={22} strokeWidth={2.25} />
-              </Link>
-            )
-          const on = tab.match(path)
-          return (
-            <Link
-              key={tab.to}
-              to={tab.to}
-              aria-current={on ? 'page' : undefined}
-              className={`flex h-full flex-col items-center justify-center gap-1 rounded-full text-[11px] font-medium transition-colors duration-200 ${on ? 'bg-white/[0.09] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.1),inset_0_1px_0_rgb(255_255_255/0.08)]' : 'text-white/55 active:text-white'}`}
-            >
-              <span className="relative">
-                <tab.icon size={20} strokeWidth={on ? 2 : 1.6} className={on ? 'text-moto' : ''} />
-                {tab.to === '/app/orders' && !on && <OrdersBadge dot />}
-              </span>
-              {tab.label}
-            </Link>
-          )
-        })}
-      </div>
-    </nav>
+    <FloatingNav label={t('Main')}>
+      {tab(home)}
+      {tab(orders)}
+      <NavCenter to="/app/products/new" icon={Plus} label={t('Add product')} />
+      {tab(products)}
+      {tab(shopTab)}
+    </FloatingNav>
   )
 }

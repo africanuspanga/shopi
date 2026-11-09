@@ -4,9 +4,10 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { ShareActions } from '#/components/share'
 import { BagButton, Price, ProductCard, ShopFooter, ShopTopBar, Tag, discount, onSale } from '#/components/shop'
+import { NotFound } from '#/components/not-found'
 import { Img, Toast } from '#/components/ui'
-import { trackEvent } from '#/lib/api/store'
-import { lineKey, trafficSource, useCart } from '#/lib/cart'
+import { track } from '#/lib/analytics'
+import { lineKey, useCart } from '#/lib/cart'
 import { imgUrl, tzs, waLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 import { shareLink, useOrigin } from '#/lib/share'
@@ -41,8 +42,14 @@ export const Route = createFileRoute('/$shop/$product')({
       ],
     }
   },
+  notFoundComponent: ProductNotFound,
   component: ProductPage,
 })
+
+function ProductNotFound() {
+  const { shop } = Route.useParams()
+  return <NotFound title="This product is not here" body="It may have sold out and been removed. The shop has more." href={`/${shop}`} action="See the shop" />
+}
 const parent = getRouteApi('/$shop')
 
 function ProductPage() {
@@ -61,7 +68,7 @@ function ProductPage() {
   const gallery = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    trackEvent({ data: { shopId: shop.id, productId: p.id, type: 'view_product', source: trafficSource() } })
+    track('view_product', { shopId: shop.id, productId: p.id })
     setSize(p.sizes?.length === 1 ? p.sizes[0].label : null)
     setQty(1)
     setSlide(0)
@@ -87,7 +94,7 @@ function ProductPage() {
       return
     }
     cart.add(lineKey(p.id, size), Math.min(qty, max))
-    trackEvent({ data: { shopId: shop.id, productId: p.id, type: 'add_to_cart', source: trafficSource() } })
+    track('add_to_cart', { shopId: shop.id, productId: p.id, detail: 'page' })
     setAdded(true)
   }
 
@@ -97,7 +104,7 @@ function ProductPage() {
       setCopied(true)
       setTimeout(() => setCopied(false), 1800)
     }
-    trackEvent({ data: { shopId: shop.id, productId: p.id, type: 'share', source: 'product' } })
+    track('share', { shopId: shop.id, productId: p.id, detail: how === 'copied' ? 'copy' : 'native' })
   }
 
   function goTo(i: number) {
@@ -266,6 +273,7 @@ function ProductPage() {
                 href={waLink(shop.whatsapp, t('Hi {shop}, I am asking about {product} ({price})', { shop: shop.name, product: p.name, price: tzs(p.price) }))}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => track('whatsapp_click', { shopId: shop.id, productId: p.id, detail: 'product' })}
               >
                 <WhatsAppMark size={18} /> {t('Ask about this on WhatsApp')}
               </a>
@@ -279,7 +287,7 @@ function ProductPage() {
                   url={`${origin}/${shop.slug}/${p.slug ?? p.id}`}
                   title={p.name}
                   text={t('{name}, {price}, at {shop}', { name: p.name, price: tzs(p.price), shop: shop.name })}
-                  onShared={(how) => trackEvent({ data: { shopId: shop.id, productId: p.id, type: 'share', source: how } })}
+                  onShared={(how) => track('share', { shopId: shop.id, productId: p.id, detail: how })}
                 />
               </div>
             </div>
@@ -304,31 +312,45 @@ function ProductPage() {
       </main>
       <ShopFooter shop={shop} />
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card/95 px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur-md md:hidden">
-        {added ? (
-          <div className="fade flex gap-2">
-            <Link to="/$shop" params={{ shop: shop.slug }} className="btn btn-ghost flex-1 px-4">
-              {t('Keep shopping')}
-            </Link>
-            <Link to="/$shop/checkout" params={{ shop: shop.slug }} className="btn flex-[1.3] px-4">
-              {t('Checkout')} <span className="tnum text-white/60">{tzs(bagTotal)}</span>
-            </Link>
-          </div>
-        ) : (
-          <div className="flex items-center gap-4">
-            <div className="min-w-0 flex-1">
-              <p className="tnum truncate text-[16px] font-medium">{tzs(p.price * qty)}</p>
-              <p className="truncate text-[13px] text-muted">
-                {soldOut
-                  ? t('Sold out')
-                  : p.sizes && !chosen
-                    ? t('Choose a size')
-                    : [chosen && t('Size {size}', { size: chosen.label }), qty > 1 && t('{n} pieces', { n: qty })].filter(Boolean).join(' · ') || t('In stock')}
-              </p>
-            </div>
-            <AddButton soldOut={soldOut} onAdd={add} />
-          </div>
-        )}
+      {/* Phones: the buy bar is the same floating black capsule as the shop's navigation */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(12px,env(safe-area-inset-bottom))] md:hidden">
+        <div className="pointer-events-auto mx-auto flex h-[68px] max-w-[440px] items-center gap-1.5 rounded-full bg-ink p-1.5 text-white shadow-[0_0_0_5px_rgb(10_10_10/0.06),0_20px_44px_-14px_rgb(10_10_10/0.6)] ring-1 ring-white/[0.14]">
+          {added ? (
+            <>
+              <Link to="/$shop" params={{ shop: shop.slug }} className="fade flex h-full flex-1 items-center justify-center rounded-full px-3 text-[14px] font-medium text-white/80 transition-colors active:bg-white/10">
+                {t('Keep shopping')}
+              </Link>
+              <Link
+                to="/$shop/checkout"
+                params={{ shop: shop.slug }}
+                className="fade flex h-full flex-[1.4] items-center justify-center gap-2 rounded-full bg-white px-4 text-[15px] font-medium text-ink transition-transform active:scale-[0.97]"
+              >
+                {t('Checkout')} <span className="tnum text-[13px] text-ink-2">{tzs(bagTotal)}</span>
+              </Link>
+            </>
+          ) : (
+            <>
+              <div className="min-w-0 flex-1 pl-4">
+                <p className="tnum truncate text-[16px] font-semibold">{tzs(p.price * qty)}</p>
+                <p className="truncate text-[12px] text-white/55">
+                  {soldOut
+                    ? t('Sold out')
+                    : p.sizes && !chosen
+                      ? t('Choose a size')
+                      : [chosen && t('Size {size}', { size: chosen.label }), qty > 1 && t('{n} pieces', { n: qty })].filter(Boolean).join(' · ') || t('In stock')}
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={soldOut}
+                onClick={add}
+                className="flex h-full shrink-0 items-center justify-center rounded-full bg-white px-7 text-[15px] font-medium text-ink transition-transform active:scale-[0.97] disabled:opacity-40"
+              >
+                {soldOut ? t('Sold out') : t('Add to bag')}
+              </button>
+            </>
+          )}
+        </div>
       </div>
       <Toast show={copied}>{t('Link copied')}</Toast>
     </div>

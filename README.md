@@ -26,6 +26,10 @@ The design system, the rules for colour, type and copy, and a map of the code ar
 - Buyer order page `/o/<code>`: pay instructions, SMS paste, progress, WhatsApp to the seller
 - Dashboard: today's sales, what needs the seller, 7-day numbers against the 7 days before, daily
   sales chart, best sellers with views and shares, latest orders
+- Analytics (`/app/analytics`): unique visitors and visits, sales by channel (Instagram, TikTok, WhatsApp...)
+  and by tagged link (`?s=bio`), the funnel from visit to delivery, WhatsApp and social taps, product
+  conversion, sizes that sell, when buyers visit, areas, phones and cities, repeat buyers, CSV export.
+  First-party only: no third-party trackers; bots and the owner's own visits are left out
 - English everywhere; every string is ready for Swahili (`SWAHILI_ENABLED` in `src/lib/i18n.tsx`)
 
 Not built yet: Rizko AI assistant, Discover and voting, subscriptions and billing, SMS/WhatsApp
@@ -76,3 +80,5 @@ https://unsplash.com/license). Photo IDs: 1696962678565-bee84e6b9cb6, 1696962701
 1781274054565-4f9d9dc7794a, 1663044023283-9ea59358b6c0, 1663044022903-caa195cb5b2e, 1663044022894-68a5e6bccd64,
 1706092373219-0316a8bbaad7, 1706092372694-223070e27695, 1709809081557-78f803ce93a0.
 Type: Mona Sans and Geist Mono (SIL Open Font License 1.1). The RIZK letters are outlined from Mona Sans.
+Analytics: the visitor and session model and the bot list follow Minilytics (MIT,
+https://github.com/surendrapandar/minilytics).

@@ -45,6 +45,18 @@ export function productSlug(name: string) {
   return out || 'product'
 }
 
+/** A link tag a seller puts on a link: "Instagram bio" -> "instagram-bio", used as ?s=instagram-bio. */
+export function linkTag(s: string) {
+  return s
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+    .replace(/-+$/, '')
+}
+
 /** Words a product link may not be, because the shop's own pages use them. */
 export const RESERVED_PRODUCT_SLUGS = new Set(['checkout', 'p', 'bag', 'cart', 'order', 'orders', 'about'])
 

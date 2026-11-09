@@ -1,4 +1,5 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
+import { NotFound } from '#/components/not-found'
 import { routeTree } from './routeTree.gen'
 
 export function getRouter() {
@@ -7,6 +8,7 @@ export function getRouter() {
     scrollRestoration: true,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
+    defaultNotFoundComponent: () => <NotFound title="This page is not here" body="Check the link for a typo, or start again from the RIZK home page." />,
   })
 
   return router

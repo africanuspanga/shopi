@@ -5,6 +5,7 @@ import { MadeWithRizk } from '#/components/shop'
 import { BackButton, Empty, ErrorText, Field, Img, ShopAvatar } from '#/components/ui'
 import { placeOrder, type PublicProduct } from '#/lib/api/store'
 import { useCart } from '#/lib/cart'
+import { track, visit } from '#/lib/analytics'
 import { tzs } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
@@ -30,6 +31,12 @@ function Checkout() {
   const [payment, setPayment] = useState<'lipa' | 'cod'>(canLipa ? 'lipa' : 'cod')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+
+  const hasLines = lines.length > 0
+  useEffect(() => {
+    if (hasLines) track('checkout_start', { shopId: shop.id })
+    // Once per checkout visit; the bag changing size is not a new checkout.
+  }, [shop.id, hasLines])
 
   useEffect(() => {
     try {
@@ -185,7 +192,7 @@ function Checkout() {
               setBusy(true)
               setError('')
               const res = await placeOrder({
-                data: { shopId: shop.id, items: lines.map((l) => ({ productId: l.p.id, qty: l.qty, size: l.size })), ...form, payment },
+                data: { shopId: shop.id, items: lines.map((l) => ({ productId: l.p.id, qty: l.qty, size: l.size })), ...form, payment, visit: visit() },
               })
               setBusy(false)
               if ('error' in res) return setError(errors[res.error ?? 'shop'] ?? errors.shop)

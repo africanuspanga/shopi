@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppMark } from '#/components/brand-icons'
 import { Img, Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
+import { track } from '#/lib/analytics'
 import { tzs, waLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
@@ -151,27 +152,6 @@ export function BagButton({ shopSlug, count }: { shopSlug: string; count: number
   )
 }
 
-/** Phones: a floating pill to the bag once something is in it. */
-export function BagBar({ shopSlug, count, total }: { shopSlug: string; count: number; total: number }) {
-  const t = useT()
-  if (!count) return null
-  return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(16px,env(safe-area-inset-bottom))] md:hidden">
-      <Link
-        to="/$shop/checkout"
-        params={{ shop: shopSlug }}
-        className="rise pointer-events-auto mx-auto flex h-14 max-w-[520px] items-center justify-between rounded-full bg-ink pr-2 pl-6 text-white shadow-[var(--shadow-float)] active:scale-[0.98]"
-      >
-        <span className="text-[15px] font-medium">{t('View bag')}</span>
-        <span className="flex items-center gap-3">
-          <span className="tnum text-[14px] text-white/70">{tzs(total)}</span>
-          <span className="tnum flex h-10 min-w-10 items-center justify-center rounded-full bg-moto px-3 text-[14px] font-medium text-ink">{count}</span>
-        </span>
-      </Link>
-    </div>
-  )
-}
-
 type Fact = { icon: ReactNode; text: string; sub?: string }
 
 /** What a buyer wants to know before ordering: delivery, how to pay, where, when. */
@@ -243,7 +223,20 @@ export function SocialLinks({ shop, whatsapp = true, className = '' }: { shop: P
   return (
     <div className={`flex gap-2 ${className}`}>
       {links.map((l) => (
-        <a key={l.label} href={l.href} target="_blank" rel="noreferrer" aria-label={l.label} title={l.label} className="icon-btn">
+        <a
+          key={l.label}
+          href={l.href}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={l.label}
+          title={l.label}
+          className="icon-btn"
+          onClick={() =>
+            l.label === 'WhatsApp'
+              ? track('whatsapp_click', { shopId: shop.id, detail: 'footer' })
+              : track('social_click', { shopId: shop.id, detail: l.label.toLowerCase() })
+          }
+        >
           {l.icon}
         </a>
       ))}

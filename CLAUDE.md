@@ -8,6 +8,27 @@ and pay the seller's own Lipa Namba (pasting the confirmation SMS) or cash on de
 Read this before changing any screen. The bar is a world-class product: every screen must look deliberate
 at phone width (390) **and** at desktop width (1440).
 
+## Next session: start here
+The founder asked for these on 9 November 2026. Each one gets its own migration, Swahili strings and a test.
+Delete this section once they ship.
+1. **Google Maps link (optional).** A field in the setup form (`/onboard`) and in Shop settings, next to the written
+   location. Accept only Google Maps links (`maps.app.goo.gl`, `goo.gl/maps`, `google.com/maps`, `maps.google.com`).
+   Buyers see a "Directions" link in the shop's Info sheet and in `ShopFacts`. New column `shops.maps_url`.
+2. **TIN from TRA (optional).** A field in the setup form and in Shop settings for the 9-digit number, stored as digits
+   and shown as `123-456-789`. Ask the founder where buyers should see it (the Info sheet, the order page or receipt).
+   New column `shops.tin`.
+3. **Social links in the setup form.** Shop settings already has WhatsApp, Instagram, TikTok and Facebook; the setup
+   form asks only for the name, link and WhatsApp. Add an optional socials step there with "Skip for now". Ask the
+   founder whether to add more networks (YouTube, X, Snapchat, a website).
+4. **Record a sale by hand (the seller's ledger).** For sales made over a phone call, in person or inside a WhatsApp chat.
+   - Reached from the **+** in the capsule (it then offers "Add product" or "Record a sale") and from Orders.
+   - Fields: products from the shop or a free line with an amount, an optional buyer name and phone, how they paid
+     (cash, Lipa Namba, other mobile money, bank; this extends `payment_method`), the date (it can be in the past),
+     and whether it is paid and waiting to be sent (`confirmed`) or already handed over (`delivered`).
+   - Saved as an order with `source = 'manual'`, so it counts in sales, the order list and the CSV export.
+     Analytics shows it as its own channel, "Recorded by you", and keeps it out of visits and the funnel.
+   - Taking it from stock is a switch (on by default); cancelling returns the stock.
+
 ## Commands
 
 ```bash
@@ -29,7 +50,10 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | --- | --- |
 | `src/styles.css` | The design system: tokens (`@theme`) and component classes. Read it first. |
 | `src/components/ui.tsx` | App-wide parts: `Page`, `TopBar`, `BackButton`, `Chips`, `StatusPill`, `Img`, `ShopAvatar`, `Money`, `Delta`, `Sheet`, `Field`, `Switch`, `Empty`, `Toast`, `TextLink`, `ErrorText`, `LangSwitch`, `Wordmark` |
-| `src/components/shop.tsx` | Storefront parts: `ProductCard` (quick add), `QuickAddSheet`, `Price`, `Tag`, `BagButton`, `BagBar`, `ShopTopBar`, `ShopFacts`, `FactPills`, `SocialLinks`, `ShopFooter`, `MadeWithRizk` |
+| `src/components/shop.tsx` | Storefront parts: `ProductCard` (quick add), `QuickAddSheet`, `Price`, `Tag`, `BagButton`, `ShopTopBar`, `ShopFacts`, `FactPills`, `SocialLinks`, `ShopFooter`, `MadeWithRizk` |
+| `src/components/floating-nav.tsx` | The phone capsule: `FloatingNav`, `NavTab`, `NavCenter`, `NavCount`, `useHideFloatingNav` |
+| `src/components/shop-nav.tsx` | The storefront's capsule with its search and info sheets |
+| `src/components/not-found.tsx` | Not-found pages for missing shops, products and orders |
 | `src/components/share.tsx` | `ShareActions` (WhatsApp, copy link, native share) and `prettyUrl` |
 | `src/components/product-form.tsx` | New and edit product: photos, sizes editor, save guards, "send this product" |
 | `src/components/auth.tsx` | `AuthLayout` (form left, dark product panel right), `StepBar`, `PasswordInput` |
@@ -38,8 +62,11 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/routes/index.tsx` | Landing page |
 | `src/routes/$shop/` | Storefront `index`, product page `$product` (readable slug), `checkout`, `p.$id` (301 redirect for old links) |
 | `src/routes/o/$code.tsx` | Buyer's order page: pay, paste SMS, progress |
-| `src/routes/app/` | Seller app: `route.tsx` (sidebar and floating bottom nav), dashboard, orders, products, shop settings |
-| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `session.ts` |
+| `src/routes/app/` | Seller app: `route.tsx` (sidebar and floating bottom nav), dashboard, `analytics`, orders, products, shop settings |
+| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `session.ts` |
+| `src/lib/analytics.ts` | The buyer-side tracker: visitor ID, 30-minute visits, traffic source, `?s=` link tags, `track()` |
+| `src/routes/api/e.ts` | Receives analytics events (sendBeacon); drops bots, records device and city |
+| `src/routes/api/export.ts` | CSV downloads of orders and buyers for the logged-in seller |
 | `src/lib/format.ts` | `tzs()`, phone, slugs (`slugify`, `productSlug`), statuses, categories, size presets |
 | `design/brand/glyphs.py` | Source of the logo, app icon and favicon. Old boards are in `design/archive/`. |
 
@@ -94,7 +121,7 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
 - 4px grid. Page gutters: 16px on phones, 40px on desktop (`Page wide` caps content at 1240px).
 - Radius: buttons, chips, nav and badges are pills; inputs 14px; cards 20px; big panels 28 to 40px;
   product images 16px in grids, 10 to 12px as thumbnails. Inner radius = outer minus padding.
-- Depth: hairlines on light surfaces; `shadow-float` only on things that float (bag bar, toasts, sheets, nav capsules).
+- Depth: hairlines on light surfaces; `shadow-float` only on things that float (nav capsules, the buy bar, the save bar, toasts, sheets).
 
 ### Components (CSS classes in `styles.css`)
 - Buttons: `.btn` (ink pill, 48px) with `.btn-sm` (36px), `.btn-lg` (56px), `.btn-ghost` (white with hairline), `.btn-quiet` (well fill).
@@ -108,13 +135,34 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
 ### Layout patterns
 - **Storefront** (`/$shop`): white page, sticky `ShopTopBar` with `BagButton`, shop header (avatar, display name,
   location, bio, WhatsApp, share, socials), `FactPills` on phones and a `ShopFacts` card on desktop, filter chips,
-  2/3/4-column grid, `ShopFooter`. On phones a floating `BagBar` appears once the bag has items.
+  2/3/4-column grid, `ShopFooter`. On phones the bag lives in the floating capsule (below).
 - **Product page:** swipe gallery with a photo counter on phones; a large photo with thumbnails on desktop;
   size chips, a details table, a "Share with a friend" box, a sticky add bar on phones.
 - **Checkout and order page:** sand page; on desktop a sticky right column holds the bag and the receipt.
 - **Seller app** (`/app`): sand page. Desktop has a 248px white sidebar (wordmark, shop card, nav, "Add product").
-  Phones have the **floating bottom capsule**: black pill, icons above labels, the current tab on a raised pill with
-  its icon in Moto, a white "+" in the middle, and an orange dot on Orders when payments need checking.
+  On phones it uses the floating capsule (below): Home · Orders · **+** (add product) · Products · Shop, with an orange dot on Orders when
+  payments need checking.
+- **The floating capsule** (`components/floating-nav.tsx`: `FloatingNav`, `NavTab`, `NavCenter`, `NavCount`) is the phone navigation
+  everywhere it appears. It is a black pill with five slots: two tabs, a white centre circle for the screen's main action, two tabs.
+  The current tab sits on a raised pill with its icon in Moto. It is hidden from `md` up. Where it is used:
+  - **Shop** (`components/shop-nav.tsx`): Shop · Search (instant search sheet) · **Bag** (with an orange count) · WhatsApp (or Share) · Info
+    (a sheet with delivery fees, payment, hours and socials). The bag pill in the top bar shows on desktop only.
+  - **Landing:** Steps · Payments · **+** (open your shop) · Pricing · Questions. The section crossing the middle of the screen lights up.
+  - **Product page:** no tab bar. The buy bar is the same black capsule: price on the left, a white "Add to bag", then
+    "Keep shopping" and a white "Checkout" with the bag total.
+  - Checkout and forms never get a capsule: they keep the buyer's attention on finishing.
+  Pages with a capsule add `pb-28` (or `pb-24`) on phones so the end of the page clears it.
+  The capsule steps aside in two cases:
+  - **Typing:** while a text field has focus, `FloatingNav` sets `body[data-typing]` and the capsule slides down. Android shrinks
+    the page when the keyboard opens, so a fixed bar would otherwise sit on top of the field.
+  - **A page's own bottom bar:** `useHideFloatingNav(show)` hides the capsule while that bar is up. Shop settings does this for
+    its "You have unsaved changes" bar, which is fixed to the bottom with the safe area.
+- **Lists on phones** (orders, latest orders): two lines. Line one: the name on the left, the money on the right. Line two:
+  the `StatusPill`, then quiet detail such as the area (it may truncate), then the time on the right as `.meta`. Order codes
+  stay on the order page and in search. Desktop gets a real table. Never squeeze a status pill onto the name's line.
+- **Charts on phones:** a finger slides along the bars to read each day (`scrubIndex` from `ui.tsx` plus `touch-pan-y`,
+  so the page still scrolls up and down). The mouse keeps hover.
+- **Product names** in the seller's grid wrap to two lines (`line-clamp-2`); the end of a name ("(Off-shoulder)") is often what tells two products apart.
 - **Landing:** floating capsule nav (a floating menu card on phones), hero with a coded phone, sections,
   and a dark closing block that holds the footer and ends on a giant `Wordmark`.
 - **Auth:** `AuthLayout`: form on the left, dark product panel on the right (desktop only).
@@ -143,6 +191,42 @@ Never hand-edit the paths. The dot is always Moto; the letters are ink or white.
 - Product links are `/<shop>/<slug>`. A slug is set once and kept on rename; `/<shop>/p/<id>` and `/<shop>/<id>` redirect (301).
   Words reserved for shop pages: `checkout`, `p`, `bag`, `cart`, `order`, `orders`, `about`.
 - Link previews: `og:image` and `og:url` are absolute, built from the request origin.
+
+## Analytics
+- **Tracker** (`src/lib/analytics.ts`):
+  - **IDs:** a random visitor ID in localStorage, and a visit (`session_id`) that ends after 30 quiet minutes or when a new `?s=` tag is opened.
+  - **Source:** worked out once per visit, from the in-app browser (Instagram, TikTok, Facebook), the Android app referrer (`android-app://com.whatsapp`), the referring website, or `direct`. The `?s=` tag is stored separately as `link_tag`.
+  - **Sending:** `track(type, { shopId, productId?, detail? })` sends with sendBeacon to `/api/e`. An identical event within 1.5 seconds is dropped.
+- **Events:**
+
+  | Event | `detail` values |
+  | --- | --- |
+  | `view_shop` | — |
+  | `view_product` | — |
+  | `add_to_cart` | `quick` or `page` |
+  | `checkout_start` | — |
+  | `whatsapp_click` | `shop`, `product`, `order`, `footer` |
+  | `social_click` | `instagram`, `tiktok`, `facebook` |
+  | `share` (buyers) | `whatsapp`, `copy`, `native` |
+  | `seller_share` | the share channel |
+
+  Add new types in both the tracker and `/api/e`.
+- **Not counted:**
+  - bots and link previews (any user agent that doesn't start with "Mozilla/", plus a bot list adapted from Minilytics, MIT)
+  - the shop owner browsing their own shop (`ignoreShop`, set in `$shop/route.tsx`)
+- **Product view counter:** `products.views` goes up once per product per visit.
+- **Orders:** each order stores `source`, `link_tag`, `visitor_id` and `session_id` from the buyer's visit (`placeOrder` takes `visit`). This is how sales are credited to channels.
+- **Counting rules:**
+  - A visit is a distinct `session_id`. Events from before sessions existed count one visit per `view_shop`.
+  - Days are in Tanzania time (UTC+3).
+  - Sales are confirmed, sent and delivered orders.
+- **Analytics page** (`/app/analytics?days=7|30|90`):
+  - headline numbers compared with the period before, and a daily chart
+  - channels, the funnel, products, sizes, the day-by-hour activity map, taps and shares, areas, phones and cities
+  - buyers with CSV downloads, and tagged links (`links` table)
+  - On phones it's reached from Home; on desktop, from the sidebar.
+- **Scale note:** queries read raw events with indexes, which is fine at today's volume. When a shop passes about 100k events in 90 days, add nightly totals (`stats_daily`, Cron) as the roadmap says.
+- **Demo data:** `scripts/seed-zee-history.mjs` generates visits, sessions, sources, tags, funnel steps, taps and attributed orders for Zee's Store.
 
 ## Before you say it's done
 1. `npx tsc --noEmit` passes.

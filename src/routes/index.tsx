@@ -1,7 +1,8 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { ArrowRight, Banknote, ChartColumn, Check, ChevronDown, CircleCheck, ImageDown, Link2, MapPin, Menu, Ruler, ShieldCheck, Smartphone, X } from 'lucide-react'
+import { ArrowRight, Banknote, ChartColumn, Check, ChevronDown, CircleCheck, CircleHelp, Footprints, ImageDown, Link2, MapPin, Plus, Ruler, ShieldCheck, Smartphone, Tag, Wallet } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { WhatsAppIcon } from '#/components/brand-icons'
+import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { BioPreview, LinkPreview, MiniStore, NewOrderCard, OrderPreview, PaymentSlip, Phone, ProductPreview, SmsBubble } from '#/components/showcase'
 import { Wordmark } from '#/components/ui'
 import { useT } from '#/lib/i18n'
@@ -15,7 +16,7 @@ function Landing() {
   const startLabel = session.shop ? t('Go to my shop') : t('Open your shop free')
 
   return (
-    <div className="min-h-dvh overflow-x-clip bg-page text-ink">
+    <div className="min-h-dvh overflow-x-clip bg-page pb-24 text-ink md:pb-0">
       <Nav start={start} signedIn={!!session.user} hasShop={!!session.shop} />
       <Hero start={start} startLabel={startLabel} />
       <Steps />
@@ -26,6 +27,7 @@ function Landing() {
       <Pricing start={start} />
       <Faq />
       <Finale start={start} startLabel={startLabel} signedIn={!!session.user} />
+      <SectionTabs start={start} startLabel={startLabel} />
     </div>
   )
 }
@@ -42,90 +44,73 @@ function Lead({ children, className = '' }: { children: ReactNode; className?: s
   return <p className={`max-w-[34rem] text-[17px] leading-relaxed text-ink-2 md:text-[18px] ${className}`}>{children}</p>
 }
 
-/* ---------- Nav: a floating capsule; on phones its menu opens as a floating card ---------- */
+/* ---------- Nav: a floating capsule at the top; on phones the sections live in the bottom capsule ---------- */
 
 function Nav({ start, signedIn, hasShop }: { start: string; signedIn: boolean; hasShop: boolean }) {
   const t = useT()
-  const [open, setOpen] = useState(false)
   const links = [
     ['#how', t('How it works')],
     ['#pay', t('Payments')],
     ['#pricing', t('Pricing')],
     ['#faq', t('Questions')],
   ]
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open])
-
   return (
-    <>
-      {open && <button type="button" aria-label={t('Close menu')} className="fade fixed inset-0 z-40 bg-ink/20 md:hidden" onClick={() => setOpen(false)} />}
-      <div className="pointer-events-none sticky top-0 z-50 px-3 pt-3 md:px-6 md:pt-4">
-        <header className="pointer-events-auto mx-auto flex h-14 max-w-[1180px] items-center gap-2 rounded-full bg-card/92 pr-2 pl-5 shadow-[0_1px_2px_rgb(10_10_10/0.05),0_12px_32px_-14px_rgb(10_10_10/0.22)] ring-1 ring-line backdrop-blur-xl md:h-16 md:pl-7">
-          <Link to="/" aria-label="RIZK" className="shrink-0" onClick={() => setOpen(false)}>
-            <Wordmark className="h-[15px] w-auto md:h-[17px]" />
-          </Link>
-          <nav className="mx-auto hidden items-center gap-1 text-[14px] text-ink-2 md:flex" aria-label={t('Sections')}>
-            {links.map(([href, label]) => (
-              <a key={href} href={href} className="rounded-full px-3.5 py-2 transition-colors hover:bg-page hover:text-ink">
-                {label}
-              </a>
-            ))}
-          </nav>
-          <div className="ml-auto flex items-center gap-1 md:ml-0">
-            {!signedIn && (
-              <Link to="/login" className="hidden rounded-full px-4 py-2 text-[14px] font-medium text-ink-2 transition-colors hover:text-ink md:block">
-                {t('Log in')}
-              </Link>
-            )}
-            <Link to={start} className="btn btn-sm h-10 px-4">
-              {hasShop ? t('My shop') : t('Open your shop')}
+    <div className="pointer-events-none sticky top-0 z-50 px-3 pt-3 md:px-6 md:pt-4">
+      <header className="pointer-events-auto mx-auto flex h-14 max-w-[1180px] items-center gap-2 rounded-full bg-card/92 pr-2 pl-5 shadow-[0_1px_2px_rgb(10_10_10/0.05),0_12px_32px_-14px_rgb(10_10_10/0.22)] ring-1 ring-line backdrop-blur-xl md:h-16 md:pl-7">
+        <Link to="/" aria-label="RIZK" className="shrink-0">
+          <Wordmark className="h-[15px] w-auto md:h-[17px]" />
+        </Link>
+        <nav className="mx-auto hidden items-center gap-1 text-[14px] text-ink-2 md:flex" aria-label={t('Sections')}>
+          {links.map(([href, label]) => (
+            <a key={href} href={href} className="rounded-full px-3.5 py-2 transition-colors hover:bg-page hover:text-ink">
+              {label}
+            </a>
+          ))}
+        </nav>
+        <div className="ml-auto flex items-center gap-1 md:ml-0">
+          {signedIn ? (
+            <Link to={start} className="rounded-full px-4 py-2 text-[14px] font-medium text-ink-2 transition-colors hover:text-ink md:hidden">
+              {hasShop ? t('My shop') : t('Finish my shop')}
             </Link>
-            <button
-              type="button"
-              aria-label={open ? t('Close menu') : t('Open menu')}
-              aria-expanded={open}
-              aria-controls="site-menu"
-              onClick={() => setOpen(!open)}
-              className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-page md:hidden"
-            >
-              {open ? <X size={20} strokeWidth={1.75} /> : <Menu size={20} strokeWidth={1.75} />}
-            </button>
-          </div>
-        </header>
-        {open && (
-          <div id="site-menu" className="sheet-up pointer-events-auto mx-auto mt-2 max-w-[1180px] rounded-[28px] bg-card p-2 shadow-[var(--shadow-float)] ring-1 ring-line md:hidden">
-            <nav className="flex flex-col" aria-label={t('Sections')}>
-              {links.map(([href, label]) => (
-                <a key={href} href={href} onClick={() => setOpen(false)} className="flex h-14 items-center justify-between rounded-[20px] px-4 text-[17px] font-medium transition-colors active:bg-page">
-                  {label}
-                  <ArrowRight size={18} strokeWidth={1.5} className="text-faint" />
-                </a>
-              ))}
-            </nav>
-            <div className="mt-1 grid grid-cols-2 gap-2 border-t border-line p-2 pt-3">
-              {signedIn ? (
-                <Link to={start} className="btn col-span-2" onClick={() => setOpen(false)}>
-                  {hasShop ? t('Go to my shop') : t('Finish my shop')}
-                </Link>
-              ) : (
-                <>
-                  <Link to="/login" className="btn btn-ghost" onClick={() => setOpen(false)}>
-                    {t('Log in')}
-                  </Link>
-                  <Link to={start} className="btn" onClick={() => setOpen(false)}>
-                    {t('Open your shop')}
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </>
+          ) : (
+            <Link to="/login" className="rounded-full px-4 py-2 text-[14px] font-medium text-ink-2 transition-colors hover:text-ink">
+              {t('Log in')}
+            </Link>
+          )}
+          <Link to={start} className="btn btn-sm hidden h-10 px-4 md:inline-flex">
+            {hasShop ? t('My shop') : t('Open your shop')}
+          </Link>
+        </div>
+      </header>
+    </div>
+  )
+}
+
+/** Phones: the floating black capsule. The section on screen lights up; + opens a shop. */
+function SectionTabs({ start, startLabel }: { start: string; startLabel: string }) {
+  const t = useT()
+  const [active, setActive] = useState<string | null>(null)
+  useEffect(() => {
+    const ids = ['top', 'how', 'pay', 'pricing', 'faq']
+    const els = ids.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => !!el)
+    // A thin band across the middle of the screen: the section crossing it is the one being read.
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setActive(e.target.id === 'top' ? null : e.target.id)
+      },
+      { rootMargin: '-45% 0px -50% 0px' },
+    )
+    els.forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  }, [])
+  return (
+    <FloatingNav label={t('Sections')}>
+      <NavTab icon={Footprints} label={t('Steps')} href="#how" active={active === 'how'} />
+      <NavTab icon={Wallet} label={t('Payments')} href="#pay" active={active === 'pay'} />
+      <NavCenter icon={Plus} label={startLabel} to={start} />
+      <NavTab icon={Tag} label={t('Pricing')} href="#pricing" active={active === 'pricing'} />
+      <NavTab icon={CircleHelp} label={t('Questions')} href="#faq" active={active === 'faq'} />
+    </FloatingNav>
   )
 }
 
@@ -134,7 +119,7 @@ function Nav({ start, signedIn, hasShop }: { start: string; signedIn: boolean; h
 function Hero({ start, startLabel }: { start: string; startLabel: string }) {
   const t = useT()
   return (
-    <section className="relative">
+    <section id="top" className="relative">
       <Container className="grid items-center gap-12 pt-10 pb-16 md:pt-16 lg:min-h-[calc(100dvh-72px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,500px)] lg:gap-16 lg:pt-6 lg:pb-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
         <div className="rise">
           <h1 className="display text-[44px] text-balance sm:text-[60px] lg:text-[74px] xl:text-[84px]">

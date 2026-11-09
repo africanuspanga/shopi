@@ -65,25 +65,6 @@ export const getStorefront = createServerFn({ method: 'GET' })
     }
   })
 
-const EVENT_TYPES = new Set(['view_shop', 'view_product', 'share', 'add_to_cart'])
-
-export const trackEvent = createServerFn({ method: 'POST' })
-  .validator((d: { shopId: string; productId?: string; type: string; source?: string }) => d)
-  .handler(async ({ data }) => {
-    if (!EVENT_TYPES.has(data.type)) return
-    await run(
-      'INSERT INTO events (shop_id, product_id, type, source, created_at) VALUES (?, ?, ?, ?, ?)',
-      String(data.shopId).slice(0, 40),
-      data.productId ? String(data.productId).slice(0, 40) : null,
-      data.type,
-      String(data.source ?? '').slice(0, 30),
-      now(),
-    )
-    if (data.type === 'view_product' && data.productId) {
-      await run('UPDATE products SET views = views + 1 WHERE id = ? AND shop_id = ?', data.productId, data.shopId)
-    }
-  })
-
 export const placeOrder = createServerFn({ method: 'POST' })
   .validator(
     (d: {
@@ -96,6 +77,7 @@ export const placeOrder = createServerFn({ method: 'POST' })
       landmark: string
       note: string
       payment: 'lipa' | 'cod'
+      visit?: { vid?: string; sid?: string; source?: string; tag?: string }
     }) => d,
   )
   .handler(async ({ data }) => {
@@ -149,17 +131,21 @@ export const placeOrder = createServerFn({ method: 'POST' })
     const id = newId()
     const code = orderCode()
     const t = now()
+    // Where the buyer came from, so this order's money is credited to its source.
+    const isId = (v: unknown) => (typeof v === 'string' && /^[\w-]{8,64}$/.test(v) ? v : null)
+    const word = (v: unknown) => String(v ?? '').toLowerCase().replace(/[^a-z0-9.-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40)
+    const visit = { vid: isId(data.visit?.vid), sid: isId(data.visit?.sid), source: word(data.visit?.source) || 'direct', tag: word(data.visit?.tag) || null }
     await db().batch([
       db()
         .prepare(
           `INSERT INTO orders (id, shop_id, code, customer_name, customer_phone, area, landmark, note, subtotal,
-             delivery_fee, total, payment_method, status, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             delivery_fee, total, payment_method, status, created_at, updated_at, source, link_tag, visitor_id, session_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           id, shop.id, code, name, phone, area?.name ?? '', String(data.landmark ?? '').slice(0, 200),
           String(data.note ?? '').slice(0, 500), subtotal, fee, subtotal + fee, payment,
-          payment === 'cod' ? 'confirmed' : 'awaiting_payment', t, t,
+          payment === 'cod' ? 'confirmed' : 'awaiting_payment', t, t, visit.source, visit.tag, visit.vid, visit.sid,
         ),
       ...lines.map((l) =>
         db()
@@ -186,7 +172,7 @@ export type TrackedOrder = {
   payment_method: 'lipa' | 'cod'
   payment_check: string | null
   created_at: number
-  shop: { slug: string; name: string; logo_key: string | null; whatsapp: string; lipa_number: string; lipa_name: string; lipa_network: string }
+  shop: { id: string; slug: string; name: string; logo_key: string | null; whatsapp: string; lipa_number: string; lipa_name: string; lipa_network: string }
   lines: { name: string; price: number; qty: number; image: string | null; variant: string | null }[]
 }
 
@@ -201,7 +187,7 @@ export const getTrackedOrder = createServerFn({ method: 'GET' })
     if (!order) return null
     const [shop, lines] = await Promise.all([
       first<TrackedOrder['shop']>(
-        'SELECT slug, name, logo_key, whatsapp, lipa_number, lipa_name, lipa_network FROM shops WHERE id = ?',
+        'SELECT id, slug, name, logo_key, whatsapp, lipa_number, lipa_name, lipa_network FROM shops WHERE id = ?',
         order.shop_id,
       ),
       all<TrackedOrder['lines'][number]>('SELECT name, price, qty, image, variant FROM order_items WHERE order_id = ?', order.id),

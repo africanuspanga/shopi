@@ -8,6 +8,8 @@ import { getTrackedOrder, submitPaymentSms } from '#/lib/api/store'
 import { timeAgo, tzs, waLink, type OrderStatus } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import { useOrigin } from '#/lib/share'
+import { NotFound } from '#/components/not-found'
+import { track } from '#/lib/analytics'
 
 export const Route = createFileRoute('/o/$code')({
   loader: async ({ params }) => {
@@ -18,6 +20,9 @@ export const Route = createFileRoute('/o/$code')({
   head: ({ loaderData }) => ({
     meta: [{ title: loaderData ? `#${loaderData.code} · ${loaderData.shop.name}` : 'RIZK' }, { name: 'robots', content: 'noindex' }],
   }),
+  notFoundComponent: () => (
+    <NotFound title="We can't find this order" body="Check the order code in your link, or ask the seller to send it again on WhatsApp." />
+  ),
   component: Track,
 })
 
@@ -175,7 +180,13 @@ function Track() {
           )}
 
           {o.shop.whatsapp && (
-            <a href={waLink(o.shop.whatsapp, orderText)} target="_blank" rel="noreferrer" className={`btn w-full ${needsPayment ? 'btn-ghost' : 'btn-lg'}`}>
+            <a
+              href={waLink(o.shop.whatsapp, orderText)}
+              target="_blank"
+              rel="noreferrer"
+              className={`btn w-full ${needsPayment ? 'btn-ghost' : 'btn-lg'}`}
+              onClick={() => track('whatsapp_click', { shopId: o.shop.id, detail: 'order' })}
+            >
               <WhatsAppMark size={20} /> {t('Message {shop} on WhatsApp', { shop: o.shop.name })}
             </a>
           )}
