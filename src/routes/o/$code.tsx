@@ -108,7 +108,8 @@ function Track() {
                     <li key={i} aria-current={state === 'now' ? 'step' : undefined}>
                       <div className={`h-1.5 rounded-full ${state === 'done' ? 'bg-ink' : state === 'now' ? 'bg-moto' : 'bg-raised'}`} />
                       <p className={`mt-2.5 flex items-center gap-1 text-[12px] leading-4 md:text-[13px] ${state === 'next' ? 'text-muted' : 'font-medium text-ink'}`}>
-                        {state === 'done' && <Check size={13} strokeWidth={2.5} className="shrink-0" />}
+                        {/* On phones the ink bar already says "done"; the check would push "Confirmed" onto two lines. */}
+                        {state === 'done' && <Check size={13} strokeWidth={2.5} className="hidden shrink-0 md:block" />}
                         {label}
                       </p>
                     </li>

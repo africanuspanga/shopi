@@ -5,13 +5,15 @@
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "@tanstack/react-start/server-entry",
 	"observability": { "enabled": true },
+	// Test site until launch; rizk.tz replaces it when RIZK goes live.
+	"routes": [{ "pattern": "rizktz.store", "custom_domain": true }],
+	"workers_dev": false,
 	"upload_source_maps": true,
 	"d1_databases": [
 		{
 			"binding": "DB",
 			"database_name": "rizk",
-			// Replace with the id from `npx wrangler d1 create rizk` before the first deploy
-			"database_id": "00000000-0000-0000-0000-000000000000",
+			"database_id": "e7609dd3-2a48-4e21-ac94-2c5267ea1da2",
 			"migrations_dir": "migrations"
 		}
 	],

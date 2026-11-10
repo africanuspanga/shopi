@@ -38,6 +38,7 @@ npx tsr generate            # regenerate src/routeTree.gen.ts after adding or re
 npx wrangler d1 migrations apply rizk --local
 node scripts/seed-zee-history.mjs          # demo history for Zee's Store
 node scripts/backfill-product-slugs.mjs    # readable links for older products
+node scripts/seed-client-shops.mjs <folder> [--remote]   # real seller shops from a private data folder (shop.json + photos/)
 ```
 
 Demo seller login (local only): `design/sample-shop/LOGIN.local.md`. Never print the password.
