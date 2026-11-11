@@ -479,8 +479,12 @@ function Finale({ start, startLabel, signedIn }: { start: string; startLabel: st
               </ul>
             </div>
           </div>
-          <div className="mx-auto flex max-w-[1280px] flex-col gap-2 border-t border-white/10 px-6 py-6 text-[13px] text-white/40 md:flex-row md:justify-between md:px-10">
+          <div className="mx-auto flex max-w-[1280px] flex-col gap-3 border-t border-white/10 px-6 py-6 text-[13px] text-white/40 md:flex-row md:items-center md:justify-between md:px-10">
             <p>© {new Date().getFullYear()} Driftmark Technologies Limited</p>
+            <p className="flex items-center gap-2.5">
+              {t('Payments powered by')}
+              <img src="/images/settlopay-dark.svg" alt="Settlo Pay" width={306} height={100} className="h-[20px] w-auto" />
+            </p>
             <p>{t('Shopi never holds buyers’ money. Sellers are paid directly.')}</p>
           </div>
           <div aria-hidden className="px-4 pt-6 pb-4 md:px-10 md:pt-10 md:pb-10">
