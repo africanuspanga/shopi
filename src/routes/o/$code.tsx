@@ -2,7 +2,7 @@ import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-rout
 import { Check, Copy, MapPin } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
-import { MadeWithRizk } from '#/components/shop'
+import { MadeWithShopi } from '#/components/shop'
 import { ErrorText, Img, LangSwitch, ShopAvatar } from '#/components/ui'
 import { getTrackedOrder, submitPaymentSms } from '#/lib/api/store'
 import { timeAgo, tzs, waLink, type OrderStatus } from '#/lib/format'
@@ -18,7 +18,7 @@ export const Route = createFileRoute('/o/$code')({
     return order
   },
   head: ({ loaderData }) => ({
-    meta: [{ title: loaderData ? `#${loaderData.code} · ${loaderData.shop.name}` : 'RIZK' }, { name: 'robots', content: 'noindex' }],
+    meta: [{ title: loaderData ? `#${loaderData.code} · ${loaderData.shop.name}` : 'Shopi' }, { name: 'robots', content: 'noindex' }],
   }),
   notFoundComponent: () => (
     <NotFound title="We can't find this order" body="Check the order code in your link, or ask the seller to send it again on WhatsApp." />
@@ -236,7 +236,7 @@ function Track() {
             </div>
           </div>
           <p className="mt-4 text-center text-[13px] text-muted">{t('Bookmark this page to follow your order.')}</p>
-          <MadeWithRizk />
+          <MadeWithShopi />
         </aside>
       </main>
     </div>

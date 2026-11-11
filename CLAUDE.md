@@ -1,9 +1,10 @@
-# RIZK — working notes for Claude
+# Shopi — working notes for Claude
 
-RIZK is an online shop in one link for people in Tanzania who sell on Instagram, TikTok and WhatsApp.
-A seller shares `rizk.tz/<shop>`; buyers browse, pick sizes, order with a phone number, area and landmark,
+Shopi is an online shop in one link for people in Tanzania who sell on Instagram, TikTok and WhatsApp.
+A seller shares `shopi.tz/<shop>`; buyers browse, pick sizes, order with a phone number, area and landmark,
 and pay the seller's own Lipa Namba (pasting the confirmation SMS) or cash on delivery.
-**RIZK never holds money.** Tagline: *Risk to get Rizk.*
+**Shopi never holds money.** Tagline: *Your shop in one link.* (Swahili: *Duka lako, link moja.*)
+The product was RIZK until 11 November 2026; the old name must not reappear in copy, code or docs.
 
 Read this before changing any screen. The bar is a world-class product: every screen must look deliberate
 at phone width (390) **and** at desktop width (1440).
@@ -51,7 +52,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | --- | --- |
 | `src/styles.css` | The design system: tokens (`@theme`) and component classes. Read it first. |
 | `src/components/ui.tsx` | App-wide parts: `Page`, `TopBar`, `BackButton`, `Chips`, `StatusPill`, `Img`, `ShopAvatar`, `Money`, `Delta`, `Sheet`, `Field`, `Switch`, `Empty`, `Toast`, `TextLink`, `ErrorText`, `LangSwitch`, `Wordmark` |
-| `src/components/shop.tsx` | Storefront parts: `ProductCard` (quick add), `QuickAddSheet`, `Price`, `Tag`, `BagButton`, `ShopTopBar`, `ShopFacts`, `FactPills`, `SocialLinks`, `ShopFooter`, `MadeWithRizk` |
+| `src/components/shop.tsx` | Storefront parts: `ProductCard` (quick add), `QuickAddSheet`, `Price`, `Tag`, `BagButton`, `ShopTopBar`, `ShopFacts`, `FactPills`, `SocialLinks`, `ShopFooter`, `MadeWithShopi` |
 | `src/components/floating-nav.tsx` | The phone capsule: `FloatingNav`, `NavTab`, `NavCenter`, `NavCount`, `useHideFloatingNav` |
 | `src/components/shop-nav.tsx` | The storefront's capsule with its search and info sheets |
 | `src/components/not-found.tsx` | Not-found pages for missing shops, products and orders |
@@ -76,7 +77,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 ### Direction
 - **Product:** an online shop in one link for Tanzanian social sellers.
 - **Character:** confident, quick, warm.
-- **World:** Dar es Salaam phone commerce. The colour comes from the sellers' own product photos; RIZK's chrome is black and white.
+- **World:** Dar es Salaam phone commerce. The colour comes from the sellers' own product photos; Shopi's chrome is black and white.
 - **Moments:** product photography; the dark "Sales today" card; the receipt slip on anything about money.
 - **Signature:** the receipt slip (`.receipt`): a torn bottom edge and mono figures, only on money (checkout total, order totals, payment checks).
 
@@ -128,7 +129,7 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
 - Buttons: `.btn` (ink pill, 48px) with `.btn-sm` (36px), `.btn-lg` (56px), `.btn-ghost` (white with hairline), `.btn-quiet` (well fill).
   On dark panels use `.btn` with `bg-white text-ink`. Danger actions are text buttons in `text-bad`.
 - `.icon-btn` (40px round), `.chip` (filters, sizes, categories; active = ink via `data-active` or `aria-pressed`).
-- Forms: `.field`, `.label`, `.hint`, `.input` (also used as a wrapper for prefixed inputs like `rizk.tz/` or `TSh`).
+- Forms: `.field`, `.label`, `.hint`, `.input` (also used as a wrapper for prefixed inputs like `shopi.tz/` or `TSh`).
   Use `Field` from `ui.tsx`. Prices are typed with thousands separators.
 - `.card`, `.receipt` + `.receipt-rule`, `.signal` (live orange dot), `.hide-scroll`.
 - Motion: `.rise`, `.rise-2`, `.rise-3` (fade and rise on enter), `.fade`, `.sheet-up`.
@@ -180,10 +181,13 @@ Write English as the key: every string goes through `t()` from `src/lib/i18n.tsx
 `src/locales/sw.json`, and `SWAHILI_ENABLED` turns it on.
 
 ### Logo
-"RIZK." is Mona Sans ExtraBold at 120% width plus a perfect-circle Moto full stop as wide as the letters' stems.
-The app icon and favicon are "R." with the same dot. Everything comes from `design/brand/glyphs.py`: edit the
-geometry there, run it, and regenerate the `Wordmark` paths in `ui.tsx` and the icon files in `public/`.
-Never hand-edit the paths. The dot is always Moto; the letters are ink or white.
+"shopi" is Mona Sans ExtraBold at 120% width, lowercase, with the i's dot drawn as a perfect-circle Moto dot as wide as the
+stem. The app icon and favicon are a shopping bag, white on ink, with the same dot on its face. Everything comes from
+`design/brand/glyphs.py`: edit the geometry there, run `python3 glyphs.py` (SVGs), `node render.mjs` (PNGs and the files in
+`public/`) and `python3 glyphs.py --ico`; paste `python3 glyphs.py --tsx` into `Wordmark` in `ui.tsx`. Never hand-edit the paths.
+The dot is always Moto; the letters are ink or white. The wordmark's box runs from the dot to the p's descender, so size it
+by height: 22px in headers, 14px in the "Shop made with" line. In prose the name is "Shopi"; only the wordmark and the
+domain are lowercase.
 
 ## Product rules the UI depends on
 - Order statuses: `awaiting_payment` → `payment_claimed` (buyer pasted an SMS) → `confirmed` → `dispatched` → `delivered`,
@@ -235,4 +239,4 @@ Never hand-edit the paths. The dot is always Moto; the letters are ink or white.
 3. Run the flow you touched in a browser (order, payment, product save), then remove any test data.
 4. Check the screen against this file: one accent used by the rules, no new colours, no new fonts, no emoji, no uppercase labels.
 
-Discovery notes and founder decisions are outside this repo (`../RIZK-discovery-notes.md`). Keep them out of the public repo.
+Discovery notes and founder decisions are outside this repo (`../Shopi-discovery-notes.md`). Keep them out of the public repo.

@@ -9,8 +9,8 @@
 
 import { linkTag } from '#/lib/format'
 
-const VISITOR_KEY = 'rizk_vid'
-const SESSION_KEY = 'rizk_sess'
+const VISITOR_KEY = 'shopi_vid'
+const SESSION_KEY = 'shopi_sess'
 const SESSION_MS = 30 * 60_000
 
 export type EventType =

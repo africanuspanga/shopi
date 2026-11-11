@@ -61,8 +61,8 @@ function Sidebar() {
   const path = useLocation({ select: (l) => l.pathname })
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-line bg-card px-3 pt-6 pb-4 md:flex">
-      <Link to="/app" className="flex h-9 items-center px-3" aria-label="RIZK">
-        <Wordmark className="h-[15px] w-auto" />
+      <Link to="/app" className="flex h-9 items-center px-3" aria-label="Shopi">
+        <Wordmark className="h-[22px] w-auto" />
       </Link>
 
       <a
@@ -74,7 +74,7 @@ function Sidebar() {
         <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-9 w-9 text-[13px]" />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[14px] font-semibold">{shop.name}</span>
-          <span className="meta block truncate">rizk.tz/{shop.slug}</span>
+          <span className="meta block truncate">shopi.tz/{shop.slug}</span>
         </span>
         <ArrowUpRight size={16} strokeWidth={1.6} className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
       </a>

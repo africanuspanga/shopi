@@ -1,7 +1,7 @@
 """
 Reads the translation sheet the team filled in and writes src/locales/sw.json.
 
-    python3 scripts/i18n/import.py path/to/RIZK-translations.xlsx
+    python3 scripts/i18n/import.py path/to/Shopi-translations.xlsx
 
 Rows with an empty Swahili cell are skipped (the app shows English there).
 Rows whose {placeholders} do not match the English are reported and skipped.

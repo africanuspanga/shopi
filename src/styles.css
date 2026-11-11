@@ -2,11 +2,11 @@
 @import "tailwindcss";
 
 /*
- * RIZK design system.
+ * Shopi design system.
  * Black and white with one signal colour, Moto (#ff4f17), used only where something needs attention or is hot:
  * items in the bag, a sale, low stock, a payment to check, today's sales. The colour of every screen comes from
  * the seller's own product photos. Money moments carry the signature: a receipt slip with a torn edge and mono figures.
- * Type: Mona Sans (wider for headlines, like the RIZK wordmark) and Geist Mono for codes, receipts and meta.
+ * Type: Mona Sans (wider for headlines, like the Shopi wordmark) and Geist Mono for codes, receipts and meta.
  * Spacing on a 4px grid. Weights 400 to 600.
  */
 @theme {

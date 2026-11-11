@@ -214,7 +214,7 @@ export function FactPills({ shop, areas }: { shop: PublicShop; areas: { name: st
 export function SocialLinks({ shop, whatsapp = true, className = '' }: { shop: PublicShop; whatsapp?: boolean; className?: string }) {
   const t = useT()
   const links = [
-    whatsapp && shop.whatsapp && { href: waLink(shop.whatsapp, t('Hi {shop}, I found your shop on RIZK.', { shop: shop.name })), label: 'WhatsApp', icon: <WhatsAppMark size={20} /> },
+    whatsapp && shop.whatsapp && { href: waLink(shop.whatsapp, t('Hi {shop}, I found your shop on Shopi.', { shop: shop.name })), label: 'WhatsApp', icon: <WhatsAppMark size={20} /> },
     shop.instagram && { href: `https://instagram.com/${shop.instagram}`, label: 'Instagram', icon: <InstagramIcon /> },
     shop.tiktok && { href: `https://tiktok.com/@${shop.tiktok}`, label: 'TikTok', icon: <TikTokIcon /> },
     shop.facebook && { href: shop.facebook.startsWith('http') ? shop.facebook : `https://${shop.facebook}`, label: 'Facebook', icon: <FacebookIcon /> },
@@ -244,11 +244,11 @@ export function SocialLinks({ shop, whatsapp = true, className = '' }: { shop: P
   )
 }
 
-export function MadeWithRizk() {
+export function MadeWithShopi() {
   const t = useT()
   return (
     <a href="/" className="mx-auto mt-12 flex w-fit items-center gap-2 text-[13px] text-muted transition-colors hover:text-ink">
-      {t('Shop made with')} <Wordmark className="h-[10px] w-auto" />
+      {t('Shop made with')} <Wordmark className="h-[14px] w-auto" />
     </a>
   )
 }
@@ -263,7 +263,7 @@ export function ShopFooter({ shop }: { shop: PublicShop }) {
           <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-11 w-11 text-[15px]" />
           <div className="min-w-0">
             <p className="text-[15px] font-semibold">{shop.name}</p>
-            <p className="meta mt-0.5">rizk.tz/{shop.slug}</p>
+            <p className="meta mt-0.5">shopi.tz/{shop.slug}</p>
           </div>
         </div>
         <SocialLinks shop={shop} />
@@ -273,7 +273,7 @@ export function ShopFooter({ shop }: { shop: PublicShop }) {
         className="group mt-8 flex items-center justify-between gap-4 rounded-[20px] bg-page px-5 py-4 transition-colors hover:bg-well"
       >
         <span className="flex items-center gap-2 text-[13px] text-muted">
-          {t('Shop made with')} <Wordmark className="h-[10px] w-auto text-ink" />
+          {t('Shop made with')} <Wordmark className="h-[14px] w-auto text-ink" />
         </span>
         <span className="flex items-center gap-1 text-[13px] font-medium">
           {t('Open yours free')} <ArrowUpRight size={15} strokeWidth={1.75} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

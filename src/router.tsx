@@ -8,7 +8,7 @@ export function getRouter() {
     scrollRestoration: true,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
-    defaultNotFoundComponent: () => <NotFound title="This page is not here" body="Check the link for a typo, or start again from the RIZK home page." />,
+    defaultNotFoundComponent: () => <NotFound title="This page is not here" body="Check the link for a typo, or start again from the Shopi home page." />,
   })
 
   return router

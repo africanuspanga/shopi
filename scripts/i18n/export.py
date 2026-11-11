@@ -2,7 +2,7 @@
 Builds the translation sheet from the code: every t('...') and msg('...') string, the screen it is on,
 notes about {placeholders}, and the old Swahili as a draft for the team to correct.
 
-    python3 scripts/i18n/export.py      ->  ../design/translations/RIZK-translations.xlsx
+    python3 scripts/i18n/export.py      ->  ../design/translations/Shopi-translations.xlsx
 
 Run it again whenever English text changes. Swahili already in src/locales/sw.json is kept in the sheet.
 """
@@ -15,7 +15,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
 
 APP = Path(__file__).resolve().parents[2]
-OUT = APP.parent / 'design' / 'translations' / 'RIZK-translations.xlsx'
+OUT = APP.parent / 'design' / 'translations' / 'Shopi-translations.xlsx'
 
 SCREENS = [
     ('routes/index.tsx', 'Landing page'),
@@ -79,8 +79,8 @@ def collect():
 def notes_for(en):
     keys = re.findall(r'\{(\w+)\}', en)
     parts = [f'Keep {{{k}}} as it is ({PLACEHOLDER_NOTES.get(k, "filled in by the app")}).' for k in dict.fromkeys(keys)]
-    if 'RIZK' in en:
-        parts.append('Keep RIZK, WhatsApp, Instagram, TikTok and Lipa Namba in English.')
+    if 'Shopi' in en:
+        parts.append('Keep Shopi, WhatsApp, Instagram, TikTok and Lipa Namba in English.')
     return ' '.join(parts)
 
 
@@ -122,12 +122,12 @@ def main():
 
     guide = wb.create_sheet('How to fill this in')
     for line in [
-        'RIZK translation sheet',
+        'Shopi translation sheet',
         '',
         '1. Write the Swahili in column D, next to the English in column C. Leave column C as it is.',
         '2. Column E is the old Swahili from the first version. Use it if it is right, rewrite it if it is not.',
         '3. Words in curly brackets, like {name} or {n}, are filled in by the app. Copy them into your Swahili exactly.',
-        '4. Keep brand and product names in English: RIZK, WhatsApp, Instagram, TikTok, Lipa Namba, M-Pesa, Mixx by Yas, Airtel Money, HaloPesa.',
+        '4. Keep brand and product names in English: Shopi, WhatsApp, Instagram, TikTok, Lipa Namba, M-Pesa, Mixx by Yas, Airtel Money, HaloPesa.',
         '5. Say "mobile money" (pesa kwa simu), never assume M-Pesa.',
         '6. Write the way a Dar seller talks to customers: short, friendly, clear. Buttons are 1 to 3 words.',
         '7. No emojis and no long dashes. Set column G to Done when a row is finished, or Question if you are unsure.',

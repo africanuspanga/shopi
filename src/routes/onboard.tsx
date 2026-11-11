@@ -12,7 +12,7 @@ export const Route = createFileRoute('/onboard')({
     if (!context.session.user) throw redirect({ to: '/signup' })
     if (context.session.shop) throw redirect({ to: '/app' })
   },
-  head: () => ({ meta: [{ title: 'Name your shop · RIZK' }] }),
+  head: () => ({ meta: [{ title: 'Name your shop · Shopi' }] }),
   component: Onboard,
 })
 
@@ -77,7 +77,7 @@ function Onboard() {
         <ShopAvatar name={name || 'R'} logo={null} className="h-11 w-11 text-[15px]" />
         <div className="min-w-0">
           <p className="truncate text-[15px] font-semibold">{name || t('Your shop')}</p>
-          <p className="code truncate text-[13px] text-muted">rizk.tz/{slug || 'yourshop'}</p>
+          <p className="code truncate text-[13px] text-muted">shopi.tz/{slug || 'yourshop'}</p>
         </div>
       </div>
 
@@ -99,7 +99,7 @@ function Onboard() {
         </Field>
         <Field label={t('Shop link')} hint={status}>
           <span className={`input flex items-center ${free === false && !checking && slug.length >= 3 ? 'shadow-[inset_0_0_0_1.5px_var(--color-bad)]' : ''}`}>
-            <span className="text-muted">rizk.tz/</span>
+            <span className="text-muted">shopi.tz/</span>
             <input
               className="min-w-0 flex-1 bg-transparent outline-none"
               value={slug}
@@ -143,7 +143,7 @@ function ShopPreview({ name, slug, category }: { name: string; slug: string; cat
       <p className="text-[15px] text-white/60">{t('Your shop, as buyers will see it')}</p>
       <div className="mt-auto mb-auto w-full max-w-[460px] self-center rounded-[28px] bg-card p-6 text-ink shadow-[0_40px_80px_-30px_rgb(0_0_0/0.6)]">
         <div className="flex items-center justify-between border-b border-line pb-4">
-          <p className="code truncate text-[13px] text-muted">rizk.tz/{slug || 'yourshop'}</p>
+          <p className="code truncate text-[13px] text-muted">shopi.tz/{slug || 'yourshop'}</p>
           <span className="flex h-8 items-center gap-1.5 rounded-full pr-1 pl-3 text-[12px] font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
             {t('Bag')} <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-ink text-[12px] text-white">0</span>
           </span>

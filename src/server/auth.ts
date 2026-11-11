@@ -1,7 +1,7 @@
 import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server'
 import { first, newId, now, run } from './db'
 
-const COOKIE = 'rizk_sid'
+const COOKIE = 'shopi_sid'
 const SESSION_DAYS = 60
 const ITERATIONS = 100_000
 

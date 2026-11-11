@@ -15,7 +15,7 @@ export const Route = createFileRoute('/app/analytics')({
   }),
   loaderDeps: ({ search }) => ({ days: search.days ?? 30 }),
   loader: ({ deps }) => getAnalytics({ data: { days: deps.days } }),
-  head: () => ({ meta: [{ title: 'Analytics · RIZK' }] }),
+  head: () => ({ meta: [{ title: 'Analytics · Shopi' }] }),
   component: AnalyticsPage,
 })
 

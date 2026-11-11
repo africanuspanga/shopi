@@ -26,7 +26,7 @@ export function ShopNav({ shop, areas, products, count, onShare }: { shop: Publi
           <NavTab
             icon={WhatsAppIcon}
             label="WhatsApp"
-            href={waLink(shop.whatsapp, t('Hi {shop}, I found your shop on RIZK.', { shop: shop.name }))}
+            href={waLink(shop.whatsapp, t('Hi {shop}, I found your shop on Shopi.', { shop: shop.name }))}
             onClick={() => track('whatsapp_click', { shopId: shop.id, detail: 'shop' })}
           />
         ) : (
@@ -101,7 +101,7 @@ function InfoSheet({ open, onClose, shop, areas, onShare }: { open: boolean; onC
         <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-12 w-12 text-[16px]" />
         <div className="min-w-0">
           <p className="truncate text-[16px] font-semibold">{shop.name}</p>
-          <p className="code truncate text-[12px] text-muted">rizk.tz/{shop.slug}</p>
+          <p className="code truncate text-[12px] text-muted">shopi.tz/{shop.slug}</p>
         </div>
       </div>
       {shop.bio && <p className="mt-4 text-[14px] leading-relaxed text-ink-2">{shop.bio}</p>}

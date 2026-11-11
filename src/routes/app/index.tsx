@@ -141,7 +141,7 @@ function Dashboard() {
         {/* Shop link */}
         <section className="rise-3 card flex flex-col p-6 lg:col-span-3">
           <h2 className="text-[15px] font-semibold">{t('Your shop link')}</h2>
-          <p className="code mt-3 truncate text-[17px]">rizk.tz/{shop.slug}</p>
+          <p className="code mt-3 truncate text-[17px]">shopi.tz/{shop.slug}</p>
           <dl className="mt-auto grid grid-cols-2 gap-3 pt-6">
             <div>
               <dt className="text-[13px] text-muted">{t('Visits')}</dt>

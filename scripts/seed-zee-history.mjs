@@ -8,18 +8,23 @@
  * visit that looked at the dress, added it to the bag and started checkout, so the funnel adds up.
  * Everything here is fictional. Safe to run again: it replaces what it made last time.
  *
- *   node scripts/seed-zee-history.mjs        # local database only
+ *   node scripts/seed-zee-history.mjs                 # local database, six months
+ *   node scripts/seed-zee-history.mjs --days 90       # a shorter history
+ *   node scripts/seed-zee-history.mjs --remote        # the live database (Zee's Store is a public sample there)
  */
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const SLUG = 'zee-store'
+const remote = process.argv.includes('--remote')
+const where = remote ? '--remote' : '--local'
+const daysAt = process.argv.indexOf('--days')
 const OUT = join(process.cwd(), '.demo')
 mkdirSync(OUT, { recursive: true })
 
 const d1 = (sql) =>
-  JSON.parse(execFileSync('npx', ['wrangler', 'd1', 'execute', 'rizk', '--local', '--json', '--command', sql], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }))[0].results
+  JSON.parse(execFileSync('npx', ['wrangler', 'd1', 'execute', 'rizk', where, '--json', '--command', sql], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }))[0].results
 
 let [shop] = d1(`SELECT id, owner_id, slug FROM shops WHERE slug IN ('${SLUG}', 'zeestore') OR name = 'Zee''s Store' LIMIT 1`)
 if (!shop) throw new Error("Zee's Store not found. Onboard it through the UI first.")
@@ -30,7 +35,9 @@ const DAY = 86400_000
 const NOW = Date.now()
 const TZ = 3 * 3600_000
 const startOfToday = Math.floor((NOW + TZ) / DAY) * DAY - TZ
-const DAYS = 182
+const DAYS = daysAt > 0 ? Math.max(14, Number(process.argv[daysAt + 1]) || 182) : 182
+// Dates below are written for six months; a shorter history keeps them in proportion.
+const ago = (days) => Math.max(1, Math.round((days * DAYS) / 182))
 
 let seed = 20261108
 const rand = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296)
@@ -61,7 +68,7 @@ const SIZE_RUNS = {
 const DEFAULT_RUN = [['S', 2], ['M', 4], ['L', 3], ['XL', 2], ['XXL', 1]]
 for (const p of products) {
   p.sizes = (SIZE_RUNS[p.name] ?? DEFAULT_RUN).map(([label, stock]) => ({ label, stock }))
-  p.addedAgo = ADDED[p.name] ?? DAYS
+  p.addedAgo = ADDED[p.name] ? ago(ADDED[p.name]) : DAYS
   p.weight = POPULAR[p.name] ?? 1
   p.image = JSON.parse(p.images)[0] ?? null
   p.views = 0
@@ -89,11 +96,12 @@ const visitor = () => {
   visitors.push(v)
   return v
 }
-// Buyers: about a third of orders are from someone who has bought before.
+// Buyers: about a third of orders are from someone who has bought before. Their numbers are 0700 numbers, the range
+// Shopi's demos keep for fictional people, so a tester who taps "WhatsApp the buyer" on the live sample reaches nobody real.
 const buyers = []
 const buyer = () => {
   if (buyers.length > 8 && rand() < 0.33) return pick(buyers)
-  const b = { name: pick(NAMES), phone: `+2557${between(10000000, 99999999)}`, area: pick(areas) }
+  const b = { name: pick(NAMES), phone: `+255700${between(100000, 999999)}`, area: pick(areas) }
   buyers.push(b)
   return b
 }
@@ -105,7 +113,7 @@ const sql = [
   `DELETE FROM links WHERE shop_id = '${shop.id}';`,
   `UPDATE shops SET slug = '${SLUG}', created_at = ${startOfToday - DAYS * DAY + 10 * 3600_000} WHERE id = '${shop.id}';`,
   `UPDATE users SET created_at = ${startOfToday - DAYS * DAY + 9 * 3600_000} WHERE id = '${shop.owner_id}';`,
-  ...LINKS.map(([tag, label, ago]) => `INSERT INTO links (shop_id, tag, label, created_at) VALUES ('${shop.id}', '${tag}', '${label}', ${startOfToday - ago * DAY + 12 * 3600_000});`),
+  ...LINKS.map(([tag, label, since]) => `INSERT INTO links (shop_id, tag, label, created_at) VALUES ('${shop.id}', '${tag}', '${label}', ${startOfToday - ago(since) * DAY + 12 * 3600_000});`),
 ]
 const orders = []
 const items = []
@@ -121,7 +129,7 @@ function session(dayStart, daysAgo, latest, { orders: wantsOrder = false } = {})
   if (t > latest) t = dayStart + Math.floor(rand() * Math.max(1, latest - dayStart))
   const source = weighted(SOURCES)
   const tagRule = TAGS[source]
-  const tag = tagRule && rand() < tagRule[1] && LINKS.find(([x, , ago]) => x === tagRule[0] && ago >= daysAgo) ? tagRule[0] : null
+  const tag = tagRule && rand() < tagRule[1] && LINKS.find(([x, , since]) => x === tagRule[0] && ago(since) >= daysAgo) ? tagRule[0] : null
   const s = { id: uuid(), visitor: visitor(), source, tag, start: t }
   const list = live(daysAgo)
   const seen = new Set()
@@ -201,10 +209,10 @@ for (let d = DAYS; d >= 1; d--) {
   const A = (name) => areas.find((a) => a.name === name)
   const at = (h, m) => Math.min(latest - 600_000, startOfToday + (h * 60 + m) * 60_000)
   const today = [
-    { name: 'Fatma Ali', phone: '+255786554411', area: A('Kariakoo & Posta'), landmark: 'mbele ya duka la dawa', product: P('Gauni la Moto (Strapless)'), size: 'S', method: 'lipa', status: 'awaiting_payment', t: at(9, 42) },
-    { name: 'Rehema Mushi', phone: '+255765112233', area: A('Masaki & Oysterbay'), landmark: 'ghorofa ya tatu, mlango 12', product: P('Kaftani ya Bahari'), size: 'Free size', method: 'lipa', status: 'confirmed', t: at(11, 20) },
-    { name: 'Neema Kileo', phone: '+255754321987', area: A('Sinza & Mwenge'), landmark: 'karibu na kituo cha daladala', product: P('Gauni la Zumaridi'), size: 'L', method: 'cod', status: 'confirmed', t: at(13, 5) },
-    { name: 'Lulu Mbwambo', phone: '+255713456789', area: A('Kinondoni & Mikocheni'), landmark: 'Mikocheni B, karibu na Shoppers Plaza, geti la bluu', product: P('Gauni la Jua'), size: 'M', method: 'lipa', status: 'payment_claimed', t: at(16, 47) },
+    { name: 'Fatma Ali', phone: '+255700554411', area: A('Kariakoo & Posta'), landmark: 'mbele ya duka la dawa', product: P('Gauni la Moto (Strapless)'), size: 'S', method: 'lipa', status: 'awaiting_payment', t: at(9, 42) },
+    { name: 'Rehema Mushi', phone: '+255700112233', area: A('Masaki & Oysterbay'), landmark: 'ghorofa ya tatu, mlango 12', product: P('Kaftani ya Bahari'), size: 'Free size', method: 'lipa', status: 'confirmed', t: at(11, 20) },
+    { name: 'Neema Kileo', phone: '+255700321987', area: A('Sinza & Mwenge'), landmark: 'karibu na kituo cha daladala', product: P('Gauni la Zumaridi'), size: 'L', method: 'cod', status: 'confirmed', t: at(13, 5) },
+    { name: 'Lulu Mbwambo', phone: '+255700456789', area: A('Kinondoni & Mikocheni'), landmark: 'Mikocheni B, karibu na Shoppers Plaza, geti la bluu', product: P('Gauni la Jua'), size: 'M', method: 'lipa', status: 'payment_claimed', t: at(16, 47) },
   ]
   for (const o of today) {
     if (!o.product) continue
@@ -227,5 +235,5 @@ chunk(events, 'INSERT INTO events (shop_id, product_id, type, source, created_at
 
 const file = join(OUT, 'zee-history.sql')
 writeFileSync(file, sql.join('\n'))
-execFileSync('npx', ['wrangler', 'd1', 'execute', 'rizk', '--local', '--file', file], { stdio: ['ignore', 'ignore', 'inherit'] })
-console.log(`Zee's Store: ${orders.length} orders, ${events.length} events, ${visitors.length} visitors over ${DAYS} days and today -> rizk.tz/${SLUG}`)
+execFileSync('npx', ['wrangler', 'd1', 'execute', 'rizk', where, '--yes', '--file', file], { stdio: ['ignore', 'ignore', 'inherit'] })
+console.log(`Zee's Store: ${orders.length} orders, ${events.length} events, ${visitors.length} visitors over ${DAYS} days and today -> ${remote ? 'live' : 'local'} /${SLUG}`)

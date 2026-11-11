@@ -37,7 +37,7 @@ export function Phone({ children, className = '' }: { children: ReactNode; class
   )
 }
 
-/** Zee's Store on a phone: the same parts a buyer sees on a real RIZK shop. */
+/** Zee's Store on a phone: the same parts a buyer sees on a real Shopi shop. */
 export function MiniStore() {
   return (
     <div className="relative h-full pt-12 text-ink">
@@ -115,7 +115,7 @@ export function NewOrderCard({ className = '' }: { className?: string }) {
   )
 }
 
-/** The signature: a receipt slip, here showing what RIZK checked in the buyer's SMS. */
+/** The signature: a receipt slip, here showing what Shopi checked in the buyer's SMS. */
 export function PaymentSlip({ className = '' }: { className?: string }) {
   return (
     <div className={`w-[264px] text-ink drop-shadow-[0_18px_30px_rgb(10_10_10/0.16)] ${className}`}>
@@ -147,7 +147,7 @@ export function LinkPreview() {
     <div className="w-full max-w-[300px] rounded-[18px] bg-card p-4 shadow-[0_1px_2px_rgb(10_10_10/0.06),0_12px_24px_-12px_rgb(10_10_10/0.18)]">
       <p className="text-[12px] font-medium">Shop link</p>
       <div className="mt-2 flex h-11 items-center gap-0.5 rounded-[12px] px-3 text-[14px] shadow-[inset_0_0_0_1.5px_var(--color-ink)]">
-        <span className="text-muted">rizk.tz/</span>
+        <span className="text-muted">shopi.tz/</span>
         <span>zees-store</span>
         <span className="ml-0.5 h-4 w-px bg-ink" />
         <span className="ml-auto flex items-center gap-1 text-[12px] text-ok">
@@ -207,7 +207,7 @@ export function BioPreview() {
       </div>
       <p className="mt-3 text-[12px] font-semibold">zees.store</p>
       <p className="text-[12px] text-ink-2">Kitenge na ankara · Sinza, Dar</p>
-      <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-moto-soft px-2 py-0.5 text-[12px] font-medium text-moto-ink">rizk.tz/zees-store</p>
+      <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-moto-soft px-2 py-0.5 text-[12px] font-medium text-moto-ink">shopi.tz/zees-store</p>
     </div>
   )
 }

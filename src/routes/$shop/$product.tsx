@@ -12,7 +12,7 @@ import { imgUrl, tzs, waLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 import { shareLink, useOrigin } from '#/lib/share'
 
-/** A product at its readable address: rizk.tz/<shop>/<product>. */
+/** A product at its readable address: shopi.tz/<shop>/<product>. */
 export const Route = createFileRoute('/$shop/$product')({
   loader: async ({ params, parentMatchPromise }) => {
     const { loaderData } = await parentMatchPromise

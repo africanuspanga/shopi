@@ -57,8 +57,8 @@ function Nav({ start, signedIn, hasShop }: { start: string; signedIn: boolean; h
   return (
     <div className="pointer-events-none sticky top-0 z-50 px-3 pt-3 md:px-6 md:pt-4">
       <header className="pointer-events-auto mx-auto flex h-14 max-w-[1180px] items-center gap-2 rounded-full bg-card/92 pr-2 pl-5 shadow-[0_1px_2px_rgb(10_10_10/0.05),0_12px_32px_-14px_rgb(10_10_10/0.22)] ring-1 ring-line backdrop-blur-xl md:h-16 md:pl-7">
-        <Link to="/" aria-label="RIZK" className="shrink-0">
-          <Wordmark className="h-[15px] w-auto md:h-[17px]" />
+        <Link to="/" aria-label="Shopi" className="shrink-0">
+          <Wordmark className="h-[22px] w-auto md:h-[24px]" />
         </Link>
         <nav className="mx-auto hidden items-center gap-1 text-[14px] text-ink-2 md:flex" aria-label={t('Sections')}>
           {links.map(([href, label]) => (
@@ -126,7 +126,7 @@ function Hero({ start, startLabel }: { start: string; startLabel: string }) {
             {t('Stop answering')} <span className="whitespace-nowrap">“bei gani?”</span> {t('in your DMs')}
           </h1>
           <Lead className="mt-6 md:mt-8">
-            {t('RIZK turns your Instagram, TikTok and WhatsApp into a shop with one link. Buyers see your prices and sizes, order by themselves, and pay your Lipa Namba or cash on delivery.')}
+            {t('Shopi turns your Instagram, TikTok and WhatsApp into a shop with one link. Buyers see your prices and sizes, order by themselves, and pay your Lipa Namba or cash on delivery.')}
           </Lead>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center md:mt-10">
             <Link to={start} className="btn btn-lg">
@@ -206,13 +206,13 @@ function Payments() {
           <div>
             <H2>{t('Every shilling goes straight to you')}</H2>
             <p className="mt-6 max-w-[34rem] text-[17px] leading-relaxed text-white/70 md:text-[18px]">
-              {t('Buyers pay your own Lipa Namba, the way they already pay sellers. Then they paste the confirmation SMS. RIZK checks the amount, the name and the transaction ID, and refuses an SMS already used on another order. You confirm with one tap.')}
+              {t('Buyers pay your own Lipa Namba, the way they already pay sellers. Then they paste the confirmation SMS. Shopi checks the amount, the name and the transaction ID, and refuses an SMS already used on another order. You confirm with one tap.')}
             </p>
             <ul className="mt-10 divide-y divide-white/10 border-y border-white/10">
               {[
                 [Smartphone, t('Your own Lipa Namba, on any network')],
                 [Banknote, t('Cash on delivery when you want it')],
-                [ShieldCheck, t('RIZK never holds your money')],
+                [ShieldCheck, t('Shopi never holds your money')],
               ].map(([Icon, label]) => {
                 const I = Icon as typeof Smartphone
                 return (
@@ -230,7 +230,7 @@ function Payments() {
             </div>
             <div className="mt-6 rounded-[24px] bg-card p-6 text-ink">
               <div className="flex items-baseline justify-between">
-                <p className="text-[15px] font-semibold">{t('RIZK checked it')}</p>
+                <p className="text-[15px] font-semibold">{t('Shopi checked it')}</p>
                 <p className="code text-[12px] text-muted">#HAN8RG</p>
               </div>
               <ul className="mt-4 space-y-3 text-[14px]">
@@ -290,15 +290,15 @@ function Dashboard() {
         </div>
         <div className="relative mx-auto mt-12 max-w-[1120px] md:mt-16">
           <img
-            src="/images/rizk-seller-dashboard-desktop.webp"
+            src="/images/shopi-seller-dashboard-desktop.webp"
             width={1920}
             height={1200}
             loading="lazy"
-            alt={t('RIZK seller dashboard on a laptop: sales today, orders that need you, the last 7 days and best sellers')}
+            alt={t('Shopi seller dashboard on a laptop: sales today, orders that need you, the last 7 days and best sellers')}
             className="w-full rounded-[20px] shadow-[0_1px_2px_rgb(10_10_10/0.06),0_40px_80px_-40px_rgb(10_10_10/0.35)] ring-1 ring-line md:rounded-[28px]"
           />
           <img
-            src="/images/rizk-seller-dashboard-phone.webp"
+            src="/images/shopi-seller-dashboard-phone.webp"
             width={780}
             height={1688}
             loading="lazy"
@@ -317,7 +317,7 @@ function Dashboard() {
 function Features() {
   const t = useT()
   const items = [
-    [Link2, t('Your own link'), 'rizk.tz/dukalako'],
+    [Link2, t('Your own link'), 'shopi.tz/dukalako'],
     [Ruler, t('Sizes and stock'), t('Buyers pick a size, sold out shows by itself')],
     [Smartphone, 'Lipa Namba', t('With a check of the payment SMS')],
     [Banknote, t('Cash on delivery'), t('Turn it on or off')],
@@ -341,7 +341,7 @@ function Features() {
             </div>
           ))}
         </div>
-        <p className="mt-8 text-[14px] text-muted">{t('Coming next: Rizko, an assistant that answers buyers’ questions, and weekly best-product votes.')}</p>
+        <p className="mt-8 text-[14px] text-muted">{t('Coming next: the Shopi assistant, which answers buyers’ questions, and weekly best-product votes.')}</p>
       </Container>
     </section>
   )
@@ -367,7 +367,7 @@ function Pricing({ start }: { start: string }) {
             </p>
           </div>
           <ul className="space-y-3 px-6 pt-6 text-[15px] md:px-8">
-            {[t('Your shop at rizk.tz/yourname'), t('Lipa Namba and cash on delivery'), t('Orders, sizes, stock and delivery areas'), t('Dashboard with your numbers')].map((x) => (
+            {[t('Your shop at shopi.tz/yourname'), t('Lipa Namba and cash on delivery'), t('Orders, sizes, stock and delivery areas'), t('Dashboard with your numbers')].map((x) => (
               <li key={x} className="flex items-center gap-3">
                 <Check size={17} strokeWidth={2} className="shrink-0" /> {x}
               </li>
@@ -389,8 +389,8 @@ function Pricing({ start }: { start: string }) {
 function Faq() {
   const t = useT()
   const qs = [
-    [t('What does RIZK cost?'), t('It is free to start and we take no commission on your sales. We will announce paid plans well before they start.')],
-    [t('How do I get paid?'), t('The buyer pays your Lipa Namba or pays cash on delivery, the way they already pay sellers today. The money never passes through RIZK.')],
+    [t('What does Shopi cost?'), t('It is free to start and we take no commission on your sales. We will announce paid plans well before they start.')],
+    [t('How do I get paid?'), t('The buyer pays your Lipa Namba or pays cash on delivery, the way they already pay sellers today. The money never passes through Shopi.')],
     [t('How do I know a buyer really paid?'), t('The buyer pastes the payment SMS. We check the amount, the name and the transaction ID, and refuse one already used. Still check your phone before you confirm.')],
     [t('Do I need a website or a developer?'), t('No. You open the shop on your phone in a few minutes and get a link to share.')],
     [t('Who does the delivery?'), t('You do, with your own rider. You set your areas and a fee for each, and the buyer picks one when ordering.')],
@@ -440,7 +440,7 @@ function Finale({ start, startLabel, signedIn }: { start: string; startLabel: st
       <div className="mx-auto max-w-[1400px] overflow-hidden rounded-[32px] bg-ink text-white md:rounded-[40px]">
         <div className="px-6 pt-20 pb-20 text-center md:pt-32 md:pb-28">
           <h2 className="display text-[52px] sm:text-[80px] lg:text-[112px]">
-            Risk to get Rizk<span className="text-moto">.</span>
+            {t('Your shop in one link')}<span className="text-moto">.</span>
           </h2>
           <p className="mx-auto mt-6 max-w-[30rem] text-[17px] text-white/65 md:text-[18px]">{t('Your buyers are already on their phones. Open your shop today and share the link tonight.')}</p>
           <Link to={start} className="btn btn-lg mt-10 bg-white text-ink hover:bg-white/90">
@@ -481,7 +481,7 @@ function Finale({ start, startLabel, signedIn }: { start: string; startLabel: st
           </div>
           <div className="mx-auto flex max-w-[1280px] flex-col gap-2 border-t border-white/10 px-6 py-6 text-[13px] text-white/40 md:flex-row md:justify-between md:px-10">
             <p>© {new Date().getFullYear()} Driftmark Technologies Limited</p>
-            <p>{t('RIZK never holds buyers’ money. Sellers are paid directly.')}</p>
+            <p>{t('Shopi never holds buyers’ money. Sellers are paid directly.')}</p>
           </div>
           <div aria-hidden className="px-4 pt-6 pb-4 md:px-10 md:pt-10 md:pb-10">
             <Wordmark className="block h-auto w-full text-white" title="" />

@@ -1,7 +1,7 @@
 import { Link, createFileRoute, getRouteApi, useNavigate } from '@tanstack/react-router'
 import { Banknote, Check, Minus, Plus, ShieldCheck, ShoppingBag, Smartphone, Trash2 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
-import { MadeWithRizk } from '#/components/shop'
+import { MadeWithShopi } from '#/components/shop'
 import { BackButton, Empty, ErrorText, Field, Img, ShopAvatar } from '#/components/ui'
 import { placeOrder, type PublicProduct } from '#/lib/api/store'
 import { useCart } from '#/lib/cart'
@@ -11,7 +11,7 @@ import { useT } from '#/lib/i18n'
 
 export const Route = createFileRoute('/$shop/checkout')({ component: Checkout })
 const parent = getRouteApi('/$shop')
-const BUYER_KEY = 'rizk_buyer'
+const BUYER_KEY = 'shopi_buyer'
 const OTHER = 'other'
 const FORM_ID = 'checkout'
 
@@ -169,7 +169,7 @@ function Checkout() {
       </button>
       <p className="flex items-start justify-center gap-2 text-center text-[13px] leading-5 text-muted">
         <ShieldCheck size={15} strokeWidth={1.6} className="mt-0.5 shrink-0" />
-        {t('You pay the seller directly. RIZK never holds your money.')}
+        {t('You pay the seller directly. Shopi never holds your money.')}
       </p>
     </div>
   )
@@ -290,7 +290,7 @@ function Checkout() {
 
           <div className="mt-10 md:hidden">{summary}</div>
           <div className="md:hidden">
-            <MadeWithRizk />
+            <MadeWithShopi />
           </div>
         </div>
 

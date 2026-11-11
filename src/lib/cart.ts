@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 /** Lines are keyed by product and size, like "abc123" or "abc123|M". */
 type Cart = Record<string, number>
-const key = (shopId: string) => `rizk_cart_${shopId}`
+const key = (shopId: string) => `shopi_cart_${shopId}`
 
 export const lineKey = (productId: string, size?: string | null) => (size ? `${productId}|${size}` : productId)
 export function parseLine(line: string) {

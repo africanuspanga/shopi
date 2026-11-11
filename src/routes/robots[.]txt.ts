@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 /** Search engines may crawl only the real site. Test hosts (rizktz.store, workers.dev, localhost) stay out of search results. */
-const LIVE_HOSTS = new Set(['rizk.tz', 'www.rizk.tz'])
+const LIVE_HOSTS = new Set(['shopi.tz', 'www.shopi.tz'])
 
 export const Route = createFileRoute('/robots.txt')({
   server: {

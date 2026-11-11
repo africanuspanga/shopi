@@ -99,13 +99,13 @@ function ShopSettings() {
             </Field>
             <Field label={t('Shop link')} hint={t('Your link stays the same so the ones you already shared keep working.')}>
               <div className="input flex items-center justify-between gap-3 bg-page">
-                <span className="code truncate text-[15px] text-ink-2">rizk.tz/{s.slug}</span>
+                <span className="code truncate text-[15px] text-ink-2">shopi.tz/{s.slug}</span>
                 <button
                   type="button"
                   className="-my-2 -mr-2 flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2.5 text-[13px] font-medium transition-colors hover:bg-well"
                   onClick={async () => {
                     try {
-                      await navigator.clipboard.writeText(`https://rizk.tz/${s.slug}`)
+                      await navigator.clipboard.writeText(`https://shopi.tz/${s.slug}`)
                       setCopied(true)
                       setTimeout(() => setCopied(false), 1600)
                     } catch {
@@ -141,7 +141,7 @@ function ShopSettings() {
           </div>
         </Group>
 
-        <Group title={t('Payments')} sub={t('Buyers pay you directly. RIZK never holds your money.')}>
+        <Group title={t('Payments')} sub={t('Buyers pay you directly. Shopi never holds your money.')}>
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('Network')}>

@@ -9,7 +9,7 @@ export const Route = createFileRoute('/signup')({
   beforeLoad: ({ context }) => {
     if (context.session.user) throw redirect({ to: context.session.shop ? '/app' : '/onboard' })
   },
-  head: () => ({ meta: [{ title: 'Open your shop · RIZK' }] }),
+  head: () => ({ meta: [{ title: 'Open your shop · Shopi' }] }),
   component: Signup,
 })
 

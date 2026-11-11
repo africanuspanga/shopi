@@ -79,7 +79,7 @@ function hashPassword(password) {
 
 /** An id in newId()'s alphabet, derived from a name so every run (and local and live) gets the same one. */
 const stableId = (name, len = 16) =>
-  Array.from(createHash('sha256').update(`rizk-seed:${name}`).digest().subarray(0, len), (b) => '0123456789abcdefghijklmnopqrstuvwxyz'[b % 36]).join('')
+  Array.from(createHash('sha256').update(`rizk-seed:${name}`) /* keep this salt: changing it would give every seeded shop and product a new id */.digest().subarray(0, len), (b) => '0123456789abcdefghijklmnopqrstuvwxyz'[b % 36]).join('')
 
 /** Easy to type on a phone, about 70 bits: xxxx-xxxx-xxxx-xx with no 0/o/1/l/i. */
 function tempPassword() {
@@ -188,7 +188,7 @@ function writeLogins(logins) {
     `# Client shop logins (private: never commit, never paste in a chat)
 
 Temporary passwords made by \`app/scripts/seed-client-shops.mjs\`. Log in at https://rizktz.store/login with the phone
-and password. RIZK has no password reset or change yet, so hand each login only to its owner.
+and password. Shopi has no password reset or change yet, so hand each login only to its owner.
 The same login works on the local copy (http://localhost:3000/login) after a local seed.
 
 | Shop | Link | Phone (login) | Password |
@@ -211,7 +211,7 @@ async function seed(dir, logins) {
 
   // Never take over a link or a phone number someone else already uses.
   const [slugOwner] = query(`SELECT id, owner_id FROM shops WHERE slug = ${q(shop.slug)}`)
-  if (slugOwner && slugOwner.id !== shopId) throw new Error(`rizk.tz/${shop.slug} already belongs to another shop (${slugOwner.id})`)
+  if (slugOwner && slugOwner.id !== shopId) throw new Error(`shopi.tz/${shop.slug} already belongs to another shop (${slugOwner.id})`)
   const [phoneUser] = query(`SELECT id FROM users WHERE phone = ${q(phone)}`)
   if (phoneUser && phoneUser.id !== userId) throw new Error(`${phone} already has an account (${phoneUser.id}); seed by hand or ask the owner`)
   const [ownShop] = query(`SELECT id FROM shops WHERE owner_id = ${q(userId)} AND id != ${q(shopId)}`)

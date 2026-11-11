@@ -1,11 +1,11 @@
-# RIZK
+# Shopi
 
-**Risk to get Rizk.** An online shop in one link for social sellers in Tanzania.
+**Your shop in one link.** An online shop for social sellers in Tanzania.
 
 A seller opens a shop in a few minutes, adds products from their phone and shares one link
-(`rizk.tz/<shop>`) on Instagram, TikTok and WhatsApp. Buyers order with their name, phone,
+(`shopi.tz/<shop>`) on Instagram, TikTok and WhatsApp. Buyers order with their name, phone,
 delivery area and a landmark, then pay the seller's Lipa Namba (and paste the confirmation SMS)
-or pay cash on delivery. RIZK never holds money.
+or pay cash on delivery. Shopi never holds money.
 
 The design system, the rules for colour, type and copy, and a map of the code are in [CLAUDE.md](CLAUDE.md).
 
@@ -16,7 +16,7 @@ The design system, the rules for colour, type and copy, and a map of the code ar
   size, hide or show, "save and add another"
 - Storefront: shop header, filters, product grid with quick add, product page, bag, checkout with
   delivery areas and fees
-- Readable product links, like `rizk.tz/zee-store/gauni-la-jua`, with photo previews in WhatsApp;
+- Readable product links, like `shopi.tz/zee-store/gauni-la-jua`, with photo previews in WhatsApp;
   old `/<shop>/p/<id>` links redirect
 - Sharing: buyers share a product with a friend; sellers send one product to a buyer
 - Payments: Lipa Namba with SMS proof (amount, name and transaction ID checked; a transaction ID can
@@ -32,7 +32,7 @@ The design system, the rules for colour, type and copy, and a map of the code ar
   First-party only: no third-party trackers; bots and the owner's own visits are left out
 - English everywhere; every string is ready for Swahili (`SWAHILI_ENABLED` in `src/lib/i18n.tsx`)
 
-Not built yet: Rizko AI assistant, Discover and voting, subscriptions and billing, SMS/WhatsApp
+Not built yet: the Shopi assistant, Discover and voting, subscriptions and billing, SMS/WhatsApp
 alerts, password reset (for now: reset by hand), terms and privacy pages, admin screens, rate limits
 on public endpoints.
 
@@ -70,7 +70,7 @@ npx wrangler d1 migrations apply rizk --remote
 npm run deploy
 ```
 
-Then add the custom domain (rizk.tz) to the Worker in the Cloudflare dashboard.
+Then add the custom domain (shopi.tz) to the Worker in the Cloudflare dashboard.
 
 ## Credits
 
@@ -79,6 +79,6 @@ https://unsplash.com/license). Photo IDs: 1696962678565-bee84e6b9cb6, 1696962701
 1601653233006-5c9fd30eab12, 1760907949889-eb62b7fd9f75, 1781274054552-311be66203fd, 1784854491993-16445b10a6c6,
 1781274054565-4f9d9dc7794a, 1663044023283-9ea59358b6c0, 1663044022903-caa195cb5b2e, 1663044022894-68a5e6bccd64,
 1706092373219-0316a8bbaad7, 1706092372694-223070e27695, 1709809081557-78f803ce93a0.
-Type: Mona Sans and Geist Mono (SIL Open Font License 1.1). The RIZK letters are outlined from Mona Sans.
+Type: Mona Sans and Geist Mono (SIL Open Font License 1.1). The Shopi letters are outlined from Mona Sans.
 Analytics: the visitor and session model and the bot list follow Minilytics (MIT,
 https://github.com/surendrapandar/minilytics).

@@ -5,7 +5,7 @@ export type Lang = 'sw' | 'en'
 
 /**
  * English is the source language and the only one shown until the team's Swahili file is in.
- * Workflow: `python3 scripts/i18n/export.py` writes design/translations/RIZK-translations.xlsx,
+ * Workflow: `python3 scripts/i18n/export.py` writes design/translations/Shopi-translations.xlsx,
  * the team fills the Swahili column, `python3 scripts/i18n/import.py <file>` writes src/locales/sw.json,
  * then flip this to true.
  */

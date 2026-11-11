@@ -6,7 +6,7 @@ import { normalizePhone } from '#/lib/format'
 import { SWAHILI_ENABLED, type Lang } from '#/lib/i18n'
 
 export const getSession = createServerFn({ method: 'GET' }).handler(async () => {
-  const lang: Lang = SWAHILI_ENABLED && getCookie('rizk_lang') === 'sw' ? 'sw' : 'en'
+  const lang: Lang = SWAHILI_ENABLED && getCookie('shopi_lang') === 'sw' ? 'sw' : 'en'
   const user = await currentUser()
   const shop = user
     ? await first<{ id: string; slug: string; name: string; logo_key: string | null }>(
@@ -20,7 +20,7 @@ export const getSession = createServerFn({ method: 'GET' }).handler(async () => 
 export const setLang = createServerFn({ method: 'POST' })
   .validator((d: { lang: Lang }) => ({ lang: d.lang === 'en' ? 'en' : 'sw' }))
   .handler(async ({ data }) => {
-    setCookie('rizk_lang', data.lang, { path: '/', maxAge: 365 * 86400, sameSite: 'lax' })
+    setCookie('shopi_lang', data.lang, { path: '/', maxAge: 365 * 86400, sameSite: 'lax' })
     return data.lang
   })
 

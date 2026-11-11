@@ -20,7 +20,7 @@ ALTER TABLE orders ADD COLUMN link_tag TEXT;
 ALTER TABLE orders ADD COLUMN visitor_id TEXT;
 ALTER TABLE orders ADD COLUMN session_id TEXT;
 
--- Links a seller tags for one channel or post: rizk.tz/zee-store?s=bio
+-- Links a seller tags for one channel or post: shopi.tz/zee-store?s=bio
 CREATE TABLE links (
   shop_id TEXT NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
   tag TEXT NOT NULL,

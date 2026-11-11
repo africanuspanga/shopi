@@ -90,7 +90,7 @@ function Storefront() {
               {shop.whatsapp && (
                 <a
                   className="btn btn-sm h-10 px-4"
-                  href={waLink(shop.whatsapp, t('Hi {shop}, I found your shop on RIZK.', { shop: shop.name }))}
+                  href={waLink(shop.whatsapp, t('Hi {shop}, I found your shop on Shopi.', { shop: shop.name }))}
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => track('whatsapp_click', { shopId: shop.id, detail: 'shop' })}

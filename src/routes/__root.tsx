@@ -10,7 +10,7 @@ export const Route = createRootRoute({
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
       { name: 'theme-color', content: '#f4f3f0' },
-      { title: 'RIZK · Your shop in one link' },
+      { title: 'Shopi · Your shop in one link' },
       { name: 'description', content: 'An online shop in one link for sellers on Instagram, TikTok and WhatsApp. Buyers order by themselves and pay your Lipa Namba or cash on delivery.' },
     ],
     links: [

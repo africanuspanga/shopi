@@ -11,8 +11,8 @@ export function AuthLayout({ children, topRight, aside }: { children: ReactNode;
     <div className="min-h-dvh bg-page lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="flex min-h-dvh flex-col px-4 pt-[max(8px,env(safe-area-inset-top))] pb-10 md:px-10">
         <header className="flex h-16 items-center justify-between">
-          <Link to="/" aria-label="RIZK">
-            <Wordmark className="h-[15px] w-auto" />
+          <Link to="/" aria-label="Shopi">
+            <Wordmark className="h-[22px] w-auto" />
           </Link>
           {topRight}
         </header>
@@ -30,7 +30,7 @@ function ProductAside() {
   return (
     <>
       <p className="display text-[44px] xl:text-[56px]">
-        Risk to get Rizk<span className="text-moto">.</span>
+        {t('Your shop in one link')}<span className="text-moto">.</span>
       </p>
       <p className="mt-4 max-w-[26rem] text-[16px] leading-relaxed text-white/60">{t('One link for your Instagram, TikTok and WhatsApp. Buyers order by themselves; you see every order in one place.')}</p>
       <div className="relative mt-auto h-[480px] xl:h-[540px]">

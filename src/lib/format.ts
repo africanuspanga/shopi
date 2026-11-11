@@ -62,7 +62,7 @@ export const RESERVED_PRODUCT_SLUGS = new Set(['checkout', 'p', 'bag', 'cart', '
 
 export const RESERVED_SLUGS = new Set([
   'app', 'admin', 'api', 'img', 'login', 'signup', 'logout', 'onboard', 'discover', 'creators',
-  'top-products', 'help', 'about', 'terms', 'privacy', 'pricing', 'rizk', 'rizko', 'shop', 'shops',
+  'top-products', 'help', 'about', 'terms', 'privacy', 'pricing', 'shopi', 'shopitz', 'rizk', 'rizko', 'shop', 'shops',
   'o', 'order', 'orders', 'static', 'assets', 'favicon.ico', 'robots.txt', 'sitemap.xml',
 ])
 

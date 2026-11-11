@@ -18,7 +18,7 @@ export async function shareLink(url: string, title: string) {
 
 import { useEffect, useState } from 'react'
 
-const PUBLIC_ORIGIN = 'https://rizk.tz'
+const PUBLIC_ORIGIN = 'https://shopi.tz'
 
 /** Same text on the server and the first client render, then the real origin (local, preview or live). */
 export function useOrigin() {
