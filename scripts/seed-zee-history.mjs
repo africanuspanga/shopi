@@ -24,7 +24,7 @@ const OUT = join(process.cwd(), '.demo')
 mkdirSync(OUT, { recursive: true })
 
 const d1 = (sql) =>
-  JSON.parse(execFileSync('npx', ['wrangler', 'd1', 'execute', 'rizk', where, '--json', '--command', sql], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }))[0].results
+  JSON.parse(execFileSync('npx', ['wrangler', 'd1', 'execute', 'shopi', where, '--json', '--command', sql], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }))[0].results
 
 let [shop] = d1(`SELECT id, owner_id, slug FROM shops WHERE slug IN ('${SLUG}', 'zeestore') OR name = 'Zee''s Store' LIMIT 1`)
 if (!shop) throw new Error("Zee's Store not found. Onboard it through the UI first.")
@@ -235,5 +235,5 @@ chunk(events, 'INSERT INTO events (shop_id, product_id, type, source, created_at
 
 const file = join(OUT, 'zee-history.sql')
 writeFileSync(file, sql.join('\n'))
-execFileSync('npx', ['wrangler', 'd1', 'execute', 'rizk', where, '--yes', '--file', file], { stdio: ['ignore', 'ignore', 'inherit'] })
+execFileSync('npx', ['wrangler', 'd1', 'execute', 'shopi', where, '--yes', '--file', file], { stdio: ['ignore', 'ignore', 'inherit'] })
 console.log(`Zee's Store: ${orders.length} orders, ${events.length} events, ${visitors.length} visitors over ${DAYS} days and today -> ${remote ? 'live' : 'local'} /${SLUG}`)

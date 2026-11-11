@@ -44,7 +44,7 @@ TanStack Start on one Cloudflare Worker, D1 (SQLite), R2 for photos, Tailwind 4.
 
 ```bash
 npm install
-npx wrangler d1 migrations apply rizk --local
+npx wrangler d1 migrations apply shopi --local
 npm run dev            # http://localhost:3000
 npx tsc --noEmit       # type check
 ```
@@ -64,9 +64,9 @@ Products created before migration 0003 get readable links with
 
 ```bash
 npx wrangler login
-npx wrangler d1 create rizk          # copy the database_id into wrangler.jsonc
-npx wrangler r2 bucket create rizk-media
-npx wrangler d1 migrations apply rizk --remote
+npx wrangler d1 create shopi         # copy the database_id into wrangler.jsonc
+npx wrangler r2 bucket create shopi-media
+npx wrangler d1 migrations apply shopi --remote
 npm run deploy
 ```
 

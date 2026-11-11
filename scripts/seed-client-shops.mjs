@@ -93,7 +93,7 @@ const q = (v) => (v == null ? 'NULL' : typeof v === 'number' ? String(v) : `'${S
 /* ---------- Wrangler ---------- */
 
 const wrangler = (...a) => execFileSync('npx', ['wrangler', ...a], { cwd: APP, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 << 20 })
-const query = (sql) => JSON.parse(wrangler('d1', 'execute', 'rizk', target, '--json', '--command', sql))[0].results
+const query = (sql) => JSON.parse(wrangler('d1', 'execute', 'shopi', target, '--json', '--command', sql))[0].results
 
 /* ---------- Checks ---------- */
 
@@ -246,7 +246,7 @@ async function seed(dir, logins) {
   const done = new Set(!reupload && existsSync(doneFile) ? JSON.parse(readFileSync(doneFile, 'utf8')) : [])
   for (const [key, file] of uploads) {
     if (done.has(key)) continue
-    wrangler('r2', 'object', 'put', `rizk-media/${key}`, target, '--file', file, '--content-type', 'image/webp')
+    wrangler('r2', 'object', 'put', `shopi-media/${key}`, target, '--file', file, '--content-type', 'image/webp')
     done.add(key)
     writeFileSync(doneFile, JSON.stringify([...done], null, 1))
   }
@@ -298,7 +298,7 @@ async function seed(dir, logins) {
   ]
   const sqlFile = join(build, `seed${remote ? '-remote' : '-local'}.sql`)
   writeFileSync(sqlFile, sql.join('\n'))
-  wrangler('d1', 'execute', 'rizk', target, '--yes', '--file', sqlFile)
+  wrangler('d1', 'execute', 'shopi', target, '--yes', '--file', sqlFile)
 
   const photos = products.reduce((s, p) => s + p.images.length, 0)
   console.log(`${shop.name}: /${shop.slug} · ${products.length} products · ${photos} photos${logoKey ? ' + logo' : ''} · ${(shop.areas ?? []).length} delivery areas · ${remote ? 'live' : 'local'}`)

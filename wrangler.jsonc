@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "rizk",
+	"name": "shopi",
 	"compatibility_date": "2025-09-02",
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "@tanstack/react-start/server-entry",
@@ -12,10 +12,10 @@
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "rizk",
-			"database_id": "e7609dd3-2a48-4e21-ac94-2c5267ea1da2",
+			"database_name": "shopi",
+			"database_id": "53388abf-03ae-47f5-becc-e07b85261e50",
 			"migrations_dir": "migrations"
 		}
 	],
-	"r2_buckets": [{ "binding": "MEDIA", "bucket_name": "rizk-media" }]
+	"r2_buckets": [{ "binding": "MEDIA", "bucket_name": "shopi-media" }]
 }

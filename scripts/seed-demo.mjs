@@ -190,13 +190,13 @@ const logoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400
   <g transform="translate(200 200)" fill="none" stroke="#fff" stroke-width="10"><rect x="-80" y="-80" width="160" height="160"/><rect x="-80" y="-80" width="160" height="160" transform="rotate(45)"/></g>
   <text x="200" y="232" text-anchor="middle" font-family="Georgia, serif" font-size="96" fill="#fff">Z</text></svg>`
 await sharp(Buffer.from(logoSvg)).webp({ quality: 85 }).toFile(join(OUT, 'logo.webp'))
-wrangler('r2', 'object', 'put', `rizk-media/${logoKey}`, '--local', '--file', join(OUT, 'logo.webp'), '--content-type', 'image/webp')
+wrangler('r2', 'object', 'put', `shopi-media/${logoKey}`, '--local', '--file', join(OUT, 'logo.webp'), '--content-type', 'image/webp')
 for (const [i, p] of products.entries()) {
   const file = join(OUT, `p${i}.webp`)
   await sharp(Buffer.from(patternSvg(p.kind, p.dark))).resize(800, 800).webp({ quality: 82 }).toFile(file)
-  wrangler('r2', 'object', 'put', `rizk-media/${p.key}`, '--local', '--file', file, '--content-type', 'image/webp')
+  wrangler('r2', 'object', 'put', `shopi-media/${p.key}`, '--local', '--file', file, '--content-type', 'image/webp')
 }
-wrangler('d1', 'execute', 'rizk', '--local', '--file', join(OUT, 'seed.sql'))
+wrangler('d1', 'execute', 'shopi', '--local', '--file', join(OUT, 'seed.sql'))
 
 const totalSales = orderRows.length
 console.log(`Demo shop ready: /zuri-fashion · ${products.length} products · ${totalSales} orders · ${eventRows.length} events over 90 days`)

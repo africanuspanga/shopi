@@ -11,7 +11,7 @@ import { join } from 'node:path'
 
 const where = process.argv.includes('--remote') ? '--remote' : '--local'
 const d1 = (sql) =>
-  JSON.parse(execFileSync('npx', ['wrangler', 'd1', 'execute', 'rizk', where, '--json', '--command', sql], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }))[0].results
+  JSON.parse(execFileSync('npx', ['wrangler', 'd1', 'execute', 'shopi', where, '--json', '--command', sql], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }))[0].results
 
 // Same rules as productSlug() and RESERVED_PRODUCT_SLUGS in src/lib/format.ts
 const RESERVED = new Set(['checkout', 'p', 'bag', 'cart', 'order', 'orders', 'about'])
@@ -45,6 +45,6 @@ if (!updates.length) {
   mkdirSync(dir, { recursive: true })
   const file = join(dir, 'product-slugs.sql')
   writeFileSync(file, updates.join('\n'))
-  execFileSync('npx', ['wrangler', 'd1', 'execute', 'rizk', where, '--file', file], { stdio: ['ignore', 'ignore', 'inherit'] })
+  execFileSync('npx', ['wrangler', 'd1', 'execute', 'shopi', where, '--file', file], { stdio: ['ignore', 'ignore', 'inherit'] })
   console.log(`Gave ${updates.length} products a link name (${where.slice(2)}).`)
 }

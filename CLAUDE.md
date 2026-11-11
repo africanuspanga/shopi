@@ -36,7 +36,7 @@ Delete this section once they ship.
 npm run dev                 # http://localhost:3000 (Vite + Cloudflare worker, local D1 and R2)
 npx tsc --noEmit            # must pass before you report anything done
 npx tsr generate            # regenerate src/routeTree.gen.ts after adding or renaming a route
-npx wrangler d1 migrations apply rizk --local
+npx wrangler d1 migrations apply shopi --local
 node scripts/seed-zee-history.mjs          # demo history for Zee's Store
 node scripts/backfill-product-slugs.mjs    # readable links for older products
 node scripts/seed-client-shops.mjs <folder> [--remote]   # real seller shops from a private data folder (shop.json + photos/)
