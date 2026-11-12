@@ -99,7 +99,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `ok` / `wait` / `bad` | `#15803d` / `#b45309` / `#d92d20` | Meaning only: status dots, check icons, errors |
 
 **Moto rules.** Moto marks what is hot or needs the seller, and the active tab in the floating bottom nav:
-bag count once something is in it, sale tags, low stock, "Check payment" status, payments-to-check count,
+bag count once something is in it (also on a product card's quick-add button, which turns Moto and shows how many of that product are in the bag), sale tags, low stock, "Check payment" status, payments-to-check count,
 today's bar in charts, the `.signal` dot, the active bottom-nav icon, and the logo's full stop.
 Primary buttons are **never** Moto; they are ink. Text on Moto is ink, never white (white fails contrast).
 No gradients between hues, no glows, no coloured shadows. The only gradient allowed is a neutral fade
@@ -135,7 +135,8 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
 - Motion: `.rise`, `.rise-2`, `.rise-3` (fade and rise on enter), `.fade`, `.sheet-up`.
 
 ### Layout patterns
-- **Storefront** (`/$shop`): white page, sticky `ShopTopBar` with `BagButton`, shop header (avatar, display name,
+- **Storefront** (`/$shop`): white page, sticky `ShopTopBar` with `BagButton` (on phones it uses `reveal`: hidden until the
+  shop's name scrolls out of view, so the name never shows twice), shop header (avatar, display name,
   location, bio, WhatsApp, share, socials), `FactPills` on phones and a `ShopFacts` card on desktop, filter chips,
   2/3/4-column grid, `ShopFooter`. On phones the bag lives in the floating capsule (below).
 - **Product page:** swipe gallery with a photo counter on phones; a large photo with thumbnails on desktop;

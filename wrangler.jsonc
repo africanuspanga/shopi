@@ -5,8 +5,10 @@
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "@tanstack/react-start/server-entry",
 	"observability": { "enabled": true },
-	// Test site until launch; shopi.tz replaces it when Shopi goes live.
-	"routes": [{ "pattern": "rizktz.store", "custom_domain": true }],
+	// Deploys replace the Worker's custom domains with this list, so a domain missing here goes offline.
+	// www.shopi.tz is not a Worker domain: a Cloudflare Redirect Rule (dashboard, zone shopi.tz) sends it
+	// to shopi.tz with a 301.
+	"routes": [{ "pattern": "shopi.tz", "custom_domain": true }],
 	"workers_dev": false,
 	"upload_source_maps": true,
 	"d1_databases": [

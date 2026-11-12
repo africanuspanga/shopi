@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowUpRight, Banknote, Clock, MapPin, Plus, Smartphone, Truck } from 'lucide-react'
+import { ArrowUpRight, Banknote, Clock, MapPin, Smartphone, Truck } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppMark } from '#/components/brand-icons'
 import { Img, Sheet, ShopAvatar, Wordmark } from '#/components/ui'
@@ -32,18 +32,37 @@ export function Tag({ children, hot = false }: { children: ReactNode; hot?: bool
   )
 }
 
-/** A product in a grid. On desktop, hovering shows the second photo. The round + adds it to the bag without leaving the grid. */
+/** The Shopi bag (bag_body in design/brand/glyphs.py) with a plus cut through its face where the logo has its dot. */
+function BagPlusIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="17 23 66 66" aria-hidden="true">
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        d="M28 38H72a3 3 0 0 1 3 2.6l4 33.4a10 10 0 0 1-10 12H31a10 10 0 0 1-10-12L25 40.6a3 3 0 0 1 3-2.6zM46.75 53H53.25V59.75H60V66.25H53.25V73H46.75V66.25H40V59.75H46.75Z"
+      />
+      <path d="M40 41V36a10 10 0 0 1 20 0V41" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+/**
+ * A product in a grid. On desktop, hovering shows the second photo. The round bag button adds it without leaving the grid;
+ * once the product is in the bag it turns Moto and shows how many, like the bag count in the capsule.
+ */
 export function ProductCard({
   shopSlug,
   p,
   onOpen,
   onQuickAdd,
+  inBag = 0,
   eager = false,
 }: {
   shopSlug: string
   p: PublicProduct
   onOpen?: () => void
   onQuickAdd?: (p: PublicProduct) => void
+  inBag?: number
   eager?: boolean
 }) {
   const t = useT()
@@ -79,11 +98,11 @@ export function ProductCard({
         <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[4/5]">
           <button
             type="button"
-            aria-label={t('Add {name} to bag', { name: p.name })}
+            aria-label={inBag ? t('{name}: {n} in your bag. Add another', { name: p.name, n: inBag }) : t('Add {name} to bag', { name: p.name })}
             onClick={() => onQuickAdd(p)}
-            className="pointer-events-auto absolute right-2.5 bottom-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-card/95 text-ink shadow-[0_1px_2px_rgb(10_10_10/0.12),0_6px_16px_-6px_rgb(10_10_10/0.3)] backdrop-blur transition-[transform,background-color] hover:bg-ink hover:text-white active:scale-90"
+            className={`pointer-events-auto absolute right-2.5 bottom-2.5 flex h-10 min-w-10 items-center justify-center rounded-full px-2.5 shadow-[0_0_0_2px_rgb(255_255_255/0.85),0_6px_16px_-6px_rgb(10_10_10/0.35)] transition-[transform,background-color,color] duration-150 ease-out active:scale-95 ${inBag ? 'bg-moto text-ink' : 'bg-ink text-white hover:bg-ink-2'}`}
           >
-            <Plus size={18} strokeWidth={2} />
+            {inBag ? <span className="tnum text-[15px] font-semibold">{inBag}</span> : <BagPlusIcon />}
           </button>
         </div>
       )}
@@ -244,6 +263,19 @@ export function SocialLinks({ shop, whatsapp = true, className = '' }: { shop: P
   )
 }
 
+/** Across the top of every page of a sample shop, so buyers know at once that nothing here is for sale. */
+export function DemoBanner() {
+  const t = useT()
+  return (
+    <div className="bg-ink px-4 py-2.5 text-center text-[13px] leading-5 text-white">
+      {t('Demo shop with sample products. Orders are switched off.')}{' '}
+      <a href="/" className="font-medium whitespace-nowrap underline decoration-white/40 underline-offset-4 hover:decoration-white">
+        {t('Open your own shop')}
+      </a>
+    </div>
+  )
+}
+
 export function MadeWithShopi() {
   const t = useT()
   return (
@@ -283,9 +315,17 @@ export function ShopFooter({ shop }: { shop: PublicShop }) {
   )
 }
 
-export function ShopTopBar({ shop, right }: { shop: PublicShop; right?: ReactNode }) {
+/**
+ * The shop's name and logo, pinned to the top. With `reveal`, phones keep it out of sight until the page's own header
+ * has scrolled away, so the name never shows twice; from md up it is always there.
+ */
+export function ShopTopBar({ shop, right, reveal }: { shop: PublicShop; right?: ReactNode; reveal?: boolean }) {
+  const place =
+    reveal === undefined
+      ? 'sticky'
+      : `fixed inset-x-0 transition-transform duration-300 ease-out md:sticky md:translate-y-0 ${reveal ? 'translate-y-0' : '-translate-y-full'}`
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-card/90 backdrop-blur-md">
+    <header className={`${place} top-0 z-30 border-b border-line bg-card/90 backdrop-blur-md`}>
       <div className="mx-auto flex h-16 max-w-[1280px] items-center gap-3 px-4 md:px-10">
         <Link to="/$shop" params={{ shop: shop.slug }} className="flex min-w-0 flex-1 items-center gap-3">
           <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-9 w-9 text-[13px]" />

@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { Check, MapPin, Share2, Store } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { BagButton, FactPills, ProductCard, QuickAddSheet, ShopFacts, ShopFooter, ShopTopBar, SocialLinks, onSale } from '#/components/shop'
 import { ShopNav } from '#/components/shop-nav'
@@ -26,6 +26,18 @@ function Storefront() {
   const [quick, setQuick] = useState<PublicProduct | null>(null)
   const [added, setAdded] = useState('')
   const url = `${useOrigin()}/${shop.slug}`
+  const inBag = (id: string) => cart.lines.reduce((n, l) => (l.productId === id ? n + l.qty : n), 0)
+
+  // Phones: the top bar waits until the shop's name has scrolled out of view.
+  const nameRef = useRef<HTMLDivElement>(null)
+  const [pastName, setPastName] = useState(false)
+  useEffect(() => {
+    const el = nameRef.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => setPastName(!e.isIntersecting && e.boundingClientRect.top < 0))
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   useEffect(() => {
     track('view_shop', { shopId: shop.id })
@@ -57,6 +69,7 @@ function Storefront() {
     <div className="min-h-dvh bg-card pb-28 md:pb-0">
       <ShopTopBar
         shop={shop}
+        reveal={pastName}
         right={
           <>
             <LangSwitch />
@@ -71,9 +84,9 @@ function Storefront() {
       />
 
       <main className="mx-auto max-w-[1280px] px-4 md:px-10">
-        <section className="grid gap-8 pt-6 pb-8 md:grid-cols-[minmax(0,1fr)_340px] md:items-end md:gap-16 md:pt-16 md:pb-14 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <section className="grid gap-8 pt-8 pb-8 md:grid-cols-[minmax(0,1fr)_340px] md:items-end md:gap-16 md:pt-16 md:pb-14 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="rise min-w-0">
-            <div className="flex items-center gap-4 md:block">
+            <div ref={nameRef} className="flex items-center gap-4 md:block">
               <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-16 w-16 text-[20px] md:h-24 md:w-24 md:text-[28px]" />
               <div className="min-w-0 md:mt-8">
                 <h1 className="display text-[30px] break-words md:text-[60px] lg:text-[72px]">{shop.name}</h1>
@@ -141,7 +154,14 @@ function Storefront() {
         ) : (
           <div className="grid grid-cols-2 gap-x-3 gap-y-8 pt-5 md:grid-cols-3 md:gap-x-6 md:gap-y-12 md:pt-8 lg:grid-cols-4">
             {shown.map((p, i) => (
-              <ProductCard key={p.id} shopSlug={shop.slug} p={p} eager={i < 4} onQuickAdd={(x) => (x.sizes ? setQuick(x) : addToBag(x, null))} />
+              <ProductCard
+                key={p.id}
+                shopSlug={shop.slug}
+                p={p}
+                eager={i < 4}
+                inBag={inBag(p.id)}
+                onQuickAdd={(x) => (x.sizes ? setQuick(x) : addToBag(x, null))}
+              />
             ))}
           </div>
         )}

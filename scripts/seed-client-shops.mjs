@@ -187,7 +187,7 @@ function writeLogins(logins) {
     LOGINS,
     `# Client shop logins (private: never commit, never paste in a chat)
 
-Temporary passwords made by \`app/scripts/seed-client-shops.mjs\`. Log in at https://rizktz.store/login with the phone
+Temporary passwords made by \`app/scripts/seed-client-shops.mjs\`. Log in at https://shopi.tz/login with the phone
 and password. Shopi has no password reset or change yet, so hand each login only to its owner.
 The same login works on the local copy (http://localhost:3000/login) after a local seed.
 
@@ -222,7 +222,7 @@ async function seed(dir, logins) {
     login = { password: tempPassword() }
     logins.set(phone, login)
   }
-  Object.assign(login, { shop: shop.name, link: `rizktz.store/${shop.slug}`, phone })
+  Object.assign(login, { shop: shop.name, link: `shopi.tz/${shop.slug}`, phone })
   writeLogins(logins)
 
   /* Photos: convert, then upload the ones this target doesn't have yet. A key comes from the file's bytes, so a

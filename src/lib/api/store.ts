@@ -22,6 +22,8 @@ export type PublicShop = {
   lipa_name: string
   lipa_network: string
   cod_enabled: number
+  /** 'active', or 'demo' for a sample shop: shown with a banner, kept out of search, orders refused. */
+  status: string
 }
 export type PublicProduct = {
   id: string
@@ -38,12 +40,12 @@ export type PublicProduct = {
 }
 
 const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram, tiktok, facebook, location, hours,
-  lipa_number, lipa_name, lipa_network, cod_enabled`
+  lipa_number, lipa_name, lipa_network, cod_enabled, status`
 
 export const getStorefront = createServerFn({ method: 'GET' })
   .validator((d: { slug: string }) => ({ slug: String(d.slug).toLowerCase() }))
   .handler(async ({ data }) => {
-    const shop = await first<PublicShop>(`SELECT ${SHOP_COLS} FROM shops WHERE slug = ? AND status = 'active'`, data.slug)
+    const shop = await first<PublicShop>(`SELECT ${SHOP_COLS} FROM shops WHERE slug = ? AND status IN ('active', 'demo')`, data.slug)
     if (!shop) return null
     const [products, areas] = await Promise.all([
       all<Omit<PublicProduct, 'images' | 'sizes'> & { images: string; sizes: string | null }>(
@@ -81,11 +83,12 @@ export const placeOrder = createServerFn({ method: 'POST' })
     }) => d,
   )
   .handler(async ({ data }) => {
-    const shop = await first<{ id: string; cod_enabled: number; lipa_number: string }>(
-      `SELECT id, cod_enabled, lipa_number FROM shops WHERE id = ? AND status = 'active'`,
+    const shop = await first<{ id: string; cod_enabled: number; lipa_number: string; status: string }>(
+      `SELECT id, cod_enabled, lipa_number, status FROM shops WHERE id = ? AND status IN ('active', 'demo')`,
       data.shopId,
     )
     if (!shop) return { error: 'shop' as const }
+    if (shop.status === 'demo') return { error: 'demo' as const }
     const name = String(data.name ?? '').trim().slice(0, 60)
     const phone = normalizePhone(String(data.phone ?? ''))
     if (!name) return { error: 'name' as const }

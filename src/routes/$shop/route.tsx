@@ -1,4 +1,5 @@
 import { Outlet, createFileRoute, notFound } from '@tanstack/react-router'
+import { DemoBanner } from '#/components/shop'
 import { ignoreShop } from '#/lib/analytics'
 import { getStorefront } from '#/lib/api/store'
 import { imgUrl } from '#/lib/format'
@@ -23,6 +24,8 @@ export const Route = createFileRoute('/$shop')({
         { property: 'og:url', content: `${origin}/${shop.slug}` },
         { name: 'twitter:card', content: 'summary_large_image' },
         ...(cover ? [{ property: 'og:image', content: `${origin}${imgUrl(cover)}` }] : []),
+        // A sample shop stays out of search results, product pages included.
+        ...(shop.status === 'demo' ? [{ name: 'robots', content: 'noindex' }] : []),
       ],
     }
   },
@@ -44,5 +47,10 @@ function ShopLayout() {
   const { shop } = Route.useLoaderData()
   // Set during render, before the pages below send their first event. Idempotent.
   if (session.shop?.id === shop.id) ignoreShop(shop.id)
-  return <Outlet />
+  return (
+    <>
+      {shop.status === 'demo' && <DemoBanner />}
+      <Outlet />
+    </>
+  )
 }

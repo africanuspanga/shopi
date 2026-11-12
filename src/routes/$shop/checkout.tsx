@@ -27,6 +27,7 @@ function Checkout() {
     .filter((l): l is Line => !!l.p)
   const canLipa = !!shop.lipa_number
   const canCod = !!shop.cod_enabled
+  const demo = shop.status === 'demo'
   const [form, setForm] = useState({ name: '', phone: '', areaId: '', areaOther: '', landmark: '', note: '' })
   const [payment, setPayment] = useState<'lipa' | 'cod'>(canLipa ? 'lipa' : 'cod')
   const [error, setError] = useState('')
@@ -103,6 +104,7 @@ function Checkout() {
     payment: t('That way to pay is not available'),
     empty: t('Your bag is empty'),
     shop: t('This shop is not taking orders right now'),
+    demo: t('This is a demo shop. Orders are switched off.'),
   }
 
   const bag = (
@@ -164,8 +166,8 @@ function Checkout() {
         </div>
       </div>
       <ErrorText>{error}</ErrorText>
-      <button form={FORM_ID} className="btn btn-lg w-full" disabled={busy || (!canLipa && !canCod)}>
-        {busy ? t('Placing your order') : t('Place order')}
+      <button form={FORM_ID} className="btn btn-lg w-full" disabled={busy || demo || (!canLipa && !canCod)}>
+        {demo ? t('Orders are off in this demo shop') : busy ? t('Placing your order') : t('Place order')}
       </button>
       <p className="flex items-start justify-center gap-2 text-center text-[13px] leading-5 text-muted">
         <ShieldCheck size={15} strokeWidth={1.6} className="mt-0.5 shrink-0" />
