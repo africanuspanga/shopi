@@ -78,7 +78,7 @@ function SearchSheet({ open, onClose, shop, products }: { open: boolean; onClose
           {results.map((p) => (
             <li key={p.id}>
               <Link to="/$shop/$product" params={{ shop: shop.slug, product: p.slug ?? p.id }} onClick={onClose} className="flex items-center gap-3 py-3">
-                <Img k={p.images[0]} alt={p.name} className="h-16 w-[52px] shrink-0 rounded-[10px]" />
+                <Img size="thumb" k={p.images[0]} alt={p.name} className="h-16 w-[52px] shrink-0 rounded-[10px]" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px]">{p.name}</span>
                   <Price p={p} />

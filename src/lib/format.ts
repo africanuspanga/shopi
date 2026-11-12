@@ -66,8 +66,11 @@ export const RESERVED_SLUGS = new Set([
   'o', 'order', 'orders', 'static', 'assets', 'favicon.ico', 'robots.txt', 'sitemap.xml',
 ])
 
-export function imgUrl(key: string | null | undefined) {
-  return key ? `/img/${key}` : ''
+/** Every photo has a small copy (600 px) beside it for grids and thumbnails: s/<shop>/<id>.webp → t/<shop>/<id>.webp. */
+export const thumbKey = (key: string) => (key.startsWith('s/') ? `t/${key.slice(2)}` : key)
+
+export function imgUrl(key: string | null | undefined, size: 'full' | 'thumb' = 'full') {
+  return key ? `/img/${size === 'thumb' ? thumbKey(key) : key}` : ''
 }
 
 export function timeAgo(ms: number, lang: Lang) {

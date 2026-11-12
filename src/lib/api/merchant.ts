@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { requireShop, requireUser } from '#/server/auth'
 import { all, db, first, newId, now, run } from '#/server/db'
+import { removePhotos } from '#/server/media'
 import { moveStock, sizesTotal } from '#/server/stock'
 import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, normalizePhone, parseSizes, productSlug, slugify, type OrderStatus, type Size } from '#/lib/format'
 
@@ -79,6 +80,8 @@ export const updateShop = createServerFn({ method: 'POST' })
   .validator((d: Partial<ShopRow> & { areas?: { name: string; fee: number }[] }) => d)
   .handler(async ({ data }) => {
     const { shop } = await requireShop()
+    const before = await first<{ logo_key: string | null }>('SELECT logo_key FROM shops WHERE id = ?', shop.id)
+    const logo = data.logo_key ? str(data.logo_key, 100) : null
     await run(
       `UPDATE shops SET name = ?, bio = ?, category = ?, logo_key = ?, whatsapp = ?, instagram = ?, tiktok = ?,
          facebook = ?, location = ?, hours = ?, lipa_number = ?, lipa_name = ?, lipa_network = ?,
@@ -86,7 +89,7 @@ export const updateShop = createServerFn({ method: 'POST' })
       str(data.name, 60) || shop.name,
       str(data.bio, 300),
       CATEGORIES.some((c) => c.id === data.category) ? data.category : 'other',
-      data.logo_key ? str(data.logo_key, 100) : null,
+      logo,
       normalizePhone(str(data.whatsapp)),
       str(data.instagram, 60).replace(/^@/, ''),
       str(data.tiktok, 60).replace(/^@/, ''),
@@ -100,6 +103,8 @@ export const updateShop = createServerFn({ method: 'POST' })
       data.cod_enabled ? 1 : 0,
       shop.id,
     )
+    // A replaced logo leaves storage.
+    if (before?.logo_key && before.logo_key !== logo) await removePhotos(shop.id, [before.logo_key])
     if (data.areas) {
       const areas = data.areas.map((a) => ({ name: str(a.name, 60), fee: int(a.fee) })).filter((a) => a.name)
       await db().batch([
@@ -335,13 +340,20 @@ export const saveProduct = createServerFn({ method: 'POST' })
     const images = JSON.stringify((data.images ?? []).slice(0, 6).map((k) => str(k, 100)))
     if (data.id) {
       // The link name stays when a product is renamed, so links already shared keep working.
-      const current = await first<{ slug: string | null }>('SELECT slug FROM products WHERE id = ? AND shop_id = ?', data.id, shop.id)
+      const current = await first<{ slug: string | null; images: string }>(
+        'SELECT slug, images FROM products WHERE id = ? AND shop_id = ?',
+        data.id,
+        shop.id,
+      )
       const slug = current?.slug ?? (await uniqueProductSlug(shop.id, name, data.id))
       await run(
         `UPDATE products SET name = ?, description = ?, price = ?, compare_price = ?, stock = ?, sizes = ?, images = ?, active = ?, slug = ?
          WHERE id = ? AND shop_id = ?`,
         name, str(data.description, 2000), price, compare, stock, sizesJson, images, data.active ? 1 : 0, slug, data.id, shop.id,
       )
+      // Photos taken off the product leave storage too (removePhotos keeps any a past order shows).
+      const kept = new Set(JSON.parse(images) as string[])
+      if (current) await removePhotos(shop.id, (JSON.parse(current.images) as string[]).filter((k) => !kept.has(k)))
       return { ok: true as const, id: data.id, slug }
     }
     const id = newId()
@@ -358,7 +370,9 @@ export const deleteProduct = createServerFn({ method: 'POST' })
   .validator((d: { id: string }) => d)
   .handler(async ({ data }) => {
     const { shop } = await requireShop()
+    const gone = await first<{ images: string }>('SELECT images FROM products WHERE id = ? AND shop_id = ?', data.id, shop.id)
     await run('DELETE FROM products WHERE id = ? AND shop_id = ?', data.id, shop.id)
+    if (gone) await removePhotos(shop.id, JSON.parse(gone.images) as string[])
     return { ok: true }
   })
 

@@ -163,7 +163,7 @@ function OrderDetail() {
             <div className="mt-4 space-y-4">
               {o.lines.map((l, i) => (
                 <div key={i} className="flex items-center gap-4">
-                  <Img k={l.image} alt={l.name} className="h-16 w-14 shrink-0 rounded-[10px]" />
+                  <Img size="thumb" k={l.image} alt={l.name} className="h-16 w-14 shrink-0 rounded-[10px]" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[15px] font-medium">{l.name}</p>
                     <p className="mt-0.5 text-[13px] text-muted">

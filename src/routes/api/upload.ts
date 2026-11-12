@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { currentUser } from '#/server/auth'
 import { first, media, newId } from '#/server/db'
+import { thumbKey } from '#/lib/format'
 
 const TYPES: Record<string, string> = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png' }
 const MAX_BYTES = 2_500_000
+const MAX_THUMB_BYTES = 600_000
 
 export const Route = createFileRoute('/api/upload')({
   server: {
@@ -17,6 +19,16 @@ export const Route = createFileRoute('/api/upload')({
         const ext = TYPES[type]
         if (!ext) return new Response('Unsupported type', { status: 415 })
         const body = await request.arrayBuffer()
+
+        // ?thumb=<key>: the 600px copy of a photo this shop just uploaded, stored beside it.
+        const of = new URL(request.url).searchParams.get('thumb')
+        if (of) {
+          if (!new RegExp(`^s/${shop.id}/[a-z0-9]+\\.(webp|jpg|png)$`).test(of)) return new Response('Bad key', { status: 400 })
+          if (body.byteLength > MAX_THUMB_BYTES) return new Response('Too large', { status: 413 })
+          await media().put(thumbKey(of), body, { httpMetadata: { contentType: type } })
+          return Response.json({ key: thumbKey(of) })
+        }
+
         if (body.byteLength > MAX_BYTES) return new Response('Too large', { status: 413 })
         const key = `s/${shop.id}/${newId(12)}.${ext}`
         await media().put(key, body, { httpMetadata: { contentType: type } })

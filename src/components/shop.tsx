@@ -32,6 +32,9 @@ export function Tag({ children, hot = false }: { children: ReactNode; hot?: bool
   )
 }
 
+/** How wide a grid photo shows: 2 columns on phones, 3 on tablets, 4 on desktop. */
+const GRID_SIZES = '(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw'
+
 /** The Shopi bag (bag_body in design/brand/glyphs.py) with a plus cut through its face where the logo has its dot. */
 function BagPlusIcon({ size = 20 }: { size?: number }) {
   return (
@@ -79,9 +82,10 @@ export function ProductCard({
             k={p.images[0]}
             alt={p.name}
             eager={eager}
+            sizes={GRID_SIZES}
             className={`absolute inset-0 h-full w-full transition-opacity duration-500 ease-out ${second && peek ? 'group-hover:opacity-0' : ''} ${soldOut ? 'opacity-50' : ''}`}
           />
-          {second && peek && <Img k={second} alt="" className="absolute inset-0 h-full w-full opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100" />}
+          {second && peek && <Img k={second} sizes={GRID_SIZES} alt="" className="absolute inset-0 h-full w-full opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100" />}
           <div className="absolute top-2.5 left-2.5 flex gap-1.5">
             {soldOut ? <Tag>{t('Sold out')}</Tag> : onSale(p) ? <Tag hot>−{discount(p)}%</Tag> : null}
           </div>
@@ -120,7 +124,7 @@ export function QuickAddSheet({ shopSlug, p, onClose, onAdd }: { shopSlug: strin
   return (
     <Sheet open onClose={onClose} title={t('Add to bag')}>
       <div className="flex gap-4">
-        <Img k={p.images[0]} alt={p.name} className="h-[100px] w-20 shrink-0 rounded-[12px]" />
+        <Img k={p.images[0]} size="thumb" alt={p.name} className="h-[100px] w-20 shrink-0 rounded-[12px]" />
         <div className="min-w-0 py-1">
           <p className="truncate text-[16px] font-medium">{p.name}</p>
           <div className="mt-1">

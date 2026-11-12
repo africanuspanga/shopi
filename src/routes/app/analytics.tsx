@@ -365,7 +365,7 @@ function Products({ a, className }: { a: Analytics; className: string }) {
                   className="flex items-center gap-3 py-3 transition-colors hover:bg-page md:grid md:grid-cols-[minmax(0,2fr)_80px_80px_70px_minmax(0,1fr)_90px] md:gap-x-4"
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-3">
-                    <Img k={p.image} alt="" className="h-11 w-11 shrink-0 rounded-[10px]" />
+                    <Img size="thumb" k={p.image} alt="" className="h-11 w-11 shrink-0 rounded-[10px]" />
                     <span className="min-w-0">
                       <span className="block truncate text-[14px] font-medium">{p.name}</span>
                       <span className="meta block md:hidden">

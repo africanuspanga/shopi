@@ -118,7 +118,7 @@ function Checkout() {
           const stock = size ? (p.sizes?.find((s) => s.label === size)?.stock ?? null) : p.stock
           return (
             <div key={line} className="flex items-center gap-3 px-5 py-3.5">
-              <Img k={p.images[0]} alt={p.name} className="h-[68px] w-14 shrink-0 rounded-[10px]" />
+              <Img size="thumb" k={p.images[0]} alt={p.name} className="h-[68px] w-14 shrink-0 rounded-[10px]" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[14px] font-medium">{p.name}</p>
                 <p className="mt-0.5 text-[13px] text-muted">

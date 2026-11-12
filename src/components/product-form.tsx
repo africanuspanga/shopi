@@ -131,7 +131,7 @@ export function ProductForm({ product, title, back }: { product?: ProductRow; ti
                     aria-label={i === 0 ? t('Main photo') : t('Make this the main photo')}
                     onClick={() => i > 0 && setImages([k, ...images.filter((x) => x !== k)])}
                   >
-                    <Img k={k} alt="" className="h-[150px] w-[120px]" />
+                    <Img size="thumb" k={k} alt="" className="h-[150px] w-[120px]" />
                   </button>
                   {i === 0 && <span className="absolute bottom-2 left-2 rounded-full bg-ink px-2.5 py-1 text-[11px] font-medium text-white">{t('Main')}</span>}
                   <button
@@ -302,7 +302,7 @@ export function ProductForm({ product, title, back }: { product?: ProductRow; ti
           <div className="card p-5">
             <p className="text-[13px] text-muted">{t('In your shop')}</p>
             <div className="relative mt-3 aspect-[4/5] overflow-hidden rounded-[14px] bg-well">
-              {images[0] ? <Img k={images[0]} alt="" className="h-full w-full" /> : <div className="flex h-full items-center justify-center text-faint"><ImagePlus size={24} strokeWidth={1.5} /></div>}
+              {images[0] ? <Img size="thumb" k={images[0]} alt="" className="h-full w-full" /> : <div className="flex h-full items-center justify-center text-faint"><ImagePlus size={24} strokeWidth={1.5} /></div>}
               {was > price && price > 0 && (
                 <div className="absolute top-2.5 left-2.5">
                   <Tag hot>−{Math.round((1 - price / was) * 100)}%</Tag>

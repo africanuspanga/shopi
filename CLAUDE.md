@@ -190,6 +190,16 @@ The dot is always Moto; the letters are ink or white. The wordmark's box runs fr
 by height: 22px in headers, 14px in the "Shop made with" line. In prose the name is "Shopi"; only the wordmark and the
 domain are lowercase.
 
+## Photos
+- Uploads are shrunk in the browser (`src/lib/upload.ts`): the photo at 1200 px and a 600 px copy, both WebP. Keys are
+  `s/<shop>/<id>.webp` and `t/<shop>/<id>.webp` (`thumbKey()` in `format.ts`). Logos are one 400 px file.
+- Show photos with `Img`: `sizes="…"` in grids (the browser picks 600 or 1200), `size="thumb"` for thumbnails and lists,
+  the default (full) only on the product page gallery and in link previews.
+- `/img/*` answers from Cloudflare's edge cache first; a missing small copy falls back to the full photo (cached 1 hour).
+- `removePhotos()` (`src/server/media.ts`) deletes photos a product or logo stops using, with their copies, but keeps any
+  photo a past order shows or another product uses. Never delete from the bucket by hand.
+- `python3 scripts/backfill-thumbs.py [--remote]` makes missing small copies (Pillow); safe to run again.
+
 ## Product rules the UI depends on
 - Shop `status`: `active`, or `demo` for a sample shop (Zee's Store). A demo shop shows `DemoBanner` on every page, has
   `noindex`, and `placeOrder` refuses its orders (`error: 'demo'`); checkout disables the button too. Any other status hides the shop.

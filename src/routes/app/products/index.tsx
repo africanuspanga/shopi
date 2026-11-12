@@ -85,7 +85,7 @@ function Products() {
           <div key={p.id} className="group relative">
           <Link to="/app/products/$id" params={{ id: p.id }} className="block">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[16px] bg-well">
-              <Img k={p.images[0]} alt={p.name} className={`h-full w-full transition-opacity group-hover:opacity-90 ${!p.active || out(p) ? 'opacity-50' : ''}`} />
+              <Img sizes="(min-width: 1024px) 20vw, (min-width: 768px) 30vw, 50vw" k={p.images[0]} alt={p.name} className={`h-full w-full transition-opacity group-hover:opacity-90 ${!p.active || out(p) ? 'opacity-50' : ''}`} />
               <div className="absolute top-2.5 left-2.5 flex gap-1.5">
                 {!p.active ? <Tag>{t('Hidden')}</Tag> : out(p) ? <Tag>{t('Sold out')}</Tag> : low(p) ? <Tag hot>{t('{n} left', { n: p.stock! })}</Tag> : null}
               </div>
@@ -117,7 +117,7 @@ function Products() {
         {sharing && (
           <>
             <div className="flex items-center gap-4">
-              <Img k={sharing.images[0]} alt={sharing.name} className="h-20 w-16 shrink-0 rounded-[10px]" />
+              <Img size="thumb" k={sharing.images[0]} alt={sharing.name} className="h-20 w-16 shrink-0 rounded-[10px]" />
               <div className="min-w-0">
                 <p className="truncate text-[15px] font-medium">{sharing.name}</p>
                 <p className="tnum text-[14px] text-ink-2">{tzs(sharing.price)}</p>

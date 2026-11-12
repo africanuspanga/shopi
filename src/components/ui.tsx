@@ -89,7 +89,25 @@ export function StatusPill({ status }: { status: OrderStatus }) {
   )
 }
 
-export function Img({ k, alt, className = '', eager = false }: { k: string | null | undefined; alt: string; className?: string; eager?: boolean }) {
+/**
+ * A stored photo. `size="thumb"` loads the 600px copy (thumbnails, lists); `sizes` lets the browser pick between the
+ * 600px copy and the full 1200px photo by the width it will show (grids); neither loads the full photo.
+ */
+export function Img({
+  k,
+  alt,
+  className = '',
+  eager = false,
+  size = 'full',
+  sizes,
+}: {
+  k: string | null | undefined
+  alt: string
+  className?: string
+  eager?: boolean
+  size?: 'full' | 'thumb'
+  sizes?: string
+}) {
   if (!k) {
     return (
       <div className={`flex items-center justify-center bg-well text-faint ${className}`} role="img" aria-label={alt}>
@@ -99,7 +117,9 @@ export function Img({ k, alt, className = '', eager = false }: { k: string | nul
   }
   return (
     <img
-      src={imgUrl(k)}
+      src={imgUrl(k, sizes ? 'thumb' : size)}
+      srcSet={sizes ? `${imgUrl(k, 'thumb')} 600w, ${imgUrl(k)} 1200w` : undefined}
+      sizes={sizes}
       alt={alt}
       loading={eager ? 'eager' : 'lazy'}
       decoding="async"

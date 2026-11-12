@@ -178,7 +178,7 @@ function ProductPage() {
                     onClick={() => goTo(i)}
                     className={`overflow-hidden rounded-[12px] transition-shadow ${slide === i ? 'shadow-[0_0_0_2px_var(--color-ink)]' : 'opacity-70 hover:opacity-100'}`}
                   >
-                    <Img k={k} alt="" className="h-20 w-16" />
+                    <Img size="thumb" k={k} alt="" className="h-20 w-16" />
                   </button>
                 ))}
               </div>

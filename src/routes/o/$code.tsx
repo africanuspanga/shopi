@@ -202,7 +202,7 @@ function Track() {
             <div className="mt-4 space-y-3">
               {o.lines.map((l, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <Img k={l.image} alt={l.name} className="h-14 w-12 shrink-0 rounded-[8px]" />
+                  <Img size="thumb" k={l.image} alt={l.name} className="h-14 w-12 shrink-0 rounded-[8px]" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[14px]">{l.name}</p>
                     <p className="text-[13px] text-muted">

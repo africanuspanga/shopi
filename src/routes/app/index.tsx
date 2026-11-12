@@ -208,7 +208,7 @@ function Dashboard() {
                   <li key={p.id}>
                     <Link to="/app/products/$id" params={{ id: p.id }} className="group flex items-center gap-3">
                       <span className="tnum w-3 shrink-0 text-[13px] text-muted">{i + 1}</span>
-                      <Img k={p.image} alt={p.name} className="h-11 w-11 shrink-0 rounded-[10px]" />
+                      <Img size="thumb" k={p.image} alt={p.name} className="h-11 w-11 shrink-0 rounded-[10px]" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
                           <p className="truncate text-[14px] font-medium group-hover:underline group-hover:decoration-line-strong group-hover:underline-offset-4">{p.name}</p>
@@ -258,7 +258,7 @@ function Dashboard() {
                   params={{ id: o.id }}
                   className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-x-3 px-6 py-3 transition-colors hover:bg-page md:grid-cols-[44px_minmax(0,1.4fr)_minmax(0,1fr)_140px_120px] md:gap-x-6"
                 >
-                  <Img k={o.image} alt="" className="h-11 w-11 rounded-[10px]" />
+                  <Img size="thumb" k={o.image} alt="" className="h-11 w-11 rounded-[10px]" />
                   {/* Phone: name and total, then status and time, so the name keeps its room. */}
                   <div className="min-w-0 md:hidden">
                     <div className="flex items-baseline justify-between gap-3">
