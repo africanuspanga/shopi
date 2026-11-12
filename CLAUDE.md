@@ -191,6 +191,8 @@ by height: 22px in headers, 14px in the "Shop made with" line. In prose the name
 domain are lowercase.
 
 ## Product rules the UI depends on
+- Shop `status`: `active`, or `demo` for a sample shop (Zee's Store). A demo shop shows `DemoBanner` on every page, has
+  `noindex`, and `placeOrder` refuses its orders (`error: 'demo'`); checkout disables the button too. Any other status hides the shop.
 - Order statuses: `awaiting_payment` → `payment_claimed` (buyer pasted an SMS) → `confirmed` → `dispatched` → `delivered`,
   or `cancelled`. Cash on delivery starts at `confirmed`. Stock is held on confirm and returned on cancel.
 - Products may have sizes (`[{label, stock}]`); then `stock` is their total. A size at 0 is sold out.
