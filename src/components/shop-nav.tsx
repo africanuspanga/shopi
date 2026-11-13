@@ -12,14 +12,35 @@ import { useT } from '#/lib/i18n'
 
 type Area = { name: string; fee: number }
 
-/** A shop on a phone: the floating capsule with Shop, Search, the bag in the middle, WhatsApp and Info. */
-export function ShopNav({ shop, areas, products, count, onShare }: { shop: PublicShop; areas: Area[]; products: PublicProduct[]; count: number; onShare: () => void }) {
+/**
+ * A shop on a phone: the floating capsule with Shop, Search, the bag in the middle, WhatsApp and Info.
+ * `away`: on a page inside the shop (a collection), Shop goes back to the shop instead of to the top.
+ */
+export function ShopNav({
+  shop,
+  areas,
+  products,
+  count,
+  onShare,
+  away = false,
+}: {
+  shop: PublicShop
+  areas: Area[]
+  products: PublicProduct[]
+  count: number
+  onShare: () => void
+  away?: boolean
+}) {
   const t = useT()
   const [sheet, setSheet] = useState<'search' | 'info' | null>(null)
   return (
     <>
       <FloatingNav label={shop.name}>
-        <NavTab icon={Store} label={t('Shop')} active={!sheet} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
+        {away ? (
+          <NavTab icon={Store} label={t('Shop')} to="/$shop" params={{ shop: shop.slug }} />
+        ) : (
+          <NavTab icon={Store} label={t('Shop')} active={!sheet} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
+        )}
         <NavTab icon={Search} label={t('Search')} active={sheet === 'search'} onClick={() => setSheet('search')} />
         <NavCenter icon={ShoppingBag} label={t('Bag')} to="/$shop/checkout" params={{ shop: shop.slug }} badge={<NavCount n={count} />} />
         {shop.whatsapp ? (

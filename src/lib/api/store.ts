@@ -48,6 +48,9 @@ export type PublicProduct = {
   created_at: number
 }
 
+/** A collection on the shop: its products in the seller's order, only those buyers can see. */
+export type PublicCollection = { id: string; slug: string; name: string; description: string; productIds: string[] }
+
 const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram, tiktok, facebook, location, maps_url, tin, hours,
   lipa_number, lipa_name, lipa_network, cod_enabled, status`
 
@@ -56,7 +59,7 @@ export const getStorefront = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     const shop = await first<PublicShop>(`SELECT ${SHOP_COLS} FROM shops WHERE slug = ? AND status IN ('active', 'demo')`, data.slug)
     if (!shop) return null
-    const [products, areas, discount] = await Promise.all([
+    const [products, areas, discount, collections, members] = await Promise.all([
       all<Omit<PublicProduct, 'images' | 'sizes'> & { images: string; sizes: string | null }>(
         `SELECT id, slug, name, description, price, compare_price, stock, sizes, images, created_at FROM products
          WHERE shop_id = ? AND active = 1 ORDER BY created_at DESC`,
@@ -67,12 +70,23 @@ export const getStorefront = createServerFn({ method: 'GET' })
         shop.id,
       ),
       first('SELECT 1 FROM discounts WHERE shop_id = ? AND active = 1 AND (ends_at IS NULL OR ends_at > ?) LIMIT 1', shop.id, now()),
+      all<Omit<PublicCollection, 'productIds'>>('SELECT id, slug, name, description FROM collections WHERE shop_id = ? ORDER BY sort, created_at', shop.id),
+      all<{ collection_id: string; product_id: string }>(
+        `SELECT cp.collection_id, cp.product_id FROM collection_products cp JOIN collections c ON c.id = cp.collection_id
+         WHERE c.shop_id = ? ORDER BY cp.sort`,
+        shop.id,
+      ),
     ])
+    const visible = new Set(products.map((p) => p.id))
     return {
       shop,
       areas,
       /** The shop has a discount code buyers can use, so checkout shows the field. */
       hasDiscounts: !!discount,
+      /** Every collection, with only the products buyers can see; the shop's chips leave out empty ones. */
+      collections: collections.map(
+        (c): PublicCollection => ({ ...c, productIds: members.filter((m) => m.collection_id === c.id && visible.has(m.product_id)).map((m) => m.product_id) }),
+      ),
       /** The plan ended: the shop "takes a break". Its page stays up with WhatsApp; orders are refused. */
       paused: BILLING_LIVE && (await shopPlan(shop.id))?.kind === 'ended',
       products: products.map((p) => ({ ...p, images: JSON.parse(p.images) as string[], sizes: parseSizes(p.sizes) })),

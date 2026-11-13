@@ -1,13 +1,12 @@
 import { createFileRoute, getRouteApi } from '@tanstack/react-router'
-import { Check, MapPin, Share2, Store } from 'lucide-react'
+import { MapPin, Share2, Store } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
-import { BagButton, FactPills, ProductCard, QuickAddSheet, ShopFacts, ShopFooter, ShopTopBar, SocialLinks, onSale } from '#/components/shop'
+import { BagButton, FactPills, ProductGrid, ShopFacts, ShopFooter, ShopTopBar, SocialLinks, onSale } from '#/components/shop'
 import { ShopNav } from '#/components/shop-nav'
 import { Chips, Empty, LangSwitch, ShopAvatar, Toast } from '#/components/ui'
-import type { PublicProduct } from '#/lib/api/store'
 import { track } from '#/lib/analytics'
-import { lineKey, useCart } from '#/lib/cart'
+import { useCart } from '#/lib/cart'
 import { waLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 import { shareLink, useOrigin } from '#/lib/share'
@@ -19,14 +18,12 @@ const NEW_DAYS = 30
 
 function Storefront() {
   const t = useT()
-  const { shop, products, areas } = parent.useLoaderData()
+  const { shop, products, areas, collections } = parent.useLoaderData()
   const cart = useCart(shop.id)
-  const [filter, setFilter] = useState<'all' | 'new' | 'sale'>('all')
+  // 'all', 'new', 'sale', or a collection's id.
+  const [filter, setFilter] = useState('all')
   const [copied, setCopied] = useState(false)
-  const [quick, setQuick] = useState<PublicProduct | null>(null)
-  const [added, setAdded] = useState('')
   const url = `${useOrigin()}/${shop.slug}`
-  const inBag = (id: string) => cart.lines.reduce((n, l) => (l.productId === id ? n + l.qty : n), 0)
 
   // Phones: the top bar waits until the shop's name has scrolled out of view.
   const nameRef = useRef<HTMLDivElement>(null)
@@ -45,16 +42,17 @@ function Storefront() {
 
   const isNew = (p: (typeof products)[number]) => Date.now() - p.created_at < NEW_DAYS * 86400_000
   const counts = { new: products.filter(isNew).length, sale: products.filter(onSale).length }
-  const shown = filter === 'sale' ? products.filter(onSale) : filter === 'new' ? products.filter(isNew) : products
-  const showFilters = products.length > 0 && ((counts.new > 0 && counts.new < products.length) || counts.sale > 0)
-
-  function addToBag(p: PublicProduct, size: string | null) {
-    cart.add(lineKey(p.id, size))
-    track('add_to_cart', { shopId: shop.id, productId: p.id, detail: 'quick' })
-    setQuick(null)
-    setAdded(size ? t('{name}, size {size}, is in your bag', { name: p.name, size }) : t('{name} is in your bag', { name: p.name }))
-    setTimeout(() => setAdded(''), 2200)
-  }
+  // The seller's collections come first in the chips, in their order, once they hold something to show.
+  const groups = collections.filter((c) => c.productIds.length > 0)
+  const group = groups.find((c) => c.id === filter)
+  const shown = group
+    ? group.productIds.flatMap((id) => products.filter((p) => p.id === id))
+    : filter === 'sale'
+      ? products.filter(onSale)
+      : filter === 'new'
+        ? products.filter(isNew)
+        : products
+  const showFilters = products.length > 0 && (groups.length > 0 || (counts.new > 0 && counts.new < products.length) || counts.sale > 0)
 
   async function share() {
     const how = await shareLink(url, shop.name)
@@ -133,8 +131,9 @@ function Storefront() {
               onChange={setFilter}
               options={[
                 { id: 'all', label: t('All'), count: products.length },
-                ...(counts.new > 0 && counts.new < products.length ? [{ id: 'new' as const, label: t('New in'), count: counts.new }] : []),
-                ...(counts.sale > 0 ? [{ id: 'sale' as const, label: t('On sale'), count: counts.sale }] : []),
+                ...groups.map((c) => ({ id: c.id, label: c.name, count: c.productIds.length })),
+                ...(counts.new > 0 && counts.new < products.length ? [{ id: 'new', label: t('New in'), count: counts.new }] : []),
+                ...(counts.sale > 0 ? [{ id: 'sale', label: t('On sale'), count: counts.sale }] : []),
               ]}
             />
           ) : (
@@ -152,28 +151,16 @@ function Storefront() {
             />
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-x-3 gap-y-8 pt-5 md:grid-cols-3 md:gap-x-6 md:gap-y-12 md:pt-8 lg:grid-cols-4">
-            {shown.map((p, i) => (
-              <ProductCard
-                key={p.id}
-                shopSlug={shop.slug}
-                p={p}
-                eager={i < 4}
-                inBag={inBag(p.id)}
-                onQuickAdd={(x) => (x.sizes ? setQuick(x) : addToBag(x, null))}
-              />
-            ))}
-          </div>
+          <>
+            {group?.description && <p className="fade pt-5 text-[15px] leading-relaxed text-ink-2 md:pt-6">{group.description}</p>}
+            <ProductGrid shop={shop} products={shown} cart={cart} />
+          </>
         )}
       </main>
 
       <ShopFooter shop={shop} />
       <ShopNav shop={shop} areas={areas} products={products} count={cart.count} onShare={share} />
-      <QuickAddSheet key={quick?.id ?? 'none'} shopSlug={shop.slug} p={quick} onClose={() => setQuick(null)} onAdd={(size) => quick && addToBag(quick, size)} />
       <Toast show={copied}>{t('Link copied')}</Toast>
-      <Toast show={!!added}>
-        <Check size={16} strokeWidth={2.25} /> {added}
-      </Toast>
     </div>
   )
 }

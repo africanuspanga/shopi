@@ -52,7 +52,7 @@ function Discounts() {
           }
         />
       ) : (
-        <div className="grid gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
           {codes.map((c) => (
             <CodeCard key={c.id} c={c} onEdit={() => setEditing(c)} onShare={() => setSharing(c)} />
           ))}

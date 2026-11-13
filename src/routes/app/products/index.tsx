@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Plus, Search, Share2 } from 'lucide-react'
+import { Layers, Plus, Search, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import { Tag } from '#/components/shop'
 import { ShareActions, prettyUrl } from '#/components/share'
@@ -47,6 +47,9 @@ function Products() {
               <Search size={16} strokeWidth={1.6} className="shrink-0 text-muted" />
               <input className="min-w-0 flex-1 bg-transparent text-[14px] outline-none" placeholder={t('Search')} value={q} onChange={(e) => setQ(e.target.value)} />
             </label>
+            <Link to="/app/collections" className="btn btn-ghost btn-sm h-10">
+              <Layers size={15} strokeWidth={1.75} /> {t('Collections')}
+            </Link>
             <Link to="/app/products/new" className="btn btn-sm hidden h-10 md:inline-flex">
               <Plus size={16} strokeWidth={2} /> {t('Add product')}
             </Link>

@@ -31,7 +31,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | --- | --- |
 | `src/styles.css` | The design system: tokens (`@theme`) and component classes. Read it first. |
 | `src/components/ui.tsx` | App-wide parts: `Page`, `TopBar`, `BackButton`, `Chips`, `StatusPill`, `Img`, `ShopAvatar`, `Money`, `Delta`, `Sheet`, `Field`, `Switch`, `Empty`, `Toast`, `TextLink`, `ErrorText`, `LangSwitch`, `Wordmark` |
-| `src/components/shop.tsx` | Storefront parts: `ProductCard` (quick add), `QuickAddSheet`, `Price`, `Tag`, `BagButton`, `ShopTopBar`, `ShopFacts`, `FactPills`, `SocialLinks`, `ShopFooter`, `MadeWithShopi` |
+| `src/components/shop.tsx` | Storefront parts: `ProductGrid` (the grid with quick add and its toast), `ProductCard` (quick add), `QuickAddSheet`, `Price`, `Tag`, `BagButton`, `ShopTopBar`, `ShopFacts`, `FactPills`, `SocialLinks`, `ShopFooter`, `MadeWithShopi` |
 | `src/components/floating-nav.tsx` | The phone capsule: `FloatingNav`, `NavTab`, `NavCenter`, `NavCount`, `useHideFloatingNav` |
 | `src/components/shop-nav.tsx` | The storefront's capsule with its search and info sheets |
 | `src/components/not-found.tsx` | Not-found pages for missing shops, products and orders |
@@ -43,14 +43,16 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/routes/index.tsx` | Landing page |
 | `src/routes/$shop/` | Storefront `index`, product page `$product` (readable slug), `checkout`, `p.$id` (301 redirect for old links) |
 | `src/routes/$shop/b.$code.tsx` | A bag link the buyer opens: checkout with the seller's lines and prices, or why it can't be ordered |
+| `src/routes/$shop/c.$slug.tsx` | A collection's own page: its products in the seller's order, chips to the others, quick add |
 | `src/routes/o/$code.tsx` | Buyer's order page: pay, paste SMS, progress |
 | `src/routes/app/` | Seller app: `route.tsx` (sidebar and floating bottom nav), dashboard, `analytics`, orders, products, shop settings |
 | `src/routes/app/bags/` | Bag links: the list, `new` (build a bag for one buyer), `$id` (send it, cancel it) |
 | `src/components/checkout.tsx` | `CheckoutView` (bag, details, delivery, payment, receipt and Place order), shared by checkout and bag links; `CheckoutHeader` |
 | `src/components/product-picker.tsx` | `ProductPicker`: search the seller's products and pick one (Record a sale, bag links) |
+| `src/routes/app/collections/` | Collections: the list (order, share), `new` and `$id` (`CollectionForm` in `components/collections.tsx`) |
 | `src/routes/app/discounts.tsx` | Discount codes: each code with its uses, on/off, Share (as a link) and the new/edit sheet |
 | `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
-| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `session.ts` |
+| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `session.ts` |
 | `src/lib/analytics.ts` | The buyer-side tracker: visitor ID, 30-minute visits, traffic source, `?s=` link tags, `track()` |
 | `src/routes/api/e.ts` | Receives analytics events (sendBeacon); drops bots, records device and city |
 | `src/routes/api/export.ts` | CSV downloads of orders and buyers for the logged-in seller |
@@ -210,13 +212,18 @@ domain are lowercase.
   `discount_code` and `discount`; `total = subtotal - discount`. A link like `shopi.tz/<shop>?code=EID10` keeps the code on the
   phone (`codeKey`, set in `$shop/route.tsx`) and checkout applies it. Bag links take no codes: the seller set those prices.
   The Discount line shows on the order page, the receipt image, the seller's order page and the orders CSV.
+- Collections (`collections`, `collection_products`): a name, an optional line, and products in the seller's order. The link
+  `shopi.tz/<shop>/c/<slug>` is set once from the name and kept on rename (`c` is reserved). `getStorefront` returns every
+  collection with only the products buyers can see; the shop's chips list the non-empty ones first, in the seller's order
+  (`orderCollections`), then New in and On sale. A product in several collections is fine; deleting a product takes it out.
+  Seller: Collections in the sidebar, and a Collections button on Products (phones).
 - Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
   sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.
 - Order statuses: `awaiting_payment` → `payment_claimed` (buyer pasted an SMS) → `confirmed` → `dispatched` → `delivered`,
   or `cancelled`. Cash on delivery starts at `confirmed`. Stock is held on confirm and returned on cancel.
 - Products may have sizes (`[{label, stock}]`); then `stock` is their total. A size at 0 is sold out.
 - Product links are `/<shop>/<slug>`. A slug is set once and kept on rename; `/<shop>/p/<id>` and `/<shop>/<id>` redirect (301).
-  Words reserved for shop pages: `checkout`, `p`, `b`, `bag`, `cart`, `order`, `orders`, `about`.
+  Words reserved for shop pages: `checkout`, `p`, `b`, `c`, `bag`, `cart`, `order`, `orders`, `about`.
 - Link previews: `og:image` and `og:url` are absolute, built from the request origin.
 
 ## Analytics
@@ -228,14 +235,14 @@ domain are lowercase.
 
   | Event | `detail` values |
   | --- | --- |
-  | `view_shop` | —, or `bag_link` when a bag link is opened |
+  | `view_shop` | —, `bag_link` when a bag link is opened, `collection` on a collection page |
   | `view_product` | — |
   | `add_to_cart` | `quick` or `page` |
   | `checkout_start` | — |
   | `whatsapp_click` | `shop`, `product`, `order`, `footer` |
   | `social_click` | `instagram`, `tiktok`, `facebook` |
   | `share` (buyers) | `whatsapp`, `copy`, `native` |
-  | `seller_share` | the share channel; `bag-<channel>` for a bag link, `code-<channel>` for a discount code |
+  | `seller_share` | the share channel; `bag-<channel>` for a bag link, `code-<channel>` for a discount code, `collection-<channel>` |
 
   Add new types in both the tracker and `/api/e`.
 - **Not counted:**

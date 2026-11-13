@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 /** Lines are keyed by product and size, like "abc123" or "abc123|M". */
-type Cart = Record<string, number>
+type Lines = Record<string, number>
 const key = (shopId: string) => `shopi_cart_${shopId}`
 
 export const lineKey = (productId: string, size?: string | null) => (size ? `${productId}|${size}` : productId)
@@ -10,7 +10,7 @@ export function parseLine(line: string) {
   return i < 0 ? { productId: line, size: null } : { productId: line.slice(0, i), size: line.slice(i + 1) }
 }
 
-function read(shopId: string): Cart {
+function read(shopId: string): Lines {
   try {
     return JSON.parse(localStorage.getItem(key(shopId)) ?? '{}')
   } catch {
@@ -18,8 +18,10 @@ function read(shopId: string): Cart {
   }
 }
 
+export type Cart = ReturnType<typeof useCart>
+
 export function useCart(shopId: string) {
-  const [cart, setCart] = useState<Cart>({})
+  const [cart, setCart] = useState<Lines>({})
   useEffect(() => {
     setCart(read(shopId))
     const onStorage = (e: StorageEvent) => e.key === key(shopId) && setCart(read(shopId))
@@ -28,7 +30,7 @@ export function useCart(shopId: string) {
   }, [shopId])
 
   const update = useCallback(
-    (next: Cart) => {
+    (next: Lines) => {
       const clean = Object.fromEntries(Object.entries(next).filter(([, q]) => q > 0))
       setCart(clean)
       try {

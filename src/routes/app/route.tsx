@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute, redirect, useLocation } from '@tanstack/react-router'
-import { ArrowUpRight, ChartColumn, House, Package, PenLine, Plus, ReceiptText, ShoppingBag, Store, TicketPercent } from 'lucide-react'
+import { ArrowUpRight, ChartColumn, House, Layers, Package, PenLine, Plus, ReceiptText, ShoppingBag, Store, TicketPercent } from 'lucide-react'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import { getNavCounts } from '#/lib/api/merchant'
@@ -22,7 +22,8 @@ function useTabs() {
     { to: '/app', icon: House, label: t('Home'), match: (p: string) => p === '/app' || p === '/app/' },
     // Bag links live under Orders.
     { to: '/app/orders', icon: ReceiptText, label: t('Orders'), match: (p: string) => p.startsWith('/app/orders') || p.startsWith('/app/bags') },
-    { to: '/app/products', icon: Package, label: t('Products'), match: (p: string) => p.startsWith('/app/products') },
+    // On phones, collections are reached from Products.
+    { to: '/app/products', icon: Package, label: t('Products'), match: (p: string) => p.startsWith('/app/products') || p.startsWith('/app/collections') },
     // On phones, discount codes are reached from Shop settings.
     { to: '/app/shop', icon: Store, label: t('Shop'), match: (p: string) => p.startsWith('/app/shop') || p.startsWith('/app/discounts') },
   ]
@@ -57,7 +58,8 @@ function Sidebar() {
     home,
     orders,
     { to: '/app/analytics', icon: ChartColumn, label: t('Analytics'), match: (p: string) => p.startsWith('/app/analytics') },
-    products,
+    { ...products, match: (p: string) => p.startsWith('/app/products') },
+    { to: '/app/collections', icon: Layers, label: t('Collections'), match: (p: string) => p.startsWith('/app/collections') },
     { to: '/app/discounts', icon: TicketPercent, label: t('Discount codes'), match: (p: string) => p.startsWith('/app/discounts') },
     { ...shopTab, match: (p: string) => p.startsWith('/app/shop') },
   ]

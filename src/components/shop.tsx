@@ -1,10 +1,11 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowUpRight, Banknote, Clock, FileText, MapPin, Smartphone, Truck } from 'lucide-react'
+import { ArrowUpRight, Banknote, Check, Clock, FileText, MapPin, Smartphone, Truck } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppMark } from '#/components/brand-icons'
-import { Img, Sheet, ShopAvatar, Wordmark } from '#/components/ui'
+import { Img, Sheet, ShopAvatar, Toast, Wordmark } from '#/components/ui'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
 import { track } from '#/lib/analytics'
+import { lineKey, type Cart } from '#/lib/cart'
 import { tzs, waLink, formatTin } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
@@ -154,6 +155,46 @@ export function QuickAddSheet({ shopSlug, p, onClose, onAdd }: { shopSlug: strin
         {p.sizes && !chosen ? t('Choose a size first') : t('Add to bag')}
       </button>
     </Sheet>
+  )
+}
+
+/**
+ * A shop's products in a grid (2, 3 or 4 columns) with quick add: products with sizes open the sheet, others go
+ * straight in the bag, and a toast says so. Used by the shop page and collection pages.
+ */
+export function ProductGrid({ shop, products, cart }: { shop: Pick<PublicShop, 'id' | 'slug'>; products: PublicProduct[]; cart: Cart }) {
+  const t = useT()
+  const [quick, setQuick] = useState<PublicProduct | null>(null)
+  const [added, setAdded] = useState('')
+  const inBag = (id: string) => cart.lines.reduce((n, l) => (l.productId === id ? n + l.qty : n), 0)
+
+  function addToBag(p: PublicProduct, size: string | null) {
+    cart.add(lineKey(p.id, size))
+    track('add_to_cart', { shopId: shop.id, productId: p.id, detail: 'quick' })
+    setQuick(null)
+    setAdded(size ? t('{name}, size {size}, is in your bag', { name: p.name, size }) : t('{name} is in your bag', { name: p.name }))
+    setTimeout(() => setAdded(''), 2200)
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-8 pt-5 md:grid-cols-3 md:gap-x-6 md:gap-y-12 md:pt-8 lg:grid-cols-4">
+        {products.map((p, i) => (
+          <ProductCard
+            key={p.id}
+            shopSlug={shop.slug}
+            p={p}
+            eager={i < 4}
+            inBag={inBag(p.id)}
+            onQuickAdd={(x) => (x.sizes ? setQuick(x) : addToBag(x, null))}
+          />
+        ))}
+      </div>
+      <QuickAddSheet key={quick?.id ?? 'none'} shopSlug={shop.slug} p={quick} onClose={() => setQuick(null)} onAdd={(size) => quick && addToBag(quick, size)} />
+      <Toast show={!!added}>
+        <Check size={16} strokeWidth={2.25} /> {added}
+      </Toast>
+    </>
   )
 }
 
