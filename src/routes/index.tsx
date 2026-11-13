@@ -13,7 +13,7 @@ function Landing() {
   const t = useT()
   const { session } = Route.useRouteContext()
   const start = session.user ? (session.shop ? '/app' : '/onboard') : '/signup'
-  const startLabel = session.shop ? t('Go to my shop') : t('Open your shop free')
+  const startLabel = session.shop ? t('Go to my shop') : t('Start 14 days free')
 
   return (
     <div className="min-h-dvh overflow-x-clip bg-page pb-24 text-ink md:pb-0">
@@ -137,7 +137,7 @@ function Hero({ start, startLabel }: { start: string; startLabel: string }) {
             </a>
           </div>
           <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-[14px] text-ink-2">
-            {[t('Free to start'), t('No commission on sales'), t('Ready in 5 minutes')].map((x) => (
+            {[t('14 days free'), t('No commission on sales'), t('Ready in 5 minutes')].map((x) => (
               <li key={x} className="flex items-center gap-2">
                 <Check size={15} strokeWidth={2} className="text-ink" /> {x}
               </li>
@@ -351,34 +351,74 @@ function Features() {
 
 function Pricing({ start }: { start: string }) {
   const t = useT()
+  const plans = [
+    {
+      name: 'Twiga',
+      price: '49,000',
+      lead: t('Everything a seller needs to take orders from one link.'),
+      items: [
+        t('Your shop at shopi.tz/yourname'),
+        t('Unlimited products, 6 photos each'),
+        t('Lipa Namba and cash on delivery'),
+        t('Orders, sizes and stock'),
+        t('Shopi assistant, 100 chats a month'),
+        t('AI product descriptions, 50 a month'),
+        t('Analytics for 90 days'),
+        t('Your customer list'),
+      ],
+    },
+    {
+      name: 'Tembo',
+      price: '99,000',
+      lead: t('For shops that sell every day, with a team.'),
+      items: [
+        t('Everything in Twiga'),
+        t('10 photos per product, bulk import'),
+        t('Shopi assistant, 500 chats a month'),
+        t('Unlimited AI product descriptions'),
+        t('Analytics for 12 months, with export'),
+        t('Your own domain, fonts and colours'),
+        t('Hide “Made with Shopi”'),
+        t('3 staff accounts'),
+        t('Campaigns to your customers'),
+      ],
+    },
+  ]
   return (
     <section id="pricing" className="scroll-mt-24 py-20 md:py-28">
-      <Container className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-20">
-        <div>
-          <H2>{t('Free while we launch')}</H2>
-          <Lead className="mt-6">{t('No commission on your sales, ever. We will announce paid plans well before they start, and early sellers hear first.')}</Lead>
+      <Container>
+        <div className="max-w-[40rem]">
+          <H2>{t('Two plans, paid once a year')}</H2>
+          <Lead className="mt-6">{t('Every shop starts with 14 days free, or 30 when you finish setting up. No commission on your sales, ever.')}</Lead>
         </div>
-        <div className="rounded-[32px] bg-card p-3">
-          <div className="rounded-[24px] bg-page p-6 md:p-8">
-            <p className="text-[15px] font-medium">{t('Early sellers')}</p>
-            <p className="mt-3 flex items-baseline gap-2">
-              <span className="display text-[64px] md:text-[80px]">TSh 0</span>
-              <span className="text-[15px] text-muted">/ {t('month')}</span>
-            </p>
-          </div>
-          <ul className="space-y-3 px-6 pt-6 text-[15px] md:px-8">
-            {[t('Your shop at shopi.tz/yourname'), t('Lipa Namba and cash on delivery'), t('Orders, sizes, stock and delivery areas'), t('Dashboard with your numbers')].map((x) => (
-              <li key={x} className="flex items-center gap-3">
-                <Check size={17} strokeWidth={2} className="shrink-0" /> {x}
-              </li>
-            ))}
-          </ul>
-          <div className="p-6 md:p-8">
-            <Link to={start} className="btn btn-lg w-full">
-              {t('Open your shop free')}
-            </Link>
-          </div>
+        <div className="mt-10 grid gap-4 md:mt-14 lg:grid-cols-2 lg:gap-6">
+          {plans.map((p, i) => (
+            <div key={p.name} className={`flex flex-col rounded-[32px] p-3 ${i === 1 ? 'bg-ink text-white' : 'bg-card'}`}>
+              <div className={`rounded-[24px] p-6 md:p-8 ${i === 1 ? 'bg-white/[0.08]' : 'bg-page'}`}>
+                <p className="title text-[22px]">{p.name}</p>
+                <p className={`mt-1 text-[15px] ${i === 1 ? 'text-white/70' : 'text-ink-2'}`}>{p.lead}</p>
+                <p className="mt-5 flex items-baseline gap-2 whitespace-nowrap">
+                  <span className="text-[20px] font-medium md:text-[24px]">TSh</span>
+                  <span className="display text-[56px] md:text-[72px]">{p.price}</span>
+                  <span className={`text-[15px] ${i === 1 ? 'text-white/70' : 'text-muted'}`}>/ {t('year')}</span>
+                </p>
+              </div>
+              <ul className="flex-1 space-y-3 px-6 pt-6 text-[15px] md:px-8">
+                {p.items.map((x) => (
+                  <li key={x} className="flex items-start gap-3">
+                    <Check size={17} strokeWidth={2} className="mt-[3px] shrink-0" /> {x}
+                  </li>
+                ))}
+              </ul>
+              <div className="p-6 md:p-8">
+                <Link to={start} className={`btn btn-lg w-full ${i === 1 ? 'bg-white text-ink' : ''}`}>
+                  {t('Start 14 days free')}
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
+        <p className="mt-6 text-[14px] text-muted">{t('Pay by mobile money. If a plan ends unpaid, your shop takes a break and nothing is deleted.')}</p>
       </Container>
     </section>
   )
@@ -389,7 +429,7 @@ function Pricing({ start }: { start: string }) {
 function Faq() {
   const t = useT()
   const qs = [
-    [t('What does Shopi cost?'), t('It is free to start and we take no commission on your sales. We will announce paid plans well before they start.')],
+    [t('What does Shopi cost?'), t('Every shop starts with 14 days free, or 30 when you finish setting up. Then Twiga is TSh 49,000 a year and Tembo TSh 99,000 a year. We take no commission on your sales.')],
     [t('How do I get paid?'), t('The buyer pays your Lipa Namba or pays cash on delivery, the way they already pay sellers today. The money never passes through Shopi.')],
     [t('How do I know a buyer really paid?'), t('The buyer pastes the payment SMS. We check the amount, the name and the transaction ID, and refuse one already used. Still check your phone before you confirm.')],
     [t('Do I need a website or a developer?'), t('No. You open the shop on your phone in a few minutes and get a link to share.')],

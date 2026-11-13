@@ -312,7 +312,7 @@ export function ShopFooter({ shop }: { shop: PublicShop }) {
           {t('Shop made with')} <Wordmark className="h-[14px] w-auto text-ink" />
         </span>
         <span className="flex items-center gap-1 text-[13px] font-medium">
-          {t('Open yours free')} <ArrowUpRight size={15} strokeWidth={1.75} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          {t('Open your own shop')} <ArrowUpRight size={15} strokeWidth={1.75} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </span>
       </a>
     </footer>

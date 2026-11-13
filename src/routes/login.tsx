@@ -54,7 +54,7 @@ function Login() {
         </button>
       </form>
       <p className="mt-8 text-[14px] text-muted">
-        {t('New to Shopi?')} <TextLink to="/signup">{t('Open a shop free')}</TextLink>
+        {t('New to Shopi?')} <TextLink to="/signup">{t('Open a shop')}</TextLink>
       </p>
       <p className="mt-2 text-[14px] text-muted">{t('Forgot your password? Message the Shopi team on WhatsApp and we will reset it.')}</p>
     </AuthLayout>
