@@ -32,6 +32,19 @@ function Checkout() {
     ]
   })
 
+  // Until the bag has been read from the phone, show the page without it, never "Your bag is empty":
+  // on a slow phone that message could sit there for seconds while the bag is fine.
+  if (!cart.ready) {
+    return (
+      <div className="min-h-dvh bg-page">
+        <CheckoutHeader shop={shop} />
+        <main className="mx-auto max-w-[1120px] px-4 md:px-10">
+          <h1 className="title mt-2 text-[28px] md:mt-6 md:text-[40px]">{t('Checkout')}</h1>
+        </main>
+      </div>
+    )
+  }
+
   if (lines.length === 0) {
     return (
       <div className="min-h-dvh bg-page">

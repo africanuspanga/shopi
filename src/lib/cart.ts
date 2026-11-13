@@ -22,8 +22,11 @@ export type Cart = ReturnType<typeof useCart>
 
 export function useCart(shopId: string) {
   const [cart, setCart] = useState<Lines>({})
+  // The bag lives on the phone, so the server and the first render can't know it. False until it has been read.
+  const [ready, setReady] = useState(false)
   useEffect(() => {
     setCart(read(shopId))
+    setReady(true)
     const onStorage = (e: StorageEvent) => e.key === key(shopId) && setCart(read(shopId))
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)
@@ -44,6 +47,7 @@ export function useCart(shopId: string) {
 
   return {
     cart,
+    ready,
     count: Object.values(cart).reduce((s, q) => s + q, 0),
     lines: Object.entries(cart).map(([line, qty]) => ({ line, qty, ...parseLine(line) })),
     set: (line: string, qty: number) => update({ ...cart, [line]: qty }),

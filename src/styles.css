@@ -96,7 +96,8 @@ body {
     border-radius: var(--radius-card);
   }
 
-  /* Buttons: pills. Black is the primary action everywhere. */
+  /* Buttons: pills. Black is the primary action everywhere.
+     Hover colours only where there is a pointer that hovers: on a phone a tap would leave the button stuck in them. */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -117,8 +118,10 @@ body {
       box-shadow 150ms var(--ease-out),
       opacity 150ms var(--ease-out);
   }
-  .btn:hover {
-    background: #2a2926;
+  @media (hover: hover) {
+    .btn:hover {
+      background: #2a2926;
+    }
   }
   .btn:active {
     transform: scale(0.97);
@@ -133,15 +136,19 @@ body {
     color: var(--color-ink);
     box-shadow: inset 0 0 0 1px var(--color-line-strong);
   }
-  .btn-ghost:hover {
-    background: var(--color-well);
+  @media (hover: hover) {
+    .btn-ghost:hover {
+      background: var(--color-well);
+    }
   }
   .btn-quiet {
     background: var(--color-well);
     color: var(--color-ink);
   }
-  .btn-quiet:hover {
-    background: var(--color-raised);
+  @media (hover: hover) {
+    .btn-quiet:hover {
+      background: var(--color-raised);
+    }
   }
   .btn-sm {
     height: 36px;
@@ -169,8 +176,10 @@ body {
       background-color 150ms var(--ease-out),
       transform 120ms var(--ease-out);
   }
-  .icon-btn:hover {
-    background: var(--color-well);
+  @media (hover: hover) {
+    .icon-btn:hover {
+      background: var(--color-well);
+    }
   }
   .icon-btn:active {
     transform: scale(0.94);
@@ -195,9 +204,11 @@ body {
       color 150ms var(--ease-out),
       box-shadow 150ms var(--ease-out);
   }
-  .chip:hover {
-    color: var(--color-ink);
-    box-shadow: inset 0 0 0 1px rgb(10 10 10 / 0.3);
+  @media (hover: hover) {
+    .chip:hover {
+      color: var(--color-ink);
+      box-shadow: inset 0 0 0 1px rgb(10 10 10 / 0.3);
+    }
   }
   .chip[data-active="true"],
   .chip[aria-pressed="true"] {
@@ -264,8 +275,10 @@ body {
     background-position: right 14px center;
     padding-right: 40px;
   }
-  .input:hover {
-    box-shadow: inset 0 0 0 1px rgb(10 10 10 / 0.28);
+  @media (hover: hover) {
+    .input:hover {
+      box-shadow: inset 0 0 0 1px rgb(10 10 10 / 0.28);
+    }
   }
   .input:focus,
   .input:focus-within {

@@ -173,12 +173,16 @@ export function WaitingCard({ product, alerts: initial }: { product: { id: strin
           return (
             <li key={a.id} className="flex items-center gap-3 py-3">
               <div className="min-w-0 flex-1">
-                <p className="code truncate text-[14px]">{localPhone(a.phone)}</p>
-                <p className="mt-0.5 flex items-center gap-1.5 truncate text-[13px] text-muted">
+                {/* The time sits by the number, so the second line has room for the option and where it stands on a phone. */}
+                <p className="flex items-baseline gap-2">
+                  <span className="code truncate text-[14px]">{localPhone(a.phone)}</span>
+                  <span className="meta shrink-0">{timeAgo(a.created_at, lang)}</span>
+                </p>
+                <p className="mt-0.5 flex items-center gap-1.5 text-[13px] text-muted">
                   <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${a.back ? 'bg-ok' : 'bg-faint'}`} />
                   <span className="truncate">
                     {a.variant ? `${optionText(t, a.product.option_name, a.variant)} · ` : ''}
-                    {status} · {timeAgo(a.created_at, lang)}
+                    {status}
                   </span>
                 </p>
               </div>

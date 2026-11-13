@@ -160,6 +160,8 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
 
 ### Motion
 One easing, `--ease-out` (`cubic-bezier(0.22, 1, 0.36, 1)`): 120 to 180ms for feedback, 300 to 500ms for entrances.
+Hover colours in `styles.css` sit inside `@media (hover: hover)` (Tailwind's `hover:` already does this): on a phone a tap
+would leave the button stuck in its hover colour. Keep new hover rules there too.
 Animate only colour, opacity and transform. No looping animation except spinners while uploading.
 Presses scale to about 0.97. Respect `prefers-reduced-motion`.
 
@@ -229,6 +231,8 @@ domain are lowercase.
   the seller opens Home or a product. Move it to the nightly job when one exists, with the 13-month visit-data purge.
 - Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
   sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.
+- The bag lives in the buyer's localStorage (`useCart`), so the server never knows it: `useCart().ready` is false until it has
+  been read, and checkout waits for it instead of showing "Your bag is empty" (on a slow phone that would sit there for seconds).
 - Order statuses: `awaiting_payment` → `payment_claimed` (buyer pasted an SMS) → `confirmed` → `dispatched` → `delivered`,
   or `cancelled`. Cash on delivery starts at `confirmed`. Stock is held on confirm and returned on cancel.
 - Products may have options, usually sizes (`sizes`: `[{label, stock, price?, image?}]`); then `stock` is their total and an
