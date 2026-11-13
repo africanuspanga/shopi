@@ -33,6 +33,7 @@ SCREENS = [
     ('routes/app/orders/', 'Seller dashboard: orders'),
     ('routes/app/products/', 'Seller dashboard: products'),
     ('components/product-form.tsx', 'Seller dashboard: add or edit product'),
+    ('components/stock-alerts.tsx', 'Buyer: back-in-stock alert, and the seller’s waiting list'),
     ('routes/app/shop.tsx', 'Seller dashboard: shop settings'),
     ('routes/app/', 'Seller dashboard'),
     ('routes/$shop/c.$slug.tsx', 'Buyer: collection page'),
@@ -50,6 +51,8 @@ PLACEHOLDER_NOTES = {
     'product': 'a product name', 'price': 'a price, like TSh 60,000', 'url': 'a web link',
     'date': 'a date, like Fri 20 Nov', 'total': 'an amount, like TSh 60,000', 'items': 'a count, like 3 items',
     'who': "a buyer's name or phone number", 'when': 'a time, like 2h ago',
+    'what': 'a product, maybe with its option, like Gauni (Size XL)', 'phone': 'a phone number, like 0754 123 456',
+    'option': 'an option in words, like Size M or Colour Red', 'value': 'an option, like M or Red',
     'off': 'a discount, like 10% off', 'min': 'an amount, like TSh 50,000', 'amount': 'an amount, like TSh 5,000',
 }
 

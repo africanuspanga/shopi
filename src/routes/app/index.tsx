@@ -73,6 +73,30 @@ function Dashboard() {
 
       <PlanRow plan={d.plan} />
 
+      {d.backInStock.length > 0 && (
+        <section className="rise card mt-6 overflow-hidden md:mt-8">
+          <div className="px-5 pt-5 md:px-6">
+            <h2 className="flex items-center gap-2.5 text-[16px] font-semibold">
+              <span className="signal shrink-0" />
+              {t('Back in stock, and buyers are waiting')}
+            </h2>
+            <p className="mt-1 text-[14px] text-muted">{t('They asked for a WhatsApp message when it came back. Open the product to send it.')}</p>
+          </div>
+          <ul className="mt-4 divide-y divide-line border-t border-line">
+            {d.backInStock.map((p) => (
+              <li key={p.id}>
+                <Link to="/app/products/$id" params={{ id: p.id }} hash="waiting" className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-page md:px-6">
+                  <Img size="thumb" k={p.image} alt="" className="h-11 w-11 shrink-0 rounded-[10px]" />
+                  <span className="min-w-0 flex-1 truncate text-[14px] font-medium">{p.name}</span>
+                  <span className="tnum shrink-0 text-[14px] text-ink-2">{t('{n} waiting', { n: p.waiting })}</span>
+                  <ChevronRight size={16} strokeWidth={1.6} className="shrink-0 text-faint" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {setupDone < setupSteps.length && (
         <section className="rise card mt-6 p-5 md:mt-8 md:p-6">
           <div className="flex items-center justify-between gap-4">

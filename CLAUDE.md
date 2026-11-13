@@ -51,8 +51,9 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/components/product-picker.tsx` | `ProductPicker`: search the seller's products and pick one (Record a sale, bag links) |
 | `src/routes/app/collections/` | Collections: the list (order, share), `new` and `$id` (`CollectionForm` in `components/collections.tsx`) |
 | `src/routes/app/discounts.tsx` | Discount codes: each code with its uses, on/off, Share (as a link) and the new/edit sheet |
+| `src/components/stock-alerts.tsx` | Back in stock: `NotifySheet` (a buyer leaves a WhatsApp number), `useAsked`, `WaitingCard` (the seller's list, a prefilled WhatsApp message each, Done) |
 | `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
-| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `session.ts` |
+| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `session.ts` |
 | `src/lib/analytics.ts` | The buyer-side tracker: visitor ID, 30-minute visits, traffic source, `?s=` link tags, `track()` |
 | `src/routes/api/e.ts` | Receives analytics events (sendBeacon); drops bots, records device and city |
 | `src/routes/api/export.ts` | CSV downloads of orders and buyers for the logged-in seller |
@@ -217,6 +218,15 @@ domain are lowercase.
   collection with only the products buyers can see; the shop's chips list the non-empty ones first, in the seller's order
   (`orderCollections`), then New in and On sale. A product in several collections is fine; deleting a product takes it out.
   Seller: Collections in the sidebar, and a Collections button on Products (phones).
+- Back-in-stock alerts (`stock_alerts`, helpers in `src/server/alerts.ts`): on the product page a sold-out product or option
+  (sold-out option chips stay choosable, outlined with a line through) offers "Notify me when it's back": a sheet with the
+  buyer's WhatsApp number (remembered from checkout) and a consent line; tapping the button is the consent. One alert per
+  product, option and number; demo shops refuse (`error: 'demo'`), and so does anything in stock. Shopi has no WhatsApp
+  Business API yet, so the seller sends each message from their own WhatsApp: Products shows "{n} waiting", the product
+  page's `WaitingCard` gives a prefilled wa.me message per person and a check that deletes the alert, and Home shows
+  "Back in stock, and buyers are waiting" once what they asked for can be bought (`getDashboard().backInStock`).
+  Alerts are deleted when done and after 90 days at most (Privacy page): `purgeOldAlerts()` runs when a buyer asks and when
+  the seller opens Home or a product. Move it to the nightly job when one exists, with the 13-month visit-data purge.
 - Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
   sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.
 - Order statuses: `awaiting_payment` → `payment_claimed` (buyer pasted an SMS) → `confirmed` → `dispatched` → `delivered`,

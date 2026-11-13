@@ -1,10 +1,11 @@
 import { Link, createFileRoute, getRouteApi, notFound, redirect, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Check, Minus, Plus, Share2 } from 'lucide-react'
+import { ArrowLeft, Bell, Check, Minus, Plus, Share2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { ShareActions } from '#/components/share'
 import { BagButton, OptionChip, Price, ProductCard, ShopFooter, ShopTopBar, Tag, shownPrice } from '#/components/shop'
 import { NotFound } from '#/components/not-found'
+import { NotifySheet, useAsked } from '#/components/stock-alerts'
 import { Img, Toast } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import { lineKey, useCart } from '#/lib/cart'
@@ -65,6 +66,7 @@ function ProductPage() {
   const [added, setAdded] = useState(false)
   const [copied, setCopied] = useState(false)
   const [slide, setSlide] = useState(0)
+  const [notify, setNotify] = useState(false)
   const gallery = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -91,6 +93,9 @@ function ProductPage() {
   const shown = shownPrice(p, chosen?.label)
   const sale = !!shown.compare_price
   const unit = shown.price
+  // Sold out, or the chosen option is: the buyer can ask for a WhatsApp message when it's back.
+  const canNotify = p.sizes ? chosen?.stock === 0 : soldOut
+  const { asked, remember } = useAsked(p.id, canNotify ? (chosen?.label ?? null) : null)
   const pay = [shop.lipa_number && t('Mobile money'), shop.cod_enabled && t('Cash on delivery')].filter(Boolean).join(', ')
   const lowStock = left != null && left > 0 && left <= 3
 
@@ -222,28 +227,42 @@ function ProductPage() {
                 </div>
                 <div className={`flex flex-wrap gap-2 rounded-[22px] ${needSize && !chosen ? 'outline-2 outline-offset-[6px] outline-moto' : ''}`}>
                   {p.sizes.map((s) => (
-                    <OptionChip key={s.label} option={s} disabled={s.stock === 0} selected={size === s.label} onClick={() => choose(s.label)} />
+                    <OptionChip key={s.label} option={s} soldOut={s.stock === 0} selected={size === s.label} onClick={() => choose(s.label)} />
                   ))}
                 </div>
                 {needSize && !chosen && <p className="mt-3 text-[13px] text-moto-ink">{t(kind.choose)}</p>}
               </div>
             )}
             {!p.sizes && lowStock && <p className="mt-5 text-[13px] text-moto-ink">{t('Only {n} left', { n: left! })}</p>}
+            {canNotify && (
+              <p className="fade mt-5 text-[14px] leading-relaxed text-ink-2">
+                {asked
+                  ? t('You asked {shop} to message you on WhatsApp when it’s back.', { shop: shop.name })
+                  : t('Sold out for now. Leave your WhatsApp number and {shop} will message you when it’s back.', { shop: shop.name })}
+              </p>
+            )}
 
-            <div className="mt-6 flex items-center justify-between md:hidden">
-              <p className="text-[14px] font-medium">{t('Quantity')}</p>
-              <Qty qty={qty} max={max} onChange={setQty} />
-            </div>
+            {!canNotify && (
+              <div className="mt-6 flex items-center justify-between md:hidden">
+                <p className="text-[14px] font-medium">{t('Quantity')}</p>
+                <Qty qty={qty} max={max} onChange={setQty} />
+              </div>
+            )}
 
             {/* Desktop buttons. Phones use the bar at the bottom. */}
             <div className="mt-8 hidden gap-3 md:flex">
-              <Qty qty={qty} max={max} onChange={setQty} big />
+              {!canNotify && <Qty qty={qty} max={max} onChange={setQty} big />}
               {added ? (
                 <Link to="/$shop/checkout" params={{ shop: shop.slug }} className="btn btn-lg flex-1">
                   {t('Go to checkout')} <span className="tnum text-white/60">{tzs(bagTotal)}</span>
                 </Link>
+              ) : canNotify ? (
+                <button type="button" className="btn btn-lg flex-1" disabled={asked} onClick={() => setNotify(true)}>
+                  {asked ? <Check size={18} strokeWidth={2.25} /> : <Bell size={18} strokeWidth={1.75} />}
+                  {asked ? t('You’ll get a WhatsApp message') : t('Notify me when it’s back')}
+                </button>
               ) : (
-                <AddButton soldOut={soldOut} onAdd={add} big />
+                <AddButton label={soldOut && !chosen ? t(kind.choose) : undefined} onAdd={add} big />
               )}
             </div>
             {added && (
@@ -342,26 +361,40 @@ function ProductPage() {
               <div className="min-w-0 flex-1 pl-4">
                 <p className="tnum truncate text-[16px] font-semibold">{shown.from ? t('From {price}', { price: tzs(unit) }) : tzs(unit * qty)}</p>
                 <p className="truncate text-[12px] text-white/55">
-                  {soldOut
-                    ? t('Sold out')
-                    : p.sizes && !chosen
-                      ? t(kind.choose)
-                      : [chosen && optionText(t, p.option_name, chosen.label), qty > 1 && t('{n} pieces', { n: qty })].filter(Boolean).join(' · ') || t('In stock')}
+                  {p.sizes && !chosen
+                    ? soldOut
+                      ? t('Sold out')
+                      : t(kind.choose)
+                    : [chosen && optionText(t, p.option_name, chosen.label), canNotify && t('Sold out'), !canNotify && qty > 1 && t('{n} pieces', { n: qty })]
+                        .filter(Boolean)
+                        .join(' · ') || t('In stock')}
                 </p>
               </div>
-              <button
-                type="button"
-                disabled={soldOut}
-                onClick={add}
-                className="flex h-full shrink-0 items-center justify-center rounded-full bg-white px-7 text-[15px] font-medium text-ink transition-transform active:scale-[0.97] disabled:opacity-40"
-              >
-                {soldOut ? t('Sold out') : t('Add to bag')}
-              </button>
+              {canNotify ? (
+                <button
+                  type="button"
+                  disabled={asked}
+                  onClick={() => setNotify(true)}
+                  className="flex h-full shrink-0 items-center justify-center gap-2 rounded-full bg-white px-6 text-[15px] font-medium text-ink transition-transform active:scale-[0.97] disabled:opacity-60"
+                >
+                  {asked ? <Check size={17} strokeWidth={2.25} /> : <Bell size={17} strokeWidth={1.75} />}
+                  {asked ? t('Asked') : t('Notify me')}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={add}
+                  className="flex h-full shrink-0 items-center justify-center rounded-full bg-white px-7 text-[15px] font-medium text-ink transition-transform active:scale-[0.97]"
+                >
+                  {soldOut && !chosen ? t(kind.choose) : t('Add to bag')}
+                </button>
+              )}
             </>
           )}
         </div>
       </div>
       <Toast show={copied}>{t('Link copied')}</Toast>
+      <NotifySheet shop={shop} product={p} size={canNotify ? (chosen?.label ?? null) : null} open={notify} onClose={() => setNotify(false)} onDone={remember} />
     </div>
   )
 }
@@ -390,11 +423,11 @@ function Qty({ qty, max, onChange, big = false }: { qty: number; max: number; on
   )
 }
 
-function AddButton({ soldOut, onAdd, big = false }: { soldOut: boolean; onAdd: () => void; big?: boolean }) {
+function AddButton({ label, onAdd, big = false }: { label?: string; onAdd: () => void; big?: boolean }) {
   const t = useT()
   return (
-    <button type="button" className={`btn flex-1 ${big ? 'btn-lg' : 'px-8'}`} disabled={soldOut} onClick={onAdd}>
-      {soldOut ? t('Sold out') : t('Add to bag')}
+    <button type="button" className={`btn flex-1 ${big ? 'btn-lg' : 'px-8'}`} onClick={onAdd}>
+      {label ?? t('Add to bag')}
     </button>
   )
 }

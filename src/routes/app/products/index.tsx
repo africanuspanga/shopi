@@ -91,6 +91,7 @@ function Products() {
               <Img sizes="(min-width: 1024px) 20vw, (min-width: 768px) 30vw, 50vw" k={p.images[0]} alt={p.name} className={`h-full w-full transition-opacity group-hover:opacity-90 ${!p.active || out(p) ? 'opacity-50' : ''}`} />
               <div className="absolute top-2.5 left-2.5 flex gap-1.5">
                 {!p.active ? <Tag>{t('Hidden')}</Tag> : out(p) ? <Tag>{t('Sold out')}</Tag> : low(p) ? <Tag hot>{t('{n} left', { n: p.stock! })}</Tag> : null}
+                {p.waiting > 0 && <Tag>{t('{n} waiting', { n: p.waiting })}</Tag>}
               </div>
             </div>
             <p className="mt-3 line-clamp-2 px-0.5 text-[14px] leading-5 font-medium">{p.name}</p>

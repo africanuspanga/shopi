@@ -28,6 +28,11 @@ function DataDeletion() {
           <li>{t('Details remembered on your phone (bag, name, number, landmark): clear your browser’s data for shopi.tz.')}</li>
           <li>
             {t(
+              'A back-in-stock request: it is deleted once the seller has messaged you, or after 90 days. To remove it sooner, write to hello@shopi.tz with your number and the shop.',
+            )}
+          </li>
+          <li>
+            {t(
               'Your orders: write to hello@shopi.tz with your phone number and the order code (it looks like #AB12CD). We remove your name, number and address from those orders within 30 days, and tell the seller.',
             )}
           </li>

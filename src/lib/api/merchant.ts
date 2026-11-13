@@ -5,6 +5,7 @@ import { removePhotos } from '#/server/media'
 import { moveStock, sizesTotal } from '#/server/stock'
 import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, imageOf, normalizePhone, optionKind, parseSizes, productSlug, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink, tinDigits } from '#/lib/format'
 import { shopPlan } from '#/server/plan'
+import { purgeOldAlerts, withReadiness, type AlertRow } from '#/server/alerts'
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
 const int = (v: unknown) => {
@@ -259,6 +260,15 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
       shop.id,
     ),
   ])
+  // Back in stock: products some buyers asked to hear about, now that what they asked for can be bought again.
+  await purgeOldAlerts()
+  const ready = (
+    await withReadiness(shop.id, await all<AlertRow>('SELECT id, product_id, variant, phone, created_at FROM stock_alerts WHERE shop_id = ?', shop.id))
+  ).filter((a) => a.back)
+  const backInStock = [...new Set(ready.map((a) => a.product_id))].map((id) => {
+    const mine = ready.filter((a) => a.product_id === id)
+    return { id, name: mine[0].product.name, image: mine[0].product.image, waiting: mine.length }
+  })
   const todayDay = Math.floor((now() + TZ) / 86400_000)
   const days = Array.from({ length: 7 }, (_, i) => {
     const day = todayDay - 6 + i
@@ -286,6 +296,7 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
       shares: shares.find((s) => s.product_id === p.id)?.n ?? 0,
     })),
     plan: await shopPlan(shop.id),
+    backInStock,
     setup: {
       products: (productCount?.n ?? 0) > 0,
       payment: !!setup?.lipa_number,
@@ -311,6 +322,8 @@ export type ProductRow = {
   option_name: string | null
   active: number
   views: number
+  /** Buyers waiting for a back-in-stock message. */
+  waiting: number
 }
 
 type ProductDbRow = Omit<ProductRow, 'images' | 'sizes'> & { images: string; sizes: string | null }
@@ -319,7 +332,8 @@ const toProduct = (r: ProductDbRow): ProductRow => ({ ...r, images: JSON.parse(r
 export const listMyProducts = createServerFn({ method: 'GET' }).handler(async () => {
   const { shop } = await requireShop()
   const rows = await all<ProductDbRow>(
-    'SELECT * FROM products WHERE shop_id = ? ORDER BY created_at DESC',
+    `SELECT p.*, (SELECT COUNT(*) FROM stock_alerts a WHERE a.product_id = p.id) waiting
+     FROM products p WHERE p.shop_id = ? ORDER BY p.created_at DESC`,
     shop.id,
   )
   return rows.map(toProduct)
@@ -330,7 +344,7 @@ export const getMyProduct = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     const { shop } = await requireShop()
     const row = await first<ProductDbRow>(
-      'SELECT * FROM products WHERE id = ? AND shop_id = ?',
+      `SELECT p.*, (SELECT COUNT(*) FROM stock_alerts a WHERE a.product_id = p.id) waiting FROM products p WHERE p.id = ? AND p.shop_id = ?`,
       data.id,
       shop.id,
     )

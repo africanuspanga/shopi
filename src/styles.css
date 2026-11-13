@@ -205,10 +205,17 @@ body {
     color: #fff;
     box-shadow: none;
   }
-  .chip:disabled {
+  .chip:disabled,
+  .chip[data-soldout="true"] {
     color: var(--color-faint);
     text-decoration: line-through;
     box-shadow: inset 0 0 0 1px var(--color-line);
+  }
+  /* A sold-out option the buyer chose (to ask for a message when it's back): outlined, not filled. */
+  .chip[data-soldout="true"][aria-pressed="true"] {
+    background: var(--color-card);
+    color: var(--color-ink-2);
+    box-shadow: inset 0 0 0 1.5px var(--color-ink);
   }
 
   /* Forms */

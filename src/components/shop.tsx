@@ -50,12 +50,15 @@ export function OptionChip({
   option,
   selected,
   disabled,
+  soldOut,
   onClick,
   className = '',
 }: {
   option: Size
   selected: boolean
   disabled?: boolean
+  /** Sold out but still choosable, so the buyer can ask to hear when it's back. */
+  soldOut?: boolean
   onClick: () => void
   className?: string
 }) {
@@ -64,6 +67,7 @@ export function OptionChip({
       type="button"
       disabled={disabled}
       aria-pressed={selected}
+      data-soldout={soldOut || undefined}
       onClick={onClick}
       className={`chip tnum h-11 min-w-14 justify-center text-[14px] ${option.image ? 'pr-4 pl-1.5' : 'px-4'} ${className}`}
     >

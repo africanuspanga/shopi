@@ -42,6 +42,11 @@ function Privacy() {
               'When you visit a shop: anonymous usage, such as pages viewed, items added to the bag, the app or link you came from, your type of phone and your city (worked out from your connection, not your exact location). It uses a random ID kept on your phone, not your name or number.',
             )}
           </li>
+          <li>
+            {t(
+              'If you ask to hear when a sold-out product is back: your WhatsApp number and what you asked for. It goes to that seller only, so they can message you.',
+            )}
+          </li>
           <li>{t('On your phone only: your bag, and your name, number and landmark so the next checkout is quicker. They stay in your browser.')}</li>
         </ul>
       </Section>
@@ -89,6 +94,7 @@ function Privacy() {
           <li>{t('Seller accounts and shops: while the account is open. A shop on a break is kept so it can open again.')}</li>
           <li>{t('Orders: as long as the seller’s account is open, so sellers keep their records, and as long as the law requires for business records.')}</li>
           <li>{t('Visit data: up to 13 months, then it is deleted or kept only as totals.')}</li>
+          <li>{t('Back-in-stock requests: deleted once the seller has messaged you, and after 90 days at most.')}</li>
         </ul>
       </Section>
 

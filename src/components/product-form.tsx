@@ -38,7 +38,7 @@ function initial(product?: ProductRow) {
   }
 }
 
-export function ProductForm({ product, title, back }: { product?: ProductRow; title: string; back: string }) {
+export function ProductForm({ product, title, back, top }: { product?: ProductRow; title: string; back: string; top?: ReactNode }) {
   const t = useT()
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -138,6 +138,7 @@ export function ProductForm({ product, title, back }: { product?: ProductRow; ti
         }}
       >
         <div className="min-w-0 space-y-4">
+          {top}
           <Card title={t('Photos')} sub={t('Up to 6. The first one is the main photo; tap another to make it the main one.')}>
             <div className="hide-scroll -mx-6 flex gap-3 overflow-x-auto px-6 pb-1">
               {images.map((k, i) => (
