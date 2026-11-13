@@ -1,5 +1,5 @@
 import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
-import { Check, Copy, MapPin } from 'lucide-react'
+import { Check, Copy, ImageDown, MapPin, Printer, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { MadeWithShopi } from '#/components/shop'
@@ -7,7 +7,8 @@ import { ErrorText, Img, LangSwitch, ShopAvatar } from '#/components/ui'
 import { getTrackedOrder, submitPaymentSms } from '#/lib/api/store'
 import { timeAgo, tzs, waLink, type OrderStatus } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
-import { useOrigin } from '#/lib/share'
+import { shareLink, useOrigin } from '#/lib/share'
+import { drawReceipt } from '#/lib/receipt-image'
 import { NotFound } from '#/components/not-found'
 import { track } from '#/lib/analytics'
 
@@ -60,6 +61,71 @@ function Track() {
     }
   }
 
+  // Until the money is in, this is an order summary; then a receipt (cash on delivery: once delivered).
+  const paid = lipa ? ['confirmed', 'dispatched', 'delivered'].includes(o.status) : o.status === 'delivered'
+  const receiptTitle = paid ? t('Receipt') : t('Order summary')
+  const when = new Date(o.created_at).toLocaleString(lang === 'sw' ? 'sw-TZ' : 'en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Africa/Dar_es_Salaam',
+  })
+  const payLine = lipa ? t('Mobile money · Lipa Namba') : t('Cash on delivery')
+  const [saving, setSaving] = useState(false)
+  const receiptImage = () =>
+    drawReceipt({
+      shop: o.shop.name,
+      title: receiptTitle,
+      code: o.code,
+      date: when,
+      lines: o.lines.map((l) => ({
+        name: l.name,
+        detail: `${l.qty} × ${tzs(l.price)}${l.variant ? ` · ${t('Size {size}', { size: l.variant })}` : ''}`,
+        amount: l.qty * l.price,
+      })),
+      rows: [
+        { label: t('Items'), value: tzs(o.subtotal) },
+        { label: t('Delivery'), value: o.delivery_fee ? tzs(o.delivery_fee) : t('Agreed on WhatsApp') },
+      ],
+      total: o.total,
+      totalLabel: t('Total'),
+      meta: [
+        ...(o.area ? [`${o.area.replace(' (fee to agree)', '')}${o.landmark ? ` · ${o.landmark}` : ''}`] : []),
+        paid ? `${t('Paid')} · ${payLine}` : payLine,
+      ],
+      footer: `${t('Not a TRA fiscal receipt')} · shopi.tz/o/${o.code}`,
+    })
+  const saveImage = async () => {
+    setSaving(true)
+    try {
+      const blob = await receiptImage()
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `${o.shop.name} ${o.code}.png`
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000)
+    } finally {
+      setSaving(false)
+    }
+  }
+  const shareReceipt = async () => {
+    try {
+      const file = new File([await receiptImage()], `${o.code}.png`, { type: 'image/png' })
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: `${receiptTitle} #${o.code}` })
+        return
+      }
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return
+    }
+    if ((await shareLink(`${origin}/o/${o.code}`, `${receiptTitle} #${o.code}`)) === 'copied') {
+      setCopied('receipt')
+      setTimeout(() => setCopied(''), 1600)
+    }
+  }
+
   const steps = [lipa ? (done > 0 ? t('Paid') : t('Pay')) : t('Ordered'), done === 1 ? t('Seller checks') : t('Confirmed'), t('On the way'), t('Delivered')]
 
   const head: Record<OrderStatus, { title: string; sub: string }> = {
@@ -83,8 +149,8 @@ function Track() {
   }
 
   return (
-    <div className="min-h-dvh bg-page">
-      <header className="mx-auto flex h-16 max-w-[1080px] items-center gap-3 px-4 md:h-20 md:px-10">
+    <div className="min-h-dvh bg-page print:bg-white">
+      <header className="mx-auto flex h-16 max-w-[1080px] items-center gap-3 px-4 md:h-20 md:px-10 print:hidden">
         <Link to="/$shop" params={{ shop: o.shop.slug }} className="flex min-w-0 flex-1 items-center gap-2.5">
           <ShopAvatar name={o.shop.name} logo={o.shop.logo_key} className="h-9 w-9 text-[13px]" />
           <span className="truncate text-[15px] font-semibold">{o.shop.name}</span>
@@ -92,8 +158,8 @@ function Track() {
         <LangSwitch />
       </header>
 
-      <main className="mx-auto max-w-[1080px] px-4 pb-16 md:grid md:grid-cols-[minmax(0,1fr)_380px] md:items-start md:gap-10 md:px-10">
-        <div className="min-w-0 space-y-4">
+      <main className="mx-auto max-w-[1080px] px-4 pb-16 md:grid md:grid-cols-[minmax(0,1fr)_380px] md:items-start md:gap-10 md:px-10 print:block">
+        <div className="min-w-0 space-y-4 print:hidden">
           <section className="rise card p-6 md:p-8">
             <p className="meta">
               {t('Order')} <span className="code text-ink">#{o.code}</span> · {timeAgo(o.created_at, lang)}
@@ -193,12 +259,13 @@ function Track() {
           )}
         </div>
 
-        <aside className="rise-2 mt-8 md:sticky md:top-6 md:mt-0">
+        <aside className="rise-2 mt-8 md:sticky md:top-6 md:mt-0 print:mx-auto print:mt-0 print:max-w-[420px]">
           <div className="receipt px-5 pt-5 pb-6">
             <div className="flex items-baseline justify-between">
-              <p className="text-[15px] font-semibold">{t('Your order')}</p>
+              <p className="text-[15px] font-semibold">{receiptTitle}</p>
               <p className="code text-[13px] text-muted">#{o.code}</p>
             </div>
+            <p className="meta mt-1 text-muted">{when}</p>
             <div className="mt-4 space-y-3">
               {o.lines.map((l, i) => (
                 <div key={i} className="flex items-center gap-3">
@@ -232,11 +299,26 @@ function Track() {
                   </span>
                 </p>
               )}
-              <p>{lipa ? t('Mobile money · Lipa Namba') : t('Cash on delivery')}</p>
+              <p>{paid ? `${t('Paid')} · ${payLine}` : payLine}</p>
+              <p className="pt-2 text-[12px]">{t('Not a TRA fiscal receipt')}</p>
             </div>
           </div>
-          <p className="mt-4 text-center text-[13px] text-muted">{t('Bookmark this page to follow your order.')}</p>
-          <MadeWithShopi />
+          <div className="mt-4 grid grid-cols-2 gap-2 print:hidden">
+            <button type="button" className="btn btn-ghost btn-sm" onClick={saveImage} disabled={saving}>
+              <ImageDown size={15} strokeWidth={1.6} /> {t('Save as image')}
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={shareReceipt}>
+              {copied === 'receipt' ? <Check size={15} strokeWidth={2} /> : <Share2 size={15} strokeWidth={1.6} />}
+              {copied === 'receipt' ? t('Link copied') : t('Share')}
+            </button>
+            <button type="button" className="btn btn-quiet btn-sm col-span-2 hidden md:inline-flex" onClick={() => window.print()}>
+              <Printer size={15} strokeWidth={1.6} /> {t('Print')}
+            </button>
+          </div>
+          <p className="mt-4 text-center text-[13px] text-muted print:hidden">{t('Bookmark this page to follow your order.')}</p>
+          <div className="print:hidden">
+            <MadeWithShopi />
+          </div>
         </aside>
       </main>
     </div>
