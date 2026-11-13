@@ -1,18 +1,24 @@
 import { Check, Link2, Share2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
+import { waLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
-/** Three ways to send a link: a WhatsApp chat, the clipboard, or the phone's own share sheet when it has one. */
+/**
+ * Three ways to send a link: a WhatsApp chat, the clipboard, or the phone's own share sheet when it has one.
+ * With `phone`, WhatsApp opens the chat with that number instead of asking who to send it to.
+ */
 export function ShareActions({
   url,
   text,
   title,
+  phone,
   onShared,
 }: {
   url: string
   text: string
   title: string
+  phone?: string
   onShared?: (how: 'whatsapp' | 'copy' | 'native') => void
 }) {
   const t = useT()
@@ -34,7 +40,7 @@ export function ShareActions({
   return (
     <div className="flex gap-2">
       <a
-        href={`https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`}
+        href={phone ? waLink(phone, `${text}\n${url}`) : `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`}
         target="_blank"
         rel="noreferrer"
         className="btn btn-sm h-11 flex-1 px-3"

@@ -5,6 +5,7 @@ import { getRequestUrl } from '@tanstack/react-start/server'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
 import { normalizePhone, parseSizes, type OrderStatus, type Size } from '#/lib/format'
 import { moveStock } from '#/server/stock'
+import { openBag } from '#/server/bags'
 import { namesMatch, parsePaymentSms, type PaymentCheck } from '#/lib/payment-sms'
 
 export type PublicShop = {
@@ -79,7 +80,9 @@ export const placeOrder = createServerFn({ method: 'POST' })
   .validator(
     (d: {
       shopId: string
-      items: { productId: string; qty: number; size?: string | null }[]
+      items?: { productId: string; qty: number; size?: string | null }[]
+      /** A bag link's code. Its lines and the seller's prices are used instead of `items`, and it works once. */
+      bag?: string
       name: string
       phone: string
       areaId: string
@@ -106,16 +109,23 @@ export const placeOrder = createServerFn({ method: 'POST' })
     if (payment === 'cod' && !shop.cod_enabled) return { error: 'payment' as const }
     if (payment === 'lipa' && !shop.lipa_number) return { error: 'payment' as const }
 
-    const wanted = (data.items ?? []).filter((i) => i.qty > 0).slice(0, 30)
+    // A bag link brings its own lines at the seller's prices, and may hold a product hidden from the shop.
+    const bag = data.bag ? await openBag(shop.id, data.bag) : null
+    if (data.bag && !bag) return { error: 'bag' as const }
+    const wanted: { productId: string; qty: number; size?: string | null; price?: number }[] = bag
+      ? bag.lines
+      : (data.items ?? []).filter((i) => i.qty > 0).slice(0, 30)
     if (!wanted.length) return { error: 'empty' as const }
-    const ids = wanted.map((i) => i.productId)
+    const ids = [...new Set(wanted.map((i) => String(i.productId)))]
     const products = await all<{ id: string; name: string; price: number; stock: number | null; sizes: string | null; images: string }>(
-      `SELECT id, name, price, stock, sizes, images FROM products WHERE shop_id = ? AND active = 1
+      `SELECT id, name, price, stock, sizes, images FROM products WHERE shop_id = ? ${bag ? '' : 'AND active = 1'}
        AND id IN (${ids.map(() => '?').join(',')})`,
       shop.id,
       ...ids,
     )
     const lines = []
+    // Lines of the same product and size draw on the same stock.
+    const taken = new Map<string, number>()
     for (const item of wanted) {
       const p = products.find((x) => x.id === item.productId)
       if (!p) return { error: 'gone' as const }
@@ -123,9 +133,11 @@ export const placeOrder = createServerFn({ method: 'POST' })
       const sizes = parseSizes(p.sizes)
       const size = sizes ? sizes.find((s) => s.label === item.size) : null
       if (sizes && !size) return { error: 'size' as const, product: p.name }
+      const key = `${p.id}|${size?.label ?? ''}`
+      taken.set(key, (taken.get(key) ?? 0) + qty)
       const left = size ? size.stock : p.stock
-      if (left != null && left < qty) return { error: 'stock' as const, product: size ? `${p.name} (${size.label})` : p.name }
-      lines.push({ p, qty, variant: size?.label ?? null })
+      if (left != null && left < taken.get(key)!) return { error: 'stock' as const, product: size ? `${p.name} (${size.label})` : p.name }
+      lines.push({ p, qty, variant: size?.label ?? null, price: bag && item.price != null ? item.price : p.price })
     }
     // Delivery fees stay out of Shopi: buyer and seller agree them on WhatsApp.
     // The buyer picks one of the shop's areas, or writes their own.
@@ -135,33 +147,52 @@ export const placeOrder = createServerFn({ method: 'POST' })
         ? await first<{ name: string }>('SELECT name FROM delivery_areas WHERE id = ? AND shop_id = ?', data.areaId, shop.id)
         : null
     const area = listed ?? (typed ? { name: typed } : null)
-    const subtotal = lines.reduce((s, l) => s + l.p.price * l.qty, 0)
+    const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0)
     const fee = 0
     const id = newId()
     const code = orderCode()
     const t = now()
-    // Where the buyer came from, so this order's money is credited to its source.
+    // Where the buyer came from, so this order's money is credited to its source. Orders from a bag link count as 'bag_link'.
     const isId = (v: unknown) => (typeof v === 'string' && /^[\w-]{8,64}$/.test(v) ? v : null)
     const word = (v: unknown) => String(v ?? '').toLowerCase().replace(/[^a-z0-9.-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40)
-    const visit = { vid: isId(data.visit?.vid), sid: isId(data.visit?.sid), source: word(data.visit?.source) || 'direct', tag: word(data.visit?.tag) || null }
-    await db().batch([
-      db()
-        .prepare(
-          `INSERT INTO orders (id, shop_id, code, customer_name, customer_phone, area, landmark, note, subtotal,
-             delivery_fee, total, payment_method, status, created_at, updated_at, source, link_tag, visitor_id, session_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        )
-        .bind(
-          id, shop.id, code, name, phone, area?.name ?? '', String(data.landmark ?? '').slice(0, 200),
-          String(data.note ?? '').slice(0, 500), subtotal, fee, subtotal + fee, payment,
-          payment === 'cod' ? 'confirmed' : 'awaiting_payment', t, t, visit.source, visit.tag, visit.vid, visit.sid,
-        ),
-      ...lines.map((l) =>
+    const visit = {
+      vid: isId(data.visit?.vid),
+      sid: isId(data.visit?.sid),
+      source: bag ? 'bag_link' : word(data.visit?.source) || 'direct',
+      tag: word(data.visit?.tag) || null,
+    }
+    // Claim the bag link before the order exists, so two taps (or two phones) can never order it twice.
+    if (bag) {
+      const claimed = await run(
+        `UPDATE bag_links SET status = 'used', order_id = ?, used_at = ? WHERE id = ? AND status = 'open' AND expires_at > ?`,
+        id, t, bag.id, t,
+      )
+      if (!claimed.meta.changes) return { error: 'bag' as const }
+    }
+    try {
+      await db().batch([
         db()
-          .prepare('INSERT INTO order_items (order_id, product_id, name, price, qty, image, variant) VALUES (?, ?, ?, ?, ?, ?, ?)')
-          .bind(id, l.p.id, l.p.name, l.p.price, l.qty, (JSON.parse(l.p.images) as string[])[0] ?? null, l.variant),
-      ),
-    ])
+          .prepare(
+            `INSERT INTO orders (id, shop_id, code, customer_name, customer_phone, area, landmark, note, subtotal,
+               delivery_fee, total, payment_method, status, created_at, updated_at, source, link_tag, visitor_id, session_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          )
+          .bind(
+            id, shop.id, code, name, phone, area?.name ?? '', String(data.landmark ?? '').slice(0, 200),
+            String(data.note ?? '').slice(0, 500), subtotal, fee, subtotal + fee, payment,
+            payment === 'cod' ? 'confirmed' : 'awaiting_payment', t, t, visit.source, visit.tag, visit.vid, visit.sid,
+          ),
+        ...lines.map((l) =>
+          db()
+            .prepare('INSERT INTO order_items (order_id, product_id, name, price, qty, image, variant) VALUES (?, ?, ?, ?, ?, ?, ?)')
+            .bind(id, l.p.id, l.p.name, l.price, l.qty, (JSON.parse(l.p.images) as string[])[0] ?? null, l.variant),
+        ),
+      ])
+    } catch (e) {
+      // The order did not save: the bag link opens again.
+      if (bag) await run(`UPDATE bag_links SET status = 'open', order_id = NULL, used_at = NULL WHERE id = ?`, bag.id)
+      throw e
+    }
     if (payment === 'cod') {
       // Cash on delivery is confirmed at once, so stock is held now.
       await moveStock(id, -1)

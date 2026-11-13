@@ -1,5 +1,5 @@
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Plus, ReceiptText, Search } from 'lucide-react'
+import { Link, createFileRoute, getRouteApi, useNavigate } from '@tanstack/react-router'
+import { ChevronRight, Plus, ReceiptText, Search, ShoppingBag } from 'lucide-react'
 import { useState } from 'react'
 import { Chips, Empty, Page, StatusPill, TopBar } from '#/components/ui'
 import { listOrders } from '#/lib/api/merchant'
@@ -17,6 +17,7 @@ export const Route = createFileRoute('/app/orders/')({
   component: Orders,
 })
 
+const app = getRouteApi('/app')
 const OPEN: OrderStatus[] = ['awaiting_payment', 'payment_claimed', 'confirmed', 'dispatched']
 const MATCH: Record<Filter, (s: OrderStatus) => boolean> = {
   todo: (s) => OPEN.includes(s),
@@ -33,6 +34,7 @@ function Orders() {
   const lang = useLang()
   const navigate = useNavigate({ from: '/app/orders/' })
   const orders = Route.useLoaderData()
+  const { openBags } = app.useLoaderData()
   const filter = Route.useSearch().f ?? 'todo'
   const [q, setQ] = useState('')
   const count = (f: Filter) => orders.filter((o) => MATCH[f](o.status)).length
@@ -60,6 +62,22 @@ function Orders() {
           </>
         }
       />
+
+      {/* Bag links: a bag the seller builds for one buyer in a chat. Their list lives here, under Orders. */}
+      <Link to="/app/bags" className="card mb-4 flex items-center gap-3 px-4 py-3 transition-colors hover:bg-page md:mb-6 md:max-w-[560px]">
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${openBags ? 'bg-ink text-white' : 'bg-well text-ink-2'}`}>
+          <ShoppingBag size={17} strokeWidth={1.75} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[14px] font-medium">{t('Bag links')}</span>
+          <span className="block truncate text-[13px] text-muted">
+            {openBags
+              ? t(openBags === 1 ? '{n} waiting for a buyer' : '{n} waiting for buyers', { n: openBags })
+              : t('Send a buyer their bag as one link')}
+          </span>
+        </span>
+        <ChevronRight size={16} strokeWidth={1.6} className="shrink-0 text-faint" />
+      </Link>
 
       <label className="input mb-4 flex items-center gap-2 px-3 md:hidden">
         <Search size={16} strokeWidth={1.6} className="shrink-0 text-muted" />

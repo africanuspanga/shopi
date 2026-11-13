@@ -156,11 +156,14 @@ export const updateShop = createServerFn({ method: 'POST' })
 /** What the menu shows on every screen: payments to check and orders to send. */
 export const getNavCounts = createServerFn({ method: 'GET' }).handler(async () => {
   const { shop } = await requireShop()
-  const row = await first<{ to_check: number | null; to_send: number | null }>(
-    `SELECT SUM(status = 'payment_claimed') to_check, SUM(status = 'confirmed') to_send FROM orders WHERE shop_id = ?`,
+  const row = await first<{ to_check: number | null; to_send: number | null; open_bags: number | null }>(
+    `SELECT SUM(status = 'payment_claimed') to_check, SUM(status = 'confirmed') to_send,
+       (SELECT COUNT(*) FROM bag_links WHERE shop_id = ?1 AND status = 'open' AND expires_at > ?2) open_bags
+     FROM orders WHERE shop_id = ?1`,
     shop.id,
+    now(),
   )
-  return { toCheck: row?.to_check ?? 0, toSend: row?.to_send ?? 0 }
+  return { toCheck: row?.to_check ?? 0, toSend: row?.to_send ?? 0, openBags: row?.open_bags ?? 0 }
 })
 
 export const getDashboard = createServerFn({ method: 'GET' }).handler(async () => {
@@ -447,23 +450,25 @@ export type OrderDetail = OrderListRow & {
   payment_check: string | null
   paid_claimed_at: number | null
   lines: { name: string; price: number; qty: number; image: string | null; variant: string | null }[]
+  /** The bag link this order was placed from, if any. */
+  bag: { id: string; note: string } | null
 }
 
 export const getOrder = createServerFn({ method: 'GET' })
   .validator((d: { id: string }) => d)
   .handler(async ({ data }) => {
     const { shop } = await requireShop()
-    const order = await first<Omit<OrderDetail, 'lines' | 'items'>>(
+    const order = await first<Omit<OrderDetail, 'lines' | 'items' | 'bag'>>(
       'SELECT * FROM orders WHERE id = ? AND shop_id = ?',
       data.id,
       shop.id,
     )
     if (!order) return null
-    const lines = await all<OrderDetail['lines'][number]>(
-      'SELECT name, price, qty, image, variant FROM order_items WHERE order_id = ?',
-      order.id,
-    )
-    return { ...order, lines, items: lines.reduce((s, l) => s + l.qty, 0) } as OrderDetail
+    const [lines, bag] = await Promise.all([
+      all<OrderDetail['lines'][number]>('SELECT name, price, qty, image, variant FROM order_items WHERE order_id = ?', order.id),
+      order.source === 'bag_link' ? first<{ id: string; note: string }>('SELECT id, note FROM bag_links WHERE order_id = ? AND shop_id = ?', order.id, shop.id) : null,
+    ])
+    return { ...order, lines, bag, items: lines.reduce((s, l) => s + l.qty, 0) } as OrderDetail
   })
 
 export type SaleLine = { productId?: string; name?: string; price: number; qty: number; size?: string | null }

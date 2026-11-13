@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute, redirect, useLocation } from '@tanstack/react-router'
-import { ArrowUpRight, ChartColumn, House, Package, PenLine, Plus, ReceiptText, Store } from 'lucide-react'
+import { ArrowUpRight, ChartColumn, House, Package, PenLine, Plus, ReceiptText, ShoppingBag, Store } from 'lucide-react'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import { getNavCounts } from '#/lib/api/merchant'
@@ -20,7 +20,8 @@ function useTabs() {
   const t = useT()
   return [
     { to: '/app', icon: House, label: t('Home'), match: (p: string) => p === '/app' || p === '/app/' },
-    { to: '/app/orders', icon: ReceiptText, label: t('Orders'), match: (p: string) => p.startsWith('/app/orders') },
+    // Bag links live under Orders.
+    { to: '/app/orders', icon: ReceiptText, label: t('Orders'), match: (p: string) => p.startsWith('/app/orders') || p.startsWith('/app/bags') },
     { to: '/app/products', icon: Package, label: t('Products'), match: (p: string) => p.startsWith('/app/products') },
     { to: '/app/shop', icon: Store, label: t('Shop'), match: (p: string) => p.startsWith('/app/shop') },
   ]
@@ -101,6 +102,9 @@ function Sidebar() {
       <Link to="/app/products/new" className="btn btn-sm mt-6 h-10 w-full">
         <Plus size={16} strokeWidth={2} /> {t('Add product')}
       </Link>
+      <Link to="/app/bags/new" className="btn btn-ghost btn-sm mt-2 h-10 w-full">
+        <ShoppingBag size={15} strokeWidth={1.75} /> {t('Send a bag link')}
+      </Link>
       <Link to="/app/orders/new" className="btn btn-ghost btn-sm mt-2 h-10 w-full">
         <PenLine size={15} strokeWidth={1.75} /> {t('Record a sale')}
       </Link>
@@ -134,6 +138,7 @@ function BottomNav() {
         <div className="grid gap-2">
           {[
             { to: '/app/products/new', icon: Package, title: t('Add product'), sub: t('Photos, price, sizes and stock') },
+            { to: '/app/bags/new', icon: ShoppingBag, title: t('Send a bag link'), sub: t('Build a bag for a buyer; they add delivery and pay') },
             { to: '/app/orders/new', icon: PenLine, title: t('Record a sale'), sub: t('A sale in person, on a call or in a chat') },
           ].map((x) => (
             <Link key={x.to} to={x.to} onClick={() => setAdding(false)} className="flex items-center gap-4 rounded-[18px] bg-page px-4 py-4 transition-colors hover:bg-well">

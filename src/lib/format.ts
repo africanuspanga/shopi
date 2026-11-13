@@ -13,6 +13,12 @@ export function normalizePhone(raw: string) {
   return ''
 }
 
+/** +255754123456 → 0754 123 456, the way people write numbers in Tanzania. Other numbers stay as they are. */
+export function localPhone(phone: string) {
+  const m = /^\+255([67]\d{2})(\d{3})(\d{3})$/.exec(phone)
+  return m ? `0${m[1]} ${m[2]} ${m[3]}` : phone
+}
+
 export function waLink(phone: string, text?: string) {
   const digits = phone.replace(/[^\d]/g, '')
   return `https://wa.me/${digits}${text ? `?text=${encodeURIComponent(text)}` : ''}`
@@ -89,8 +95,8 @@ export function linkTag(s: string) {
     .replace(/-+$/, '')
 }
 
-/** Words a product link may not be, because the shop's own pages use them. */
-export const RESERVED_PRODUCT_SLUGS = new Set(['checkout', 'p', 'bag', 'cart', 'order', 'orders', 'about'])
+/** Words a product link may not be, because the shop's own pages use them (b: bag links). */
+export const RESERVED_PRODUCT_SLUGS = new Set(['checkout', 'p', 'b', 'bag', 'cart', 'order', 'orders', 'about'])
 
 export const RESERVED_SLUGS = new Set([
   'app', 'admin', 'api', 'img', 'login', 'signup', 'logout', 'onboard', 'discover', 'creators',

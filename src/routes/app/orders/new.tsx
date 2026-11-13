@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
-import { Minus, PackagePlus, PenLine, Plus, Search, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { Minus, PackagePlus, PenLine, Plus, X } from 'lucide-react'
+import { useState } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
-import { ErrorText, Field, Img, Page, Sheet, Switch, TopBar } from '#/components/ui'
+import { ProductPicker } from '#/components/product-picker'
+import { ErrorText, Field, Img, Page, Switch, TopBar } from '#/components/ui'
 import { listMyProducts, recordSale, type ProductRow } from '#/lib/api/merchant'
 import { PAYMENT_LABEL, tzs, type PaymentMethod } from '#/lib/format'
 import { useT } from '#/lib/i18n'
@@ -222,6 +223,7 @@ function RecordSale() {
 
       <ProductPicker
         open={picking}
+        title={t('Add from your products')}
         products={products}
         onClose={() => setPicking(false)}
         onPick={(p) => {
@@ -230,38 +232,5 @@ function RecordSale() {
         }}
       />
     </Page>
-  )
-}
-
-function ProductPicker({ open, products, onClose, onPick }: { open: boolean; products: ProductRow[]; onClose: () => void; onPick: (p: ProductRow) => void }) {
-  const t = useT()
-  const [q, setQ] = useState('')
-  const shown = useMemo(() => {
-    const n = q.trim().toLowerCase()
-    return n ? products.filter((p) => p.name.toLowerCase().includes(n)) : products
-  }, [q, products])
-  return (
-    <Sheet open={open} onClose={onClose} title={t('Add from your products')}>
-      <label className="input flex items-center gap-2 px-3">
-        <Search size={16} strokeWidth={1.6} className="shrink-0 text-muted" />
-        <input className="min-w-0 flex-1 bg-transparent outline-none" placeholder={t('Search')} value={q} onChange={(e) => setQ(e.target.value)} />
-      </label>
-      <ul className="mt-3 divide-y divide-line">
-        {shown.map((p) => (
-          <li key={p.id}>
-            <button type="button" className="flex w-full items-center gap-3 py-3 text-left" onClick={() => onPick(p)}>
-              <Img size="thumb" k={p.images[0]} alt={p.name} className="h-12 w-10 shrink-0 rounded-[8px]" />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px]">{p.name}</span>
-                <span className="block text-[13px] text-muted">
-                  {p.stock == null ? t('In stock') : p.stock === 0 ? t('Sold out') : t('{n} in stock', { n: p.stock })}
-                </span>
-              </span>
-              <span className="tnum shrink-0 text-[14px]">{tzs(p.price)}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </Sheet>
   )
 }

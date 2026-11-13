@@ -24,6 +24,8 @@ SCREENS = [
     ('routes/onboard.tsx', 'Open your shop (setup)'),
     ('routes/app/index.tsx', 'Seller dashboard: home'),
     ('routes/app/route.tsx', 'Seller dashboard: menu'),
+    ('routes/app/bags/', 'Seller dashboard: bag links'),
+    ('components/bag-links.tsx', 'Seller dashboard: bag links'),
     ('routes/app/orders/$id.tsx', 'Seller dashboard: one order'),
     ('routes/app/orders/', 'Seller dashboard: orders'),
     ('routes/app/products/', 'Seller dashboard: products'),
@@ -31,6 +33,8 @@ SCREENS = [
     ('routes/app/shop.tsx', 'Seller dashboard: shop settings'),
     ('routes/app/', 'Seller dashboard'),
     ('routes/$shop/checkout.tsx', 'Buyer: checkout'),
+    ('components/checkout.tsx', 'Buyer: checkout'),
+    ('routes/$shop/b.$code.tsx', 'Buyer: bag link from the seller'),
     ('routes/$shop/', 'Buyer: shop page'),
     ('routes/o/', 'Buyer: order tracking page'),
     ('lib/format.ts', 'Shared labels (categories, order status, time)'),
@@ -39,6 +43,8 @@ SCREENS = [
 PLACEHOLDER_NOTES = {
     'n': 'a number', 'name': "a person's first name", 'shop': 'the shop name', 'code': 'the order code, like D6XS76',
     'product': 'a product name', 'price': 'a price, like TSh 60,000', 'url': 'a web link',
+    'date': 'a date, like Fri 20 Nov', 'total': 'an amount, like TSh 60,000', 'items': 'a count, like 3 items',
+    'who': "a buyer's name or phone number", 'when': 'a time, like 2h ago',
 }
 
 LIT = r"'((?:[^'\\\n]|\\.)*)'"

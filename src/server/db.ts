@@ -9,12 +9,14 @@ export function newId(len = 16) {
   return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('')
 }
 
-/** Short order code buyers can read out on the phone: no 0/O/1/I. */
-export function orderCode() {
+/** A code people can read out on the phone: no 0/O/1/I. Orders use 6 characters; links nobody types use more. */
+export function shortCode(len = 6) {
   const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
-  const bytes = crypto.getRandomValues(new Uint8Array(6))
+  const bytes = crypto.getRandomValues(new Uint8Array(len))
   return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('')
 }
+
+export const orderCode = () => shortCode(6)
 
 export const now = () => Date.now()
 

@@ -1,5 +1,5 @@
-import { createFileRoute, notFound, useRouter } from '@tanstack/react-router'
-import { CircleCheck, CircleHelp, MapPin, Phone, TriangleAlert } from 'lucide-react'
+import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
+import { ChevronRight, CircleCheck, CircleHelp, MapPin, Phone, ShoppingBag, TriangleAlert } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { Img, Page, StatusPill, TopBar } from '#/components/ui'
@@ -152,6 +152,16 @@ function OrderDetail() {
               </span>
             </div>
             {o.note && <p className="mt-4 rounded-[14px] bg-page px-4 py-3 text-[14px] leading-relaxed text-ink-2">“{o.note}”</p>}
+            {o.bag && (
+              <Link to="/app/bags/$id" params={{ id: o.bag.id }} className="mt-4 flex items-center gap-2.5 rounded-[14px] bg-page px-4 py-3 text-[14px] transition-colors hover:bg-well">
+                <ShoppingBag size={16} strokeWidth={1.6} className="shrink-0 text-ink-2" />
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium">{t('Ordered from your bag link')}</span>
+                  {o.bag.note && <span className="block truncate text-[13px] text-muted">“{o.bag.note}”</span>}
+                </span>
+                <ChevronRight size={16} strokeWidth={1.6} className="shrink-0 text-faint" />
+              </Link>
+            )}
             <div className="mt-5 grid grid-cols-2 gap-2">
               <a href={`tel:${o.customer_phone}`} className="btn btn-ghost btn-sm h-11">
                 <Phone size={16} strokeWidth={1.6} /> {t('Call')}

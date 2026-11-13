@@ -31,7 +31,11 @@ import { Route as AppPlanRouteImport } from './routes/app/plan'
 import { Route as AppShopRouteImport } from './routes/app/shop'
 import { Route as ImgSplatRouteImport } from './routes/img/$'
 import { Route as OCodeRouteImport } from './routes/o/$code'
+import { Route as ShopBCodeRouteImport } from './routes/$shop/b.$code'
 import { Route as ShopPIdRouteImport } from './routes/$shop/p.$id'
+import { Route as AppBagsIndexRouteImport } from './routes/app/bags/index'
+import { Route as AppBagsIdRouteImport } from './routes/app/bags/$id'
+import { Route as AppBagsNewRouteImport } from './routes/app/bags/new'
 import { Route as AppOrdersIndexRouteImport } from './routes/app/orders/index'
 import { Route as AppOrdersIdRouteImport } from './routes/app/orders/$id'
 import { Route as AppOrdersNewRouteImport } from './routes/app/orders/new'
@@ -149,10 +153,30 @@ const OCodeRoute = OCodeRouteImport.update({
   path: '/o/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopBCodeRoute = ShopBCodeRouteImport.update({
+  id: '/b/$code',
+  path: '/b/$code',
+  getParentRoute: () => ShopRouteRoute,
+} as any)
 const ShopPIdRoute = ShopPIdRouteImport.update({
   id: '/p/$id',
   path: '/p/$id',
   getParentRoute: () => ShopRouteRoute,
+} as any)
+const AppBagsIndexRoute = AppBagsIndexRouteImport.update({
+  id: '/bags/',
+  path: '/bags/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppBagsIdRoute = AppBagsIdRouteImport.update({
+  id: '/bags/$id',
+  path: '/bags/$id',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppBagsNewRoute = AppBagsNewRouteImport.update({
+  id: '/bags/new',
+  path: '/bags/new',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppOrdersIndexRoute = AppOrdersIndexRouteImport.update({
   id: '/orders/',
@@ -208,11 +232,15 @@ export interface FileRoutesByFullPath {
   '/o/$code': typeof OCodeRoute
   '/$shop/': typeof ShopIndexRoute
   '/app/': typeof AppIndexRoute
+  '/$shop/b/$code': typeof ShopBCodeRoute
   '/$shop/p/$id': typeof ShopPIdRoute
+  '/app/bags/$id': typeof AppBagsIdRoute
+  '/app/bags/new': typeof AppBagsNewRoute
   '/app/orders/$id': typeof AppOrdersIdRoute
   '/app/orders/new': typeof AppOrdersNewRoute
   '/app/products/$id': typeof AppProductsIdRoute
   '/app/products/new': typeof AppProductsNewRoute
+  '/app/bags/': typeof AppBagsIndexRoute
   '/app/orders/': typeof AppOrdersIndexRoute
   '/app/products/': typeof AppProductsIndexRoute
 }
@@ -237,11 +265,15 @@ export interface FileRoutesByTo {
   '/o/$code': typeof OCodeRoute
   '/$shop': typeof ShopIndexRoute
   '/app': typeof AppIndexRoute
+  '/$shop/b/$code': typeof ShopBCodeRoute
   '/$shop/p/$id': typeof ShopPIdRoute
+  '/app/bags/$id': typeof AppBagsIdRoute
+  '/app/bags/new': typeof AppBagsNewRoute
   '/app/orders/$id': typeof AppOrdersIdRoute
   '/app/orders/new': typeof AppOrdersNewRoute
   '/app/products/$id': typeof AppProductsIdRoute
   '/app/products/new': typeof AppProductsNewRoute
+  '/app/bags': typeof AppBagsIndexRoute
   '/app/orders': typeof AppOrdersIndexRoute
   '/app/products': typeof AppProductsIndexRoute
 }
@@ -269,11 +301,15 @@ export interface FileRoutesById {
   '/o/$code': typeof OCodeRoute
   '/$shop/': typeof ShopIndexRoute
   '/app/': typeof AppIndexRoute
+  '/$shop/b/$code': typeof ShopBCodeRoute
   '/$shop/p/$id': typeof ShopPIdRoute
+  '/app/bags/$id': typeof AppBagsIdRoute
+  '/app/bags/new': typeof AppBagsNewRoute
   '/app/orders/$id': typeof AppOrdersIdRoute
   '/app/orders/new': typeof AppOrdersNewRoute
   '/app/products/$id': typeof AppProductsIdRoute
   '/app/products/new': typeof AppProductsNewRoute
+  '/app/bags/': typeof AppBagsIndexRoute
   '/app/orders/': typeof AppOrdersIndexRoute
   '/app/products/': typeof AppProductsIndexRoute
 }
@@ -302,11 +338,15 @@ export interface FileRouteTypes {
     | '/o/$code'
     | '/$shop/'
     | '/app/'
+    | '/$shop/b/$code'
     | '/$shop/p/$id'
+    | '/app/bags/$id'
+    | '/app/bags/new'
     | '/app/orders/$id'
     | '/app/orders/new'
     | '/app/products/$id'
     | '/app/products/new'
+    | '/app/bags/'
     | '/app/orders/'
     | '/app/products/'
   fileRoutesByTo: FileRoutesByTo
@@ -331,11 +371,15 @@ export interface FileRouteTypes {
     | '/o/$code'
     | '/$shop'
     | '/app'
+    | '/$shop/b/$code'
     | '/$shop/p/$id'
+    | '/app/bags/$id'
+    | '/app/bags/new'
     | '/app/orders/$id'
     | '/app/orders/new'
     | '/app/products/$id'
     | '/app/products/new'
+    | '/app/bags'
     | '/app/orders'
     | '/app/products'
   id:
@@ -362,11 +406,15 @@ export interface FileRouteTypes {
     | '/o/$code'
     | '/$shop/'
     | '/app/'
+    | '/$shop/b/$code'
     | '/$shop/p/$id'
+    | '/app/bags/$id'
+    | '/app/bags/new'
     | '/app/orders/$id'
     | '/app/orders/new'
     | '/app/products/$id'
     | '/app/products/new'
+    | '/app/bags/'
     | '/app/orders/'
     | '/app/products/'
   fileRoutesById: FileRoutesById
@@ -545,12 +593,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$shop/b/$code': {
+      id: '/$shop/b/$code'
+      path: '/b/$code'
+      fullPath: '/$shop/b/$code'
+      preLoaderRoute: typeof ShopBCodeRouteImport
+      parentRoute: typeof ShopRouteRoute
+    }
     '/$shop/p/$id': {
       id: '/$shop/p/$id'
       path: '/p/$id'
       fullPath: '/$shop/p/$id'
       preLoaderRoute: typeof ShopPIdRouteImport
       parentRoute: typeof ShopRouteRoute
+    }
+    '/app/bags/': {
+      id: '/app/bags/'
+      path: '/bags'
+      fullPath: '/app/bags/'
+      preLoaderRoute: typeof AppBagsIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/bags/$id': {
+      id: '/app/bags/$id'
+      path: '/bags/$id'
+      fullPath: '/app/bags/$id'
+      preLoaderRoute: typeof AppBagsIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/bags/new': {
+      id: '/app/bags/new'
+      path: '/bags/new'
+      fullPath: '/app/bags/new'
+      preLoaderRoute: typeof AppBagsNewRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/app/orders/': {
       id: '/app/orders/'
@@ -601,6 +677,7 @@ interface ShopRouteRouteChildren {
   ShopProductRoute: typeof ShopProductRoute
   ShopCheckoutRoute: typeof ShopCheckoutRoute
   ShopIndexRoute: typeof ShopIndexRoute
+  ShopBCodeRoute: typeof ShopBCodeRoute
   ShopPIdRoute: typeof ShopPIdRoute
 }
 
@@ -608,6 +685,7 @@ const ShopRouteRouteChildren: ShopRouteRouteChildren = {
   ShopProductRoute: ShopProductRoute,
   ShopCheckoutRoute: ShopCheckoutRoute,
   ShopIndexRoute: ShopIndexRoute,
+  ShopBCodeRoute: ShopBCodeRoute,
   ShopPIdRoute: ShopPIdRoute,
 }
 
@@ -620,10 +698,13 @@ interface AppRouteRouteChildren {
   AppPlanRoute: typeof AppPlanRoute
   AppShopRoute: typeof AppShopRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppBagsIdRoute: typeof AppBagsIdRoute
+  AppBagsNewRoute: typeof AppBagsNewRoute
   AppOrdersIdRoute: typeof AppOrdersIdRoute
   AppOrdersNewRoute: typeof AppOrdersNewRoute
   AppProductsIdRoute: typeof AppProductsIdRoute
   AppProductsNewRoute: typeof AppProductsNewRoute
+  AppBagsIndexRoute: typeof AppBagsIndexRoute
   AppOrdersIndexRoute: typeof AppOrdersIndexRoute
   AppProductsIndexRoute: typeof AppProductsIndexRoute
 }
@@ -633,10 +714,13 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppPlanRoute: AppPlanRoute,
   AppShopRoute: AppShopRoute,
   AppIndexRoute: AppIndexRoute,
+  AppBagsIdRoute: AppBagsIdRoute,
+  AppBagsNewRoute: AppBagsNewRoute,
   AppOrdersIdRoute: AppOrdersIdRoute,
   AppOrdersNewRoute: AppOrdersNewRoute,
   AppProductsIdRoute: AppProductsIdRoute,
   AppProductsNewRoute: AppProductsNewRoute,
+  AppBagsIndexRoute: AppBagsIndexRoute,
   AppOrdersIndexRoute: AppOrdersIndexRoute,
   AppProductsIndexRoute: AppProductsIndexRoute,
 }

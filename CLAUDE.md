@@ -42,9 +42,13 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/components/brand-icons.tsx` | One-colour social icons, plus `WhatsAppMark` (WhatsApp's green mark) |
 | `src/routes/index.tsx` | Landing page |
 | `src/routes/$shop/` | Storefront `index`, product page `$product` (readable slug), `checkout`, `p.$id` (301 redirect for old links) |
+| `src/routes/$shop/b.$code.tsx` | A bag link the buyer opens: checkout with the seller's lines and prices, or why it can't be ordered |
 | `src/routes/o/$code.tsx` | Buyer's order page: pay, paste SMS, progress |
 | `src/routes/app/` | Seller app: `route.tsx` (sidebar and floating bottom nav), dashboard, `analytics`, orders, products, shop settings |
-| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `session.ts` |
+| `src/routes/app/bags/` | Bag links: the list, `new` (build a bag for one buyer), `$id` (send it, cancel it) |
+| `src/components/checkout.tsx` | `CheckoutView` (bag, details, delivery, payment, receipt and Place order), shared by checkout and bag links; `CheckoutHeader` |
+| `src/components/product-picker.tsx` | `ProductPicker`: search the seller's products and pick one (Record a sale, bag links) |
+| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `session.ts` |
 | `src/lib/analytics.ts` | The buyer-side tracker: visitor ID, 30-minute visits, traffic source, `?s=` link tags, `track()` |
 | `src/routes/api/e.ts` | Receives analytics events (sendBeacon); drops bots, records device and city |
 | `src/routes/api/export.ts` | CSV downloads of orders and buyers for the logged-in seller |
@@ -188,13 +192,20 @@ domain are lowercase.
 - Optional shop fields: `maps_url` (Google Maps links only, `mapsLink()`) gives buyers Directions; `tin` (9 digits, `tinDigits()`,
   shown as `formatTin()` 123-456-789) appears in `ShopFacts`, the Info sheet and on receipts, not in the phone pills.
 - Delivery fees are not in Shopi: buyer and seller agree them on WhatsApp. Shops list delivery areas by name only.
+- Bag links (`bag_links`, helpers in `src/server/bags.ts`): the seller builds a bag for one buyer (products, hidden ones too,
+  sizes, quantities, their own price per line, and optionally the buyer's name, WhatsApp and a note the buyer sees) and sends
+  `shopi.tz/<shop>/b/<code>` (8 characters; `b` is reserved). The buyer only adds delivery and payment. `placeOrder({ bag })`
+  takes the lines and prices from the link, never from the browser, and claims the link before it saves the order, so it works
+  once. The order gets `source = 'bag_link'`. Links end after 7 days (`BAG_DAYS`); open, used, cancelled or expired is worked
+  out when read. Stock is checked when the buyer orders, not held when the link is made. Entry points: the + sheet, the
+  sidebar, and the Bag links row on Orders (open links are counted in `getNavCounts`).
 - Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
   sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.
 - Order statuses: `awaiting_payment` → `payment_claimed` (buyer pasted an SMS) → `confirmed` → `dispatched` → `delivered`,
   or `cancelled`. Cash on delivery starts at `confirmed`. Stock is held on confirm and returned on cancel.
 - Products may have sizes (`[{label, stock}]`); then `stock` is their total. A size at 0 is sold out.
 - Product links are `/<shop>/<slug>`. A slug is set once and kept on rename; `/<shop>/p/<id>` and `/<shop>/<id>` redirect (301).
-  Words reserved for shop pages: `checkout`, `p`, `bag`, `cart`, `order`, `orders`, `about`.
+  Words reserved for shop pages: `checkout`, `p`, `b`, `bag`, `cart`, `order`, `orders`, `about`.
 - Link previews: `og:image` and `og:url` are absolute, built from the request origin.
 
 ## Analytics
@@ -206,14 +217,14 @@ domain are lowercase.
 
   | Event | `detail` values |
   | --- | --- |
-  | `view_shop` | — |
+  | `view_shop` | —, or `bag_link` when a bag link is opened |
   | `view_product` | — |
   | `add_to_cart` | `quick` or `page` |
   | `checkout_start` | — |
   | `whatsapp_click` | `shop`, `product`, `order`, `footer` |
   | `social_click` | `instagram`, `tiktok`, `facebook` |
   | `share` (buyers) | `whatsapp`, `copy`, `native` |
-  | `seller_share` | the share channel |
+  | `seller_share` | the share channel; `bag-<channel>` for a bag link |
 
   Add new types in both the tracker and `/api/e`.
 - **Not counted:**
