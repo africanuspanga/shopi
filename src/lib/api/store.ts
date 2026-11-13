@@ -1,3 +1,5 @@
+import { BILLING_LIVE } from '#/lib/plans'
+import { shopPlan } from '#/server/plan'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequestUrl } from '@tanstack/react-start/server'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
@@ -63,6 +65,8 @@ export const getStorefront = createServerFn({ method: 'GET' })
     return {
       shop,
       areas,
+      /** The plan ended: the shop "takes a break". Its page stays up with WhatsApp; orders are refused. */
+      paused: BILLING_LIVE && (await shopPlan(shop.id))?.kind === 'ended',
       products: products.map((p) => ({ ...p, images: JSON.parse(p.images) as string[], sizes: parseSizes(p.sizes) })),
       // Link previews (WhatsApp, Instagram) need absolute image URLs.
       origin: getRequestUrl().origin,
@@ -91,6 +95,7 @@ export const placeOrder = createServerFn({ method: 'POST' })
     )
     if (!shop) return { error: 'shop' as const }
     if (shop.status === 'demo') return { error: 'demo' as const }
+    if (BILLING_LIVE && (await shopPlan(shop.id))?.kind === 'ended') return { error: 'paused' as const }
     const name = String(data.name ?? '').trim().slice(0, 60)
     const phone = normalizePhone(String(data.phone ?? ''))
     if (!name) return { error: 'name' as const }

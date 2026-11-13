@@ -6,6 +6,7 @@ import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { BioPreview, LinkPreview, MiniStore, NewOrderCard, OrderPreview, PaymentSlip, Phone, ProductPreview, SmsBubble } from '#/components/showcase'
 import { Wordmark } from '#/components/ui'
 import { useT } from '#/lib/i18n'
+import { PLANS } from '#/lib/plans'
 
 export const Route = createFileRoute('/')({ component: Landing })
 
@@ -351,39 +352,6 @@ function Features() {
 
 function Pricing({ start }: { start: string }) {
   const t = useT()
-  const plans = [
-    {
-      name: 'Twiga',
-      price: '49,000',
-      lead: t('Everything a seller needs to take orders from one link.'),
-      items: [
-        t('Your shop at shopi.tz/yourname'),
-        t('Unlimited products, 6 photos each'),
-        t('Lipa Namba and cash on delivery'),
-        t('Orders, sizes and stock'),
-        t('Shopi assistant, 100 chats a month'),
-        t('AI product descriptions, 50 a month'),
-        t('Analytics for 90 days'),
-        t('Your customer list'),
-      ],
-    },
-    {
-      name: 'Tembo',
-      price: '99,000',
-      lead: t('For shops that sell every day, with a team.'),
-      items: [
-        t('Everything in Twiga'),
-        t('10 photos per product, bulk import'),
-        t('Shopi assistant, 500 chats a month'),
-        t('Unlimited AI product descriptions'),
-        t('Analytics for 12 months, with export'),
-        t('Your own domain, fonts and colours'),
-        t('Hide “Made with Shopi”'),
-        t('3 staff accounts'),
-        t('Campaigns to your customers'),
-      ],
-    },
-  ]
   return (
     <section id="pricing" className="scroll-mt-24 py-20 md:py-28">
       <Container>
@@ -392,21 +360,21 @@ function Pricing({ start }: { start: string }) {
           <Lead className="mt-6">{t('Every shop starts with 14 days free, or 30 when you finish setting up. No commission on your sales, ever.')}</Lead>
         </div>
         <div className="mt-10 grid gap-4 md:mt-14 lg:grid-cols-2 lg:gap-6">
-          {plans.map((p, i) => (
+          {PLANS.map((p, i) => (
             <div key={p.name} className={`flex flex-col rounded-[32px] p-3 ${i === 1 ? 'bg-ink text-white' : 'bg-card'}`}>
               <div className={`rounded-[24px] p-6 md:p-8 ${i === 1 ? 'bg-white/[0.08]' : 'bg-page'}`}>
                 <p className="title text-[22px]">{p.name}</p>
-                <p className={`mt-1 text-[15px] ${i === 1 ? 'text-white/70' : 'text-ink-2'}`}>{p.lead}</p>
+                <p className={`mt-1 text-[15px] ${i === 1 ? 'text-white/70' : 'text-ink-2'}`}>{t(p.lead)}</p>
                 <p className="mt-5 flex items-baseline gap-2 whitespace-nowrap">
                   <span className="text-[20px] font-medium md:text-[24px]">TSh</span>
-                  <span className="display text-[56px] md:text-[72px]">{p.price}</span>
+                  <span className="display text-[56px] md:text-[72px]">{p.price.toLocaleString('en-US')}</span>
                   <span className={`text-[15px] ${i === 1 ? 'text-white/70' : 'text-muted'}`}>/ {t('year')}</span>
                 </p>
               </div>
               <ul className="flex-1 space-y-3 px-6 pt-6 text-[15px] md:px-8">
                 {p.items.map((x) => (
                   <li key={x} className="flex items-start gap-3">
-                    <Check size={17} strokeWidth={2} className="mt-[3px] shrink-0" /> {x}
+                    <Check size={17} strokeWidth={2} className="mt-[3px] shrink-0" /> {t(x)}
                   </li>
                 ))}
               </ul>

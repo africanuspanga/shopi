@@ -307,6 +307,21 @@ export function DemoBanner() {
   )
 }
 
+/** A shop whose plan ended: still visible, orders off, WhatsApp still works. Nothing is deleted. */
+export function BreakBanner({ whatsapp, name }: { whatsapp: string; name: string }) {
+  const t = useT()
+  return (
+    <div className="bg-ink px-4 py-2.5 text-center text-[13px] leading-5 text-white">
+      {t('{shop} is taking a break. Orders are off for now.', { shop: name })}{' '}
+      {whatsapp && (
+        <a href={waLink(whatsapp)} className="font-medium whitespace-nowrap underline decoration-white/40 underline-offset-4 hover:decoration-white">
+          {t('Message on WhatsApp')}
+        </a>
+      )}
+    </div>
+  )
+}
+
 export function MadeWithShopi() {
   const t = useT()
   return (

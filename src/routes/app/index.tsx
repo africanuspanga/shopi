@@ -5,6 +5,7 @@ import { Delta, Empty, Img, LangSwitch, Money, Page, ShopAvatar, StatusPill, Toa
 import { getDashboard } from '#/lib/api/merchant'
 import { timeAgo, tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
+import type { PlanState } from '#/lib/plans'
 import { shareLink, useOrigin } from '#/lib/share'
 
 export const Route = createFileRoute('/app/')({
@@ -69,6 +70,8 @@ function Dashboard() {
           <ArrowUpRight size={18} strokeWidth={1.6} />
         </a>
       </header>
+
+      <PlanRow plan={d.plan} />
 
       {setupDone < setupSteps.length && (
         <section className="rise card mt-6 p-5 md:mt-8 md:p-6">
@@ -412,5 +415,29 @@ function SalesChart({ days, total, className = '' }: { days: { day: number; tota
       </div>
       <p className="sr-only">{t('Total this week: {total}', { total: tzs(total) })}</p>
     </section>
+  )
+}
+
+/** One quiet line about the plan: trial days left, or that the trial or plan has ended. Paid plans stay quiet until the last month. */
+function PlanRow({ plan }: { plan: PlanState | null }) {
+  const t = useT()
+  if (!plan || plan.kind === 'demo' || (plan.kind === 'paid' && plan.daysLeft > 30)) return null
+  const soon = (plan.kind === 'trial' || plan.kind === 'paid') && plan.daysLeft <= 3
+  const text =
+    plan.kind === 'trial'
+      ? t(plan.daysLeft === 1 ? 'Free trial: {n} day left' : 'Free trial: {n} days left', { n: plan.daysLeft })
+      : plan.kind === 'paid'
+        ? t(plan.daysLeft === 1 ? 'Your plan ends in {n} day' : 'Your plan ends in {n} days', { n: plan.daysLeft })
+        : plan.paused
+          ? t('Your shop is taking a break')
+          : t('Your free trial has ended. You can keep selling for now.')
+  return (
+    <Link to="/app/plan" className="rise card mt-6 flex items-center gap-3 px-5 py-4 transition-colors hover:bg-page md:mt-8">
+      {(soon || plan.kind === 'ended') && <span className="signal shrink-0" aria-hidden />}
+      <span className="min-w-0 flex-1 truncate text-[15px] font-medium">{text}</span>
+      <span className="flex shrink-0 items-center gap-1 text-[14px] text-ink-2">
+        {t('See plans')} <ChevronRight size={16} strokeWidth={1.6} />
+      </span>
+    </Link>
   )
 }

@@ -4,6 +4,7 @@ import { all, db, first, newId, now, run } from '#/server/db'
 import { removePhotos } from '#/server/media'
 import { moveStock, sizesTotal } from '#/server/stock'
 import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, normalizePhone, parseSizes, productSlug, slugify, type OrderStatus, type Size, mapsLink } from '#/lib/format'
+import { shopPlan } from '#/server/plan'
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
 const int = (v: unknown) => {
@@ -88,6 +89,11 @@ export const saveShopBasics = createServerFn({ method: 'POST' })
     )
     return { ok: true as const }
   })
+
+export const getMyPlan = createServerFn({ method: 'GET' }).handler(async () => {
+  const { shop } = await requireShop()
+  return { plan: await shopPlan(shop.id) }
+})
 
 export const getMyShop = createServerFn({ method: 'GET' }).handler(async () => {
   const { shop } = await requireShop()
@@ -269,6 +275,7 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
       image: (JSON.parse(p.images) as string[])[0] ?? null,
       shares: shares.find((s) => s.product_id === p.id)?.n ?? 0,
     })),
+    plan: await shopPlan(shop.id),
     setup: {
       products: (productCount?.n ?? 0) > 0,
       payment: !!setup?.lipa_number,

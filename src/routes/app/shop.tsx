@@ -1,5 +1,5 @@
-import { createFileRoute, useBlocker, useRouter } from '@tanstack/react-router'
-import { Camera, Check, Copy, LogOut, Plus, X } from 'lucide-react'
+import { Link, createFileRoute, useBlocker, useRouter } from '@tanstack/react-router'
+import { Camera, Check, ChevronRight, Copy, LogOut, Plus, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
 import { ErrorText, Field, LangSwitch, Page, ShopAvatar, Switch, Toast, TopBar } from '#/components/ui'
@@ -238,6 +238,12 @@ function ShopSettings() {
               <input className="input" value={s.facebook} onChange={set('facebook')} placeholder="facebook.com/dukalako" autoCapitalize="none" />
             </Field>
           </div>
+        </Group>
+
+        <Group title={t('Plan')} sub={t('Twiga or Tembo, paid once a year. See your trial and your plan.')}>
+          <Link to="/app/plan" className="btn btn-ghost">
+            {t('See your plan')} <ChevronRight size={16} strokeWidth={1.6} />
+          </Link>
         </Group>
 
         <Group title={t('Account')} sub={t('You are logged in on this phone.')}>

@@ -20,7 +20,7 @@ type Line = { line: string; qty: number; size: string | null; productId: string;
 function Checkout() {
   const t = useT()
   const navigate = useNavigate()
-  const { shop, products, areas } = parent.useLoaderData()
+  const { shop, products, areas, paused } = parent.useLoaderData()
   const cart = useCart(shop.id)
   const lines: Line[] = cart.lines
     .map((l) => ({ ...l, p: products.find((p) => p.id === l.productId) }))
@@ -94,6 +94,7 @@ function Checkout() {
     empty: t('Your bag is empty'),
     shop: t('This shop is not taking orders right now'),
     demo: t('This is a demo shop. Orders are switched off.'),
+    paused: t('This shop is taking a break. Message the seller on WhatsApp.'),
   }
 
   const bag = (
@@ -155,8 +156,8 @@ function Checkout() {
         </div>
       </div>
       <ErrorText>{error}</ErrorText>
-      <button form={FORM_ID} className="btn btn-lg w-full" disabled={busy || demo || (!canLipa && !canCod)}>
-        {demo ? t('Orders are off in this demo shop') : busy ? t('Placing your order') : t('Place order')}
+      <button form={FORM_ID} className="btn btn-lg w-full" disabled={busy || demo || paused || (!canLipa && !canCod)}>
+        {demo ? t('Orders are off in this demo shop') : paused ? t('This shop is taking a break') : busy ? t('Placing your order') : t('Place order')}
       </button>
       <p className="flex items-start justify-center gap-2 text-center text-[13px] leading-5 text-muted">
         <ShieldCheck size={15} strokeWidth={1.6} className="mt-0.5 shrink-0" />

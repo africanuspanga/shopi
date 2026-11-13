@@ -24,6 +24,7 @@ import { Route as ApiExportRouteImport } from './routes/api/export'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppAnalyticsRouteImport } from './routes/app/analytics'
+import { Route as AppPlanRouteImport } from './routes/app/plan'
 import { Route as AppShopRouteImport } from './routes/app/shop'
 import { Route as ImgSplatRouteImport } from './routes/img/$'
 import { Route as OCodeRouteImport } from './routes/o/$code'
@@ -109,6 +110,11 @@ const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppPlanRoute = AppPlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppShopRoute = AppShopRouteImport.update({
   id: '/shop',
   path: '/shop',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/api/export': typeof ApiExportRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/plan': typeof AppPlanRoute
   '/app/shop': typeof AppShopRoute
   '/img/$': typeof ImgSplatRoute
   '/o/$code': typeof OCodeRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/api/export': typeof ApiExportRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/plan': typeof AppPlanRoute
   '/app/shop': typeof AppShopRoute
   '/img/$': typeof ImgSplatRoute
   '/o/$code': typeof OCodeRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/api/export': typeof ApiExportRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/plan': typeof AppPlanRoute
   '/app/shop': typeof AppShopRoute
   '/img/$': typeof ImgSplatRoute
   '/o/$code': typeof OCodeRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/api/export'
     | '/api/upload'
     | '/app/analytics'
+    | '/app/plan'
     | '/app/shop'
     | '/img/$'
     | '/o/$code'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/api/export'
     | '/api/upload'
     | '/app/analytics'
+    | '/app/plan'
     | '/app/shop'
     | '/img/$'
     | '/o/$code'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/api/export'
     | '/api/upload'
     | '/app/analytics'
+    | '/app/plan'
     | '/app/shop'
     | '/img/$'
     | '/o/$code'
@@ -433,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAnalyticsRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/plan': {
+      id: '/app/plan'
+      path: '/plan'
+      fullPath: '/app/plan'
+      preLoaderRoute: typeof AppPlanRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/shop': {
       id: '/app/shop'
       path: '/shop'
@@ -519,6 +538,7 @@ const ShopRouteRouteWithChildren = ShopRouteRoute._addFileChildren(
 
 interface AppRouteRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppPlanRoute: typeof AppPlanRoute
   AppShopRoute: typeof AppShopRoute
   AppIndexRoute: typeof AppIndexRoute
   AppOrdersIdRoute: typeof AppOrdersIdRoute
@@ -530,6 +550,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
+  AppPlanRoute: AppPlanRoute,
   AppShopRoute: AppShopRoute,
   AppIndexRoute: AppIndexRoute,
   AppOrdersIdRoute: AppOrdersIdRoute,
