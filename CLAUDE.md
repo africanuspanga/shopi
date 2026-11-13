@@ -10,25 +10,11 @@ Read this before changing any screen. The bar is a world-class product: every sc
 at phone width (390) **and** at desktop width (1440).
 
 ## Next session: start here
-The founder asked for these on 9 November 2026. Each one gets its own migration, Swahili strings and a test.
-Delete this section once they ship.
-1. **Google Maps link (optional).** A field in the setup form (`/onboard`) and in Shop settings, next to the written
-   location. Accept only Google Maps links (`maps.app.goo.gl`, `goo.gl/maps`, `google.com/maps`, `maps.google.com`).
-   Buyers see a "Directions" link in the shop's Info sheet and in `ShopFacts`. New column `shops.maps_url`.
-2. **TIN from TRA (optional).** A field in the setup form and in Shop settings for the 9-digit number, stored as digits
-   and shown as `123-456-789`. Ask the founder where buyers should see it (the Info sheet, the order page or receipt).
-   New column `shops.tin`.
-3. **Social links in the setup form.** Shop settings already has WhatsApp, Instagram, TikTok and Facebook; the setup
-   form asks only for the name, link and WhatsApp. Add an optional socials step there with "Skip for now". Ask the
-   founder whether to add more networks (YouTube, X, Snapchat, a website).
-4. **Record a sale by hand (the seller's ledger).** For sales made over a phone call, in person or inside a WhatsApp chat.
-   - Reached from the **+** in the capsule (it then offers "Add product" or "Record a sale") and from Orders.
-   - Fields: products from the shop or a free line with an amount, an optional buyer name and phone, how they paid
-     (cash, Lipa Namba, other mobile money, bank; this extends `payment_method`), the date (it can be in the past),
-     and whether it is paid and waiting to be sent (`confirmed`) or already handed over (`delivered`).
-   - Saved as an order with `source = 'manual'`, so it counts in sales, the order list and the CSV export.
-     Analytics shows it as its own channel, "Recorded by you", and keeps it out of visits and the funnel.
-   - Taking it from stock is a switch (on by default); cancelling returns the stock.
+Of the founder's 9 November asks, the Google Maps link, socials in setup and "Record a sale" shipped on 13 November.
+One is left; it gets its own migration, Swahili strings and a test. Delete this section once it ships.
+- **TIN from TRA (optional).** A field in the setup form and in Shop settings for the 9-digit number, stored as digits
+  and shown as `123-456-789`. Ask the founder where buyers should see it (the Info sheet, the order page or receipt).
+  New column `shops.tin`. The receipt (`/o/<code>`, `lib/receipt-image.ts`) has room for it.
 
 ## Commands
 
@@ -203,6 +189,12 @@ domain are lowercase.
 ## Product rules the UI depends on
 - Shop `status`: `active`, or `demo` for a sample shop (Zee's Store). A demo shop shows `DemoBanner` on every page, has
   `noindex`, and `placeOrder` refuses its orders (`error: 'demo'`); checkout disables the button too. Any other status hides the shop.
+- Plans (`src/lib/plans.ts`): a trial (14 days, 30 with setup done), then Twiga or Tembo yearly. `planState()` is the one
+  entitlement check. `BILLING_LIVE` stays false until sellers can pay in Shopi; then an ended shop takes a break
+  (`BreakBanner`, orders refused, nothing deleted).
+- Delivery fees are not in Shopi: buyer and seller agree them on WhatsApp. Shops list delivery areas by name only.
+- Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
+  sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.
 - Order statuses: `awaiting_payment` → `payment_claimed` (buyer pasted an SMS) → `confirmed` → `dispatched` → `delivered`,
   or `cancelled`. Cash on delivery starts at `confirmed`. Stock is held on confirm and returned on cancel.
 - Products may have sizes (`[{label, stock}]`); then `stock` is their total. A size at 0 is sold out.
