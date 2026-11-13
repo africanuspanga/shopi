@@ -87,6 +87,7 @@ function Track() {
       })),
       rows: [
         { label: t('Items'), value: tzs(o.subtotal) },
+        ...(o.discount > 0 ? [{ label: t('Discount ({code})', { code: o.discount_code ?? '' }), value: `−${tzs(o.discount)}` }] : []),
         { label: t('Delivery'), value: o.delivery_fee ? tzs(o.delivery_fee) : t('Agreed on WhatsApp') },
       ],
       total: o.total,
@@ -284,6 +285,7 @@ function Track() {
             </div>
             <div className="receipt-rule mt-5 space-y-2 pt-4 text-[14px]">
               <Line label={t('Items')} value={tzs(o.subtotal)} />
+              {o.discount > 0 && <Line label={t('Discount ({code})', { code: o.discount_code ?? '' })} value={`−${tzs(o.discount)}`} />}
               <Line label={t('Delivery')} value={o.delivery_fee ? tzs(o.delivery_fee) : t('Agreed on WhatsApp')} />
             </div>
             <div className="receipt-rule mt-4 flex items-baseline justify-between pt-4">

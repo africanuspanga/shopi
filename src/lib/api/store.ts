@@ -6,6 +6,8 @@ import { all, db, first, newId, now, orderCode, run } from '#/server/db'
 import { normalizePhone, parseSizes, type OrderStatus, type Size } from '#/lib/format'
 import { moveStock } from '#/server/stock'
 import { openBag } from '#/server/bags'
+import { liveDiscount } from '#/server/discounts'
+import { discountOff } from '#/lib/discounts'
 import { namesMatch, parsePaymentSms, type PaymentCheck } from '#/lib/payment-sms'
 
 export type PublicShop = {
@@ -54,7 +56,7 @@ export const getStorefront = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     const shop = await first<PublicShop>(`SELECT ${SHOP_COLS} FROM shops WHERE slug = ? AND status IN ('active', 'demo')`, data.slug)
     if (!shop) return null
-    const [products, areas] = await Promise.all([
+    const [products, areas, discount] = await Promise.all([
       all<Omit<PublicProduct, 'images' | 'sizes'> & { images: string; sizes: string | null }>(
         `SELECT id, slug, name, description, price, compare_price, stock, sizes, images, created_at FROM products
          WHERE shop_id = ? AND active = 1 ORDER BY created_at DESC`,
@@ -64,10 +66,13 @@ export const getStorefront = createServerFn({ method: 'GET' })
         'SELECT id, name, fee FROM delivery_areas WHERE shop_id = ? ORDER BY sort',
         shop.id,
       ),
+      first('SELECT 1 FROM discounts WHERE shop_id = ? AND active = 1 AND (ends_at IS NULL OR ends_at > ?) LIMIT 1', shop.id, now()),
     ])
     return {
       shop,
       areas,
+      /** The shop has a discount code buyers can use, so checkout shows the field. */
+      hasDiscounts: !!discount,
       /** The plan ended: the shop "takes a break". Its page stays up with WhatsApp; orders are refused. */
       paused: BILLING_LIVE && (await shopPlan(shop.id))?.kind === 'ended',
       products: products.map((p) => ({ ...p, images: JSON.parse(p.images) as string[], sizes: parseSizes(p.sizes) })),
@@ -83,6 +88,8 @@ export const placeOrder = createServerFn({ method: 'POST' })
       items?: { productId: string; qty: number; size?: string | null }[]
       /** A bag link's code. Its lines and the seller's prices are used instead of `items`, and it works once. */
       bag?: string
+      /** A discount code the buyer applied. Checked again here; bag links take none (the seller set their prices). */
+      discount?: string
       name: string
       phone: string
       areaId: string
@@ -148,6 +155,16 @@ export const placeOrder = createServerFn({ method: 'POST' })
         : null
     const area = listed ?? (typed ? { name: typed } : null)
     const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0)
+    // A discount code counts only if it still works and the items reach its minimum; the buyer sees why if not.
+    let off = 0
+    let discountCode: string | null = null
+    if (data.discount && !bag) {
+      const found = await liveDiscount(shop.id, String(data.discount))
+      if ('error' in found) return { error: 'discount' as const }
+      off = discountOff(found.rule, subtotal)
+      if (!off) return { error: 'discount' as const }
+      discountCode = found.rule.code
+    }
     const fee = 0
     const id = newId()
     const code = orderCode()
@@ -174,13 +191,15 @@ export const placeOrder = createServerFn({ method: 'POST' })
         db()
           .prepare(
             `INSERT INTO orders (id, shop_id, code, customer_name, customer_phone, area, landmark, note, subtotal,
-               delivery_fee, total, payment_method, status, created_at, updated_at, source, link_tag, visitor_id, session_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+               delivery_fee, total, payment_method, status, created_at, updated_at, source, link_tag, visitor_id, session_id,
+               discount_code, discount)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           )
           .bind(
             id, shop.id, code, name, phone, area?.name ?? '', String(data.landmark ?? '').slice(0, 200),
-            String(data.note ?? '').slice(0, 500), subtotal, fee, subtotal + fee, payment,
+            String(data.note ?? '').slice(0, 500), subtotal, fee, subtotal - off + fee, payment,
             payment === 'cod' ? 'confirmed' : 'awaiting_payment', t, t, visit.source, visit.tag, visit.vid, visit.sid,
+            discountCode, off,
           ),
         ...lines.map((l) =>
           db()
@@ -207,6 +226,9 @@ export type TrackedOrder = {
   area: string
   landmark: string
   subtotal: number
+  /** A discount code the buyer used, and the shillings it took off. */
+  discount_code: string | null
+  discount: number
   delivery_fee: number
   total: number
   payment_method: 'lipa' | 'cod'
@@ -220,8 +242,8 @@ export const getTrackedOrder = createServerFn({ method: 'GET' })
   .validator((d: { code: string }) => ({ code: String(d.code).toUpperCase().slice(0, 10) }))
   .handler(async ({ data }) => {
     const order = await first<Omit<TrackedOrder, 'shop' | 'lines'> & { id: string; shop_id: string }>(
-      `SELECT id, shop_id, code, status, customer_name, area, landmark, subtotal, delivery_fee, total, payment_method,
-         payment_check, created_at FROM orders WHERE code = ?`,
+      `SELECT id, shop_id, code, status, customer_name, area, landmark, subtotal, discount_code, discount, delivery_fee, total,
+         payment_method, payment_check, created_at FROM orders WHERE code = ?`,
       data.code,
     )
     if (!order) return null

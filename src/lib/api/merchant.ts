@@ -444,6 +444,9 @@ export type OrderDetail = OrderListRow & {
   landmark: string
   note: string
   subtotal: number
+  /** A discount code the buyer used, and the shillings it took off. */
+  discount_code: string | null
+  discount: number
   delivery_fee: number
   payment_sms: string | null
   txn_id: string | null

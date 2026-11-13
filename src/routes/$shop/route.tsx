@@ -1,7 +1,9 @@
 import { Outlet, createFileRoute, notFound } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { BreakBanner, DemoBanner } from '#/components/shop'
 import { ignoreShop } from '#/lib/analytics'
 import { getStorefront } from '#/lib/api/store'
+import { cleanCode, codeKey } from '#/lib/discounts'
 import { imgUrl } from '#/lib/format'
 
 export const Route = createFileRoute('/$shop')({
@@ -47,6 +49,16 @@ function ShopLayout() {
   const { shop, paused } = Route.useLoaderData()
   // Set during render, before the pages below send their first event. Idempotent.
   if (session.shop?.id === shop.id) ignoreShop(shop.id)
+  useEffect(() => {
+    // A link like shopi.tz/<shop>?code=EID10 keeps the code for checkout, which applies it by itself.
+    const code = cleanCode(new URLSearchParams(window.location.search).get('code') ?? '')
+    if (!code) return
+    try {
+      localStorage.setItem(codeKey(shop.id), code)
+    } catch {
+      /* storage blocked: the buyer can still type the code */
+    }
+  }, [shop.id])
   return (
     <>
       {shop.status === 'demo' && <DemoBanner />}

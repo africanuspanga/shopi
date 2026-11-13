@@ -48,7 +48,9 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/routes/app/bags/` | Bag links: the list, `new` (build a bag for one buyer), `$id` (send it, cancel it) |
 | `src/components/checkout.tsx` | `CheckoutView` (bag, details, delivery, payment, receipt and Place order), shared by checkout and bag links; `CheckoutHeader` |
 | `src/components/product-picker.tsx` | `ProductPicker`: search the seller's products and pick one (Record a sale, bag links) |
-| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `session.ts` |
+| `src/routes/app/discounts.tsx` | Discount codes: each code with its uses, on/off, Share (as a link) and the new/edit sheet |
+| `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
+| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `session.ts` |
 | `src/lib/analytics.ts` | The buyer-side tracker: visitor ID, 30-minute visits, traffic source, `?s=` link tags, `track()` |
 | `src/routes/api/e.ts` | Receives analytics events (sendBeacon); drops bots, records device and city |
 | `src/routes/api/export.ts` | CSV downloads of orders and buyers for the logged-in seller |
@@ -199,6 +201,15 @@ domain are lowercase.
   once. The order gets `source = 'bag_link'`. Links end after 7 days (`BAG_DAYS`); open, used, cancelled or expired is worked
   out when read. Stock is checked when the buyer orders, not held when the link is made. Entry points: the + sheet, the
   sidebar, and the Bag links row on Orders (open links are counted in `getNavCounts`).
+- Discount codes (`discounts`, helpers in `src/server/discounts.ts`): uppercase letters, digits and hyphens; a percent (1 to 100)
+  or TSh off the items total; optional minimum order, last day (the end of that day, Tanzania time) and most orders
+  (counted from `orders.discount_code` since the code was made; cancelled orders don't count); an on/off switch.
+  `discountOff()` is the one formula, and the discount never takes a total below 0. Checkout shows "Have a discount code?"
+  only when the shop has a live code (`hasDiscounts`). `placeOrder({ discount })` checks the code again (`liveDiscount`);
+  if it stopped working, it answers `error: 'discount'` and checkout takes the code off and says so. Orders store
+  `discount_code` and `discount`; `total = subtotal - discount`. A link like `shopi.tz/<shop>?code=EID10` keeps the code on the
+  phone (`codeKey`, set in `$shop/route.tsx`) and checkout applies it. Bag links take no codes: the seller set those prices.
+  The Discount line shows on the order page, the receipt image, the seller's order page and the orders CSV.
 - Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
   sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.
 - Order statuses: `awaiting_payment` → `payment_claimed` (buyer pasted an SMS) → `confirmed` → `dispatched` → `delivered`,
@@ -224,7 +235,7 @@ domain are lowercase.
   | `whatsapp_click` | `shop`, `product`, `order`, `footer` |
   | `social_click` | `instagram`, `tiktok`, `facebook` |
   | `share` (buyers) | `whatsapp`, `copy`, `native` |
-  | `seller_share` | the share channel; `bag-<channel>` for a bag link |
+  | `seller_share` | the share channel; `bag-<channel>` for a bag link, `code-<channel>` for a discount code |
 
   Add new types in both the tracker and `/api/e`.
 - **Not counted:**

@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute, redirect, useLocation } from '@tanstack/react-router'
-import { ArrowUpRight, ChartColumn, House, Package, PenLine, Plus, ReceiptText, ShoppingBag, Store } from 'lucide-react'
+import { ArrowUpRight, ChartColumn, House, Package, PenLine, Plus, ReceiptText, ShoppingBag, Store, TicketPercent } from 'lucide-react'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import { getNavCounts } from '#/lib/api/merchant'
@@ -23,7 +23,8 @@ function useTabs() {
     // Bag links live under Orders.
     { to: '/app/orders', icon: ReceiptText, label: t('Orders'), match: (p: string) => p.startsWith('/app/orders') || p.startsWith('/app/bags') },
     { to: '/app/products', icon: Package, label: t('Products'), match: (p: string) => p.startsWith('/app/products') },
-    { to: '/app/shop', icon: Store, label: t('Shop'), match: (p: string) => p.startsWith('/app/shop') },
+    // On phones, discount codes are reached from Shop settings.
+    { to: '/app/shop', icon: Store, label: t('Shop'), match: (p: string) => p.startsWith('/app/shop') || p.startsWith('/app/discounts') },
   ]
 }
 
@@ -57,7 +58,8 @@ function Sidebar() {
     orders,
     { to: '/app/analytics', icon: ChartColumn, label: t('Analytics'), match: (p: string) => p.startsWith('/app/analytics') },
     products,
-    shopTab,
+    { to: '/app/discounts', icon: TicketPercent, label: t('Discount codes'), match: (p: string) => p.startsWith('/app/discounts') },
+    { ...shopTab, match: (p: string) => p.startsWith('/app/shop') },
   ]
   const { shop } = Route.useRouteContext()
   const path = useLocation({ select: (l) => l.pathname })

@@ -11,7 +11,7 @@ const parent = getRouteApi('/$shop')
 function Checkout() {
   const t = useT()
   const navigate = useNavigate()
-  const { shop, products, areas, paused } = parent.useLoaderData()
+  const { shop, products, areas, paused, hasDiscounts } = parent.useLoaderData()
   const cart = useCart(shop.id)
   const lines: CheckoutLine[] = cart.lines.flatMap((l) => {
     const p = products.find((x) => x.id === l.productId)
@@ -58,6 +58,7 @@ function Checkout() {
       lines={lines}
       title={t('Checkout')}
       onQty={(key, qty) => cart.set(key, qty)}
+      discounts={hasDiscounts}
       onPlaced={async (code) => {
         // Open the order page first: clearing the bag before would flash "your bag is empty".
         await navigate({ to: '/o/$code', params: { code } })

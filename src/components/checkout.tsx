@@ -1,10 +1,12 @@
 import { Link } from '@tanstack/react-router'
-import { Banknote, Check, Minus, Plus, ShieldCheck, Smartphone, Trash2 } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { Banknote, Check, Minus, Plus, ShieldCheck, Smartphone, TicketPercent, Trash2 } from 'lucide-react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { MadeWithShopi } from '#/components/shop'
 import { BackButton, ErrorText, Field, Img, ShopAvatar } from '#/components/ui'
+import { checkDiscount } from '#/lib/api/discounts'
 import { placeOrder, type PublicShop } from '#/lib/api/store'
 import { track, visit } from '#/lib/analytics'
+import { cleanCode, codeKey, discountLabel, discountOff, type DiscountRule } from '#/lib/discounts'
 import { tzs } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
@@ -63,6 +65,7 @@ export function CheckoutView({
   prefill,
   blocked,
   foot,
+  discounts = false,
   onPlaced,
 }: {
   shop: PublicShop
@@ -78,6 +81,8 @@ export function CheckoutView({
   blocked?: string
   /** A quiet line under the button. */
   foot?: ReactNode
+  /** The shop has discount codes: show the field. Bag links never do. */
+  discounts?: boolean
   onPlaced: (code: string) => Promise<void> | void
 }) {
   const t = useT()
@@ -88,11 +93,28 @@ export function CheckoutView({
   const [payment, setPayment] = useState<'lipa' | 'cod'>(canLipa ? 'lipa' : 'cod')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [applied, setApplied] = useState<DiscountRule | null>(null)
 
   useEffect(() => {
     // Once per checkout visit; the bag changing size is not a new checkout.
     track('checkout_start', { shopId: shop.id })
   }, [shop.id])
+
+  useEffect(() => {
+    // A code that came in a link is applied by itself; one that no longer works is quietly dropped.
+    if (!discounts) return
+    let saved = ''
+    try {
+      saved = localStorage.getItem(codeKey(shop.id)) ?? ''
+    } catch {
+      /* storage blocked */
+    }
+    if (!saved) return
+    checkDiscount({ data: { shopId: shop.id, code: saved } }).then((res) => {
+      if ('rule' in res) setApplied(res.rule)
+      else forgetCode(shop.id)
+    })
+  }, [discounts, shop.id])
 
   useEffect(() => {
     // The seller's details for the buyer win over what this phone remembers from the last order.
@@ -113,6 +135,8 @@ export function CheckoutView({
   const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0)
   const count = lines.reduce((s, l) => s + l.qty, 0)
   const fixed = !onQty
+  const off = applied ? discountOff(applied, subtotal) : 0
+  const total = subtotal - off
 
   const notAvailable = bagCode
     ? t('Something in this bag is no longer available. Ask {shop} for a new link.', { shop: shop.name })
@@ -129,6 +153,7 @@ export function CheckoutView({
     demo: t('This is a demo shop. Orders are switched off.'),
     paused: t('This shop is taking a break. Message the seller on WhatsApp.'),
     bag: t('This bag link can no longer be used. Ask {shop} for a new one.', { shop: shop.name }),
+    discount: t('That discount code no longer works, so it was taken off. Check the new total and place your order.'),
   }
 
   const bag = (
@@ -182,14 +207,30 @@ export function CheckoutView({
 
   const summary = (
     <div className="space-y-4">
+      {discounts && !bagCode && (
+        <DiscountField
+          shopId={shop.id}
+          applied={applied}
+          subtotal={subtotal}
+          onApply={(rule) => {
+            setApplied(rule)
+            setError('')
+          }}
+          onRemove={() => {
+            setApplied(null)
+            forgetCode(shop.id)
+          }}
+        />
+      )}
       <div className="receipt px-5 pt-5 pb-6">
         <div className="space-y-2.5 text-[14px]">
           <Row label={t('Items ({n})', { n: count })} value={tzs(subtotal)} />
+          {off > 0 && applied && <Row label={t('Discount ({code})', { code: applied.code })} value={`−${tzs(off)}`} />}
           <Row label={t('Delivery')} value={t('Agreed on WhatsApp')} quiet />
         </div>
         <div className="receipt-rule mt-4 flex items-baseline justify-between pt-4">
           <span className="text-[15px] font-medium">{t('Total')}</span>
-          <span className="font-mono text-[20px] font-medium tracking-tight">{tzs(subtotal)}</span>
+          <span className="font-mono text-[20px] font-medium tracking-tight">{tzs(total)}</span>
         </div>
       </div>
       <ErrorText>{error || blocked}</ErrorText>
@@ -232,18 +273,26 @@ export function CheckoutView({
                 data: {
                   shopId: shop.id,
                   ...(bagCode ? { bag: bagCode } : { items: lines.map((l) => ({ productId: l.productId, qty: l.qty, size: l.size })) }),
+                  ...(applied && off > 0 ? { discount: applied.code } : {}),
                   ...form,
                   payment,
                   visit: visit(),
                 },
               })
               setBusy(false)
-              if ('error' in res) return setError(errors[res.error ?? 'shop'] ?? errors.shop)
+              if ('error' in res) {
+                if (res.error === 'discount') {
+                  setApplied(null)
+                  forgetCode(shop.id)
+                }
+                return setError(errors[res.error ?? 'shop'] ?? errors.shop)
+              }
               try {
                 localStorage.setItem(BUYER_KEY, JSON.stringify({ name: form.name, phone: form.phone, landmark: form.landmark }))
               } catch {
                 /* ignore */
               }
+              if (applied) forgetCode(shop.id)
               await onPlaced(res.code)
             }}
           >
@@ -338,6 +387,108 @@ export function CheckoutView({
         </aside>
       </main>
     </div>
+  )
+}
+
+function forgetCode(shopId: string) {
+  try {
+    localStorage.removeItem(codeKey(shopId))
+  } catch {
+    /* storage blocked */
+  }
+}
+
+/** "Have a discount code?" until the buyer opens it; then a field; once applied, the code with a way to remove it. */
+function DiscountField({
+  shopId,
+  applied,
+  subtotal,
+  onApply,
+  onRemove,
+}: {
+  shopId: string
+  applied: DiscountRule | null
+  subtotal: number
+  onApply: (rule: DiscountRule) => void
+  onRemove: () => void
+}) {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+  const [value, setValue] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  if (applied) {
+    const short = applied.min_order != null && subtotal < applied.min_order
+    return (
+      <div className="flex items-center gap-3 rounded-[16px] bg-card px-4 py-3 shadow-[inset_0_0_0_1px_var(--color-line)]">
+        <TicketPercent size={18} strokeWidth={1.6} className="shrink-0 text-ink-2" />
+        <div className="min-w-0 flex-1">
+          <p className="code truncate text-[14px]">{applied.code}</p>
+          <p className="text-[13px] text-muted">
+            {short ? t('Works on orders from {min}', { min: tzs(applied.min_order!) }) : discountLabel(t, applied)}
+          </p>
+        </div>
+        <button type="button" className="shrink-0 text-[13px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink" onClick={onRemove}>
+          {t('Remove')}
+        </button>
+      </div>
+    )
+  }
+  if (!open) {
+    return (
+      <button
+        type="button"
+        className="flex items-center gap-2 text-[14px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink"
+        onClick={() => setOpen(true)}
+      >
+        <TicketPercent size={16} strokeWidth={1.6} /> {t('Have a discount code?')}
+      </button>
+    )
+  }
+  async function apply(e: FormEvent) {
+    e.preventDefault()
+    const code = cleanCode(value)
+    if (!code) return
+    setBusy(true)
+    setError('')
+    const res = await checkDiscount({ data: { shopId, code } })
+    setBusy(false)
+    if ('rule' in res) {
+      setValue('')
+      setOpen(false)
+      return onApply(res.rule)
+    }
+    setError(
+      res.error === 'ended' ? t('This code has ended.') : res.error === 'used_up' ? t('This code has been used up.') : t('We don’t know that code. Check the spelling.'),
+    )
+  }
+  return (
+    <form onSubmit={apply} className="fade">
+      <label className="label" htmlFor={`discount-${shopId}`}>
+        {t('Discount code')}
+      </label>
+      <div className="flex gap-2">
+        <input
+          id={`discount-${shopId}`}
+          className="input code min-w-0 flex-1 uppercase"
+          autoCapitalize="characters"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="EID10"
+          value={value}
+          aria-invalid={!!error}
+          onChange={(e) => {
+            setValue(e.target.value)
+            setError('')
+          }}
+        />
+        <button className="btn btn-ghost shrink-0" disabled={busy || !cleanCode(value)}>
+          {busy ? t('Checking') : t('Apply')}
+        </button>
+      </div>
+      {error && <p className="mt-2 text-[13px] text-bad">{error}</p>}
+    </form>
   )
 }
 

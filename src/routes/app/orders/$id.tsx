@@ -202,6 +202,7 @@ function OrderDetail() {
             </div>
             <div className="receipt-rule mt-6 space-y-2 pt-4 text-[14px]">
               <Line label={t('Items')} value={tzs(o.subtotal)} />
+              {o.discount > 0 && <Line label={t('Discount ({code})', { code: o.discount_code ?? '' })} value={`−${tzs(o.discount)}`} />}
               {!manual && <Line label={t('Delivery')} value={o.delivery_fee ? tzs(o.delivery_fee) : t('Agree on WhatsApp')} />}
               <Line label={t('Payment')} value={t(PAYMENT_LABEL[o.payment_method] ?? o.payment_method)} />
             </div>
