@@ -24,8 +24,8 @@ function Dashboard() {
   const [copied, setCopied] = useState(false)
   const origin = useOrigin()
   const url = `${origin}/${shop.slug}`
-  const conversion = d.visits.shop ? Math.round((d.counts.all / d.visits.shop) * 1000) / 10 : 0
-  const prevConversion = d.prev.visits ? Math.round((d.prev.orders / d.prev.visits) * 1000) / 10 : 0
+  const conversion = d.visits.shop ? Math.round((d.counts.online / d.visits.shop) * 1000) / 10 : 0
+  const prevConversion = d.prev.visits ? Math.round((d.prev.online / d.prev.visits) * 1000) / 10 : 0
   const yesterday = d.days[d.days.length - 2]?.total ?? 0
   const date = new Date().toLocaleDateString(lang === 'sw' ? 'sw-TZ' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Africa/Dar_es_Salaam' })
 
@@ -265,7 +265,7 @@ function Dashboard() {
                   {/* Phone: name and total, then status and time, so the name keeps its room. */}
                   <div className="min-w-0 md:hidden">
                     <div className="flex items-baseline justify-between gap-3">
-                      <p className="min-w-0 truncate text-[14px] font-medium">{o.customer_name}</p>
+                      <p className="min-w-0 truncate text-[14px] font-medium">{o.customer_name || t('Sale recorded by you')}</p>
                       <p className="tnum shrink-0 text-[14px] font-medium">{tzs(o.total)}</p>
                     </div>
                     <div className="flex h-6 items-center justify-between gap-3">
@@ -274,7 +274,7 @@ function Dashboard() {
                     </div>
                   </div>
                   <div className="hidden min-w-0 md:block">
-                    <p className="truncate text-[14px] font-medium">{o.customer_name}</p>
+                    <p className="truncate text-[14px] font-medium">{o.customer_name || t('Sale recorded by you')}</p>
                     <p className="meta mt-0.5 truncate">
                       #{o.code} · {timeAgo(o.created_at, lang)}
                     </p>

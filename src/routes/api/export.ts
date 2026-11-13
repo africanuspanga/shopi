@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { currentUser } from '#/server/auth'
 import { all, first, now } from '#/server/db'
+import { PAYMENT_LABEL, type PaymentMethod } from '#/lib/format'
 
 /** CSV downloads for the logged-in seller: /api/export?what=orders|customers&days=7|30|90 */
 const DAY = 86_400_000
@@ -52,7 +53,7 @@ export const Route = createFileRoute('/api/export')({
               r.subtotal,
               r.delivery_fee,
               r.total,
-              r.payment_method === 'cod' ? 'Cash on delivery' : 'Lipa Namba',
+              PAYMENT_LABEL[r.payment_method as PaymentMethod] ?? r.payment_method,
               r.status,
               r.source,
               r.link_tag,
@@ -62,7 +63,7 @@ export const Route = createFileRoute('/api/export')({
           const rows = await all<{ name: string; phone: string; orders: number; spent: number; first: number; last: number }>(
             `SELECT MAX(customer_name) name, customer_phone phone, COUNT(*) orders,
                COALESCE(SUM(CASE WHEN status IN ${PAID} THEN total END), 0) spent, MIN(created_at) first, MAX(created_at) last
-             FROM orders WHERE shop_id = ? AND created_at >= ? AND status != 'cancelled'
+             FROM orders WHERE shop_id = ? AND created_at >= ? AND status != 'cancelled' AND customer_phone != ''
              GROUP BY customer_phone ORDER BY spent DESC`,
             shop.id,
             from,

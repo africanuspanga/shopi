@@ -1,5 +1,5 @@
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
-import { ArrowDownToLine, Check, Copy, Globe, Link2, Mail, Plus, Search, Send, X } from 'lucide-react'
+import { ArrowDownToLine, Check, Copy, Globe, Link2, Mail, PenLine, Plus, Search, Send, X } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from '#/components/brand-icons'
 import { prettyUrl } from '#/components/share'
@@ -48,6 +48,7 @@ function useSources() {
     x: { label: 'X', icon: <Globe className={icon} strokeWidth={1.6} /> },
     direct: { label: t('Direct'), icon: <Link2 className={icon} strokeWidth={1.6} /> },
     unknown: { label: t('Before tracking'), icon: <Globe className={icon} strokeWidth={1.6} /> },
+    manual: { label: t('Recorded by you'), icon: <PenLine className={icon} strokeWidth={1.6} /> },
   }
   return (s: string) => map[s] ?? { label: s, icon: <Globe className={icon} strokeWidth={1.6} /> }
 }

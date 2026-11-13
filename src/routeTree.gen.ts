@@ -34,6 +34,7 @@ import { Route as OCodeRouteImport } from './routes/o/$code'
 import { Route as ShopPIdRouteImport } from './routes/$shop/p.$id'
 import { Route as AppOrdersIndexRouteImport } from './routes/app/orders/index'
 import { Route as AppOrdersIdRouteImport } from './routes/app/orders/$id'
+import { Route as AppOrdersNewRouteImport } from './routes/app/orders/new'
 import { Route as AppProductsIndexRouteImport } from './routes/app/products/index'
 import { Route as AppProductsIdRouteImport } from './routes/app/products/$id'
 import { Route as AppProductsNewRouteImport } from './routes/app/products/new'
@@ -163,6 +164,11 @@ const AppOrdersIdRoute = AppOrdersIdRouteImport.update({
   path: '/orders/$id',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppOrdersNewRoute = AppOrdersNewRouteImport.update({
+  id: '/orders/new',
+  path: '/orders/new',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppProductsIndexRoute = AppProductsIndexRouteImport.update({
   id: '/products/',
   path: '/products/',
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/$shop/p/$id': typeof ShopPIdRoute
   '/app/orders/$id': typeof AppOrdersIdRoute
+  '/app/orders/new': typeof AppOrdersNewRoute
   '/app/products/$id': typeof AppProductsIdRoute
   '/app/products/new': typeof AppProductsNewRoute
   '/app/orders/': typeof AppOrdersIndexRoute
@@ -232,6 +239,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/$shop/p/$id': typeof ShopPIdRoute
   '/app/orders/$id': typeof AppOrdersIdRoute
+  '/app/orders/new': typeof AppOrdersNewRoute
   '/app/products/$id': typeof AppProductsIdRoute
   '/app/products/new': typeof AppProductsNewRoute
   '/app/orders': typeof AppOrdersIndexRoute
@@ -263,6 +271,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/$shop/p/$id': typeof ShopPIdRoute
   '/app/orders/$id': typeof AppOrdersIdRoute
+  '/app/orders/new': typeof AppOrdersNewRoute
   '/app/products/$id': typeof AppProductsIdRoute
   '/app/products/new': typeof AppProductsNewRoute
   '/app/orders/': typeof AppOrdersIndexRoute
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/$shop/p/$id'
     | '/app/orders/$id'
+    | '/app/orders/new'
     | '/app/products/$id'
     | '/app/products/new'
     | '/app/orders/'
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/$shop/p/$id'
     | '/app/orders/$id'
+    | '/app/orders/new'
     | '/app/products/$id'
     | '/app/products/new'
     | '/app/orders'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/$shop/p/$id'
     | '/app/orders/$id'
+    | '/app/orders/new'
     | '/app/products/$id'
     | '/app/products/new'
     | '/app/orders/'
@@ -554,6 +566,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrdersIdRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/orders/new': {
+      id: '/app/orders/new'
+      path: '/orders/new'
+      fullPath: '/app/orders/new'
+      preLoaderRoute: typeof AppOrdersNewRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/products/': {
       id: '/app/products/'
       path: '/products'
@@ -602,6 +621,7 @@ interface AppRouteRouteChildren {
   AppShopRoute: typeof AppShopRoute
   AppIndexRoute: typeof AppIndexRoute
   AppOrdersIdRoute: typeof AppOrdersIdRoute
+  AppOrdersNewRoute: typeof AppOrdersNewRoute
   AppProductsIdRoute: typeof AppProductsIdRoute
   AppProductsNewRoute: typeof AppProductsNewRoute
   AppOrdersIndexRoute: typeof AppOrdersIndexRoute
@@ -614,6 +634,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppShopRoute: AppShopRoute,
   AppIndexRoute: AppIndexRoute,
   AppOrdersIdRoute: AppOrdersIdRoute,
+  AppOrdersNewRoute: AppOrdersNewRoute,
   AppProductsIdRoute: AppProductsIdRoute,
   AppProductsNewRoute: AppProductsNewRoute,
   AppOrdersIndexRoute: AppOrdersIndexRoute,

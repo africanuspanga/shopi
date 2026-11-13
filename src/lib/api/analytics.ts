@@ -28,9 +28,11 @@ async function totals(shopId: string, from: number, to: number) {
       from,
       to,
     ),
-    first<{ orders: number; paid: number; delivered: number; cancelled: number; sales: number }>(
+    first<{ orders: number; paid: number; delivered: number; cancelled: number; sales: number; online: number; onlinePaid: number; onlineDelivered: number }>(
       `SELECT COUNT(*) orders, COALESCE(SUM(status IN ${PAID}), 0) paid, COALESCE(SUM(status = 'delivered'), 0) delivered,
-         COALESCE(SUM(status = 'cancelled'), 0) cancelled, ${SALES} sales
+         COALESCE(SUM(status = 'cancelled'), 0) cancelled, ${SALES} sales,
+         COALESCE(SUM(source != 'manual'), 0) online, COALESCE(SUM(source != 'manual' AND status IN ${PAID}), 0) onlinePaid,
+         COALESCE(SUM(source != 'manual' AND status = 'delivered'), 0) onlineDelivered
        FROM orders WHERE shop_id = ?1 AND created_at >= ?2 AND created_at < ?3`,
       shopId,
       from,
@@ -49,7 +51,11 @@ async function totals(shopId: string, from: number, to: number) {
     delivered: od?.delivered ?? 0,
     cancelled: od?.cancelled ?? 0,
     sales,
-    conversion: visits ? orders / visits : 0,
+    // Orders placed in the shop, without sales the seller recorded by hand: the funnel and conversion use these.
+    online: od?.online ?? 0,
+    onlinePaid: od?.onlinePaid ?? 0,
+    onlineDelivered: od?.onlineDelivered ?? 0,
+    conversion: visits ? (od?.online ?? 0) / visits : 0,
     aov: paid ? sales / paid : 0,
   }
 }
@@ -190,12 +196,12 @@ export const getAnalytics = createServerFn({ method: 'GET' })
       ),
       all<{ phone: string; name: string; orders: number; spent: number; last: number }>(
         `SELECT customer_phone phone, MAX(customer_name) name, COUNT(*) orders, ${SALES} spent, MAX(created_at) last
-         FROM orders WHERE shop_id = ?1 AND created_at >= ?2 AND status != 'cancelled' GROUP BY customer_phone ORDER BY spent DESC`,
+         FROM orders WHERE shop_id = ?1 AND created_at >= ?2 AND status != 'cancelled' AND customer_phone != '' GROUP BY customer_phone ORDER BY spent DESC`,
         S,
         from,
       ),
       all<{ phone: string; first: number }>(
-        `SELECT customer_phone phone, MIN(created_at) first FROM orders WHERE shop_id = ?1 AND status != 'cancelled' GROUP BY customer_phone`,
+        `SELECT customer_phone phone, MIN(created_at) first FROM orders WHERE shop_id = ?1 AND status != 'cancelled' AND customer_phone != '' GROUP BY customer_phone`,
         S,
       ),
     ])
@@ -252,9 +258,9 @@ export const getAnalytics = createServerFn({ method: 'GET' })
         viewed: funnel?.viewed ?? 0,
         added: funnel?.added ?? 0,
         checkout: funnel?.checkout ?? 0,
-        ordered: cur.orders,
-        paid: cur.paid,
-        delivered: cur.delivered,
+        ordered: cur.online,
+        paid: cur.onlinePaid,
+        delivered: cur.onlineDelivered,
       },
       clicks: {
         whatsapp: count('whatsapp_click'),

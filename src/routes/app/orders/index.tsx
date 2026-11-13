@@ -1,9 +1,9 @@
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ReceiptText, Search } from 'lucide-react'
+import { Plus, ReceiptText, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Chips, Empty, Page, StatusPill, TopBar } from '#/components/ui'
 import { listOrders } from '#/lib/api/merchant'
-import { timeAgo, tzs, type OrderStatus } from '#/lib/format'
+import { PAYMENT_LABEL, timeAgo, tzs, type OrderStatus } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 
 const FILTERS = ['todo', 'check', 'send', 'way', 'done', 'cancelled', 'all'] as const
@@ -49,10 +49,15 @@ function Orders() {
         title={t('Orders')}
         sub={count('todo') ? t('{n} open', { n: count('todo') }) : t('All caught up')}
         right={
+          <>
+          <Link to="/app/orders/new" className="btn btn-sm">
+            <Plus size={15} strokeWidth={2} /> {t('Record a sale')}
+          </Link>
           <label className="input hidden h-10 w-64 items-center gap-2 px-3 md:flex">
             <Search size={16} strokeWidth={1.6} className="shrink-0 text-muted" />
             <input className="min-w-0 flex-1 bg-transparent text-[14px] outline-none" placeholder={t('Search')} value={q} onChange={(e) => setQ(e.target.value)} />
           </label>
+          </>
         }
       />
 
@@ -104,7 +109,7 @@ function Orders() {
                   {/* Phone: who and how much, then where it stands. The code is on the order page and in search. */}
                   <div className="lg:hidden">
                     <div className="flex items-baseline justify-between gap-4">
-                      <p className="min-w-0 truncate text-[15px] font-medium">{o.customer_name}</p>
+                      <p className="min-w-0 truncate text-[15px] font-medium">{o.customer_name || t('Sale recorded by you')}</p>
                       <p className="tnum shrink-0 text-[15px] font-medium">{tzs(o.total)}</p>
                     </div>
                     <div className="mt-1 flex h-6 items-center gap-3">
@@ -119,12 +124,12 @@ function Orders() {
                     <p className="meta mt-0.5">{timeAgo(o.created_at, lang)}</p>
                   </div>
                   <div className="hidden min-w-0 lg:block">
-                    <p className="truncate text-[14px] font-medium">{o.customer_name}</p>
+                    <p className="truncate text-[14px] font-medium">{o.customer_name || t('Sale recorded by you')}</p>
                     <p className="meta mt-0.5">{o.customer_phone}</p>
                   </div>
                   <p className="hidden truncate text-[14px] text-ink-2 lg:block">{o.area || '—'}</p>
                   <p className="tnum hidden text-[14px] text-ink-2 lg:block">{o.items}</p>
-                  <p className="hidden text-[14px] text-ink-2 lg:block">{o.payment_method === 'cod' ? t('Cash') : 'Lipa'}</p>
+                  <p className="hidden text-[14px] text-ink-2 lg:block">{o.payment_method === 'lipa' ? 'Lipa' : o.payment_method === 'cod' ? t('Cash') : t(PAYMENT_LABEL[o.payment_method])}</p>
                   <p className="tnum hidden text-right text-[14px] font-medium lg:block">{tzs(o.total)}</p>
                   <div className="hidden lg:block">
                     <StatusPill status={o.status} />

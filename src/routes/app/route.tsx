@@ -1,9 +1,10 @@
 import { Link, Outlet, createFileRoute, redirect, useLocation } from '@tanstack/react-router'
-import { ArrowUpRight, ChartColumn, House, Package, Plus, ReceiptText, Store } from 'lucide-react'
+import { ArrowUpRight, ChartColumn, House, Package, PenLine, Plus, ReceiptText, Store } from 'lucide-react'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
-import { ShopAvatar, Wordmark } from '#/components/ui'
+import { Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import { getNavCounts } from '#/lib/api/merchant'
 import { useT } from '#/lib/i18n'
+import { useState } from 'react'
 
 export const Route = createFileRoute('/app')({
   beforeLoad: ({ context }) => {
@@ -100,6 +101,9 @@ function Sidebar() {
       <Link to="/app/products/new" className="btn btn-sm mt-6 h-10 w-full">
         <Plus size={16} strokeWidth={2} /> {t('Add product')}
       </Link>
+      <Link to="/app/orders/new" className="btn btn-ghost btn-sm mt-2 h-10 w-full">
+        <PenLine size={15} strokeWidth={1.75} /> {t('Record a sale')}
+      </Link>
 
       <div className="mt-auto rounded-[14px] px-3 py-3 text-[13px] leading-5 text-muted">
         {t('Share your link in your Instagram bio and WhatsApp status. That is where buyers come from.')}
@@ -111,18 +115,39 @@ function Sidebar() {
 /** Phones: the floating black capsule (components/floating-nav.tsx); + adds a product. */
 function BottomNav() {
   const t = useT()
+  const [adding, setAdding] = useState(false)
   const [home, orders, products, shopTab] = useTabs()
   const path = useLocation({ select: (l) => l.pathname })
   const tab = (x: typeof home) => (
     <NavTab key={x.to} to={x.to} icon={x.icon} label={x.label} active={x.match(path)} badge={x.to === '/app/orders' && !x.match(path) ? <OrdersBadge dot /> : undefined} />
   )
   return (
+    <>
     <FloatingNav label={t('Main')}>
       {tab(home)}
       {tab(orders)}
-      <NavCenter to="/app/products/new" icon={Plus} label={t('Add product')} />
+      <NavCenter onClick={() => setAdding(true)} icon={Plus} label={t('Add')} />
       {tab(products)}
       {tab(shopTab)}
     </FloatingNav>
+      <Sheet open={adding} onClose={() => setAdding(false)} title={t('Add')}>
+        <div className="grid gap-2">
+          {[
+            { to: '/app/products/new', icon: Package, title: t('Add product'), sub: t('Photos, price, sizes and stock') },
+            { to: '/app/orders/new', icon: PenLine, title: t('Record a sale'), sub: t('A sale in person, on a call or in a chat') },
+          ].map((x) => (
+            <Link key={x.to} to={x.to} onClick={() => setAdding(false)} className="flex items-center gap-4 rounded-[18px] bg-page px-4 py-4 transition-colors hover:bg-well">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-white">
+                <x.icon size={19} strokeWidth={1.75} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[15px] font-medium">{x.title}</span>
+                <span className="block text-[13px] text-muted">{x.sub}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </Sheet>
+    </>
   )
 }

@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { Img, Page, StatusPill, TopBar } from '#/components/ui'
 import { getOrder, setOrderStatus } from '#/lib/api/merchant'
-import { timeAgo, tzs, waLink, type OrderStatus } from '#/lib/format'
+import { timeAgo, tzs, waLink, type OrderStatus, PAYMENT_LABEL } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import type { PaymentCheck } from '#/lib/payment-sms'
 import { useOrigin } from '#/lib/share'
@@ -29,6 +29,7 @@ function OrderDetail() {
   const [busy, setBusy] = useState(false)
   const check: PaymentCheck | null = o.payment_check ? JSON.parse(o.payment_check) : null
   const cod = o.payment_method === 'cod'
+  const manual = o.source === 'manual'
 
   async function move(status: OrderStatus, ask?: string) {
     if (ask && !window.confirm(ask)) return
@@ -131,14 +132,22 @@ function OrderDetail() {
             )}
           </section>
 
+          {manual && !o.customer_phone ? (
+            <section className="card p-6">
+              <p className="text-[13px] text-muted">{t('Buyer')}</p>
+              <p className="mt-1 text-[18px] font-semibold">{o.customer_name || t('Sale recorded by you')}</p>
+              <p className="mt-1 text-[14px] text-ink-2">{t('You recorded this sale by hand.')}</p>
+              {o.note && <p className="mt-4 rounded-[14px] bg-page px-4 py-3 text-[14px] leading-relaxed text-ink-2">“{o.note}”</p>}
+            </section>
+          ) : (
           <section className="card p-6">
             <p className="text-[13px] text-muted">{t('Buyer')}</p>
-            <p className="mt-1 text-[18px] font-semibold">{o.customer_name}</p>
+            <p className="mt-1 text-[18px] font-semibold">{o.customer_name || t('Sale recorded by you')}</p>
             <p className="code mt-0.5 text-[14px] text-ink-2">{o.customer_phone}</p>
             <div className="mt-4 flex items-start gap-2.5 text-[14px] leading-5">
               <MapPin size={16} strokeWidth={1.6} className="mt-0.5 shrink-0 text-muted" />
               <span>
-                <span className="font-medium">{o.area || t('No area')}</span>
+                <span className="font-medium">{o.area || (manual ? t('Recorded by you') : t('No area'))}</span>
                 {o.landmark && <span className="block text-ink-2">{o.landmark}</span>}
               </span>
             </div>
@@ -152,6 +161,7 @@ function OrderDetail() {
               </a>
             </div>
           </section>
+          )}
         </div>
 
         <div className="min-w-0 space-y-4 lg:order-1">
@@ -182,8 +192,8 @@ function OrderDetail() {
             </div>
             <div className="receipt-rule mt-6 space-y-2 pt-4 text-[14px]">
               <Line label={t('Items')} value={tzs(o.subtotal)} />
-              <Line label={t('Delivery')} value={o.delivery_fee ? tzs(o.delivery_fee) : t('Agree on WhatsApp')} />
-              <Line label={t('Payment')} value={cod ? t('Cash on delivery') : 'Lipa Namba'} />
+              {!manual && <Line label={t('Delivery')} value={o.delivery_fee ? tzs(o.delivery_fee) : t('Agree on WhatsApp')} />}
+              <Line label={t('Payment')} value={t(PAYMENT_LABEL[o.payment_method] ?? o.payment_method)} />
             </div>
             <div className="receipt-rule mt-4 flex items-baseline justify-between pt-4">
               <span className="text-[15px] font-medium">{t('Total')}</span>
@@ -191,7 +201,7 @@ function OrderDetail() {
             </div>
           </div>
 
-          {!cod && (
+          {o.payment_method === 'lipa' && !manual && (
             <section className="card p-6">
               <h2 className="text-[15px] font-semibold">{t('Payment SMS from the buyer')}</h2>
               {!o.payment_sms ? (

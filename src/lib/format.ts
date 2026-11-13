@@ -160,3 +160,13 @@ export const SIZE_PRESETS: { label: string; sizes: string[] }[] = [
   { label: msg('Kids'), sizes: ['2-3Y', '4-5Y', '6-7Y', '8-9Y', '10-12Y'] },
   { label: msg('One size'), sizes: ['Free size'] },
 ]
+
+/** How an order was paid. Online orders use lipa or cod; a sale recorded by hand may use any. */
+export type PaymentMethod = 'lipa' | 'cod' | 'cash' | 'mobile' | 'bank'
+export const PAYMENT_LABEL: Record<PaymentMethod, string> = {
+  lipa: 'Lipa Namba',
+  cod: 'Cash on delivery',
+  cash: 'Cash',
+  mobile: 'Other mobile money',
+  bank: 'Bank',
+}

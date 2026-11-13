@@ -1,9 +1,9 @@
 import { createServerFn } from '@tanstack/react-start'
 import { requireShop, requireUser } from '#/server/auth'
-import { all, db, first, newId, now, run } from '#/server/db'
+import { all, db, first, newId, now, orderCode, run } from '#/server/db'
 import { removePhotos } from '#/server/media'
 import { moveStock, sizesTotal } from '#/server/stock'
-import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, normalizePhone, parseSizes, productSlug, slugify, type OrderStatus, type Size, mapsLink } from '#/lib/format'
+import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, normalizePhone, parseSizes, productSlug, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink } from '#/lib/format'
 import { shopPlan } from '#/server/plan'
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
@@ -204,11 +204,12 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
        FROM shops WHERE id = ?`,
       shop.id,
     ),
-    first<{ total: number; orders: number; visits: number }>(
+    first<{ total: number; orders: number; online: number; visits: number }>(
       `SELECT
          (SELECT COALESCE(SUM(total), 0) FROM orders WHERE shop_id = ?1 AND created_at BETWEEN ?2 AND ?3
             AND status IN ('confirmed','dispatched','delivered')) total,
          (SELECT COUNT(*) FROM orders WHERE shop_id = ?1 AND created_at BETWEEN ?2 AND ?3) orders,
+         (SELECT COUNT(*) FROM orders WHERE shop_id = ?1 AND created_at BETWEEN ?2 AND ?3 AND source != 'manual') online,
          (SELECT COUNT(DISTINCT CASE WHEN type IN ('view_shop','view_product') THEN session_id END)
             + COALESCE(SUM(session_id IS NULL AND type = 'view_shop'), 0)
           FROM events WHERE shop_id = ?1 AND created_at BETWEEN ?2 AND ?3) visits`,
@@ -223,8 +224,8 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
       shop.id,
       since - 86400_000,
     ),
-    first<{ all_orders: number; paid: number; pending: number; cancelled: number }>(
-      `SELECT COUNT(*) all_orders,
+    first<{ all_orders: number; online: number; paid: number; pending: number; cancelled: number }>(
+      `SELECT COUNT(*) all_orders, SUM(source != 'manual') online,
          SUM(status IN ('confirmed','dispatched','delivered')) paid,
          SUM(status IN ('awaiting_payment','payment_claimed')) pending,
          SUM(status = 'cancelled') cancelled
@@ -259,9 +260,10 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
     today: { total: today?.total ?? 0, orders: today?.orders ?? 0 },
     queue: { toConfirm: queue?.to_confirm ?? 0, toSend: queue?.to_send ?? 0, onTheWay: queue?.on_the_way ?? 0 },
     days,
-    prev: prev ?? { total: 0, orders: 0, visits: 0 },
+    prev: prev ?? { total: 0, orders: 0, online: 0, visits: 0 },
     counts: {
       all: counts?.all_orders ?? 0,
+      online: counts?.online ?? 0,
       paid: counts?.paid ?? 0,
       pending: counts?.pending ?? 0,
       cancelled: counts?.cancelled ?? 0,
@@ -413,16 +415,17 @@ export type OrderListRow = {
   customer_phone: string
   area: string
   total: number
-  payment_method: 'lipa' | 'cod'
+  payment_method: PaymentMethod
   status: OrderStatus
   created_at: number
   items: number
+  source: string
 }
 
 export const listOrders = createServerFn({ method: 'GET' }).handler(async () => {
   const { shop } = await requireShop()
   return all<OrderListRow>(
-    `SELECT o.id, o.code, o.customer_name, o.customer_phone, o.area, o.total, o.payment_method, o.status, o.created_at,
+    `SELECT o.id, o.code, o.customer_name, o.customer_phone, o.area, o.total, o.payment_method, o.status, o.created_at, o.source,
        (SELECT SUM(qty) FROM order_items WHERE order_id = o.id) items
      FROM orders o WHERE o.shop_id = ? ORDER BY o.created_at DESC LIMIT 300`,
     shop.id,
@@ -458,6 +461,79 @@ export const getOrder = createServerFn({ method: 'GET' })
     return { ...order, lines, items: lines.reduce((s, l) => s + l.qty, 0) } as OrderDetail
   })
 
+export type SaleLine = { productId?: string; name?: string; price: number; qty: number; size?: string | null }
+
+/**
+ * A sale the seller records by hand: in person, on a call, inside a WhatsApp chat. It is saved as an order with
+ * source 'manual', so it counts in sales, the order list and the CSV, and stays out of visits and the funnel.
+ */
+export const recordSale = createServerFn({ method: 'POST' })
+  .validator(
+    (d: {
+      lines: SaleLine[]
+      name?: string
+      phone?: string
+      payment: PaymentMethod
+      date?: number
+      status: 'confirmed' | 'delivered'
+      takeStock: boolean
+      note?: string
+    }) => d,
+  )
+  .handler(async ({ data }) => {
+    const { shop } = await requireShop()
+    const payment: PaymentMethod = (['cash', 'lipa', 'mobile', 'bank'] as const).find((m) => m === data.payment) ?? 'cash'
+    const status = data.status === 'delivered' ? 'delivered' : 'confirmed'
+    const lines: { productId: string | null; name: string; price: number; qty: number; image: string | null; variant: string | null }[] = []
+    for (const l of (data.lines ?? []).slice(0, 50)) {
+      const qty = Math.min(999, Math.max(1, Math.round(Number(l.qty) || 1)))
+      const price = int(l.price)
+      if (l.productId) {
+        const p = await first<{ id: string; name: string; images: string; sizes: string | null }>(
+          'SELECT id, name, images, sizes FROM products WHERE id = ? AND shop_id = ?',
+          l.productId,
+          shop.id,
+        )
+        if (!p) return { error: 'product' as const }
+        const sizes = parseSizes(p.sizes)
+        const variant = sizes && l.size ? (sizes.find((s) => s.label === l.size)?.label ?? null) : null
+        if (sizes && !variant) return { error: 'size' as const, product: p.name }
+        lines.push({ productId: p.id, name: p.name, price, qty, image: (JSON.parse(p.images) as string[])[0] ?? null, variant })
+      } else {
+        const name = str(l.name, 120)
+        if (!name || !price) continue
+        lines.push({ productId: null, name, price, qty, image: null, variant: null })
+      }
+    }
+    if (!lines.length) return { error: 'empty' as const }
+    const total = lines.reduce((s, l) => s + l.price * l.qty, 0)
+    const t = now()
+    // A past date is allowed (a sale from last week); a future one is not.
+    const at = Number.isFinite(Number(data.date)) && Number(data.date) > 0 ? Math.min(Number(data.date), t) : t
+    const id = newId()
+    const code = orderCode()
+    const takeStock = data.takeStock !== false && lines.some((l) => l.productId)
+    await db().batch([
+      db()
+        .prepare(
+          `INSERT INTO orders (id, shop_id, code, customer_name, customer_phone, note, subtotal, delivery_fee, total,
+             payment_method, status, created_at, updated_at, source, stock_taken)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, 'manual', ?)`,
+        )
+        .bind(
+          id, shop.id, code, str(data.name, 80), data.phone ? normalizePhone(str(data.phone)) : '', str(data.note, 500),
+          total, total, payment, status, at, t, takeStock ? 1 : 0,
+        ),
+      ...lines.map((l) =>
+        db()
+          .prepare('INSERT INTO order_items (order_id, product_id, name, price, qty, image, variant) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .bind(id, l.productId, l.name, l.price, l.qty, l.image, l.variant),
+      ),
+    ])
+    if (takeStock) await moveStock(id, -1)
+    return { ok: true as const, id }
+  })
+
 const NEXT: Record<OrderStatus, OrderStatus[]> = {
   awaiting_payment: ['confirmed', 'cancelled'],
   payment_claimed: ['confirmed', 'awaiting_payment', 'cancelled'],
@@ -471,8 +547,8 @@ export const setOrderStatus = createServerFn({ method: 'POST' })
   .validator((d: { id: string; status: OrderStatus }) => d)
   .handler(async ({ data }) => {
     const { shop } = await requireShop()
-    const order = await first<{ status: OrderStatus }>(
-      'SELECT status FROM orders WHERE id = ? AND shop_id = ?',
+    const order = await first<{ status: OrderStatus; stock_taken: number }>(
+      'SELECT status, stock_taken FROM orders WHERE id = ? AND shop_id = ?',
       data.id,
       shop.id,
     )
@@ -486,7 +562,7 @@ export const setOrderStatus = createServerFn({ method: 'POST' })
       data.id,
     )
     // Stock comes back when a confirmed order is cancelled.
-    if (data.status === 'cancelled' && ['confirmed', 'dispatched'].includes(order.status)) await moveStock(data.id, 1)
-    if (data.status === 'confirmed' && order.status !== 'confirmed') await moveStock(data.id, -1)
+    if (data.status === 'cancelled' && ['confirmed', 'dispatched'].includes(order.status) && order.stock_taken) await moveStock(data.id, 1)
+    if (data.status === 'confirmed' && order.status !== 'confirmed' && order.stock_taken) await moveStock(data.id, -1)
     return { ok: true }
   })
