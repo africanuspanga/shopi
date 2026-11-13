@@ -321,7 +321,7 @@ function Features() {
     [Ruler, t('Sizes and stock'), t('Buyers pick a size, sold out shows by itself')],
     [Smartphone, 'Lipa Namba', t('With a check of the payment SMS')],
     [Banknote, t('Cash on delivery'), t('Turn it on or off')],
-    [MapPin, t('Delivery areas'), t('Your areas, your fees')],
+    [MapPin, t('Delivery areas'), t('Your areas, fees agreed on WhatsApp')],
     [WhatsAppIcon, 'WhatsApp', t('Every buyer one tap away')],
     [ChartColumn, t('Your numbers'), t('Sales, visits, shares, best sellers')],
     [ImageDown, t('Light photos'), t('Shrunk on upload to save buyers data')],
@@ -433,7 +433,7 @@ function Faq() {
     [t('How do I get paid?'), t('The buyer pays your Lipa Namba or pays cash on delivery, the way they already pay sellers today. The money never passes through Shopi.')],
     [t('How do I know a buyer really paid?'), t('The buyer pastes the payment SMS. We check the amount, the name and the transaction ID, and refuse one already used. Still check your phone before you confirm.')],
     [t('Do I need a website or a developer?'), t('No. You open the shop on your phone in a few minutes and get a link to share.')],
-    [t('Who does the delivery?'), t('You do, with your own rider. You set your areas and a fee for each, and the buyer picks one when ordering.')],
+    [t('Who does the delivery?'), t('You do, with your own rider. You list the areas you deliver to, the buyer picks one when ordering, and you agree the delivery fee on WhatsApp.')],
     [t('What can I sell?'), t('Clothes, shoes, cosmetics, perfumes, electronics, food and more. Illegal goods are not allowed.')],
   ]
   return (

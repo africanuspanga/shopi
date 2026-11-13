@@ -118,19 +118,16 @@ export const placeOrder = createServerFn({ method: 'POST' })
       if (left != null && left < qty) return { error: 'stock' as const, product: size ? `${p.name} (${size.label})` : p.name }
       lines.push({ p, qty, variant: size?.label ?? null })
     }
-    // "My area is not listed": the seller agrees the fee with the buyer on WhatsApp.
-    const other = data.areaId === 'other' ? String(data.areaOther ?? '').trim().slice(0, 60) : ''
-    const area = other
-      ? { name: `${other} (fee to agree)`, fee: 0 }
-      : data.areaId
-      ? await first<{ name: string; fee: number }>(
-          'SELECT name, fee FROM delivery_areas WHERE id = ? AND shop_id = ?',
-          data.areaId,
-          shop.id,
-        )
-      : null
+    // Delivery fees stay out of Shopi: buyer and seller agree them on WhatsApp.
+    // The buyer picks one of the shop's areas, or writes their own.
+    const typed = String(data.areaOther ?? '').trim().slice(0, 60)
+    const listed =
+      data.areaId && data.areaId !== 'other'
+        ? await first<{ name: string }>('SELECT name FROM delivery_areas WHERE id = ? AND shop_id = ?', data.areaId, shop.id)
+        : null
+    const area = listed ?? (typed ? { name: typed } : null)
     const subtotal = lines.reduce((s, l) => s + l.p.price * l.qty, 0)
-    const fee = area?.fee ?? 0
+    const fee = 0
     const id = newId()
     const code = orderCode()
     const t = now()

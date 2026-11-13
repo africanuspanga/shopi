@@ -50,17 +50,6 @@ function Checkout() {
 
   const subtotal = lines.reduce((s, l) => s + l.p.price * l.qty, 0)
   const count = lines.reduce((s, l) => s + l.qty, 0)
-  const area = areas.find((a) => a.id === form.areaId)
-  const fee = area?.fee ?? 0
-  const deliveryText = !areas.length
-    ? t('Seller confirms')
-    : !form.areaId
-      ? t('Choose an area')
-      : form.areaId === OTHER
-        ? t('Seller confirms')
-        : fee
-          ? tzs(fee)
-          : t('Free')
 
   const header = (
     <header className="mx-auto flex h-16 max-w-[1120px] items-center gap-3 px-4 md:h-20 md:px-10">
@@ -158,11 +147,11 @@ function Checkout() {
       <div className="receipt px-5 pt-5 pb-6">
         <div className="space-y-2.5 text-[14px]">
           <Row label={t('Items ({n})', { n: count })} value={tzs(subtotal)} />
-          <Row label={t('Delivery')} value={deliveryText} quiet={!form.areaId || form.areaId === OTHER} />
+          <Row label={t('Delivery')} value={t('Agreed on WhatsApp')} quiet />
         </div>
         <div className="receipt-rule mt-4 flex items-baseline justify-between pt-4">
           <span className="text-[15px] font-medium">{t('Total')}</span>
-          <span className="font-mono text-[20px] font-medium tracking-tight">{tzs(subtotal + fee)}</span>
+          <span className="font-mono text-[20px] font-medium tracking-tight">{tzs(subtotal)}</span>
         </div>
       </div>
       <ErrorText>{error}</ErrorText>
@@ -190,7 +179,7 @@ function Checkout() {
             onSubmit={async (e) => {
               e.preventDefault()
               if (areas.length && !form.areaId) return setError(t('Choose where to deliver'))
-              if (form.areaId === OTHER && !form.areaOther.trim()) return setError(t('Write your area'))
+              if ((!areas.length || form.areaId === OTHER) && !form.areaOther.trim()) return setError(t('Write your area'))
               setBusy(true)
               setError('')
               const res = await placeOrder({
@@ -227,27 +216,24 @@ function Checkout() {
               </div>
             </Block>
 
-            <Block title={t('Delivery')} sub={areas.length ? t('Pick your area. The fee goes to the seller’s rider.') : undefined}>
+            <Block title={t('Delivery')} sub={t('You agree the delivery fee with the seller on WhatsApp.')}>
               {areas.length > 0 && (
                 <div className="card divide-y divide-line overflow-hidden" role="radiogroup" aria-label={t('Delivery area')}>
-                  {[...areas, { id: OTHER, name: t('My area is not listed'), fee: -1 }].map((a) => {
+                  {[...areas, { id: OTHER, name: t('My area is not listed') }].map((a) => {
                     const on = form.areaId === a.id
                     return (
                       <label key={a.id} className={`flex cursor-pointer items-center gap-3 px-4 py-3.5 transition-colors ${on ? 'bg-well' : 'hover:bg-page'}`}>
                         <input type="radio" name="area" className="sr-only" checked={on} onChange={() => setForm({ ...form, areaId: a.id })} />
                         <Radio on={on} />
                         <span className="flex-1 text-[15px]">{a.name}</span>
-                        <span className={`tnum text-[14px] ${a.fee < 0 ? 'text-muted' : 'text-ink-2'}`}>
-                          {a.fee < 0 ? t('Seller confirms') : a.fee ? tzs(a.fee) : t('Free')}
-                        </span>
                       </label>
                     )
                   })}
                 </div>
               )}
-              {form.areaId === OTHER && (
-                <div className="fade mt-4">
-                  <Field label={t('Your area')} hint={t('The seller tells you the delivery fee on WhatsApp')}>
+              {(!areas.length || form.areaId === OTHER) && (
+                <div className={areas.length ? 'fade mt-4' : ''}>
+                  <Field label={t('Your area')}>
                     <input className="input" value={form.areaOther} onChange={(e) => setForm({ ...form, areaOther: e.target.value })} placeholder={t('e.g. Goba, Bunju, Kibaha')} />
                   </Field>
                 </div>

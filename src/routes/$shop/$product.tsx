@@ -83,7 +83,6 @@ function ProductPage() {
   const images = p.images.length ? p.images : [null]
   const more = products.filter((x) => x.id !== p.id && x.stock !== 0).slice(0, 4)
   const bagTotal = cart.lines.reduce((s, l) => s + (products.find((x) => x.id === l.productId)?.price ?? 0) * l.qty, 0)
-  const minFee = areas.length ? Math.min(...areas.map((a) => a.fee)) : null
   const pay = [shop.lipa_number && t('Mobile money'), shop.cod_enabled && t('Cash on delivery')].filter(Boolean).join(', ')
   const lowStock = left != null && left > 0 && left <= 3
 
@@ -254,12 +253,10 @@ function ProductPage() {
             {p.description && <p className="mt-8 max-w-[60ch] text-[15px] leading-relaxed whitespace-pre-line text-ink-2">{p.description}</p>}
 
             <dl className="mt-8 rounded-[20px] bg-page px-5 py-1">
-              {minFee != null && (
-                <Detail label={t('Delivery')}>
-                  {minFee === 0 ? t('Free in some areas') : t('From {fee}', { fee: tzs(minFee) })}
-                  <span className="text-muted"> · {t(areas.length === 1 ? '{n} area' : '{n} areas', { n: areas.length })}</span>
-                </Detail>
-              )}
+              <Detail label={t('Delivery')}>
+                {t('Fee agreed on WhatsApp')}
+                {areas.length > 0 && <span className="text-muted"> · {t(areas.length === 1 ? '{n} area' : '{n} areas', { n: areas.length })}</span>}
+              </Detail>
               {pay && <Detail label={t('Payment')}>{pay}</Detail>}
               {p.sizes && <Detail label={t('Sizes')}>{p.sizes.map((s) => s.label).join(', ')}</Detail>}
               <Detail label={t('Availability')}>

@@ -44,10 +44,9 @@ function ShopSettings() {
 
   async function save() {
     const named = areas.filter((a) => a.name.trim())
-    if (named.some((a) => a.fee.trim() === '')) return setError(t('Set a delivery fee for every area. Use 0 for free delivery.'))
     setBusy(true)
     setError('')
-    await updateShop({ data: { ...s, areas: named.map((a) => ({ name: a.name.trim(), fee: Number(a.fee.replace(/\D/g, '')) || 0 })) } })
+    await updateShop({ data: { ...s, areas: named.map((a) => ({ name: a.name.trim(), fee: 0 })) } })
     initial.current = { shop: s, areas: named }
     setAreas(named)
     setBusy(false)
@@ -177,16 +176,10 @@ function ShopSettings() {
           </div>
         </Group>
 
-        <Group title={t('Delivery')} sub={t('The areas you deliver to and what each one costs. Buyers pick one at checkout.')}>
-          {areas.length > 0 && (
-            <div className="mb-3 grid grid-cols-[minmax(0,1fr)_112px_40px] gap-x-2 sm:grid-cols-[minmax(0,1fr)_132px_40px] sm:gap-x-3 px-1 text-[13px] text-muted">
-              <span>{t('Area')}</span>
-              <span>{t('Fee')}</span>
-            </div>
-          )}
+        <Group title={t('Delivery')} sub={t('The areas you deliver to. Buyers pick one at checkout, and you agree the delivery fee with them on WhatsApp.')}>
           <div className="space-y-2">
             {areas.map((a, i) => (
-              <div key={i} className="grid grid-cols-[minmax(0,1fr)_112px_40px] items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_132px_40px] sm:gap-x-3">
+              <div key={i} className="grid grid-cols-[minmax(0,1fr)_40px] items-center gap-x-2 sm:gap-x-3">
                 <input
                   className="input h-11"
                   value={a.name}
@@ -194,17 +187,6 @@ function ShopSettings() {
                   placeholder="Mikocheni"
                   onChange={(e) => setAreas(areas.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))}
                 />
-                <label className={`input flex h-11 items-center gap-1.5 px-3 ${a.name.trim() && a.fee === '' && error ? 'shadow-[inset_0_0_0_1.5px_var(--color-bad)]' : ''}`}>
-                  <span className="text-[13px] text-muted">TSh</span>
-                  <input
-                    className="tnum min-w-0 flex-1 bg-transparent outline-none"
-                    inputMode="numeric"
-                    value={a.fee === '' ? '' : Number(a.fee).toLocaleString('en-US')}
-                    aria-label={t('Fee')}
-                    placeholder="3,000"
-                    onChange={(e) => setAreas(areas.map((x, j) => (j === i ? { ...x, fee: e.target.value.replace(/\D/g, '').slice(0, 7) } : x)))}
-                  />
-                </label>
                 <button type="button" className="icon-btn" aria-label={t('Remove area')} onClick={() => setAreas(areas.filter((_, j) => j !== i))}>
                   <X size={16} strokeWidth={1.75} />
                 </button>

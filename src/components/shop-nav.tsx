@@ -7,7 +7,7 @@ import { Price, ShopFacts, SocialLinks, onSale, Tag, discount } from '#/componen
 import { Img, Sheet, ShopAvatar } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
-import { tzs, waLink } from '#/lib/format'
+import { waLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
 type Area = { name: string; fee: number }
@@ -113,13 +113,12 @@ function InfoSheet({ open, onClose, shop, areas, onShare }: { open: boolean; onC
           <p className="text-[14px] font-medium">{t('Delivery areas')}</p>
           <ul className="mt-2 divide-y divide-line">
             {areas.map((a) => (
-              <li key={a.name} className="flex justify-between gap-4 py-2.5 text-[14px]">
-                <span className="text-ink-2">{a.name}</span>
-                <span className="tnum">{a.fee ? tzs(a.fee) : t('Free')}</span>
+              <li key={a.name} className="py-2.5 text-[14px] text-ink-2">
+                {a.name}
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-[12px] text-muted">{t('Not on the list? Choose "My area is not listed" at checkout.')}</p>
+          <p className="mt-2 text-[12px] text-muted">{t('Not on the list? Write your area at checkout. You agree the delivery fee with the seller on WhatsApp.')}</p>
         </div>
       )}
       <div className="mt-6 flex items-center justify-between gap-3">

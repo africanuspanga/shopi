@@ -182,7 +182,7 @@ function OrderDetail() {
             </div>
             <div className="receipt-rule mt-6 space-y-2 pt-4 text-[14px]">
               <Line label={t('Items')} value={tzs(o.subtotal)} />
-              <Line label={t('Delivery')} value={o.delivery_fee ? tzs(o.delivery_fee) : o.area.includes('(fee to agree)') ? t('To agree') : t('Free')} />
+              <Line label={t('Delivery')} value={o.delivery_fee ? tzs(o.delivery_fee) : t('Agree on WhatsApp')} />
               <Line label={t('Payment')} value={cod ? t('Cash on delivery') : 'Lipa Namba'} />
             </div>
             <div className="receipt-rule mt-4 flex items-baseline justify-between pt-4">

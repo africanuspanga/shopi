@@ -180,13 +180,12 @@ type Fact = { icon: ReactNode; text: string; sub?: string }
 /** What a buyer wants to know before ordering: delivery, how to pay, where, when. */
 function useShopFacts(shop: PublicShop, areas: { name: string; fee: number }[]): Fact[] {
   const t = useT()
-  const minFee = areas.length ? Math.min(...areas.map((a) => a.fee)) : null
   const facts: Fact[] = []
-  if (minFee != null)
+  if (areas.length)
     facts.push({
       icon: <Truck size={18} strokeWidth={1.5} />,
-      text: minFee === 0 ? t('Free delivery in some areas') : t('Delivery from {fee}', { fee: tzs(minFee) }),
-      sub: t(areas.length === 1 ? '{n} area' : '{n} areas', { n: areas.length }),
+      text: t(areas.length === 1 ? 'Delivers to {n} area' : 'Delivers to {n} areas', { n: areas.length }),
+      sub: t('Fee agreed on WhatsApp'),
     })
   if (shop.lipa_number)
     facts.push({
