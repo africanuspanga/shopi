@@ -484,6 +484,15 @@ function Finale({ start, startLabel, signedIn }: { start: string; startLabel: st
               <ul className="mt-4 space-y-3 text-[15px] text-white/75">
                 <li>Driftmark Technologies Limited</li>
                 <li>Dar es Salaam, Tanzania</li>
+                <li>
+                  <Link to="/terms" className="transition-colors hover:text-white">
+                    {t('Terms')}
+                  </Link>
+                  <span className="text-white/30"> · </span>
+                  <Link to="/privacy" className="transition-colors hover:text-white">
+                    {t('Privacy')}
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>

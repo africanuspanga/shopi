@@ -12,10 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShopRouteRouteImport } from './routes/$shop/route'
 import { Route as AppRouteRouteImport } from './routes/app/route'
+import { Route as DataDeletionRouteImport } from './routes/data-deletion'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardRouteImport } from './routes/onboard'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ShopIndexRouteImport } from './routes/$shop/index'
 import { Route as ShopProductRouteImport } from './routes/$shop/$product'
 import { Route as ShopCheckoutRouteImport } from './routes/$shop/checkout'
@@ -50,6 +53,11 @@ const AppRouteRoute = AppRouteRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DataDeletionRoute = DataDeletionRouteImport.update({
+  id: '/data-deletion',
+  path: '/data-deletion',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -60,6 +68,11 @@ const OnboardRoute = OnboardRouteImport.update({
   path: '/onboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
@@ -68,6 +81,11 @@ const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShopIndexRoute = ShopIndexRouteImport.update({
@@ -165,10 +183,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$shop': typeof ShopRouteRouteWithChildren
   '/app': typeof AppRouteRouteWithChildren
+  '/data-deletion': typeof DataDeletionRoute
   '/login': typeof LoginRoute
   '/onboard': typeof OnboardRoute
+  '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
   '/$shop/$product': typeof ShopProductRoute
   '/$shop/checkout': typeof ShopCheckoutRoute
   '/api/e': typeof ApiERoute
@@ -190,10 +211,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/data-deletion': typeof DataDeletionRoute
   '/login': typeof LoginRoute
   '/onboard': typeof OnboardRoute
+  '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
   '/$shop/$product': typeof ShopProductRoute
   '/$shop/checkout': typeof ShopCheckoutRoute
   '/api/e': typeof ApiERoute
@@ -218,10 +242,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$shop': typeof ShopRouteRouteWithChildren
   '/app': typeof AppRouteRouteWithChildren
+  '/data-deletion': typeof DataDeletionRoute
   '/login': typeof LoginRoute
   '/onboard': typeof OnboardRoute
+  '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
   '/$shop/$product': typeof ShopProductRoute
   '/$shop/checkout': typeof ShopCheckoutRoute
   '/api/e': typeof ApiERoute
@@ -247,10 +274,13 @@ export interface FileRouteTypes {
     | '/'
     | '/$shop'
     | '/app'
+    | '/data-deletion'
     | '/login'
     | '/onboard'
+    | '/privacy'
     | '/robots.txt'
     | '/signup'
+    | '/terms'
     | '/$shop/$product'
     | '/$shop/checkout'
     | '/api/e'
@@ -272,10 +302,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/data-deletion'
     | '/login'
     | '/onboard'
+    | '/privacy'
     | '/robots.txt'
     | '/signup'
+    | '/terms'
     | '/$shop/$product'
     | '/$shop/checkout'
     | '/api/e'
@@ -299,10 +332,13 @@ export interface FileRouteTypes {
     | '/'
     | '/$shop'
     | '/app'
+    | '/data-deletion'
     | '/login'
     | '/onboard'
+    | '/privacy'
     | '/robots.txt'
     | '/signup'
+    | '/terms'
     | '/$shop/$product'
     | '/$shop/checkout'
     | '/api/e'
@@ -327,10 +363,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ShopRouteRoute: typeof ShopRouteRouteWithChildren
   AppRouteRoute: typeof AppRouteRouteWithChildren
+  DataDeletionRoute: typeof DataDeletionRoute
   LoginRoute: typeof LoginRoute
   OnboardRoute: typeof OnboardRoute
+  PrivacyRoute: typeof PrivacyRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SignupRoute: typeof SignupRoute
+  TermsRoute: typeof TermsRoute
   ApiERoute: typeof ApiERoute
   ApiExportRoute: typeof ApiExportRoute
   ApiUploadRoute: typeof ApiUploadRoute
@@ -361,6 +400,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/data-deletion': {
+      id: '/data-deletion'
+      path: '/data-deletion'
+      fullPath: '/data-deletion'
+      preLoaderRoute: typeof DataDeletionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -375,6 +421,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/robots.txt': {
       id: '/robots.txt'
       path: '/robots.txt'
@@ -387,6 +440,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$shop/': {
@@ -568,10 +628,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ShopRouteRoute: ShopRouteRouteWithChildren,
   AppRouteRoute: AppRouteRouteWithChildren,
+  DataDeletionRoute: DataDeletionRoute,
   LoginRoute: LoginRoute,
   OnboardRoute: OnboardRoute,
+  PrivacyRoute: PrivacyRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SignupRoute: SignupRoute,
+  TermsRoute: TermsRoute,
   ApiERoute: ApiERoute,
   ApiExportRoute: ApiExportRoute,
   ApiUploadRoute: ApiUploadRoute,

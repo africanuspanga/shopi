@@ -163,6 +163,12 @@ function Checkout() {
         <ShieldCheck size={15} strokeWidth={1.6} className="mt-0.5 shrink-0" />
         {t('You pay the seller directly. Shopi never holds your money.')}
       </p>
+      <p className="text-center text-[12px] leading-5 text-muted">
+        {t('Your details go to {shop} to deliver your order.', { shop: shop.name })}{' '}
+        <Link to="/privacy" className="underline decoration-line-strong underline-offset-4 hover:text-ink">
+          {t('Privacy')}
+        </Link>
+      </p>
     </div>
   )
 

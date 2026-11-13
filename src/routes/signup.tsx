@@ -62,6 +62,10 @@ function Signup() {
         <button className="btn btn-lg w-full" disabled={busy}>
           {busy ? t('Creating your account') : t('Continue')}
         </button>
+        <p className="text-[13px] leading-relaxed text-muted">
+          {t('By continuing you agree to the')} <TextLink to="/terms">{t('Terms')}</TextLink> {t('and')}{' '}
+          <TextLink to="/privacy">{t('Privacy')}</TextLink>.
+        </p>
       </form>
       <p className="mt-8 text-[14px] text-muted">
         {t('Already have a shop?')} <TextLink to="/login">{t('Log in')}</TextLink>
