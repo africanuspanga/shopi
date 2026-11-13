@@ -6,7 +6,7 @@ import { ProductPicker } from '#/components/product-picker'
 import { Empty, ErrorText, Field, Img, Page, TopBar } from '#/components/ui'
 import { createBagLink } from '#/lib/api/bags'
 import { listMyProducts, type ProductRow } from '#/lib/api/merchant'
-import { tzs } from '#/lib/format'
+import { priceOf, tzs } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
 export const Route = createFileRoute('/app/bags/new')({
@@ -93,7 +93,7 @@ function NewBag() {
                 <div className="card mt-3 divide-y divide-line overflow-hidden">
                   {lines.map((l) => {
                     const left = leftOf(l.product, l.size)
-                    const shopPrice = l.product.price
+                    const shopPrice = priceOf(l.product, l.size)
                     const changed = l.price !== '' && Number(l.price) !== shopPrice
                     return (
                       <div key={l.key} className="space-y-3 p-4">
@@ -113,7 +113,14 @@ function NewBag() {
                                 className="chip h-9 px-3"
                                 disabled={s.stock === 0}
                                 aria-pressed={l.size === s.label}
-                                onClick={() => update(l.key, { size: s.label, qty: s.stock != null ? Math.min(l.qty, s.stock) : l.qty })}
+                                onClick={() =>
+                                  update(l.key, {
+                                    size: s.label,
+                                    qty: s.stock != null ? Math.min(l.qty, s.stock) : l.qty,
+                                    // The price follows the option until the seller types one of their own.
+                                    price: l.price === String(priceOf(l.product, l.size)) ? String(priceOf(l.product, s.label)) : l.price,
+                                  })
+                                }
                               >
                                 {s.label}
                                 {s.stock != null && s.stock > 0 && <span className="text-[12px] opacity-60">{s.stock}</span>}
@@ -217,7 +224,8 @@ function NewBag() {
         onClose={() => setPicking(false)}
         onPick={(p) => {
           const open = p.sizes?.filter((s) => s.stock !== 0) ?? []
-          setLines([...lines, { key: Date.now() + Math.random(), product: p, size: open.length === 1 ? open[0].label : null, qty: 1, price: String(p.price) }])
+          const size = open.length === 1 ? open[0].label : null
+          setLines([...lines, { key: Date.now() + Math.random(), product: p, size, qty: 1, price: String(priceOf(p, size)) }])
           setPicking(false)
         }}
       />

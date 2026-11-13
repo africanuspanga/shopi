@@ -36,7 +36,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/components/shop-nav.tsx` | The storefront's capsule with its search and info sheets |
 | `src/components/not-found.tsx` | Not-found pages for missing shops, products and orders |
 | `src/components/share.tsx` | `ShareActions` (WhatsApp, copy link, native share) and `prettyUrl` |
-| `src/components/product-form.tsx` | New and edit product: photos, sizes editor, save guards, "send this product" |
+| `src/components/product-form.tsx` | New and edit product: photos, options editor (kind, stock, own price, own photo), save guards, "send this product" |
 | `src/components/auth.tsx` | `AuthLayout` (form left, dark product panel right), `StepBar`, `PasswordInput` |
 | `src/components/showcase.tsx` | Coded product previews for the landing and auth pages (phone, mini store, order card, payment slip) |
 | `src/components/brand-icons.tsx` | One-colour social icons, plus `WhatsAppMark` (WhatsApp's green mark) |
@@ -56,7 +56,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/lib/analytics.ts` | The buyer-side tracker: visitor ID, 30-minute visits, traffic source, `?s=` link tags, `track()` |
 | `src/routes/api/e.ts` | Receives analytics events (sendBeacon); drops bots, records device and city |
 | `src/routes/api/export.ts` | CSV downloads of orders and buyers for the logged-in seller |
-| `src/lib/format.ts` | `tzs()`, phone, slugs (`slugify`, `productSlug`), statuses, categories, size presets |
+| `src/lib/format.ts` | `tzs()`, phone, slugs (`slugify`, `productSlug`), statuses, categories, size presets, options (`priceOf`, `imageOf`, `OPTION_KINDS`) |
 | `design/brand/glyphs.py` | Source of the logo, app icon and favicon. Old boards are in `design/archive/`. |
 
 ## Design system
@@ -127,7 +127,7 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
   location, bio, WhatsApp, share, socials), `FactPills` on phones and a `ShopFacts` card on desktop, filter chips,
   2/3/4-column grid, `ShopFooter`. On phones the bag lives in the floating capsule (below).
 - **Product page:** swipe gallery with a photo counter on phones; a large photo with thumbnails on desktop;
-  size chips, a details table, a "Share with a friend" box, a sticky add bar on phones.
+  option chips (an option with its own photo brings it up), a details table, a "Share with a friend" box, a sticky add bar on phones.
 - **Checkout and order page:** sand page; on desktop a sticky right column holds the bag and the receipt.
 - **Seller app** (`/app`): sand page. Desktop has a 248px white sidebar (wordmark, shop card, nav, "Add product").
   On phones it uses the floating capsule (below): Home · Orders · **+** (add product) · Products · Shop, with an orange dot on Orders when
@@ -221,7 +221,14 @@ domain are lowercase.
   sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.
 - Order statuses: `awaiting_payment` → `payment_claimed` (buyer pasted an SMS) → `confirmed` → `dispatched` → `delivered`,
   or `cancelled`. Cash on delivery starts at `confirmed`. Stock is held on confirm and returned on cancel.
-- Products may have sizes (`[{label, stock}]`); then `stock` is their total. A size at 0 is sold out.
+- Products may have options, usually sizes (`sizes`: `[{label, stock, price?, image?}]`); then `stock` is their total and an
+  option at 0 is sold out. `parseSizes()` reads old `[{label, stock}]` the same. An option's own `price` replaces the product's
+  (`priceOf()`), and its own `image` (one of the product's photos) shows when it is chosen (`imageOf()`): the product page
+  scrolls to it, quick add swaps its thumbnail, and the order line keeps it. Before a choice, a product whose options cost
+  different amounts reads "From TSh …" (`priceSpan()`, `shownPrice()` in `shop.tsx`); the "was" price only ever shows at the
+  product's own price. `placeOrder` works the price out on the server. `products.option_name` says what buyers choose:
+  NULL (size), `colour`, `style`, `model` or `flavour` (`OPTION_KINDS`), so copy reads "Choose your colour" and lines read
+  "Colour Red" (`optionText()`); `order_items.option` keeps it on the order. `OptionChip` shows an option's photo in its chip.
 - Product links are `/<shop>/<slug>`. A slug is set once and kept on rename; `/<shop>/p/<id>` and `/<shop>/<id>` redirect (301).
   Words reserved for shop pages: `checkout`, `p`, `b`, `c`, `bag`, `cart`, `order`, `orders`, `about`.
 - Link previews: `og:image` and `og:url` are absolute, built from the request origin.

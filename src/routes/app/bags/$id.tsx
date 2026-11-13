@@ -6,7 +6,7 @@ import { ShareActions, prettyUrl } from '#/components/share'
 import { Img, Page, TopBar } from '#/components/ui'
 import { cancelBagLink, getMyBagLink } from '#/lib/api/bags'
 import { track } from '#/lib/analytics'
-import { timeAgo, tzs } from '#/lib/format'
+import { optionText, timeAgo, tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import { useOrigin } from '#/lib/share'
 
@@ -137,7 +137,7 @@ function BagDetail() {
                     <p className="mt-0.5 text-[13px] text-muted">
                       {l.size && (
                         <>
-                          <span className="font-medium text-ink">{t('Size {size}', { size: l.size })}</span>
+                          <span className="font-medium text-ink">{optionText(t, l.option, l.size)}</span>
                           {' · '}
                         </>
                       )}

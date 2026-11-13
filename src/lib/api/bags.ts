@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { requireShop } from '#/server/auth'
 import { BAG_DAYS, bagLines, bagState, cleanBagCode, parseBagItems, type BagItem, type BagLine, type BagRow, type BagState } from '#/server/bags'
 import { all, first, newId, now, run, shortCode } from '#/server/db'
-import { normalizePhone, parseSizes } from '#/lib/format'
+import { imageOf, normalizePhone, parseSizes } from '#/lib/format'
 
 export type { BagLine, BagState }
 
@@ -77,7 +77,7 @@ export const createBagLink = createServerFn({ method: 'POST' })
         qty: Math.min(99, Math.max(1, Math.round(Number(w.qty) || 1))),
         price: int(w.price),
         name: p.name,
-        image: (JSON.parse(p.images) as string[])[0] ?? null,
+        image: imageOf({ images: JSON.parse(p.images) as string[], sizes }, size?.label),
       })
     }
     if (!items.some((i) => i.price > 0)) return { error: 'price' as const }

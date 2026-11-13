@@ -3,17 +3,22 @@ import { Check, ImagePlus, Loader2, Plus, Trash2, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { ShareActions, prettyUrl } from '#/components/share'
 import { Tag } from '#/components/shop'
-import { ErrorText, Field, Img, Switch, Toast, TopBar } from '#/components/ui'
+import { ErrorText, Field, Img, Sheet, Switch, Toast, TopBar } from '#/components/ui'
 import { deleteProduct, saveProduct, type ProductRow } from '#/lib/api/merchant'
 import { track } from '#/lib/analytics'
-import { SIZE_PRESETS, tzs } from '#/lib/format'
+import { OPTION_KINDS, SIZE_PRESETS, optionKind, tzs, type OptionKind } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 import { uploadImage } from '#/lib/upload'
 import { useOrigin } from '#/lib/share'
 
 const MAX_PHOTOS = 6
 const FORM_ID = 'product-form'
-type SizeRow = { label: string; stock: string }
+/** One option as typed: stock and price as digits ('' = not counted / the product's price), image as a photo key ('' = none). */
+type SizeRow = { label: string; stock: string; price: string; image: string }
+const KINDS = Object.keys(OPTION_KINDS) as OptionKind[]
+/** What a seller might type for each kind, as a hint in the empty field. */
+const EXAMPLE: Record<OptionKind, string> = { size: 'M', colour: 'Red', style: 'Long sleeve', model: 'iPhone 13', flavour: 'Vanilla' }
+const blankRow = (): SizeRow => ({ label: '', stock: '', price: '', image: '' })
 
 function initial(product?: ProductRow) {
   return {
@@ -26,7 +31,10 @@ function initial(product?: ProductRow) {
       active: product ? !!product.active : true,
     },
     images: product?.images ?? [],
-    sizes: product?.sizes ? product.sizes.map((s) => ({ label: s.label, stock: s.stock == null ? '' : String(s.stock) })) : null,
+    sizes: product?.sizes
+      ? product.sizes.map((s) => ({ label: s.label, stock: s.stock == null ? '' : String(s.stock), price: s.price ? String(s.price) : '', image: s.image ?? '' }))
+      : null,
+    option: optionKind(product?.option_name),
   }
 }
 
@@ -38,6 +46,10 @@ export function ProductForm({ product, title, back }: { product?: ProductRow; ti
   const [form, setForm] = useState(start.current.form)
   const [images, setImages] = useState<string[]>(start.current.images)
   const [sizes, setSizes] = useState<SizeRow[] | null>(start.current.sizes)
+  const [option, setOption] = useState<OptionKind>(start.current.option)
+  // The option whose photo is being chosen.
+  const [photoFor, setPhotoFor] = useState<number | null>(null)
+  const kind = OPTION_KINDS[option]
   const [uploading, setUploading] = useState(0)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -47,7 +59,8 @@ export function ProductForm({ product, title, back }: { product?: ProductRow; ti
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value })
 
   const dirty =
-    JSON.stringify({ form, images, sizes }) !== JSON.stringify({ form: start.current.form, images: start.current.images, sizes: start.current.sizes }) || uploading > 0
+    JSON.stringify({ form, images, sizes, option }) !==
+      JSON.stringify({ form: start.current.form, images: start.current.images, sizes: start.current.sizes, option: start.current.option }) || uploading > 0
   useBlocker({
     shouldBlockFn: () => !leaving.current && dirty && !window.confirm(t('Leave without saving? Your changes to this product will be lost.')),
     enableBeforeUnload: () => !leaving.current && dirty,
@@ -77,7 +90,10 @@ export function ProductForm({ product, title, back }: { product?: ProductRow; ti
         ...form,
         id: product?.id,
         images,
-        sizes: sizes ? sizes.filter((s) => s.label.trim()).map((s) => ({ label: s.label.trim(), stock: s.stock })) : [],
+        sizes: sizes
+          ? sizes.filter((s) => s.label.trim()).map((s) => ({ label: s.label.trim(), stock: s.stock, price: s.price, image: images.includes(s.image) ? s.image : null }))
+          : [],
+        option_name: option,
       },
     })
     setBusy(false)
@@ -88,6 +104,7 @@ export function ProductForm({ product, title, back }: { product?: ProductRow; ti
       setForm(blank.form)
       setImages(blank.images)
       setSizes(blank.sizes)
+      setOption(blank.option)
       setSavedOne(true)
       setTimeout(() => setSavedOne(false), 2200)
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -137,7 +154,10 @@ export function ProductForm({ product, title, back }: { product?: ProductRow; ti
                   <button
                     type="button"
                     aria-label={t('Remove photo')}
-                    onClick={() => setImages(images.filter((x) => x !== k))}
+                    onClick={() => {
+                      setImages(images.filter((x) => x !== k))
+                      setSizes(sizes ? sizes.map((x) => (x.image === k ? { ...x, image: '' } : x)) : null)
+                    }}
                     className="absolute top-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-card/95 shadow-[0_1px_2px_rgb(10_10_10/0.15)] transition-colors hover:bg-card"
                   >
                     <X size={14} strokeWidth={2} />
@@ -193,63 +213,118 @@ export function ProductForm({ product, title, back }: { product?: ProductRow; ti
             </div>
           </Card>
 
-          <Card title={t('Sizes and stock')}>
+          <Card title={t('Options and stock')}>
             <Switch
-              label={t('This product comes in sizes')}
-              sub={t('Buyers pick a size before they order')}
+              label={t('Buyers choose an option')}
+              sub={t('A size, colour or style, each with its own stock, and its own price or photo if you like')}
               checked={!!sizes}
               onChange={(on) => setSizes(on ? (start.current.sizes?.length ? start.current.sizes : []) : null)}
             />
             {sizes ? (
               <div className="fade mt-5">
-                {sizes.length === 0 ? (
-                  <div>
+                <p className="label">{t('What buyers choose')}</p>
+                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t('What buyers choose')}>
+                  {KINDS.map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      role="radio"
+                      aria-checked={option === k}
+                      aria-pressed={option === k}
+                      className="chip"
+                      onClick={() => {
+                        setOption(k)
+                        if (k !== 'size' && sizes.length === 0) setSizes([blankRow()])
+                      }}
+                    >
+                      {t(OPTION_KINDS[k].label)}
+                    </button>
+                  ))}
+                </div>
+                {sizes.length === 0 && option !== 'size' ? (
+                  <button type="button" className="btn btn-quiet btn-sm mt-5" onClick={() => setSizes([blankRow()])}>
+                    <Plus size={15} strokeWidth={2} /> {t('Add an option')}
+                  </button>
+                ) : sizes.length === 0 ? (
+                  <div className="mt-5">
                     <p className="text-[14px] text-muted">{t('Start from a set')}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {SIZE_PRESETS.map((p) => (
-                        <button key={p.label} type="button" className="chip" onClick={() => setSizes(p.sizes.map((label) => ({ label, stock: '' })))}>
+                        <button key={p.label} type="button" className="chip" onClick={() => setSizes(p.sizes.map((label) => ({ ...blankRow(), label })))}>
                           {t(p.label)} <span className="text-muted">{p.sizes.length > 1 ? `${p.sizes[0]}–${p.sizes[p.sizes.length - 1]}` : p.sizes[0]}</span>
                         </button>
                       ))}
-                      <button type="button" className="chip" onClick={() => setSizes([{ label: '', stock: '' }])}>
+                      <button type="button" className="chip" onClick={() => setSizes([blankRow()])}>
                         <Plus size={14} strokeWidth={2} /> {t('My own')}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div>
-                    <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-x-3 px-1 pb-2 text-[13px] text-muted">
-                      <span>{t('Size')}</span>
-                      <span>{t('In stock')}</span>
+                  <div className="mt-5">
+                    <div className="space-y-3">
+                      {sizes.map((s, i) => {
+                        const setRow = (patch: Partial<SizeRow>) => setSizes(sizes.map((x, j) => (j === i ? { ...x, ...patch } : x)))
+                        const withPhotos = images.length >= 2
+                        return (
+                          <div
+                            key={i}
+                            className={`grid items-center gap-x-3 gap-y-2 ${withPhotos ? 'grid-cols-[44px_minmax(0,1fr)_40px] sm:grid-cols-[44px_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1.2fr)_40px]' : 'grid-cols-[minmax(0,1fr)_40px] sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1.2fr)_40px]'}`}
+                          >
+                            {withPhotos && (
+                              <button
+                                type="button"
+                                aria-label={s.image ? t('Change the photo for {option}', { option: s.label || t(kind.label) }) : t('Choose a photo for {option}', { option: s.label || t(kind.label) })}
+                                onClick={() => setPhotoFor(i)}
+                                className={`row-span-2 h-11 w-11 self-start overflow-hidden rounded-[12px] transition-colors sm:order-1 sm:row-span-1 ${s.image && images.includes(s.image) ? '' : 'flex items-center justify-center border border-dashed border-line-strong text-faint hover:border-ink hover:text-ink'}`}
+                              >
+                                {s.image && images.includes(s.image) ? <Img size="thumb" k={s.image} alt="" className="h-full w-full" /> : <ImagePlus size={17} strokeWidth={1.5} />}
+                              </button>
+                            )}
+                            <input
+                              className="input h-11 sm:order-2"
+                              value={s.label}
+                              aria-label={t(kind.label)}
+                              placeholder={EXAMPLE[option]}
+                              onChange={(e) => setRow({ label: e.target.value })}
+                            />
+                            <button type="button" className="icon-btn sm:order-5" aria-label={t('Remove option')} onClick={() => setSizes(sizes.filter((_, j) => j !== i))}>
+                              <X size={16} strokeWidth={1.75} />
+                            </button>
+                            <div className="col-span-2 grid grid-cols-2 gap-2 sm:contents">
+                              <label className="input flex h-11 items-center gap-2 px-3 sm:order-3">
+                                <span className="shrink-0 text-[13px] text-muted">{t('Stock')}</span>
+                                <input
+                                  className="tnum min-w-0 flex-1 bg-transparent text-right outline-none"
+                                  inputMode="numeric"
+                                  value={s.stock}
+                                  aria-label={t('In stock')}
+                                  placeholder={t('Any')}
+                                  onChange={(e) => setRow({ stock: e.target.value.replace(/\D/g, '') })}
+                                />
+                              </label>
+                              <label className="input flex h-11 items-center gap-2 px-3 sm:order-4">
+                                <span className="shrink-0 text-[13px] text-muted">TSh</span>
+                                <input
+                                  className="tnum min-w-0 flex-1 bg-transparent text-right outline-none"
+                                  inputMode="numeric"
+                                  value={s.price ? Number(s.price).toLocaleString('en-US') : ''}
+                                  aria-label={t('Price for {option}', { option: s.label || t(kind.label) })}
+                                  placeholder={price ? price.toLocaleString('en-US') : t('Price')}
+                                  onChange={(e) => setRow({ price: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
-                    <div className="space-y-2">
-                      {sizes.map((s, i) => (
-                        <div key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] items-center gap-x-3">
-                          <input
-                            className="input h-11"
-                            value={s.label}
-                            aria-label={t('Size')}
-                            placeholder="M"
-                            onChange={(e) => setSizes(sizes.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
-                          />
-                          <input
-                            className="input tnum h-11"
-                            inputMode="numeric"
-                            value={s.stock}
-                            aria-label={t('In stock')}
-                            placeholder={t('Not counted')}
-                            onChange={(e) => setSizes(sizes.map((x, j) => (j === i ? { ...x, stock: e.target.value.replace(/\D/g, '') } : x)))}
-                          />
-                          <button type="button" className="icon-btn" aria-label={t('Remove size')} onClick={() => setSizes(sizes.filter((_, j) => j !== i))}>
-                            <X size={16} strokeWidth={1.75} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <button type="button" className="btn btn-quiet btn-sm mt-3" onClick={() => setSizes([...sizes, { label: '', stock: '' }])}>
-                      <Plus size={15} strokeWidth={2} /> {t('Add a size')}
+                    <button type="button" className="btn btn-quiet btn-sm mt-3" onClick={() => setSizes([...sizes, blankRow()])}>
+                      <Plus size={15} strokeWidth={2} /> {t('Add an option')}
                     </button>
-                    <p className="hint">{t('Leave stock empty for sizes you do not count. A size at 0 shows as sold out.')}</p>
+                    <p className="hint">
+                      {t('Stock left empty is not counted; at 0 an option shows as sold out. A price left empty is the product’s price.')}
+                      {images.length >= 2 ? ` ${t('Give an option a photo and it shows when buyers choose it.')}` : ''}
+                    </p>
                   </div>
                 )}
               </div>
@@ -331,6 +406,47 @@ export function ProductForm({ product, title, back }: { product?: ProductRow; ti
       <Toast show={savedOne}>
         <Check size={16} strokeWidth={2.25} /> {t('Saved. Add the next one')}
       </Toast>
+      <Sheet
+        open={photoFor != null && !!sizes?.[photoFor]}
+        onClose={() => setPhotoFor(null)}
+        title={t('Photo for {option}', { option: (photoFor != null && sizes?.[photoFor]?.label) || t(kind.label) })}
+      >
+        <p className="-mt-1 mb-4 text-[14px] text-muted">{t('Buyers see it when they choose this option.')}</p>
+        <div className="grid grid-cols-3 gap-2">
+          {images.map((k) => {
+            const on = photoFor != null && sizes?.[photoFor]?.image === k
+            return (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={on}
+                className={`relative overflow-hidden rounded-[12px] transition-shadow ${on ? 'shadow-[0_0_0_2px_var(--color-ink)]' : ''}`}
+                onClick={() => {
+                  if (sizes && photoFor != null) setSizes(sizes.map((x, j) => (j === photoFor ? { ...x, image: k } : x)))
+                  setPhotoFor(null)
+                }}
+              >
+                <Img size="thumb" k={k} alt="" className="aspect-[4/5] w-full" />
+                {on && (
+                  <span className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-white">
+                    <Check size={13} strokeWidth={3} />
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+        <button
+          type="button"
+          className="btn btn-ghost mt-4 w-full"
+          onClick={() => {
+            if (sizes && photoFor != null) setSizes(sizes.map((x, j) => (j === photoFor ? { ...x, image: '' } : x)))
+            setPhotoFor(null)
+          }}
+        >
+          {t('No photo of its own')}
+        </button>
+      </Sheet>
     </>
   )
 }

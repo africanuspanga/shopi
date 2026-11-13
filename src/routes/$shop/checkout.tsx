@@ -3,6 +3,7 @@ import { ShoppingBag } from 'lucide-react'
 import { CheckoutHeader, CheckoutView, type CheckoutLine } from '#/components/checkout'
 import { Empty } from '#/components/ui'
 import { useCart } from '#/lib/cart'
+import { imageOf, priceOf } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
 export const Route = createFileRoute('/$shop/checkout')({ component: Checkout })
@@ -21,10 +22,11 @@ function Checkout() {
         key: l.line,
         productId: p.id,
         name: p.name,
-        image: p.images[0] ?? null,
+        image: imageOf(p, l.size),
         size: l.size,
+        option: p.option_name,
         qty: l.qty,
-        price: p.price,
+        price: priceOf(p, l.size),
         left: l.size ? (p.sizes?.find((s) => s.label === l.size)?.stock ?? null) : p.stock,
       },
     ]

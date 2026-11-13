@@ -154,18 +154,61 @@ export const STATUS_LABEL: Record<OrderStatus, { label: string; tone: string }> 
   cancelled: { label: msg('Cancelled'), tone: 'bad' },
 }
 
-/** One option per product, usually sizes. stock null means "not counted". */
-export type Size = { label: string; stock: number | null }
+/**
+ * One option per product, usually sizes. stock null means "not counted". An option may have its own price (it replaces the
+ * product's) and its own photo (one of the product's photos).
+ */
+export type Size = { label: string; stock: number | null; price?: number; image?: string }
 
+/** Options from the database. Older options have only label and stock, and read the same. */
 export function parseSizes(raw: string | null | undefined): Size[] | null {
   if (!raw) return null
   try {
-    const list = JSON.parse(raw) as Size[]
-    return Array.isArray(list) && list.length ? list : null
+    const list = JSON.parse(raw) as Partial<Size>[]
+    if (!Array.isArray(list) || !list.length) return null
+    return list.map((o) => ({
+      label: String(o.label ?? ''),
+      stock: o.stock == null ? null : Number(o.stock),
+      ...(Number(o.price) > 0 ? { price: Math.round(Number(o.price)) } : {}),
+      ...(typeof o.image === 'string' && o.image ? { image: o.image } : {}),
+    }))
   } catch {
     return null
   }
 }
+
+/** The price of one piece: the option's own price when it has one, else the product's. */
+export function priceOf(p: { price: number; sizes: Size[] | null }, size: string | null | undefined) {
+  return (size ? p.sizes?.find((s) => s.label === size)?.price : undefined) || p.price
+}
+
+/** The photo that shows a choice: the option's own photo when it has one, else the product's main photo. */
+export function imageOf(p: { images: string[]; sizes: Size[] | null }, size: string | null | undefined) {
+  return (size ? p.sizes?.find((s) => s.label === size)?.image : undefined) || p.images[0] || null
+}
+
+/** The lowest and highest price of one piece, over the options still in stock (all of them once all are sold out). */
+export function priceSpan(p: { price: number; sizes: Size[] | null }) {
+  const open = p.sizes?.filter((s) => s.stock !== 0)
+  const list = open?.length ? open : p.sizes
+  const prices = list?.length ? list.map((s) => s.price || p.price) : [p.price]
+  return { min: Math.min(...prices), max: Math.max(...prices) }
+}
+
+/** What buyers choose on a product. The database keeps NULL for size. */
+export type OptionKind = 'size' | 'colour' | 'style' | 'model' | 'flavour'
+export const OPTION_KINDS: Record<OptionKind, { label: string; choose: string; named: string }> = {
+  size: { label: msg('Size'), choose: msg('Choose your size'), named: msg('Size {value}') },
+  colour: { label: msg('Colour'), choose: msg('Choose your colour'), named: msg('Colour {value}') },
+  style: { label: msg('Style'), choose: msg('Choose your style'), named: msg('Style {value}') },
+  model: { label: msg('Model'), choose: msg('Choose your model'), named: msg('Model {value}') },
+  flavour: { label: msg('Flavour'), choose: msg('Choose your flavour'), named: msg('Flavour {value}') },
+}
+export const optionKind = (v: unknown): OptionKind => (typeof v === 'string' && v in OPTION_KINDS ? (v as OptionKind) : 'size')
+
+type T = (en: string, vars?: Record<string, string | number>) => string
+/** "Size M", "Colour Red": a chosen option in words. Pass the page's t(). */
+export const optionText = (t: T, kind: unknown, value: string) => t(OPTION_KINDS[optionKind(kind)].named, { value })
 
 /** Common size runs, offered as one tap when adding a product. */
 export const SIZE_PRESETS: { label: string; sizes: string[] }[] = [

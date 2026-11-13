@@ -5,7 +5,7 @@ import { WhatsAppMark } from '#/components/brand-icons'
 import { MadeWithShopi } from '#/components/shop'
 import { ErrorText, Img, LangSwitch, ShopAvatar } from '#/components/ui'
 import { getTrackedOrder, submitPaymentSms } from '#/lib/api/store'
-import { timeAgo, tzs, waLink, type OrderStatus, formatTin } from '#/lib/format'
+import { optionText, timeAgo, tzs, waLink, type OrderStatus, formatTin } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import { shareLink, useOrigin } from '#/lib/share'
 import { drawReceipt } from '#/lib/receipt-image'
@@ -46,7 +46,7 @@ function Track() {
   const needsPayment = lipa && o.status === 'awaiting_payment'
   const orderText = [
     t('Hi {shop}, I placed order #{code}', { shop: o.shop.name, code: o.code }),
-    ...o.lines.map((l) => `• ${l.qty} × ${l.name}${l.variant ? ` (${l.variant})` : ''}`),
+    ...o.lines.map((l) => `• ${l.qty} × ${l.name}${l.variant ? ` (${optionText(t, l.option, l.variant)})` : ''}`),
     `${t('Total')}: ${tzs(o.total)}`,
     `${origin}/o/${o.code}`,
   ].join('\n')
@@ -82,7 +82,7 @@ function Track() {
       date: when,
       lines: o.lines.map((l) => ({
         name: l.name,
-        detail: `${l.qty} × ${tzs(l.price)}${l.variant ? ` · ${t('Size {size}', { size: l.variant })}` : ''}`,
+        detail: `${l.qty} × ${tzs(l.price)}${l.variant ? ` · ${optionText(t, l.option, l.variant)}` : ''}`,
         amount: l.qty * l.price,
       })),
       rows: [
@@ -276,7 +276,7 @@ function Track() {
                     <p className="truncate text-[14px]">{l.name}</p>
                     <p className="text-[13px] text-muted">
                       {l.qty} × <span className="tnum">{tzs(l.price)}</span>
-                      {l.variant ? ` · ${t('Size {size}', { size: l.variant })}` : ''}
+                      {l.variant ? ` · ${optionText(t, l.option, l.variant)}` : ''}
                     </p>
                   </div>
                   <p className="font-mono text-[13px]">{tzs(l.qty * l.price)}</p>

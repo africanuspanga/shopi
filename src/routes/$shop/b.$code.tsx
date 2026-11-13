@@ -68,6 +68,7 @@ function BagPage() {
     name: l.name,
     image: l.image,
     size: l.size,
+    option: l.option,
     qty: l.qty,
     price: l.price,
     left: null,

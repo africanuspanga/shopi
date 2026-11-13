@@ -3,7 +3,7 @@ import { shopPlan } from '#/server/plan'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequestUrl } from '@tanstack/react-start/server'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
-import { normalizePhone, parseSizes, type OrderStatus, type Size } from '#/lib/format'
+import { imageOf, normalizePhone, optionKind, parseSizes, priceOf, type OrderStatus, type Size } from '#/lib/format'
 import { moveStock } from '#/server/stock'
 import { openBag } from '#/server/bags'
 import { liveDiscount } from '#/server/discounts'
@@ -44,6 +44,8 @@ export type PublicProduct = {
   compare_price: number | null
   stock: number | null
   sizes: Size[] | null
+  /** What buyers choose: NULL for size, or 'colour', 'style', 'model', 'flavour' (see OPTION_KINDS). */
+  option_name: string | null
   images: string[]
   created_at: number
 }
@@ -61,7 +63,7 @@ export const getStorefront = createServerFn({ method: 'GET' })
     if (!shop) return null
     const [products, areas, discount, collections, members] = await Promise.all([
       all<Omit<PublicProduct, 'images' | 'sizes'> & { images: string; sizes: string | null }>(
-        `SELECT id, slug, name, description, price, compare_price, stock, sizes, images, created_at FROM products
+        `SELECT id, slug, name, description, price, compare_price, stock, sizes, option_name, images, created_at FROM products
          WHERE shop_id = ? AND active = 1 ORDER BY created_at DESC`,
         shop.id,
       ),
@@ -138,8 +140,8 @@ export const placeOrder = createServerFn({ method: 'POST' })
       : (data.items ?? []).filter((i) => i.qty > 0).slice(0, 30)
     if (!wanted.length) return { error: 'empty' as const }
     const ids = [...new Set(wanted.map((i) => String(i.productId)))]
-    const products = await all<{ id: string; name: string; price: number; stock: number | null; sizes: string | null; images: string }>(
-      `SELECT id, name, price, stock, sizes, images FROM products WHERE shop_id = ? ${bag ? '' : 'AND active = 1'}
+    const products = await all<{ id: string; name: string; price: number; stock: number | null; sizes: string | null; option_name: string | null; images: string }>(
+      `SELECT id, name, price, stock, sizes, option_name, images FROM products WHERE shop_id = ? ${bag ? '' : 'AND active = 1'}
        AND id IN (${ids.map(() => '?').join(',')})`,
       shop.id,
       ...ids,
@@ -158,7 +160,17 @@ export const placeOrder = createServerFn({ method: 'POST' })
       taken.set(key, (taken.get(key) ?? 0) + qty)
       const left = size ? size.stock : p.stock
       if (left != null && left < taken.get(key)!) return { error: 'stock' as const, product: size ? `${p.name} (${size.label})` : p.name }
-      lines.push({ p, qty, variant: size?.label ?? null, price: bag && item.price != null ? item.price : p.price })
+      // The price is worked out here, never taken from the browser: a bag link's price is the seller's, else the option's own
+      // price or the product's. The line keeps the option's photo and kind ("Colour Red").
+      const product = { price: p.price, sizes, images: JSON.parse(p.images) as string[] }
+      lines.push({
+        p,
+        qty,
+        variant: size?.label ?? null,
+        option: size && optionKind(p.option_name) !== 'size' ? optionKind(p.option_name) : null,
+        price: bag && item.price != null ? item.price : priceOf(product, size?.label),
+        image: imageOf(product, size?.label),
+      })
     }
     // Delivery fees stay out of Shopi: buyer and seller agree them on WhatsApp.
     // The buyer picks one of the shop's areas, or writes their own.
@@ -217,8 +229,8 @@ export const placeOrder = createServerFn({ method: 'POST' })
           ),
         ...lines.map((l) =>
           db()
-            .prepare('INSERT INTO order_items (order_id, product_id, name, price, qty, image, variant) VALUES (?, ?, ?, ?, ?, ?, ?)')
-            .bind(id, l.p.id, l.p.name, l.price, l.qty, (JSON.parse(l.p.images) as string[])[0] ?? null, l.variant),
+            .prepare('INSERT INTO order_items (order_id, product_id, name, price, qty, image, variant, option) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+            .bind(id, l.p.id, l.p.name, l.price, l.qty, l.image, l.variant, l.option),
         ),
       ])
     } catch (e) {
@@ -249,7 +261,8 @@ export type TrackedOrder = {
   payment_check: string | null
   created_at: number
   shop: { id: string; slug: string; name: string; logo_key: string | null; whatsapp: string; lipa_number: string; lipa_name: string; lipa_network: string; tin: string }
-  lines: { name: string; price: number; qty: number; image: string | null; variant: string | null }[]
+  /** option: the kind of option on the line (see OPTION_KINDS); null means size. */
+  lines: { name: string; price: number; qty: number; image: string | null; variant: string | null; option: string | null }[]
 }
 
 export const getTrackedOrder = createServerFn({ method: 'GET' })
@@ -266,7 +279,7 @@ export const getTrackedOrder = createServerFn({ method: 'GET' })
         'SELECT id, slug, name, logo_key, whatsapp, lipa_number, lipa_name, lipa_network, tin FROM shops WHERE id = ?',
         order.shop_id,
       ),
-      all<TrackedOrder['lines'][number]>('SELECT name, price, qty, image, variant FROM order_items WHERE order_id = ?', order.id),
+      all<TrackedOrder['lines'][number]>('SELECT name, price, qty, image, variant, option FROM order_items WHERE order_id = ?', order.id),
     ])
     const { id: _id, shop_id: _s, ...rest } = order
     return { ...rest, shop: shop!, lines } as TrackedOrder

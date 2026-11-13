@@ -3,7 +3,7 @@ import { Info, Search, Share2, ShoppingBag, Store } from 'lucide-react'
 import { useState } from 'react'
 import { WhatsAppIcon } from '#/components/brand-icons'
 import { FloatingNav, NavCenter, NavCount, NavTab } from '#/components/floating-nav'
-import { Price, ShopFacts, SocialLinks, onSale, Tag, discount } from '#/components/shop'
+import { Price, ShopFacts, SocialLinks, onSale, Tag, discount, shownPrice } from '#/components/shop'
 import { Img, Sheet, ShopAvatar } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
@@ -102,7 +102,7 @@ function SearchSheet({ open, onClose, shop, products }: { open: boolean; onClose
                 <Img size="thumb" k={p.images[0]} alt={p.name} className="h-16 w-[52px] shrink-0 rounded-[10px]" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px]">{p.name}</span>
-                  <Price p={p} />
+                  <Price p={shownPrice(p)} />
                 </span>
                 {p.stock === 0 ? <Tag>{t('Sold out')}</Tag> : onSale(p) ? <Tag hot>−{discount(p)}%</Tag> : null}
               </Link>

@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { Img, Page, StatusPill, TopBar } from '#/components/ui'
 import { getOrder, setOrderStatus } from '#/lib/api/merchant'
-import { timeAgo, tzs, waLink, type OrderStatus, PAYMENT_LABEL } from '#/lib/format'
+import { optionText, timeAgo, tzs, waLink, type OrderStatus, PAYMENT_LABEL } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import type { PaymentCheck } from '#/lib/payment-sms'
 import { useOrigin } from '#/lib/share'
@@ -189,7 +189,7 @@ function OrderDetail() {
                     <p className="mt-0.5 text-[13px] text-muted">
                       {l.variant && (
                         <>
-                          <span className="font-medium text-ink">{t('Size {size}', { size: l.variant })}</span>
+                          <span className="font-medium text-ink">{optionText(t, l.option, l.variant)}</span>
                           {' · '}
                         </>
                       )}

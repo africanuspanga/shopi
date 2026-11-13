@@ -8,8 +8,8 @@ export const BAG_DAYS = 7
 export type BagItem = { productId: string; size: string | null; qty: number; price: number; name: string; image: string | null }
 /** open: waiting for the buyer. used: it became an order. cancelled: by the seller. expired: 7 days passed. */
 export type BagState = 'open' | 'used' | 'cancelled' | 'expired'
-/** A line with the product as it is now, and why it can't be ordered when it can't. */
-export type BagLine = BagItem & { problem: 'gone' | 'size' | 'stock' | null }
+/** A line with the product as it is now (`option`: what its options are, see OPTION_KINDS), and why it can't be ordered. */
+export type BagLine = BagItem & { problem: 'gone' | 'size' | 'stock' | null; option: string | null }
 
 export type BagRow = {
   id: string
@@ -59,8 +59,8 @@ export async function openBag(shopId: string, code: string) {
 export async function bagLines(shopId: string, items: BagItem[]): Promise<BagLine[]> {
   const ids = [...new Set(items.map((i) => i.productId))]
   const products = ids.length
-    ? await all<{ id: string; name: string; stock: number | null; sizes: string | null }>(
-        `SELECT id, name, stock, sizes FROM products WHERE shop_id = ? AND id IN (${ids.map(() => '?').join(',')})`,
+    ? await all<{ id: string; name: string; stock: number | null; sizes: string | null; option_name: string | null }>(
+        `SELECT id, name, stock, sizes, option_name FROM products WHERE shop_id = ? AND id IN (${ids.map(() => '?').join(',')})`,
         shopId,
         ...ids,
       )
@@ -69,11 +69,12 @@ export async function bagLines(shopId: string, items: BagItem[]): Promise<BagLin
   for (const i of items) want.set(`${i.productId}|${i.size ?? ''}`, (want.get(`${i.productId}|${i.size ?? ''}`) ?? 0) + i.qty)
   return items.map((i): BagLine => {
     const p = products.find((x) => x.id === i.productId)
-    if (!p) return { ...i, problem: 'gone' }
+    if (!p) return { ...i, problem: 'gone', option: null }
     const sizes = parseSizes(p.sizes)
     const size = sizes && i.size ? sizes.find((s) => s.label === i.size) : null
-    if (sizes && !size) return { ...i, name: p.name, problem: 'size' }
+    if (sizes && !size) return { ...i, name: p.name, problem: 'size', option: p.option_name }
     const left = size ? size.stock : p.stock
-    return { ...i, name: p.name, problem: left != null && left < (want.get(`${i.productId}|${i.size ?? ''}`) ?? i.qty) ? 'stock' : null }
+    const short = left != null && left < (want.get(`${i.productId}|${i.size ?? ''}`) ?? i.qty)
+    return { ...i, name: p.name, problem: short ? 'stock' : null, option: p.option_name }
   })
 }

@@ -6,22 +6,70 @@ import { Img, Sheet, ShopAvatar, Toast, Wordmark } from '#/components/ui'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
 import { track } from '#/lib/analytics'
 import { lineKey, type Cart } from '#/lib/cart'
-import { tzs, waLink, formatTin } from '#/lib/format'
+import { OPTION_KINDS, imageOf, optionKind, optionText, priceOf, priceSpan, tzs, waLink, formatTin, type Size } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
-export const onSale = (p: Pick<PublicProduct, 'price' | 'compare_price'>) => !!p.compare_price && p.compare_price > p.price
-export const discount = (p: Pick<PublicProduct, 'price' | 'compare_price'>) => Math.round((1 - p.price / (p.compare_price || p.price)) * 100)
+type Priced = Pick<PublicProduct, 'price' | 'compare_price'> & { sizes?: Size[] | null }
+
+/**
+ * The price to show: the chosen option's, or, before a choice, the lowest with "From" when options cost different amounts.
+ * The "was" price belongs to the product's own price, so an option with a price of its own never shows one.
+ */
+export function shownPrice(p: Priced, size?: string | null) {
+  const sizes = p.sizes ?? null
+  const was = (price: number) => (price === p.price && p.compare_price && p.compare_price > price ? p.compare_price : null)
+  if (size) {
+    const price = priceOf({ price: p.price, sizes }, size)
+    return { price, compare_price: was(price), from: false }
+  }
+  const { min, max } = priceSpan({ price: p.price, sizes })
+  return { price: min, compare_price: min === max ? was(min) : null, from: min !== max }
+}
+export const onSale = (p: Priced) => !!shownPrice(p).compare_price
+export const discount = (p: Priced) => {
+  const s = shownPrice(p)
+  return Math.round((1 - s.price / (s.compare_price || s.price)) * 100)
+}
 
 /** Sizes still in stock, in the order the seller set them. */
 const sizesLeft = (p: PublicProduct) => (p.sizes ?? []).filter((s) => s.stock == null || s.stock > 0)
 
-export function Price({ p, size = 'sm' }: { p: Pick<PublicProduct, 'price' | 'compare_price'>; size?: 'sm' | 'lg' }) {
-  const sale = onSale(p)
+export function Price({ p, size = 'sm' }: { p: { price: number; compare_price: number | null; from?: boolean }; size?: 'sm' | 'lg' }) {
+  const t = useT()
+  const was = !p.from && p.compare_price && p.compare_price > p.price
   return (
     <p className={`tnum flex flex-wrap items-baseline gap-x-2 ${size === 'lg' ? 'text-[22px] font-medium tracking-[-0.01em]' : 'text-[14px] font-medium'}`}>
-      <span>{tzs(p.price)}</span>
-      {sale && <span className={`font-normal text-muted line-through ${size === 'lg' ? 'text-[16px]' : 'text-[13px]'}`}>{tzs(p.compare_price!)}</span>}
+      <span>{p.from ? t('From {price}', { price: tzs(p.price) }) : tzs(p.price)}</span>
+      {was && <span className={`font-normal text-muted line-through ${size === 'lg' ? 'text-[16px]' : 'text-[13px]'}`}>{tzs(p.compare_price!)}</span>}
     </p>
+  )
+}
+
+/** A choice chip: the option's own photo in a circle when it has one. */
+export function OptionChip({
+  option,
+  selected,
+  disabled,
+  onClick,
+  className = '',
+}: {
+  option: Size
+  selected: boolean
+  disabled?: boolean
+  onClick: () => void
+  className?: string
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      aria-pressed={selected}
+      onClick={onClick}
+      className={`chip tnum h-11 min-w-14 justify-center text-[14px] ${option.image ? 'pr-4 pl-1.5' : 'px-4'} ${className}`}
+    >
+      {option.image && <Img size="thumb" k={option.image} alt="" className="h-8 w-8 rounded-full" />}
+      {option.label}
+    </button>
   )
 }
 
@@ -94,7 +142,7 @@ export function ProductCard({
         <div className="mt-3 px-0.5">
           <p className="line-clamp-1 text-[14px] leading-5">{p.name}</p>
           <div className="mt-0.5">
-            <Price p={p} />
+            <Price p={shownPrice(p)} />
           </div>
           {p.sizes && !soldOut && <p className="meta mt-1 line-clamp-1">{left.map((s) => s.label).join(' · ')}</p>}
         </div>
@@ -122,14 +170,15 @@ export function QuickAddSheet({ shopSlug, p, onClose, onAdd }: { shopSlug: strin
   if (!p) return null
   const chosen = p.sizes?.find((s) => s.label === size)
   const low = chosen?.stock != null && chosen.stock > 0 && chosen.stock <= 3
+  const kind = OPTION_KINDS[optionKind(p.option_name)]
   return (
     <Sheet open onClose={onClose} title={t('Add to bag')}>
       <div className="flex gap-4">
-        <Img k={p.images[0]} size="thumb" alt={p.name} className="h-[100px] w-20 shrink-0 rounded-[12px]" />
+        <Img k={imageOf(p, chosen?.label)} size="thumb" alt={p.name} className="h-[100px] w-20 shrink-0 rounded-[12px]" />
         <div className="min-w-0 py-1">
           <p className="truncate text-[16px] font-medium">{p.name}</p>
           <div className="mt-1">
-            <Price p={p} />
+            <Price p={shownPrice(p, chosen?.label)} />
           </div>
           <Link to="/$shop/$product" params={{ shop: shopSlug, product: p.slug ?? p.id }} className="mt-2 inline-block text-[13px] text-muted underline decoration-line-strong underline-offset-4 hover:text-ink">
             {t('See photos and details')}
@@ -139,20 +188,18 @@ export function QuickAddSheet({ shopSlug, p, onClose, onAdd }: { shopSlug: strin
       {p.sizes && (
         <div className="mt-6">
           <div className="mb-3 flex items-baseline justify-between">
-            <p className="text-[14px] font-medium">{chosen ? t('Size {size}', { size: chosen.label }) : t('Choose a size')}</p>
+            <p className="text-[14px] font-medium">{chosen ? optionText(t, p.option_name, chosen.label) : t(kind.choose)}</p>
             {low && <p className="text-[13px] text-moto-ink">{t('Only {n} left', { n: chosen!.stock! })}</p>}
           </div>
           <div className="flex flex-wrap gap-2">
             {p.sizes.map((s) => (
-              <button key={s.label} type="button" disabled={s.stock === 0} aria-pressed={size === s.label} onClick={() => setSize(s.label)} className="chip h-11 min-w-14 justify-center px-4">
-                {s.label}
-              </button>
+              <OptionChip key={s.label} option={s} disabled={s.stock === 0} selected={size === s.label} onClick={() => setSize(s.label)} />
             ))}
           </div>
         </div>
       )}
       <button type="button" className="btn btn-lg mt-6 w-full" disabled={!!p.sizes && !chosen} onClick={() => onAdd(chosen?.label ?? null)}>
-        {p.sizes && !chosen ? t('Choose a size first') : t('Add to bag')}
+        {p.sizes && !chosen ? t(kind.choose) : t('Add to bag')}
       </button>
     </Sheet>
   )
@@ -172,7 +219,7 @@ export function ProductGrid({ shop, products, cart }: { shop: Pick<PublicShop, '
     cart.add(lineKey(p.id, size))
     track('add_to_cart', { shopId: shop.id, productId: p.id, detail: 'quick' })
     setQuick(null)
-    setAdded(size ? t('{name}, size {size}, is in your bag', { name: p.name, size }) : t('{name} is in your bag', { name: p.name }))
+    setAdded(size ? t('{name} ({option}) is in your bag', { name: p.name, option: optionText(t, p.option_name, size) }) : t('{name} is in your bag', { name: p.name }))
     setTimeout(() => setAdded(''), 2200)
   }
 

@@ -3,12 +3,12 @@ import { ArrowLeft, Check, Minus, Plus, Share2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { ShareActions } from '#/components/share'
-import { BagButton, Price, ProductCard, ShopFooter, ShopTopBar, Tag, discount, onSale } from '#/components/shop'
+import { BagButton, OptionChip, Price, ProductCard, ShopFooter, ShopTopBar, Tag, shownPrice } from '#/components/shop'
 import { NotFound } from '#/components/not-found'
 import { Img, Toast } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import { lineKey, useCart } from '#/lib/cart'
-import { imgUrl, tzs, waLink } from '#/lib/format'
+import { OPTION_KINDS, imgUrl, optionKind, optionText, priceOf, tzs, waLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 import { shareLink, useOrigin } from '#/lib/share'
 
@@ -82,7 +82,15 @@ function ProductPage() {
   const max = left ?? 99
   const images = p.images.length ? p.images : [null]
   const more = products.filter((x) => x.id !== p.id && x.stock !== 0).slice(0, 4)
-  const bagTotal = cart.lines.reduce((s, l) => s + (products.find((x) => x.id === l.productId)?.price ?? 0) * l.qty, 0)
+  const bagTotal = cart.lines.reduce((s, l) => {
+    const x = products.find((y) => y.id === l.productId)
+    return s + (x ? priceOf(x, l.size) : 0) * l.qty
+  }, 0)
+  // Options may cost different amounts: before a choice the price reads "From", after it the option's own.
+  const kind = OPTION_KINDS[optionKind(p.option_name)]
+  const shown = shownPrice(p, chosen?.label)
+  const sale = !!shown.compare_price
+  const unit = shown.price
   const pay = [shop.lipa_number && t('Mobile money'), shop.cod_enabled && t('Cash on delivery')].filter(Boolean).join(', ')
   const lowStock = left != null && left > 0 && left <= 3
 
@@ -104,6 +112,17 @@ function ProductPage() {
       setTimeout(() => setCopied(false), 1800)
     }
     track('share', { shopId: shop.id, productId: p.id, detail: how === 'copied' ? 'copy' : 'native' })
+  }
+
+  /** Choosing an option with its own photo brings that photo up. */
+  function choose(label: string) {
+    setSize(label)
+    setNeedSize(false)
+    setQty(1)
+    setAdded(false)
+    const image = p.sizes?.find((s) => s.label === label)?.image
+    const at = image ? p.images.indexOf(image) : -1
+    if (at >= 0) goTo(at)
   }
 
   function goTo(i: number) {
@@ -190,37 +209,23 @@ function ProductPage() {
             </Link>
             <h1 className="title mt-2 text-[26px] md:text-[40px] lg:text-[46px]">{p.name}</h1>
             <div className="mt-3 flex items-center gap-3">
-              <Price p={p} size="lg" />
-              {onSale(p) && !soldOut && <Tag hot>−{discount(p)}%</Tag>}
+              <Price p={shown} size="lg" />
+              {sale && !soldOut && <Tag hot>−{Math.round((1 - shown.price / shown.compare_price!) * 100)}%</Tag>}
               {soldOut && <Tag>{t('Sold out')}</Tag>}
             </div>
 
             {p.sizes && (
               <div id="sizes" className="mt-8 scroll-mt-24">
                 <div className="mb-3 flex items-baseline justify-between">
-                  <p className="text-[14px] font-medium">{chosen ? t('Size {size}', { size: chosen.label }) : t('Choose a size')}</p>
+                  <p className="text-[14px] font-medium">{chosen ? optionText(t, p.option_name, chosen.label) : t(kind.choose)}</p>
                   {lowStock && chosen && <p className="text-[13px] text-moto-ink">{t('Only {n} left', { n: left! })}</p>}
                 </div>
                 <div className={`flex flex-wrap gap-2 rounded-[22px] ${needSize && !chosen ? 'outline-2 outline-offset-[6px] outline-moto' : ''}`}>
                   {p.sizes.map((s) => (
-                    <button
-                      key={s.label}
-                      type="button"
-                      disabled={s.stock === 0}
-                      aria-pressed={size === s.label}
-                      onClick={() => {
-                        setSize(s.label)
-                        setNeedSize(false)
-                        setQty(1)
-                        setAdded(false)
-                      }}
-                      className="chip tnum h-11 min-w-14 justify-center px-4 text-[14px]"
-                    >
-                      {s.label}
-                    </button>
+                    <OptionChip key={s.label} option={s} disabled={s.stock === 0} selected={size === s.label} onClick={() => choose(s.label)} />
                   ))}
                 </div>
-                {needSize && !chosen && <p className="mt-3 text-[13px] text-moto-ink">{t('Pick your size first')}</p>}
+                {needSize && !chosen && <p className="mt-3 text-[13px] text-moto-ink">{t(kind.choose)}</p>}
               </div>
             )}
             {!p.sizes && lowStock && <p className="mt-5 text-[13px] text-moto-ink">{t('Only {n} left', { n: left! })}</p>}
@@ -258,7 +263,7 @@ function ProductPage() {
                 {areas.length > 0 && <span className="text-muted"> · {t(areas.length === 1 ? '{n} area' : '{n} areas', { n: areas.length })}</span>}
               </Detail>
               {pay && <Detail label={t('Payment')}>{pay}</Detail>}
-              {p.sizes && <Detail label={t('Sizes')}>{p.sizes.map((s) => s.label).join(', ')}</Detail>}
+              {p.sizes && <Detail label={t(kind.label)}>{p.sizes.map((s) => s.label).join(', ')}</Detail>}
               <Detail label={t('Availability')}>
                 {soldOut ? t('Sold out') : lowStock ? <span className="text-moto-ink">{t('Only {n} left', { n: left! })}</span> : t('In stock')}
               </Detail>
@@ -267,7 +272,14 @@ function ProductPage() {
             {shop.whatsapp && (
               <a
                 className="mt-6 inline-flex items-center gap-2 text-[14px] font-medium underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink"
-                href={waLink(shop.whatsapp, t('Hi {shop}, I am asking about {product} ({price})', { shop: shop.name, product: p.name, price: tzs(p.price) }))}
+                href={waLink(
+                  shop.whatsapp,
+                  t('Hi {shop}, I am asking about {product} ({price})', {
+                    shop: shop.name,
+                    product: chosen ? `${p.name}, ${optionText(t, p.option_name, chosen.label)}` : p.name,
+                    price: tzs(unit),
+                  }),
+                )}
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => track('whatsapp_click', { shopId: shop.id, productId: p.id, detail: 'product' })}
@@ -328,13 +340,13 @@ function ProductPage() {
           ) : (
             <>
               <div className="min-w-0 flex-1 pl-4">
-                <p className="tnum truncate text-[16px] font-semibold">{tzs(p.price * qty)}</p>
+                <p className="tnum truncate text-[16px] font-semibold">{shown.from ? t('From {price}', { price: tzs(unit) }) : tzs(unit * qty)}</p>
                 <p className="truncate text-[12px] text-white/55">
                   {soldOut
                     ? t('Sold out')
                     : p.sizes && !chosen
-                      ? t('Choose a size')
-                      : [chosen && t('Size {size}', { size: chosen.label }), qty > 1 && t('{n} pieces', { n: qty })].filter(Boolean).join(' · ') || t('In stock')}
+                      ? t(kind.choose)
+                      : [chosen && optionText(t, p.option_name, chosen.label), qty > 1 && t('{n} pieces', { n: qty })].filter(Boolean).join(' · ') || t('In stock')}
                 </p>
               </div>
               <button

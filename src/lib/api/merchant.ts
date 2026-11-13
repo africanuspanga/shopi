@@ -3,7 +3,7 @@ import { requireShop, requireUser } from '#/server/auth'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
 import { removePhotos } from '#/server/media'
 import { moveStock, sizesTotal } from '#/server/stock'
-import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, normalizePhone, parseSizes, productSlug, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink, tinDigits } from '#/lib/format'
+import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, imageOf, normalizePhone, optionKind, parseSizes, productSlug, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink, tinDigits } from '#/lib/format'
 import { shopPlan } from '#/server/plan'
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
@@ -307,6 +307,8 @@ export type ProductRow = {
   stock: number | null
   images: string[]
   sizes: Size[] | null
+  /** What buyers choose: NULL for size (see OPTION_KINDS). */
+  option_name: string | null
   active: number
   views: number
 }
@@ -354,7 +356,9 @@ export const saveProduct = createServerFn({ method: 'POST' })
       price: number | string
       compare_price?: number | string | null
       stock?: number | string | null
-      sizes?: { label: string; stock: number | string | null }[] | null
+      /** Each option may have its own price (empty: the product's) and photo (one of `images`). */
+      sizes?: { label: string; stock: number | string | null; price?: number | string | null; image?: string | null }[] | null
+      option_name?: string | null
       images: string[]
       active: boolean
     }) => d,
@@ -367,15 +371,22 @@ export const saveProduct = createServerFn({ method: 'POST' })
     if (!price) return { error: 'price' as const }
     const compare = data.compare_price ? int(data.compare_price) || null : null
     const count = (v: number | string | null | undefined) => (v === '' || v == null ? null : int(v))
+    const photos = (data.images ?? []).slice(0, 6).map((k) => str(k, 100))
     const sizes: Size[] = []
     for (const s of data.sizes ?? []) {
       const label = str(s.label, 20)
-      if (label && !sizes.some((x) => x.label.toLowerCase() === label.toLowerCase())) sizes.push({ label, stock: count(s.stock) })
+      if (!label || sizes.some((x) => x.label.toLowerCase() === label.toLowerCase())) continue
+      const own = s.price === '' || s.price == null ? 0 : int(s.price)
+      const image = s.image && photos.includes(s.image) ? s.image : null
+      // An option's price only counts when it differs from the product's.
+      sizes.push({ label, stock: count(s.stock), ...(own && own !== price ? { price: own } : {}), ...(image ? { image } : {}) })
     }
     // With sizes, the product's stock is their total.
     const stock = sizes.length ? sizesTotal(sizes) : count(data.stock)
     const sizesJson = sizes.length ? JSON.stringify(sizes.slice(0, 20)) : null
-    const images = JSON.stringify((data.images ?? []).slice(0, 6).map((k) => str(k, 100)))
+    const kind = optionKind(data.option_name)
+    const optionName = sizes.length && kind !== 'size' ? kind : null
+    const images = JSON.stringify(photos)
     if (data.id) {
       // The link name stays when a product is renamed, so links already shared keep working.
       const current = await first<{ slug: string | null; images: string }>(
@@ -385,9 +396,9 @@ export const saveProduct = createServerFn({ method: 'POST' })
       )
       const slug = current?.slug ?? (await uniqueProductSlug(shop.id, name, data.id))
       await run(
-        `UPDATE products SET name = ?, description = ?, price = ?, compare_price = ?, stock = ?, sizes = ?, images = ?, active = ?, slug = ?
-         WHERE id = ? AND shop_id = ?`,
-        name, str(data.description, 2000), price, compare, stock, sizesJson, images, data.active ? 1 : 0, slug, data.id, shop.id,
+        `UPDATE products SET name = ?, description = ?, price = ?, compare_price = ?, stock = ?, sizes = ?, option_name = ?, images = ?,
+           active = ?, slug = ? WHERE id = ? AND shop_id = ?`,
+        name, str(data.description, 2000), price, compare, stock, sizesJson, optionName, images, data.active ? 1 : 0, slug, data.id, shop.id,
       )
       // Photos taken off the product leave storage too (removePhotos keeps any a past order shows).
       const kept = new Set(JSON.parse(images) as string[])
@@ -397,9 +408,9 @@ export const saveProduct = createServerFn({ method: 'POST' })
     const id = newId()
     const slug = await uniqueProductSlug(shop.id, name)
     await run(
-      `INSERT INTO products (id, shop_id, slug, name, description, price, compare_price, stock, sizes, images, active, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      id, shop.id, slug, name, str(data.description, 2000), price, compare, stock, sizesJson, images, data.active ? 1 : 0, now(),
+      `INSERT INTO products (id, shop_id, slug, name, description, price, compare_price, stock, sizes, option_name, images, active, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id, shop.id, slug, name, str(data.description, 2000), price, compare, stock, sizesJson, optionName, images, data.active ? 1 : 0, now(),
     )
     return { ok: true as const, id, slug }
   })
@@ -452,7 +463,8 @@ export type OrderDetail = OrderListRow & {
   txn_id: string | null
   payment_check: string | null
   paid_claimed_at: number | null
-  lines: { name: string; price: number; qty: number; image: string | null; variant: string | null }[]
+  /** option: the kind of option on the line (see OPTION_KINDS); null means size. */
+  lines: { name: string; price: number; qty: number; image: string | null; variant: string | null; option: string | null }[]
   /** The bag link this order was placed from, if any. */
   bag: { id: string; note: string } | null
 }
@@ -468,7 +480,7 @@ export const getOrder = createServerFn({ method: 'GET' })
     )
     if (!order) return null
     const [lines, bag] = await Promise.all([
-      all<OrderDetail['lines'][number]>('SELECT name, price, qty, image, variant FROM order_items WHERE order_id = ?', order.id),
+      all<OrderDetail['lines'][number]>('SELECT name, price, qty, image, variant, option FROM order_items WHERE order_id = ?', order.id),
       order.source === 'bag_link' ? first<{ id: string; note: string }>('SELECT id, note FROM bag_links WHERE order_id = ? AND shop_id = ?', order.id, shop.id) : null,
     ])
     return { ...order, lines, bag, items: lines.reduce((s, l) => s + l.qty, 0) } as OrderDetail
@@ -497,13 +509,13 @@ export const recordSale = createServerFn({ method: 'POST' })
     const { shop } = await requireShop()
     const payment: PaymentMethod = (['cash', 'lipa', 'mobile', 'bank'] as const).find((m) => m === data.payment) ?? 'cash'
     const status = data.status === 'delivered' ? 'delivered' : 'confirmed'
-    const lines: { productId: string | null; name: string; price: number; qty: number; image: string | null; variant: string | null }[] = []
+    const lines: { productId: string | null; name: string; price: number; qty: number; image: string | null; variant: string | null; option: string | null }[] = []
     for (const l of (data.lines ?? []).slice(0, 50)) {
       const qty = Math.min(999, Math.max(1, Math.round(Number(l.qty) || 1)))
       const price = int(l.price)
       if (l.productId) {
-        const p = await first<{ id: string; name: string; images: string; sizes: string | null }>(
-          'SELECT id, name, images, sizes FROM products WHERE id = ? AND shop_id = ?',
+        const p = await first<{ id: string; name: string; images: string; sizes: string | null; option_name: string | null }>(
+          'SELECT id, name, images, sizes, option_name FROM products WHERE id = ? AND shop_id = ?',
           l.productId,
           shop.id,
         )
@@ -511,11 +523,20 @@ export const recordSale = createServerFn({ method: 'POST' })
         const sizes = parseSizes(p.sizes)
         const variant = sizes && l.size ? (sizes.find((s) => s.label === l.size)?.label ?? null) : null
         if (sizes && !variant) return { error: 'size' as const, product: p.name }
-        lines.push({ productId: p.id, name: p.name, price, qty, image: (JSON.parse(p.images) as string[])[0] ?? null, variant })
+        const kind = optionKind(p.option_name)
+        lines.push({
+          productId: p.id,
+          name: p.name,
+          price,
+          qty,
+          image: imageOf({ images: JSON.parse(p.images) as string[], sizes }, variant),
+          variant,
+          option: variant && kind !== 'size' ? kind : null,
+        })
       } else {
         const name = str(l.name, 120)
         if (!name || !price) continue
-        lines.push({ productId: null, name, price, qty, image: null, variant: null })
+        lines.push({ productId: null, name, price, qty, image: null, variant: null, option: null })
       }
     }
     if (!lines.length) return { error: 'empty' as const }
@@ -539,8 +560,8 @@ export const recordSale = createServerFn({ method: 'POST' })
         ),
       ...lines.map((l) =>
         db()
-          .prepare('INSERT INTO order_items (order_id, product_id, name, price, qty, image, variant) VALUES (?, ?, ?, ?, ?, ?, ?)')
-          .bind(id, l.productId, l.name, l.price, l.qty, l.image, l.variant),
+          .prepare('INSERT INTO order_items (order_id, product_id, name, price, qty, image, variant, option) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+          .bind(id, l.productId, l.name, l.price, l.qty, l.image, l.variant, l.option),
       ),
     ])
     if (takeStock) await moveStock(id, -1)

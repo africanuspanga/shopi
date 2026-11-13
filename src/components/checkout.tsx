@@ -7,7 +7,7 @@ import { checkDiscount } from '#/lib/api/discounts'
 import { placeOrder, type PublicShop } from '#/lib/api/store'
 import { track, visit } from '#/lib/analytics'
 import { cleanCode, codeKey, discountLabel, discountOff, type DiscountRule } from '#/lib/discounts'
-import { tzs } from '#/lib/format'
+import { optionText, tzs } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
 const BUYER_KEY = 'shopi_buyer'
@@ -21,6 +21,8 @@ export type CheckoutLine = {
   name: string
   image: string | null
   size: string | null
+  /** What the size is (see OPTION_KINDS): "Colour Red" rather than "Size Red". */
+  option?: string | null
   qty: number
   /** Per piece. */
   price: number
@@ -169,7 +171,7 @@ export function CheckoutView({
             <div className="min-w-0 flex-1">
               <p className="truncate text-[14px] font-medium">{l.name}</p>
               <p className="mt-0.5 text-[13px] text-muted">
-                {l.size ? `${t('Size {size}', { size: l.size })} · ` : ''}
+                {l.size ? `${optionText(t, l.option, l.size)} · ` : ''}
                 {fixed && l.qty > 1 ? `${l.qty} × ` : ''}
                 <span className="tnum">{tzs(l.price)}</span>
               </p>

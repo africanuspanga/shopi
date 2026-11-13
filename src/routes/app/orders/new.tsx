@@ -5,7 +5,7 @@ import { useHideFloatingNav } from '#/components/floating-nav'
 import { ProductPicker } from '#/components/product-picker'
 import { ErrorText, Field, Img, Page, Switch, TopBar } from '#/components/ui'
 import { listMyProducts, recordSale, type ProductRow } from '#/lib/api/merchant'
-import { PAYMENT_LABEL, tzs, type PaymentMethod } from '#/lib/format'
+import { PAYMENT_LABEL, priceOf, tzs, type PaymentMethod } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
 export const Route = createFileRoute('/app/orders/new')({
@@ -105,7 +105,19 @@ function RecordSale() {
                     {l.product?.sizes && (
                       <div className="flex flex-wrap gap-2">
                         {l.product.sizes.map((s) => (
-                          <button key={s.label} type="button" className="chip h-9 px-3" aria-pressed={l.size === s.label} onClick={() => update(l.key, { size: s.label })}>
+                          <button
+                            key={s.label}
+                            type="button"
+                            className="chip h-9 px-3"
+                            aria-pressed={l.size === s.label}
+                            onClick={() =>
+                              update(l.key, {
+                                size: s.label,
+                                // The price follows the option until the seller types one of their own.
+                                price: l.product && l.price === String(priceOf(l.product, l.size)) ? String(priceOf(l.product, s.label)) : l.price,
+                              })
+                            }
+                          >
                             {s.label}
                             {s.stock != null && <span className="text-[12px] opacity-60">{s.stock}</span>}
                           </button>
@@ -227,7 +239,8 @@ function RecordSale() {
         products={products}
         onClose={() => setPicking(false)}
         onPick={(p) => {
-          add({ product: p, name: p.name, price: String(p.price), qty: 1, size: p.sizes?.length === 1 ? p.sizes[0].label : null })
+          const size = p.sizes?.length === 1 ? p.sizes[0].label : null
+          add({ product: p, name: p.name, price: String(priceOf(p, size)), qty: 1, size })
           setPicking(false)
         }}
       />
