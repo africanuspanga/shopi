@@ -5,7 +5,7 @@ import { WhatsAppMark } from '#/components/brand-icons'
 import { MadeWithShopi } from '#/components/shop'
 import { ErrorText, Img, LangSwitch, ShopAvatar } from '#/components/ui'
 import { getTrackedOrder, submitPaymentSms } from '#/lib/api/store'
-import { timeAgo, tzs, waLink, type OrderStatus } from '#/lib/format'
+import { timeAgo, tzs, waLink, type OrderStatus, formatTin } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import { shareLink, useOrigin } from '#/lib/share'
 import { drawReceipt } from '#/lib/receipt-image'
@@ -94,6 +94,7 @@ function Track() {
       meta: [
         ...(o.area ? [`${o.area.replace(' (fee to agree)', '')}${o.landmark ? ` · ${o.landmark}` : ''}`] : []),
         paid ? `${t('Paid')} · ${payLine}` : payLine,
+        ...(o.shop.tin ? [t('Seller TIN {tin}', { tin: formatTin(o.shop.tin) })] : []),
       ],
       footer: `${t('Not a TRA fiscal receipt')} · shopi.tz/o/${o.code}`,
     })
@@ -300,6 +301,7 @@ function Track() {
                 </p>
               )}
               <p>{paid ? `${t('Paid')} · ${payLine}` : payLine}</p>
+              {o.shop.tin && <p>{t('Seller TIN {tin}', { tin: formatTin(o.shop.tin) })}</p>}
               <p className="pt-2 text-[12px]">{t('Not a TRA fiscal receipt')}</p>
             </div>
           </div>

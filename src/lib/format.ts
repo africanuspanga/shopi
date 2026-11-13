@@ -69,6 +69,14 @@ export function mapsLink(raw: string): string | null {
   return u.toString().slice(0, 500)
 }
 
+/** A TRA TIN: 9 digits. '' when empty, null when it isn't 9 digits. Dashes and spaces are allowed while typing. */
+export function tinDigits(raw: string): string | null {
+  const d = raw.replace(/[\s-]/g, '')
+  if (!d) return ''
+  return /^\d{9}$/.test(d) ? d : null
+}
+export const formatTin = (d: string) => (d.length === 9 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : d)
+
 /** A link tag a seller puts on a link: "Instagram bio" -> "instagram-bio", used as ?s=instagram-bio. */
 export function linkTag(s: string) {
   return s

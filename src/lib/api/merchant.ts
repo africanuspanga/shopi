@@ -3,7 +3,7 @@ import { requireShop, requireUser } from '#/server/auth'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
 import { removePhotos } from '#/server/media'
 import { moveStock, sizesTotal } from '#/server/stock'
-import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, normalizePhone, parseSizes, productSlug, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink } from '#/lib/format'
+import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, normalizePhone, parseSizes, productSlug, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink, tinDigits } from '#/lib/format'
 import { shopPlan } from '#/server/plan'
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
@@ -27,6 +27,7 @@ export type ShopRow = {
   facebook: string
   location: string
   maps_url: string
+  tin: string
   hours: string
   lipa_number: string
   lipa_name: string
@@ -73,15 +74,18 @@ export const createShop = createServerFn({ method: 'POST' })
 
 /** The optional setup step: where the shop is and its socials. Empty fields stay empty; "Skip for now" never calls this. */
 export const saveShopBasics = createServerFn({ method: 'POST' })
-  .validator((d: { location?: string; maps_url?: string; instagram?: string; tiktok?: string; facebook?: string }) => d)
+  .validator((d: { location?: string; maps_url?: string; tin?: string; instagram?: string; tiktok?: string; facebook?: string }) => d)
   .handler(async ({ data }) => {
     const { shop } = await requireShop()
     const maps = mapsLink(str(data.maps_url, 500))
     if (maps === null) return { error: 'maps' as const }
+    const tin = tinDigits(str(data.tin, 20))
+    if (tin === null) return { error: 'tin' as const }
     await run(
-      'UPDATE shops SET location = ?, maps_url = ?, instagram = ?, tiktok = ?, facebook = ? WHERE id = ?',
+      'UPDATE shops SET location = ?, maps_url = ?, tin = ?, instagram = ?, tiktok = ?, facebook = ? WHERE id = ?',
       str(data.location, 200),
       maps,
+      tin,
       str(data.instagram, 60).replace(/^@/, ''),
       str(data.tiktok, 60).replace(/^@/, ''),
       str(data.facebook, 100),
@@ -110,7 +114,7 @@ export const updateShop = createServerFn({ method: 'POST' })
     const logo = data.logo_key ? str(data.logo_key, 100) : null
     await run(
       `UPDATE shops SET name = ?, bio = ?, category = ?, logo_key = ?, whatsapp = ?, instagram = ?, tiktok = ?,
-         facebook = ?, location = ?, maps_url = ?, hours = ?, lipa_number = ?, lipa_name = ?, lipa_network = ?,
+         facebook = ?, location = ?, maps_url = ?, tin = ?, hours = ?, lipa_number = ?, lipa_name = ?, lipa_network = ?,
          lipa_is_personal = ?, cod_enabled = ? WHERE id = ?`,
       str(data.name, 60) || shop.name,
       str(data.bio, 300),
@@ -122,6 +126,7 @@ export const updateShop = createServerFn({ method: 'POST' })
       str(data.facebook, 100),
       str(data.location, 200),
       mapsLink(str(data.maps_url, 500)) ?? '',
+      tinDigits(str(data.tin, 20)) ?? '',
       str(data.hours, 100),
       str(data.lipa_number, 20).replace(/\s+/g, ''),
       str(data.lipa_name, 80),

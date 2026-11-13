@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { AuthLayout, StepBar } from '#/components/auth'
 import { ErrorText, Field, ShopAvatar } from '#/components/ui'
 import { checkSlug, createShop, saveShopBasics } from '#/lib/api/merchant'
-import { CATEGORIES, mapsLink, slugify } from '#/lib/format'
+import { CATEGORIES, mapsLink, slugify, tinDigits } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
 export const Route = createFileRoute('/onboard')({
@@ -151,7 +151,7 @@ function Onboard() {
 /** Step 3, optional: where buyers find the shop, and its socials. "Skip for now" leaves everything for Shop settings. */
 function BasicsStep({ onDone }: { onDone: () => Promise<void> }) {
   const t = useT()
-  const [f, setF] = useState({ location: '', maps_url: '', instagram: '', tiktok: '', facebook: '' })
+  const [f, setF] = useState({ location: '', maps_url: '', tin: '', instagram: '', tiktok: '', facebook: '' })
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value })
@@ -170,13 +170,14 @@ function BasicsStep({ onDone }: { onDone: () => Promise<void> }) {
         className="mt-6 space-y-5"
         onSubmit={async (e) => {
           e.preventDefault()
+          if (tinDigits(f.tin) === null) return setError(t('A TIN has 9 digits, like 123-456-789.'))
           if (mapsLink(f.maps_url) === null) return setError(t('That isn’t a Google Maps link. In Google Maps, find your shop, tap Share and copy the link.'))
           setBusy(true)
           setError('')
           const res = await saveShopBasics({ data: f })
           if ('error' in res) {
             setBusy(false)
-            return setError(t('That isn’t a Google Maps link. In Google Maps, find your shop, tap Share and copy the link.'))
+            return setError(res.error === 'tin' ? t('A TIN has 9 digits, like 123-456-789.') : t('That isn’t a Google Maps link. In Google Maps, find your shop, tap Share and copy the link.'))
           }
           await onDone()
         }}
@@ -186,6 +187,9 @@ function BasicsStep({ onDone }: { onDone: () => Promise<void> }) {
         </Field>
         <Field label={t('Google Maps link')} aside={t('Optional')} hint={t('In Google Maps, find your shop, tap Share and paste the link. Buyers get directions.')}>
           <input className="input" value={f.maps_url} onChange={set('maps_url')} placeholder="https://maps.app.goo.gl/…" inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+        </Field>
+        <Field label={t('TIN (TRA)')} aside={t('Optional')} hint={t('The 9-digit number from TRA. Shown in your shop’s info and on receipts.')}>
+          <input className="input tnum" value={f.tin} onChange={set('tin')} placeholder="123-456-789" inputMode="numeric" maxLength={11} />
         </Field>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Instagram" aside={t('Optional')}>{handle('instagram')}</Field>

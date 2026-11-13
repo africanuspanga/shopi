@@ -1,11 +1,11 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowUpRight, Banknote, Clock, MapPin, Smartphone, Truck } from 'lucide-react'
+import { ArrowUpRight, Banknote, Clock, FileText, MapPin, Smartphone, Truck } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppMark } from '#/components/brand-icons'
 import { Img, Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
 import { track } from '#/lib/analytics'
-import { tzs, waLink } from '#/lib/format'
+import { tzs, waLink, formatTin } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
 export const onSale = (p: Pick<PublicProduct, 'price' | 'compare_price'>) => !!p.compare_price && p.compare_price > p.price
@@ -197,6 +197,7 @@ function useShopFacts(shop: PublicShop, areas: { name: string; fee: number }[]):
   if (shop.location || shop.maps_url)
     facts.push({ icon: <MapPin size={18} strokeWidth={1.5} />, text: shop.location || t('Directions'), href: shop.maps_url || undefined })
   if (shop.hours) facts.push({ icon: <Clock size={18} strokeWidth={1.5} />, text: shop.hours })
+  if (shop.tin) facts.push({ icon: <FileText size={18} strokeWidth={1.5} />, text: `TIN ${formatTin(shop.tin)}`, sub: t('Registered with TRA') })
   return facts
 }
 
@@ -239,7 +240,7 @@ export function ShopFacts({ shop, areas }: { shop: PublicShop; areas: { name: st
 /** The same facts as a row of quiet pills, for the top of a shop on a phone. The written location is in the header already, so its pill only shows as a directions link. */
 export function FactPills({ shop, areas }: { shop: PublicShop; areas: { name: string; fee: number }[] }) {
   const t = useT()
-  const facts = useShopFacts(shop, areas).filter((f) => f.href || f.text !== shop.location)
+  const facts = useShopFacts(shop, areas).filter((f) => (f.href || f.text !== shop.location) && !f.text.startsWith('TIN '))
   if (!facts.length) return null
   const pill = 'flex h-9 shrink-0 items-center gap-2 rounded-full bg-page px-3.5 text-[13px] whitespace-nowrap text-ink-2 [&_svg]:size-4'
   return (

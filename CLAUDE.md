@@ -9,13 +9,6 @@ The product was RIZK until 11 November 2026; the old name must not reappear in c
 Read this before changing any screen. The bar is a world-class product: every screen must look deliberate
 at phone width (390) **and** at desktop width (1440).
 
-## Next session: start here
-Of the founder's 9 November asks, the Google Maps link, socials in setup and "Record a sale" shipped on 13 November.
-One is left; it gets its own migration, Swahili strings and a test. Delete this section once it ships.
-- **TIN from TRA (optional).** A field in the setup form and in Shop settings for the 9-digit number, stored as digits
-  and shown as `123-456-789`. Ask the founder where buyers should see it (the Info sheet, the order page or receipt).
-  New column `shops.tin`. The receipt (`/o/<code>`, `lib/receipt-image.ts`) has room for it.
-
 ## Commands
 
 ```bash
@@ -192,6 +185,8 @@ domain are lowercase.
 - Plans (`src/lib/plans.ts`): a trial (14 days, 30 with setup done), then Twiga or Tembo yearly. `planState()` is the one
   entitlement check. `BILLING_LIVE` stays false until sellers can pay in Shopi; then an ended shop takes a break
   (`BreakBanner`, orders refused, nothing deleted).
+- Optional shop fields: `maps_url` (Google Maps links only, `mapsLink()`) gives buyers Directions; `tin` (9 digits, `tinDigits()`,
+  shown as `formatTin()` 123-456-789) appears in `ShopFacts`, the Info sheet and on receipts, not in the phone pills.
 - Delivery fees are not in Shopi: buyer and seller agree them on WhatsApp. Shops list delivery areas by name only.
 - Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
   sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.

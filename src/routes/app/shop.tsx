@@ -5,7 +5,7 @@ import { useHideFloatingNav } from '#/components/floating-nav'
 import { ErrorText, Field, LangSwitch, Page, ShopAvatar, Switch, Toast, TopBar } from '#/components/ui'
 import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
-import { CATEGORIES, NETWORKS, mapsLink } from '#/lib/format'
+import { CATEGORIES, NETWORKS, mapsLink, tinDigits } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 import { uploadImage } from '#/lib/upload'
 
@@ -44,6 +44,7 @@ function ShopSettings() {
 
   async function save() {
     const named = areas.filter((a) => a.name.trim())
+    if (tinDigits(s.tin ?? '') === null) return setError(t('A TIN has 9 digits, like 123-456-789.'))
     if (mapsLink(s.maps_url ?? '') === null) return setError(t('That isn’t a Google Maps link. In Google Maps, find your shop, tap Share and copy the link.'))
     setBusy(true)
     setError('')
@@ -148,6 +149,16 @@ function ShopSettings() {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
+              />
+            </Field>
+            <Field label={t('TIN (TRA)')} aside={t('Optional')} hint={t('The 9-digit number from TRA. Shown in your shop’s info and on receipts.')}>
+              <input
+                className="input tnum"
+                value={s.tin ?? ''}
+                onChange={set('tin')}
+                placeholder="123-456-789"
+                inputMode="numeric"
+                maxLength={11}
               />
             </Field>
           </div>

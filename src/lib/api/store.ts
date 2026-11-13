@@ -21,6 +21,8 @@ export type PublicShop = {
   location: string
   /** Optional Google Maps link for directions. */
   maps_url: string
+  /** Optional TRA TIN, 9 digits. */
+  tin: string
   hours: string
   lipa_number: string
   lipa_name: string
@@ -43,7 +45,7 @@ export type PublicProduct = {
   created_at: number
 }
 
-const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram, tiktok, facebook, location, maps_url, hours,
+const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram, tiktok, facebook, location, maps_url, tin, hours,
   lipa_number, lipa_name, lipa_network, cod_enabled, status`
 
 export const getStorefront = createServerFn({ method: 'GET' })
@@ -179,7 +181,7 @@ export type TrackedOrder = {
   payment_method: 'lipa' | 'cod'
   payment_check: string | null
   created_at: number
-  shop: { id: string; slug: string; name: string; logo_key: string | null; whatsapp: string; lipa_number: string; lipa_name: string; lipa_network: string }
+  shop: { id: string; slug: string; name: string; logo_key: string | null; whatsapp: string; lipa_number: string; lipa_name: string; lipa_network: string; tin: string }
   lines: { name: string; price: number; qty: number; image: string | null; variant: string | null }[]
 }
 
@@ -194,7 +196,7 @@ export const getTrackedOrder = createServerFn({ method: 'GET' })
     if (!order) return null
     const [shop, lines] = await Promise.all([
       first<TrackedOrder['shop']>(
-        'SELECT id, slug, name, logo_key, whatsapp, lipa_number, lipa_name, lipa_network FROM shops WHERE id = ?',
+        'SELECT id, slug, name, logo_key, whatsapp, lipa_number, lipa_name, lipa_network, tin FROM shops WHERE id = ?',
         order.shop_id,
       ),
       all<TrackedOrder['lines'][number]>('SELECT name, price, qty, image, variant FROM order_items WHERE order_id = ?', order.id),
