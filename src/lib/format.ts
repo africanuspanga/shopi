@@ -45,6 +45,30 @@ export function productSlug(name: string) {
   return out || 'product'
 }
 
+/**
+ * A Google Maps link for a shop, cleaned to https. '' when empty, null when it isn't a Google Maps link.
+ * Accepts maps.app.goo.gl, goo.gl/maps, google.com/maps (any Google country domain) and maps.google.com.
+ */
+export function mapsLink(raw: string): string | null {
+  const s = raw.trim()
+  if (!s) return ''
+  let u: URL
+  try {
+    u = new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`)
+  } catch {
+    return null
+  }
+  const host = u.hostname.toLowerCase().replace(/^www\./, '')
+  const ok =
+    host === 'maps.app.goo.gl' ||
+    (host === 'goo.gl' && u.pathname.startsWith('/maps')) ||
+    /^maps\.google\.[a-z.]+$/.test(host) ||
+    (/^google\.[a-z.]+$/.test(host) && u.pathname.startsWith('/maps'))
+  if (!ok) return null
+  u.protocol = 'https:'
+  return u.toString().slice(0, 500)
+}
+
 /** A link tag a seller puts on a link: "Instagram bio" -> "instagram-bio", used as ?s=instagram-bio. */
 export function linkTag(s: string) {
   return s

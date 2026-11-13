@@ -33,7 +33,7 @@ function Signup() {
         </Link>
       }
     >
-      <StepBar step={1} of={2} />
+      <StepBar step={1} of={3} />
       <h1 className="title mt-6 text-[32px] md:text-[38px]">{t('Open your shop')}</h1>
       <p className="mt-2 text-[15px] text-muted">{t('First, your account. Your shop comes next.')}</p>
       <form

@@ -5,7 +5,7 @@ import { useHideFloatingNav } from '#/components/floating-nav'
 import { ErrorText, Field, LangSwitch, Page, ShopAvatar, Switch, Toast, TopBar } from '#/components/ui'
 import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
-import { CATEGORIES, NETWORKS } from '#/lib/format'
+import { CATEGORIES, NETWORKS, mapsLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 import { uploadImage } from '#/lib/upload'
 
@@ -44,6 +44,7 @@ function ShopSettings() {
 
   async function save() {
     const named = areas.filter((a) => a.name.trim())
+    if (mapsLink(s.maps_url ?? '') === null) return setError(t('That isn’t a Google Maps link. In Google Maps, find your shop, tap Share and copy the link.'))
     setBusy(true)
     setError('')
     await updateShop({ data: { ...s, areas: named.map((a) => ({ name: a.name.trim(), fee: 0 })) } })
@@ -136,6 +137,18 @@ function ShopSettings() {
             </div>
             <Field label={t('Where you are')} hint={t('A street or a landmark buyers know')}>
               <input className="input" value={s.location} onChange={set('location')} placeholder={t('e.g. Kariakoo, Mtaa wa Congo')} />
+            </Field>
+            <Field label={t('Google Maps link')} aside={t('Optional')} hint={t('In Google Maps, find your shop, tap Share and paste the link. Buyers get directions.')}>
+              <input
+                className="input"
+                value={s.maps_url ?? ''}
+                onChange={set('maps_url')}
+                placeholder="https://maps.app.goo.gl/…"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
             </Field>
           </div>
         </Group>

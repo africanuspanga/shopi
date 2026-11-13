@@ -175,7 +175,7 @@ export function BagButton({ shopSlug, count }: { shopSlug: string; count: number
   )
 }
 
-type Fact = { icon: ReactNode; text: string; sub?: string }
+type Fact = { icon: ReactNode; text: string; sub?: string; href?: string }
 
 /** What a buyer wants to know before ordering: delivery, how to pay, where, when. */
 function useShopFacts(shop: PublicShop, areas: { name: string; fee: number }[]): Fact[] {
@@ -194,22 +194,41 @@ function useShopFacts(shop: PublicShop, areas: { name: string; fee: number }[]):
       sub: shop.lipa_network ? t('{network} Lipa Namba', { network: shop.lipa_network }) : t('Lipa Namba'),
     })
   if (shop.cod_enabled) facts.push({ icon: <Banknote size={18} strokeWidth={1.5} />, text: t('Cash on delivery'), sub: t('Pay when it arrives') })
-  if (shop.location) facts.push({ icon: <MapPin size={18} strokeWidth={1.5} />, text: shop.location })
+  if (shop.location || shop.maps_url)
+    facts.push({ icon: <MapPin size={18} strokeWidth={1.5} />, text: shop.location || t('Directions'), href: shop.maps_url || undefined })
   if (shop.hours) facts.push({ icon: <Clock size={18} strokeWidth={1.5} />, text: shop.hours })
   return facts
 }
 
 export function ShopFacts({ shop, areas }: { shop: PublicShop; areas: { name: string; fee: number }[] }) {
+  const t = useT()
   const facts = useShopFacts(shop, areas)
   if (!facts.length) return null
+  const directions = (href: string) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-0.5 flex w-fit items-center gap-1 text-[13px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink"
+    >
+      {t('Directions')} <ArrowUpRight size={13} strokeWidth={1.75} />
+    </a>
+  )
   return (
     <ul className="divide-y divide-line">
       {facts.map((f) => (
         <li key={f.text} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
           <span className="mt-px shrink-0 text-ink-2">{f.icon}</span>
           <span className="min-w-0 text-[14px] leading-5">
-            {f.text}
-            {f.sub && <span className="block text-[13px] text-muted">{f.sub}</span>}
+            {f.href && !shop.location ? (
+              directions(f.href)
+            ) : (
+              <>
+                {f.text}
+                {f.sub && <span className="block text-[13px] text-muted">{f.sub}</span>}
+                {f.href && directions(f.href)}
+              </>
+            )}
           </span>
         </li>
       ))}
@@ -217,18 +236,27 @@ export function ShopFacts({ shop, areas }: { shop: PublicShop; areas: { name: st
   )
 }
 
-/** The same facts as a row of quiet pills, for the top of a shop on a phone. */
+/** The same facts as a row of quiet pills, for the top of a shop on a phone. The written location is in the header already, so its pill only shows as a directions link. */
 export function FactPills({ shop, areas }: { shop: PublicShop; areas: { name: string; fee: number }[] }) {
-  const facts = useShopFacts(shop, areas).filter((f) => f.text !== shop.location)
+  const t = useT()
+  const facts = useShopFacts(shop, areas).filter((f) => f.href || f.text !== shop.location)
   if (!facts.length) return null
+  const pill = 'flex h-9 shrink-0 items-center gap-2 rounded-full bg-page px-3.5 text-[13px] whitespace-nowrap text-ink-2 [&_svg]:size-4'
   return (
     <div className="hide-scroll -mx-4 flex gap-2 overflow-x-auto px-4">
-      {facts.map((f) => (
-        <span key={f.text} className="flex h-9 shrink-0 items-center gap-2 rounded-full bg-page px-3.5 text-[13px] whitespace-nowrap text-ink-2 [&_svg]:size-4">
-          {f.icon}
-          {f.text}
-        </span>
-      ))}
+      {facts.map((f) =>
+        f.href ? (
+          <a key={f.text} href={f.href} target="_blank" rel="noopener noreferrer" className={`${pill} text-ink transition-colors hover:bg-well`}>
+            {f.icon}
+            {t('Directions')}
+          </a>
+        ) : (
+          <span key={f.text} className={pill}>
+            {f.icon}
+            {f.text}
+          </span>
+        ),
+      )}
     </div>
   )
 }

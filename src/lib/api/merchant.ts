@@ -3,7 +3,7 @@ import { requireShop, requireUser } from '#/server/auth'
 import { all, db, first, newId, now, run } from '#/server/db'
 import { removePhotos } from '#/server/media'
 import { moveStock, sizesTotal } from '#/server/stock'
-import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, normalizePhone, parseSizes, productSlug, slugify, type OrderStatus, type Size } from '#/lib/format'
+import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, normalizePhone, parseSizes, productSlug, slugify, type OrderStatus, type Size, mapsLink } from '#/lib/format'
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
 const int = (v: unknown) => {
@@ -25,6 +25,7 @@ export type ShopRow = {
   tiktok: string
   facebook: string
   location: string
+  maps_url: string
   hours: string
   lipa_number: string
   lipa_name: string
@@ -69,6 +70,25 @@ export const createShop = createServerFn({ method: 'POST' })
     return { ok: true as const, slug: data.slug }
   })
 
+/** The optional setup step: where the shop is and its socials. Empty fields stay empty; "Skip for now" never calls this. */
+export const saveShopBasics = createServerFn({ method: 'POST' })
+  .validator((d: { location?: string; maps_url?: string; instagram?: string; tiktok?: string; facebook?: string }) => d)
+  .handler(async ({ data }) => {
+    const { shop } = await requireShop()
+    const maps = mapsLink(str(data.maps_url, 500))
+    if (maps === null) return { error: 'maps' as const }
+    await run(
+      'UPDATE shops SET location = ?, maps_url = ?, instagram = ?, tiktok = ?, facebook = ? WHERE id = ?',
+      str(data.location, 200),
+      maps,
+      str(data.instagram, 60).replace(/^@/, ''),
+      str(data.tiktok, 60).replace(/^@/, ''),
+      str(data.facebook, 100),
+      shop.id,
+    )
+    return { ok: true as const }
+  })
+
 export const getMyShop = createServerFn({ method: 'GET' }).handler(async () => {
   const { shop } = await requireShop()
   const full = await first<ShopRow>('SELECT * FROM shops WHERE id = ?', shop.id)
@@ -84,7 +104,7 @@ export const updateShop = createServerFn({ method: 'POST' })
     const logo = data.logo_key ? str(data.logo_key, 100) : null
     await run(
       `UPDATE shops SET name = ?, bio = ?, category = ?, logo_key = ?, whatsapp = ?, instagram = ?, tiktok = ?,
-         facebook = ?, location = ?, hours = ?, lipa_number = ?, lipa_name = ?, lipa_network = ?,
+         facebook = ?, location = ?, maps_url = ?, hours = ?, lipa_number = ?, lipa_name = ?, lipa_network = ?,
          lipa_is_personal = ?, cod_enabled = ? WHERE id = ?`,
       str(data.name, 60) || shop.name,
       str(data.bio, 300),
@@ -95,6 +115,7 @@ export const updateShop = createServerFn({ method: 'POST' })
       str(data.tiktok, 60).replace(/^@/, ''),
       str(data.facebook, 100),
       str(data.location, 200),
+      mapsLink(str(data.maps_url, 500)) ?? '',
       str(data.hours, 100),
       str(data.lipa_number, 20).replace(/\s+/g, ''),
       str(data.lipa_name, 80),

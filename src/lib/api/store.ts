@@ -17,6 +17,8 @@ export type PublicShop = {
   tiktok: string
   facebook: string
   location: string
+  /** Optional Google Maps link for directions. */
+  maps_url: string
   hours: string
   lipa_number: string
   lipa_name: string
@@ -39,7 +41,7 @@ export type PublicProduct = {
   created_at: number
 }
 
-const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram, tiktok, facebook, location, hours,
+const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram, tiktok, facebook, location, maps_url, hours,
   lipa_number, lipa_name, lipa_network, cod_enabled, status`
 
 export const getStorefront = createServerFn({ method: 'GET' })

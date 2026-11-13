@@ -3,8 +3,8 @@ import { Check, ImageIcon, Loader2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { AuthLayout, StepBar } from '#/components/auth'
 import { ErrorText, Field, ShopAvatar } from '#/components/ui'
-import { checkSlug, createShop } from '#/lib/api/merchant'
-import { CATEGORIES, slugify } from '#/lib/format'
+import { checkSlug, createShop, saveShopBasics } from '#/lib/api/merchant'
+import { CATEGORIES, mapsLink, slugify } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
 export const Route = createFileRoute('/onboard')({
@@ -29,6 +29,7 @@ function Onboard() {
   const [checking, setChecking] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [created, setCreated] = useState(false)
 
   useEffect(() => {
     if (!slugTouched) setSlug(slugify(name))
@@ -67,9 +68,21 @@ function Onboard() {
 
   const categoryLabel = t(CATEGORIES.find((c) => c.id === category)?.label ?? 'Other')
 
+  const finish = async () => {
+    await router.invalidate()
+    router.navigate({ to: '/app' })
+  }
+
+  if (created)
+    return (
+      <AuthLayout aside={<ShopPreview name={name} slug={slug} category={categoryLabel} />}>
+        <BasicsStep onDone={finish} />
+      </AuthLayout>
+    )
+
   return (
     <AuthLayout aside={<ShopPreview name={name} slug={slug} category={categoryLabel} />}>
-      <StepBar step={2} of={2} />
+      <StepBar step={2} of={3} />
       <h1 className="title mt-6 text-[32px] md:text-[38px]">{t('Name your shop')}</h1>
       <p className="mt-2 text-[15px] text-muted">{t('Choose the link with care: it stays the same, so the places you share it keep working.')}</p>
 
@@ -90,8 +103,8 @@ function Onboard() {
           const res = await createShop({ data: { name, slug, category, whatsapp } })
           setBusy(false)
           if ('error' in res) return setError(res.error === 'name' ? t('Enter a shop name.') : t('That link is taken. Try another.'))
-          await router.invalidate()
-          router.navigate({ to: '/app' })
+          setCreated(true)
+          window.scrollTo(0, 0)
         }}
       >
         <Field label={t('Shop name')}>
@@ -132,6 +145,66 @@ function Onboard() {
         </button>
       </form>
     </AuthLayout>
+  )
+}
+
+/** Step 3, optional: where buyers find the shop, and its socials. "Skip for now" leaves everything for Shop settings. */
+function BasicsStep({ onDone }: { onDone: () => Promise<void> }) {
+  const t = useT()
+  const [f, setF] = useState({ location: '', maps_url: '', instagram: '', tiktok: '', facebook: '' })
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value })
+  const handle = (k: 'instagram' | 'tiktok') => (
+    <span className="input flex items-center gap-1 px-4">
+      <span className="text-muted">@</span>
+      <input className="min-w-0 flex-1 bg-transparent outline-none" value={f[k]} onChange={set(k)} placeholder="dukalako" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+    </span>
+  )
+  return (
+    <>
+      <StepBar step={3} of={3} />
+      <h1 className="title mt-6 text-[32px] md:text-[38px]">{t('Where buyers find you')}</h1>
+      <p className="mt-2 text-[15px] text-muted">{t('Your shop is open. Add these now or later in Shop settings.')}</p>
+      <form
+        className="mt-6 space-y-5"
+        onSubmit={async (e) => {
+          e.preventDefault()
+          if (mapsLink(f.maps_url) === null) return setError(t('That isn’t a Google Maps link. In Google Maps, find your shop, tap Share and copy the link.'))
+          setBusy(true)
+          setError('')
+          const res = await saveShopBasics({ data: f })
+          if ('error' in res) {
+            setBusy(false)
+            return setError(t('That isn’t a Google Maps link. In Google Maps, find your shop, tap Share and copy the link.'))
+          }
+          await onDone()
+        }}
+      >
+        <Field label={t('Where you are')} aside={t('Optional')} hint={t('A street or a landmark buyers know')}>
+          <input className="input" value={f.location} onChange={set('location')} placeholder={t('e.g. Kariakoo, Mtaa wa Congo')} />
+        </Field>
+        <Field label={t('Google Maps link')} aside={t('Optional')} hint={t('In Google Maps, find your shop, tap Share and paste the link. Buyers get directions.')}>
+          <input className="input" value={f.maps_url} onChange={set('maps_url')} placeholder="https://maps.app.goo.gl/…" inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+        </Field>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="Instagram" aside={t('Optional')}>{handle('instagram')}</Field>
+          <Field label="TikTok" aside={t('Optional')}>{handle('tiktok')}</Field>
+        </div>
+        <Field label="Facebook" aside={t('Optional')}>
+          <input className="input" value={f.facebook} onChange={set('facebook')} placeholder="facebook.com/dukalako" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+        </Field>
+        <ErrorText>{error}</ErrorText>
+        <div className="flex flex-col gap-3">
+          <button className="btn btn-lg w-full" disabled={busy}>
+            {busy ? t('Saving') : t('Save and continue')}
+          </button>
+          <button type="button" className="btn btn-lg btn-ghost w-full" disabled={busy} onClick={() => onDone()}>
+            {t('Skip for now')}
+          </button>
+        </div>
+      </form>
+    </>
   )
 }
 
