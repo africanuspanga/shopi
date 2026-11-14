@@ -7,8 +7,30 @@ import { BioPreview, LinkPreview, MiniStore, NewOrderCard, OrderPreview, Payment
 import { Wordmark } from '#/components/ui'
 import { useT } from '#/lib/i18n'
 import { PLANS } from '#/lib/plans'
+import { SITE, canonical, ld } from '#/lib/seo'
 
-export const Route = createFileRoute('/')({ component: Landing })
+export const Route = createFileRoute('/')({
+  head: () => ({
+    meta: [
+      { title: 'Shopi · Your shop in one link · Duka lako, link moja' },
+      { property: 'og:title', content: 'Shopi · Your shop in one link' },
+      { property: 'og:url', content: SITE },
+      ld({
+        '@type': 'Organization',
+        '@id': `${SITE}/#organization`,
+        name: 'Shopi',
+        legalName: 'Driftmark Technologies Limited',
+        url: SITE,
+        logo: `${SITE}/icon-512.png`,
+        email: 'hello@shopi.tz',
+        address: { '@type': 'PostalAddress', addressLocality: 'Dar es Salaam', addressCountry: 'TZ' },
+      }),
+      ld({ '@type': 'WebSite', '@id': `${SITE}/#website`, name: 'Shopi', url: SITE, publisher: { '@id': `${SITE}/#organization` } }),
+    ],
+    links: [canonical('/')],
+  }),
+  component: Landing,
+})
 
 function Landing() {
   const t = useT()

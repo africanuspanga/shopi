@@ -55,6 +55,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
 | `src/server.ts` | The Worker entry: TanStack Start answers requests; `scheduled` runs the cron jobs in `src/server/jobs.ts` |
 | `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `session.ts` |
+| `src/lib/seo.ts` | Search: `SITE`, `canonical()`, titles and descriptions per page, JSON-LD (`ld`, `storeSchema`, `productSchema`, `breadcrumbSchema`); `src/routes/sitemap[.]xml.ts` |
 | `src/lib/analytics.ts` | The buyer-side tracker: visitor ID, 30-minute visits, traffic source, `?s=` link tags, `track()` |
 | `src/routes/api/e.ts` | Receives analytics events (sendBeacon); drops bots, records device and city |
 | `src/routes/api/export.ts` | CSV downloads of orders and buyers for the logged-in seller |
@@ -246,6 +247,16 @@ domain are lowercase.
 - Product links are `/<shop>/<slug>`. A slug is set once and kept on rename; `/<shop>/p/<id>` and `/<shop>/<id>` redirect (301).
   Words reserved for shop pages: `checkout`, `p`, `b`, `c`, `bag`, `cart`, `order`, `orders`, `about`.
 - Link previews: `og:image` and `og:url` are absolute, built from the request origin.
+- Search (`src/lib/seo.ts`): every public page has a canonical link to `https://shopi.tz` (`SITE`), so `?s=` and `?code=` links
+  and test copies never compete with it. Canonicals go on leaf routes only (TanStack keeps every route's links; meta tags
+  are de-duplicated, the child winning). Titles are built by `shopTitle`, `productTitle`, `collectionTitle` (`fitTitle` keeps
+  them near 60 characters) and descriptions by the matching `*Description` (the seller's words first, then price, area and
+  payment; 160 characters). Structured data: `Store` on the shop page, `Product` with an `Offer` (an `AggregateOffer` when
+  options cost different amounts) and a `BreadcrumbList` on product pages, `BreadcrumbList` on collections, `Organization`
+  and `WebSite` on the landing. The product page shows the same breadcrumb (Shop › Collection, the first collection in the
+  seller's order that holds the product). `/sitemap.xml` lists the landing and legal pages, live shops with products, their
+  collections and products with photos; demo shops, hidden products and checkout (`noindex`) stay out. `robots.txt` on
+  shopi.tz keeps `/app/` and `/api/` out and names the sitemap.
 
 ## Nightly job and backups
 `src/server/jobs.ts`, run by Cloudflare cron triggers (`triggers` in `wrangler.jsonc`, the same strings as `NIGHTLY` and `WEEKLY`).

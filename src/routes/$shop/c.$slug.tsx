@@ -9,6 +9,7 @@ import { track } from '#/lib/analytics'
 import { useCart } from '#/lib/cart'
 import { imgUrl } from '#/lib/format'
 import { useT } from '#/lib/i18n'
+import { breadcrumbSchema, canonical, collectionDescription, collectionTitle } from '#/lib/seo'
 import { shareLink, useOrigin } from '#/lib/share'
 
 /** A collection the seller made, at its own link: shopi.tz/<shop>/c/<slug>. */
@@ -18,23 +19,29 @@ export const Route = createFileRoute('/$shop/c/$slug')({
     const collection = loaderData?.collections.find((c) => c.slug === params.slug.toLowerCase())
     if (!loaderData || !collection) throw notFound()
     const first = collection.productIds.map((id) => loaderData.products.find((p) => p.id === id)).find((p) => p?.images[0])
-    return { collection, shopName: loaderData.shop.name, slug: loaderData.shop.slug, origin: loaderData.origin, cover: first?.images[0] ?? null }
+    return { collection, shop: loaderData.shop, origin: loaderData.origin, cover: first?.images[0] ?? null }
   },
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [] }
-    const { collection: c, shopName, slug, origin, cover } = loaderData
-    const n = c.productIds.length
-    const description = c.description || `${n} ${n === 1 ? 'product' : 'products'} at ${shopName}`
+    const { collection: c, shop, origin, cover } = loaderData
+    const title = collectionTitle(c, shop)
+    const description = collectionDescription(c, shop)
+    const path = `/${shop.slug}/c/${c.slug}`
     return {
       meta: [
-        { title: `${c.name} · ${shopName}` },
+        { title },
         { name: 'description', content: description },
-        { property: 'og:title', content: `${c.name} · ${shopName}` },
+        { property: 'og:title', content: `${c.name} · ${shop.name}` },
         { property: 'og:description', content: description },
-        { property: 'og:url', content: `${origin}/${slug}/c/${c.slug}` },
+        { property: 'og:url', content: `${origin}${path}` },
         { name: 'twitter:card', content: 'summary_large_image' },
         ...(cover ? [{ property: 'og:image', content: `${origin}${imgUrl(cover)}` }] : []),
+        breadcrumbSchema([
+          [shop.name, `/${shop.slug}`],
+          [c.name, path],
+        ]),
       ],
+      links: [canonical(path)],
     }
   },
   notFoundComponent: CollectionNotFound,

@@ -1,9 +1,10 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { LegalPage, Section } from '#/components/legal'
 import { useT } from '#/lib/i18n'
+import { canonical } from '#/lib/seo'
 
 export const Route = createFileRoute('/privacy')({
-  head: () => ({ meta: [{ title: 'Privacy · Shopi' }, { name: 'description', content: 'What Shopi collects, why, who sees it and how to delete it.' }] }),
+  head: () => ({ meta: [{ title: 'Privacy · Shopi' }, { name: 'description', content: 'What Shopi collects, why, who sees it and how to delete it.' }], links: [canonical('/privacy')] }),
   component: Privacy,
 })
 

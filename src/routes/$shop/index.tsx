@@ -9,9 +9,21 @@ import { track } from '#/lib/analytics'
 import { useCart } from '#/lib/cart'
 import { waLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
+import { canonical, shopDescription, storeSchema } from '#/lib/seo'
 import { shareLink, useOrigin } from '#/lib/share'
 
-export const Route = createFileRoute('/$shop/')({ component: Storefront })
+export const Route = createFileRoute('/$shop/')({
+  // Only what the head needs: the shop page's own address and the store's structured data.
+  loader: async ({ parentMatchPromise }) => {
+    const { loaderData } = await parentMatchPromise
+    return { shop: loaderData!.shop, count: loaderData!.products.length }
+  },
+  head: ({ loaderData }) =>
+    loaderData
+      ? { meta: [storeSchema(loaderData.shop, shopDescription(loaderData.shop, loaderData.count))], links: [canonical(`/${loaderData.shop.slug}`)] }
+      : {},
+  component: Storefront,
+})
 const parent = getRouteApi('/$shop')
 
 const NEW_DAYS = 30

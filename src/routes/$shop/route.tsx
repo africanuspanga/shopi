@@ -5,6 +5,7 @@ import { ignoreShop } from '#/lib/analytics'
 import { getStorefront } from '#/lib/api/store'
 import { cleanCode, codeKey } from '#/lib/discounts'
 import { imgUrl } from '#/lib/format'
+import { shopDescription, shopTitle } from '#/lib/seo'
 
 export const Route = createFileRoute('/$shop')({
   loader: async ({ params }) => {
@@ -16,10 +17,10 @@ export const Route = createFileRoute('/$shop')({
     if (!loaderData) return { meta: [] }
     const { shop, products, origin } = loaderData
     const cover = products[0]?.images[0] ?? shop.logo_key
-    const description = shop.bio || `${shop.name} on Shopi`
+    const description = shopDescription(shop, products.length)
     return {
       meta: [
-        { title: `${shop.name} · Shopi` },
+        { title: shopTitle(shop) },
         { name: 'description', content: description },
         { property: 'og:title', content: shop.name },
         { property: 'og:description', content: description },

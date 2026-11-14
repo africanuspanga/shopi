@@ -11,6 +11,7 @@ import { track } from '#/lib/analytics'
 import { lineKey, useCart } from '#/lib/cart'
 import { OPTION_KINDS, imgUrl, optionKind, optionText, priceOf, tzs, waLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
+import { breadcrumbSchema, canonical, homeCollection, productDescription, productPath, productSchema, productTitle } from '#/lib/seo'
 import { shareLink, useOrigin } from '#/lib/share'
 
 /** A product at its readable address: shopi.tz/<shop>/<product>. */
@@ -24,23 +25,32 @@ export const Route = createFileRoute('/$shop/$product')({
     if (product.slug && product.slug !== params.product) {
       throw redirect({ to: '/$shop/$product', params: { shop: params.shop, product: product.slug }, statusCode: 301 })
     }
-    return { product, shopName: loaderData!.shop.name, slug: loaderData!.shop.slug, origin: loaderData!.origin }
+    const shop = loaderData!.shop
+    return { product, shop, collection: homeCollection(loaderData!.collections, product.id), origin: loaderData!.origin }
   },
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [] }
-    const { product: p, shopName, slug, origin } = loaderData
-    const title = `${p.name} · ${tzs(p.price)}`
-    const description = p.description ? p.description.slice(0, 160) : `${p.name} at ${shopName}`
+    const { product: p, shop, collection, origin } = loaderData
+    const title = productTitle(p, shop)
+    const description = productDescription(p, shop)
+    const path = productPath(shop, p)
     return {
       meta: [
-        { title: `${title} · ${shopName}` },
+        { title },
         { name: 'description', content: description },
         { property: 'og:title', content: title },
-        { property: 'og:description', content: `${shopName} · ${description}` },
-        { property: 'og:url', content: `${origin}/${slug}/${p.slug ?? p.id}` },
+        { property: 'og:description', content: description },
+        { property: 'og:url', content: `${origin}${path}` },
         { name: 'twitter:card', content: 'summary_large_image' },
         ...(p.images[0] ? [{ property: 'og:image', content: `${origin}${imgUrl(p.images[0])}` }] : []),
+        productSchema(p, shop, description),
+        breadcrumbSchema([
+          [shop.name, `/${shop.slug}`],
+          ...(collection ? [[collection.name, `/${shop.slug}/c/${collection.slug}`] as [string, string]] : []),
+          [p.name, path],
+        ]),
       ],
+      links: [canonical(path)],
     }
   },
   notFoundComponent: ProductNotFound,
@@ -57,7 +67,7 @@ function ProductPage() {
   const t = useT()
   const navigate = useNavigate()
   const { shop, products, areas } = parent.useLoaderData()
-  const { product: p } = Route.useLoaderData()
+  const { product: p, collection } = Route.useLoaderData()
   const cart = useCart(shop.id)
   const origin = useOrigin()
   const [size, setSize] = useState<string | null>(p.sizes?.length === 1 ? p.sizes[0].label : null)
@@ -68,6 +78,11 @@ function ProductPage() {
   const [slide, setSlide] = useState(0)
   const [notify, setNotify] = useState(false)
   const gallery = useRef<HTMLDivElement>(null)
+  /** "Dress, Colour Red" for an option's own photo, otherwise "Dress, photo 2". */
+  const photoAlt = (k: string | null, i: number) => {
+    const option = k ? p.sizes?.find((s) => s.image === k) : undefined
+    return `${p.name}, ${option ? optionText(t, p.option_name, option.label) : t('photo {n}', { n: i + 1 })}`
+  }
 
   useEffect(() => {
     track('view_product', { shopId: shop.id, productId: p.id })
@@ -165,7 +180,7 @@ function ProductPage() {
               }}
             >
               {images.map((k, i) => (
-                <Img key={k ?? i} k={k} alt={`${p.name}, ${t('photo {n}', { n: i + 1 })}`} eager={i === 0} className="aspect-[4/5] w-full shrink-0 snap-center" />
+                <Img key={k ?? i} k={k} alt={photoAlt(k, i)} eager={i === 0} className="aspect-[4/5] w-full shrink-0 snap-center" />
               ))}
             </div>
 
@@ -209,9 +224,27 @@ function ProductPage() {
           </div>
 
           <div className="rise px-4 pt-6 md:px-0 md:pt-2">
-            <Link to="/$shop" params={{ shop: shop.slug }} className="text-[14px] text-muted transition-colors hover:text-ink">
-              {shop.name}
-            </Link>
+            <nav aria-label={t('Breadcrumb')}>
+              <ol className="flex min-w-0 items-center gap-1.5 text-[14px] text-muted">
+                <li className="min-w-0 truncate">
+                  <Link to="/$shop" params={{ shop: shop.slug }} className="transition-colors hover:text-ink">
+                    {shop.name}
+                  </Link>
+                </li>
+                {collection && (
+                  <>
+                    <li aria-hidden className="text-faint">
+                      ›
+                    </li>
+                    <li className="min-w-0 truncate">
+                      <Link to="/$shop/c/$slug" params={{ shop: shop.slug, slug: collection.slug }} className="transition-colors hover:text-ink">
+                        {collection.name}
+                      </Link>
+                    </li>
+                  </>
+                )}
+              </ol>
+            </nav>
             <h1 className="title mt-2 text-[26px] md:text-[40px] lg:text-[46px]">{p.name}</h1>
             <div className="mt-3 flex items-center gap-3">
               <Price p={shown} size="lg" />

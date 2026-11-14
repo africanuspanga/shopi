@@ -2,9 +2,10 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { LegalPage, Section } from '#/components/legal'
 import { useT } from '#/lib/i18n'
 import { PLANS, SETUP_TRIAL_DAYS, TRIAL_DAYS } from '#/lib/plans'
+import { canonical } from '#/lib/seo'
 
 export const Route = createFileRoute('/terms')({
-  head: () => ({ meta: [{ title: 'Terms · Shopi' }, { name: 'description', content: 'The rules for selling and buying on Shopi.' }] }),
+  head: () => ({ meta: [{ title: 'Terms · Shopi' }, { name: 'description', content: 'The rules for selling and buying on Shopi.' }], links: [canonical('/terms')] }),
   component: Terms,
 })
 

@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { LegalPage, Section } from '#/components/legal'
 import { useT } from '#/lib/i18n'
+import { canonical } from '#/lib/seo'
 
 export const Route = createFileRoute('/data-deletion')({
-  head: () => ({ meta: [{ title: 'Delete your data · Shopi' }, { name: 'description', content: 'How sellers and buyers delete their data from Shopi.' }] }),
+  head: () => ({ meta: [{ title: 'Delete your data · Shopi' }, { name: 'description', content: 'How sellers and buyers delete their data from Shopi.' }], links: [canonical('/data-deletion')] }),
   component: DataDeletion,
 })
 

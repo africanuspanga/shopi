@@ -6,7 +6,11 @@ import { useCart } from '#/lib/cart'
 import { imageOf, priceOf } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
-export const Route = createFileRoute('/$shop/checkout')({ component: Checkout })
+export const Route = createFileRoute('/$shop/checkout')({
+  // A buyer's bag, different on every phone: nothing for search engines.
+  head: () => ({ meta: [{ name: 'robots', content: 'noindex' }] }),
+  component: Checkout,
+})
 const parent = getRouteApi('/$shop')
 
 function Checkout() {

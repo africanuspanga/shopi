@@ -4,12 +4,13 @@ import { AuthLayout, PasswordInput, StepBar } from '#/components/auth'
 import { ErrorText, Field, TextLink } from '#/components/ui'
 import { signup } from '#/lib/api/session'
 import { useT } from '#/lib/i18n'
+import { canonical } from '#/lib/seo'
 
 export const Route = createFileRoute('/signup')({
   beforeLoad: ({ context }) => {
     if (context.session.user) throw redirect({ to: context.session.shop ? '/app' : '/onboard' })
   },
-  head: () => ({ meta: [{ title: 'Open your shop · Shopi' }] }),
+  head: () => ({ meta: [{ title: 'Open your shop · Shopi' }], links: [canonical('/signup')] }),
   component: Signup,
 })
 
