@@ -3,7 +3,7 @@
 	"name": "shopi",
 	"compatibility_date": "2025-09-02",
 	"compatibility_flags": ["nodejs_compat"],
-	"main": "@tanstack/react-start/server-entry",
+	"main": "src/server.ts",
 	"observability": { "enabled": true },
 	// Deploys replace the Worker's custom domains with this list, so a domain missing here goes offline.
 	// www.shopi.tz is not a Worker domain: a Cloudflare Redirect Rule (dashboard, zone shopi.tz) sends it
@@ -19,5 +19,11 @@
 			"migrations_dir": "migrations"
 		}
 	],
-	"r2_buckets": [{ "binding": "MEDIA", "bucket_name": "shopi-media" }]
+	// MEDIA holds photos and is served at /img. BACKUPS is private: the weekly database copies (src/server/jobs.ts).
+	"r2_buckets": [
+		{ "binding": "MEDIA", "bucket_name": "shopi-media" },
+		{ "binding": "BACKUPS", "bucket_name": "shopi-backups" }
+	],
+	// NIGHTLY and WEEKLY in src/server/jobs.ts: the clean-up the Privacy page promises, and the database backup.
+	"triggers": { "crons": ["0 0 * * *", "30 0 * * SUN"] }
 }

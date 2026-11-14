@@ -5,7 +5,7 @@ import { removePhotos } from '#/server/media'
 import { moveStock, sizesTotal } from '#/server/stock'
 import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, imageOf, normalizePhone, optionKind, parseSizes, productSlug, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink, tinDigits } from '#/lib/format'
 import { shopPlan } from '#/server/plan'
-import { purgeOldAlerts, withReadiness, type AlertRow } from '#/server/alerts'
+import { withReadiness, type AlertRow } from '#/server/alerts'
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
 const int = (v: unknown) => {
@@ -261,7 +261,6 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
     ),
   ])
   // Back in stock: products some buyers asked to hear about, now that what they asked for can be bought again.
-  await purgeOldAlerts()
   const ready = (
     await withReadiness(shop.id, await all<AlertRow>('SELECT id, product_id, variant, phone, created_at FROM stock_alerts WHERE shop_id = ?', shop.id))
   ).filter((a) => a.back)

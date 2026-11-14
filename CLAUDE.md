@@ -53,6 +53,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/routes/app/discounts.tsx` | Discount codes: each code with its uses, on/off, Share (as a link) and the new/edit sheet |
 | `src/components/stock-alerts.tsx` | Back in stock: `NotifySheet` (a buyer leaves a WhatsApp number), `useAsked`, `WaitingCard` (the seller's list, a prefilled WhatsApp message each, Done) |
 | `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
+| `src/server.ts` | The Worker entry: TanStack Start answers requests; `scheduled` runs the cron jobs in `src/server/jobs.ts` |
 | `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `session.ts` |
 | `src/lib/analytics.ts` | The buyer-side tracker: visitor ID, 30-minute visits, traffic source, `?s=` link tags, `track()` |
 | `src/routes/api/e.ts` | Receives analytics events (sendBeacon); drops bots, records device and city |
@@ -227,8 +228,7 @@ domain are lowercase.
   Business API yet, so the seller sends each message from their own WhatsApp: Products shows "{n} waiting", the product
   page's `WaitingCard` gives a prefilled wa.me message per person and a check that deletes the alert, and Home shows
   "Back in stock, and buyers are waiting" once what they asked for can be bought (`getDashboard().backInStock`).
-  Alerts are deleted when done and after 90 days at most (Privacy page): `purgeOldAlerts()` runs when a buyer asks and when
-  the seller opens Home or a product. Move it to the nightly job when one exists, with the 13-month visit-data purge.
+  Alerts are deleted when done and after 90 days at most (Privacy page), by the nightly job (below).
 - Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
   sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.
 - The bag lives in the buyer's localStorage (`useCart`), so the server never knows it: `useCart().ready` is false until it has
@@ -246,6 +246,25 @@ domain are lowercase.
 - Product links are `/<shop>/<slug>`. A slug is set once and kept on rename; `/<shop>/p/<id>` and `/<shop>/<id>` redirect (301).
   Words reserved for shop pages: `checkout`, `p`, `b`, `c`, `bag`, `cart`, `order`, `orders`, `about`.
 - Link previews: `og:image` and `og:url` are absolute, built from the request origin.
+
+## Nightly job and backups
+`src/server/jobs.ts`, run by Cloudflare cron triggers (`triggers` in `wrangler.jsonc`, the same strings as `NIGHTLY` and `WEEKLY`).
+Logs start with `[jobs]` (Workers Logs); a failed task fails the run, so it shows in the dashboard's cron events.
+- **Nightly, 03:00 in Dar:** keeps the Privacy page's promises. Back-in-stock alerts past 90 days, visit data (`events`) past
+  13 months, and the visitor and visit IDs on orders that old (the order and its channel stay); expired seller logins.
+  Each purge also takes what would pass its limit before the next run.
+- **Weekly, Sunday 03:30:** the whole database as gzipped SQL in the private bucket `shopi-backups`
+  (`d1/shopi-YYYY-MM-DD.sql.gz`; no public URL, never bind it to `/img`). The newest 5 are kept (Privacy: "up to 5 weeks").
+  D1 Time Travel covers the last 30 days on its own; this copy survives the database being deleted.
+- **Run locally:** with `npm run dev` up, `curl "http://localhost:3000/cdn-cgi/handler/scheduled?cron=0+0+*+*+*"` (nightly) or
+  `cron=30+0+*+*+SUN` (backup); the local copy is at `shopi-backups/...` with `wrangler r2 object get --local`.
+- **Restore** into a new database, never over the live one:
+  ```bash
+  npx wrangler r2 object get shopi-backups/d1/shopi-YYYY-MM-DD.sql.gz --remote --file b.sql.gz && gunzip b.sql.gz
+  npx wrangler d1 create shopi-restore && npx wrangler d1 execute shopi-restore --remote --file b.sql
+  ```
+  Check it, then point `d1_databases` at it. `sqlite3 x.db < b.sql` also opens a backup locally.
+- Add new periodic work as a task in `runJob`, not on a request path. The 13 Nov purge-on-read for alerts was moved here.
 
 ## Analytics
 - **Tracker** (`src/lib/analytics.ts`):

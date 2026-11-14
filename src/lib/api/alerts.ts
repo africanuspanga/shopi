@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { requireShop } from '#/server/auth'
-import { purgeOldAlerts, withReadiness, type AlertRow } from '#/server/alerts'
+import { withReadiness, type AlertRow } from '#/server/alerts'
 import { all, first, newId, now, run } from '#/server/db'
 import { normalizePhone, parseSizes } from '#/lib/format'
 
@@ -36,7 +36,6 @@ export const askStockAlert = createServerFn({ method: 'POST' })
        ON CONFLICT (product_id, variant, phone) DO NOTHING`,
       newId(), data.shopId, data.productId, option?.label ?? '', data.phone, now(),
     )
-    await purgeOldAlerts()
     return { ok: true as const }
   })
 
@@ -47,7 +46,6 @@ export const listStockAlerts = createServerFn({ method: 'GET' })
   .validator((d: { productId: string }) => ({ productId: String(d.productId) }))
   .handler(async ({ data }) => {
     const { shop } = await requireShop()
-    await purgeOldAlerts()
     const rows = await all<AlertRow>(
       'SELECT id, product_id, variant, phone, created_at FROM stock_alerts WHERE shop_id = ? AND product_id = ? ORDER BY created_at',
       shop.id,

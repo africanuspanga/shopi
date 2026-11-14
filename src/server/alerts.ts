@@ -1,16 +1,8 @@
-import { all, now, run } from '#/server/db'
+import { all } from '#/server/db'
 import { parseSizes } from '#/lib/format'
 
-/** Back-in-stock alerts live 90 days at most (Privacy page). */
+/** Back-in-stock alerts live 90 days at most (Privacy page). The nightly job deletes older ones (`src/server/jobs.ts`). */
 export const ALERT_DAYS = 90
-
-/**
- * Deletes alerts older than 90 days, for every shop. Cheap (indexed on created_at), so it runs where alerts are made and
- * read: a buyer asking, and a seller opening Home or a product. A nightly job can take over once one exists.
- */
-export async function purgeOldAlerts() {
-  await run('DELETE FROM stock_alerts WHERE created_at < ?', now() - ALERT_DAYS * 86400_000)
-}
 
 export type AlertRow = { id: string; product_id: string; variant: string; phone: string; created_at: number }
 

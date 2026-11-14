@@ -95,6 +95,7 @@ function Privacy() {
           <li>{t('Orders: as long as the seller’s account is open, so sellers keep their records, and as long as the law requires for business records.')}</li>
           <li>{t('Visit data: up to 13 months, then it is deleted or kept only as totals.')}</li>
           <li>{t('Back-in-stock requests: deleted once the seller has messaged you, and after 90 days at most.')}</li>
+          <li>{t('Backup copies of the database: up to 5 weeks, then they are deleted.')}</li>
         </ul>
       </Section>
 
