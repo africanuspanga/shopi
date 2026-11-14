@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShopRouteRouteImport } from './routes/$shop/route'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as DataDeletionRouteImport } from './routes/data-deletion'
 import { Route as LoginRouteImport } from './routes/login'
@@ -57,6 +58,11 @@ const IndexRoute = IndexRouteImport.update({
 const ShopRouteRoute = ShopRouteRouteImport.update({
   id: '/$shop',
   path: '/$shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRouteRoute = AppRouteRouteImport.update({
@@ -249,6 +255,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$shop': typeof ShopRouteRouteWithChildren
   '/app': typeof AppRouteRouteWithChildren
+  '/admin': typeof AdminRoute
   '/data-deletion': typeof DataDeletionRoute
   '/login': typeof LoginRoute
   '/onboard': typeof OnboardRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/data-deletion': typeof DataDeletionRoute
   '/login': typeof LoginRoute
   '/onboard': typeof OnboardRoute
@@ -330,6 +338,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$shop': typeof ShopRouteRouteWithChildren
   '/app': typeof AppRouteRouteWithChildren
+  '/admin': typeof AdminRoute
   '/data-deletion': typeof DataDeletionRoute
   '/login': typeof LoginRoute
   '/onboard': typeof OnboardRoute
@@ -373,6 +382,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$shop'
     | '/app'
+    | '/admin'
     | '/data-deletion'
     | '/login'
     | '/onboard'
@@ -412,6 +422,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/data-deletion'
     | '/login'
     | '/onboard'
@@ -453,6 +464,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$shop'
     | '/app'
+    | '/admin'
     | '/data-deletion'
     | '/login'
     | '/onboard'
@@ -495,6 +507,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ShopRouteRoute: typeof ShopRouteRouteWithChildren
   AppRouteRoute: typeof AppRouteRouteWithChildren
+  AdminRoute: typeof AdminRoute
   DataDeletionRoute: typeof DataDeletionRoute
   LoginRoute: typeof LoginRoute
   OnboardRoute: typeof OnboardRoute
@@ -524,6 +537,13 @@ declare module '@tanstack/react-router' {
       path: '/$shop'
       fullPath: '/$shop'
       preLoaderRoute: typeof ShopRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -858,6 +878,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ShopRouteRoute: ShopRouteRouteWithChildren,
   AppRouteRoute: AppRouteRouteWithChildren,
+  AdminRoute: AdminRoute,
   DataDeletionRoute: DataDeletionRoute,
   LoginRoute: LoginRoute,
   OnboardRoute: OnboardRoute,

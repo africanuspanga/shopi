@@ -44,6 +44,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/routes/$shop/` | Storefront `index`, product page `$product` (readable slug), `checkout`, `p.$id` (301 redirect for old links) |
 | `src/routes/$shop/b.$code.tsx` | A bag link the buyer opens: checkout with the seller's lines and prices, or why it can't be ordered |
 | `src/routes/$shop/c.$slug.tsx` | A collection's own page: its products in the seller's order, chips to the others, quick add |
+| `src/routes/admin.tsx`, `src/lib/api/admin.ts` | The owner (CEO) dashboard at `/admin`, for users with `is_admin` only |
 | `src/routes/o/$code.tsx` | Buyer's order page: pay, paste SMS, progress |
 | `src/routes/app/` | Seller app: `route.tsx` (sidebar and floating bottom nav), dashboard, `analytics`, orders, products, shop settings |
 | `src/routes/app/bags/` | Bag links: the list, `new` (build a bag for one buyer), `$id` (send it, cancel it) |
@@ -303,6 +304,20 @@ domain are lowercase.
   seller's order that holds the product). `/sitemap.xml` lists the landing and legal pages, live shops with products, their
   collections and products with photos; demo shops, hidden products and checkout (`noindex`) stay out. `robots.txt` on
   shopi.tz keeps `/app/` and `/api/` out and names the sitemap.
+
+## Owner dashboard (`/admin`)
+For the founder: every shop and seller across Shopi (roadmap, "CEO dashboard"). Only `users.is_admin = 1` sees it;
+everyone else, logged in or not, gets the not-found page (`requireAdmin()` on the server, `beforeLoad` on the route).
+Set the flag by hand in D1 (`UPDATE users SET is_admin = 1 WHERE phone = '+255…'`); never put a phone number in code.
+- **Shows** (7/30/90 days, Tanzania time; demo shops listed but never counted; admins left out of sign-ups):
+  sign-ups, new and active shops (an order or a shop visit in the range), online orders, sales, average order; plans
+  now (trials, ending within 7 days, ended, Twiga, Tembo, yearly income); payments waiting over 1, 6 and 48 hours and
+  proofs with a low amount or another name; how buyers pay; the funnel from sign-up to fifth order (all time); every
+  shop with its seller, plan, setup, products, visits, orders, sales and last order (search); order sources;
+  sales by category; sign-ups without a shop, each with a WhatsApp link.
+- **Not yet:** the assistant's numbers, actions on a shop (suspend, change plan, reset password) and the audit log.
+  Add each with its feature, and log every action once actions exist.
+- One D1 batch, per-shop subqueries. Fine for hundreds of shops; move to nightly totals with `stats_daily` well before thousands.
 
 ## Nightly job and backups
 `src/server/jobs.ts`, run by Cloudflare cron triggers (`triggers` in `wrangler.jsonc`, the same strings as `NIGHTLY` and `WEEKLY`).

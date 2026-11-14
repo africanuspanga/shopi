@@ -75,6 +75,13 @@ export async function requireUser() {
 
 export type OwnShop = { id: string; slug: string; name: string }
 
+/** The owner dashboard (/admin): only users with is_admin. Anyone else gets the same answer as a missing page. */
+export async function requireAdmin() {
+  const user = await currentUser()
+  if (!user?.is_admin) throw new Error('NOT_FOUND')
+  return user
+}
+
 export async function requireShop() {
   const user = await requireUser()
   const shop = await first<OwnShop>('SELECT id, slug, name FROM shops WHERE owner_id = ? LIMIT 1', user.id)
