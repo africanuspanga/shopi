@@ -14,5 +14,9 @@
   "{kind} in {place}",
   "{name} from {shop}",
   "{price} at {shop} in {place}.",
-  "{price} at {shop}."
+  "{price} at {shop}.",
+  "Companies that run parts of Shopi for us, only for that purpose: Cloudflare (hosting, database, photo storage, and the check that keeps bots out of sign-up, checkout and back-in-stock requests), and, when you use them, our payment partner Settlo Pay, Google (maps) and Meta (WhatsApp and Instagram).",
+  "We couldn’t check that you’re not a robot. Try again in a minute, or order from {shop} on WhatsApp.",
+  "Tap the box above to show you’re not a robot, then try again.",
+  "We couldn’t check that you’re not a robot. Wait a minute and try again."
 ]

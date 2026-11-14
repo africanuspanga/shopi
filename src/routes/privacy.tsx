@@ -67,7 +67,7 @@ function Privacy() {
           <li>{t('The seller you order from sees your order details. Other sellers do not.')}</li>
           <li>
             {t(
-              'Companies that run parts of Shopi for us, only for that purpose: Cloudflare (hosting, database and photo storage), and, when you use them, our payment partner Settlo Pay, Google (maps) and Meta (WhatsApp and Instagram).',
+              'Companies that run parts of Shopi for us, only for that purpose: Cloudflare (hosting, database, photo storage, and the check that keeps bots out of sign-up, checkout and back-in-stock requests), and, when you use them, our payment partner Settlo Pay, Google (maps) and Meta (WhatsApp and Instagram).',
             )}
           </li>
           <li>{t('Authorities, when Tanzanian law requires it.')}</li>

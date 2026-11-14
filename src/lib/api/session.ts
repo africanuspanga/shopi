@@ -3,6 +3,7 @@ import { getCookie, setCookie } from '@tanstack/react-start/server'
 import { currentUser, endSession, hashPassword, startSession, verifyPassword } from '#/server/auth'
 import { first, newId, now, run } from '#/server/db'
 import { LIMITS, clientIp, count, forget, overLimit } from '#/server/limits'
+import { isHuman } from '#/server/turnstile'
 import { normalizePhone } from '#/lib/format'
 import { asLang, type Lang } from '#/lib/i18n'
 
@@ -26,10 +27,11 @@ export const setLang = createServerFn({ method: 'POST' })
   })
 
 export const signup = createServerFn({ method: 'POST' })
-  .validator((d: { name: string; phone: string; password: string }) => ({
+  .validator((d: { name: string; phone: string; password: string; human?: string }) => ({
     name: String(d.name ?? '').trim().slice(0, 60),
     phone: normalizePhone(String(d.phone ?? '')),
     password: String(d.password ?? ''),
+    human: d.human,
   }))
   .handler(async ({ data }) => {
     const ipKey = `signup-ip:${clientIp()}`
@@ -38,6 +40,7 @@ export const signup = createServerFn({ method: 'POST' })
     if (!data.name) return { error: 'name' as const }
     if (!data.phone) return { error: 'phone' as const }
     if (data.password.length < 6) return { error: 'password' as const }
+    if (!(await isHuman(data.human, 'signup', { key: 'signup', limit: LIMITS.uncheckedSignup }))) return { error: 'bot' as const }
     const exists = await first('SELECT id FROM users WHERE phone = ?', data.phone)
     if (exists) return { error: 'exists' as const }
     const id = newId()

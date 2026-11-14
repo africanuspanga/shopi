@@ -11,6 +11,11 @@ export const LIMITS = {
   loginFails: { max: 10, window: 60 * MINUTE },
   loginIp: { max: 60, window: 15 * MINUTE },
   signupIp: { max: 30, window: 60 * MINUTE },
+  // Requests the bot check (src/server/turnstile.ts) could not vouch for: sign-ups across Shopi, orders and
+  // back-in-stock requests per shop.
+  uncheckedSignup: { max: 5, window: 60 * MINUTE },
+  uncheckedOrder: { max: 3, window: 60 * MINUTE },
+  uncheckedAlert: { max: 5, window: 60 * MINUTE },
 } as const
 
 /** The visitor's IP as Cloudflare saw it. */

@@ -4,6 +4,7 @@ import { AuthLayout, PasswordInput, StepBar } from '#/components/auth'
 import { ErrorText, Field, TextLink } from '#/components/ui'
 import { signup } from '#/lib/api/session'
 import { useT } from '#/lib/i18n'
+import { useHumanCheck } from '#/lib/turnstile'
 import { canonical } from '#/lib/seo'
 
 export const Route = createFileRoute('/signup')({
@@ -20,12 +21,14 @@ function Signup() {
   const [form, setForm] = useState({ name: '', phone: '', password: '' })
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const check = useHumanCheck('signup')
   const errors = {
     name: t('Enter your name.'),
     phone: t('That phone number looks wrong. Example: 0754 123 456'),
     password: t('Use at least 6 characters for the password.'),
     exists: t('This number already has a shop. Log in instead.'),
     limit: t('Too many tries. Wait an hour and try again, or message the Shopi team on WhatsApp.'),
+    bot: t('We couldn’t check that you’re not a robot. Wait a minute and try again.'),
   }
   return (
     <AuthLayout
@@ -44,7 +47,12 @@ function Signup() {
           e.preventDefault()
           setBusy(true)
           setError('')
-          const res = await signup({ data: form })
+          const human = await check.token()
+          if (human === null) {
+            setBusy(false)
+            return setError(t('Tap the box above to show you’re not a robot, then try again.'))
+          }
+          const res = await signup({ data: { ...form, human } })
           setBusy(false)
           if ('error' in res && res.error) return setError(errors[res.error])
           await router.invalidate()
@@ -60,6 +68,7 @@ function Signup() {
         <Field label={t('Password')} hint={t('At least 6 characters')}>
           <PasswordInput autoComplete="new-password" value={form.password} onChange={(password) => setForm({ ...form, password })} />
         </Field>
+        <div ref={check.slot} />
         <ErrorText>{error}</ErrorText>
         <button className="btn btn-lg w-full" disabled={busy}>
           {busy ? t('Creating your account') : t('Continue')}

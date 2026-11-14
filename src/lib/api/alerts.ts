@@ -2,6 +2,8 @@ import { createServerFn } from '@tanstack/react-start'
 import { requireShop } from '#/server/auth'
 import { withReadiness, type AlertRow } from '#/server/alerts'
 import { all, first, newId, now, run } from '#/server/db'
+import { LIMITS } from '#/server/limits'
+import { isHuman } from '#/server/turnstile'
 import { normalizePhone, parseSizes } from '#/lib/format'
 
 /**
@@ -9,14 +11,16 @@ import { normalizePhone, parseSizes } from '#/lib/format'
  * Asking twice for the same thing with the same number keeps one alert.
  */
 export const askStockAlert = createServerFn({ method: 'POST' })
-  .validator((d: { shopId: string; productId: string; size?: string | null; phone: string }) => ({
+  .validator((d: { shopId: string; productId: string; size?: string | null; phone: string; human?: string }) => ({
     shopId: String(d.shopId),
     productId: String(d.productId),
     size: d.size ? String(d.size).slice(0, 20) : '',
     phone: normalizePhone(String(d.phone ?? '')),
+    human: d.human,
   }))
   .handler(async ({ data }) => {
     if (!data.phone) return { error: 'phone' as const }
+    if (!(await isHuman(data.human, 'alert', { key: `alert:${data.shopId}`, limit: LIMITS.uncheckedAlert }))) return { error: 'bot' as const }
     const p = await first<{ stock: number | null; sizes: string | null; status: string }>(
       `SELECT p.stock, p.sizes, s.status FROM products p JOIN shops s ON s.id = p.shop_id
        WHERE p.id = ? AND p.shop_id = ? AND p.active = 1 AND s.status IN ('active', 'demo')`,

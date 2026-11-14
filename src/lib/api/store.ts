@@ -8,6 +8,8 @@ import { moveStock } from '#/server/stock'
 import { openBag } from '#/server/bags'
 import { liveDiscount } from '#/server/discounts'
 import { discountOff } from '#/lib/discounts'
+import { LIMITS } from '#/server/limits'
+import { isHuman } from '#/server/turnstile'
 import { namesMatch, parsePaymentSms, type PaymentCheck } from '#/lib/payment-sms'
 
 export type PublicShop = {
@@ -116,6 +118,8 @@ export const placeOrder = createServerFn({ method: 'POST' })
       note: string
       payment: 'lipa' | 'cod'
       visit?: { vid?: string; sid?: string; source?: string; tag?: string }
+      /** The Turnstile token (src/lib/turnstile.tsx). */
+      human?: string
     }) => d,
   )
   .handler(async ({ data }) => {
@@ -124,12 +128,13 @@ export const placeOrder = createServerFn({ method: 'POST' })
       data.shopId,
     )
     if (!shop) return { error: 'shop' as const }
-    if (shop.status === 'demo') return { error: 'demo' as const }
-    if (BILLING_LIVE && (await shopPlan(shop.id))?.kind === 'ended') return { error: 'paused' as const }
     const name = String(data.name ?? '').trim().slice(0, 60)
     const phone = normalizePhone(String(data.phone ?? ''))
     if (!name) return { error: 'name' as const }
     if (!phone) return { error: 'phone' as const }
+    if (!(await isHuman(data.human, 'order', { key: `order:${shop.id}`, limit: LIMITS.uncheckedOrder }))) return { error: 'bot' as const }
+    if (shop.status === 'demo') return { error: 'demo' as const }
+    if (BILLING_LIVE && (await shopPlan(shop.id))?.kind === 'ended') return { error: 'paused' as const }
     const payment = data.payment === 'cod' ? 'cod' : 'lipa'
     if (payment === 'cod' && !shop.cod_enabled) return { error: 'payment' as const }
     if (payment === 'lipa' && !shop.lipa_number) return { error: 'payment' as const }

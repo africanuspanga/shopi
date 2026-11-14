@@ -249,6 +249,15 @@ domain are lowercase.
   page's `WaitingCard` gives a prefilled wa.me message per person and a check that deletes the alert, and Home shows
   "Back in stock, and buyers are waiting" once what they asked for can be bought (`getDashboard().backInStock`).
   Alerts are deleted when done and after 90 days at most (Privacy page), by the nightly job (below).
+- Bot check (Cloudflare Turnstile) on sign-up, checkout and "Notify me". The browser side is `useHumanCheck(action)` in
+  `src/lib/turnstile.tsx`: the script loads only on those screens (for Notify me, when the sheet opens), the check runs
+  unseen, and a box appears in the `slot` div above the button only when Cloudflare wants a tap (the first press then asks
+  for it). `token()` gives one token per request and starts a fresh check for the next try. The server side is `isHuman()`
+  in `src/server/turnstile.ts`: a token that fails is refused (`error: 'bot'`); no token, or Cloudflare unreachable, passes
+  only a few times an hour (`LIMITS.unchecked*`: 5 sign-ups across Shopi, 3 orders and 5 alerts per shop), so a phone that
+  can't run the check can still order. The site key is in code (Cloudflare's always-pass test key anywhere but shopi.tz);
+  `TURNSTILE_SECRET` is a Worker secret, and without it everything passes. Locally `.dev.vars` holds the always-pass test
+  secret; `2x0000000000000000000000000000000AA` always fails, and the site key `3x00000000000000000000FF` always asks for a tap.
 - Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
   sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.
 - The bag lives in the buyer's localStorage (`useCart`), so the server never knows it: `useCart().ready` is false until it has

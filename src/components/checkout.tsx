@@ -9,6 +9,7 @@ import { track, visit } from '#/lib/analytics'
 import { cleanCode, codeKey, discountLabel, discountOff, type DiscountRule } from '#/lib/discounts'
 import { optionText, tzs } from '#/lib/format'
 import { useT } from '#/lib/i18n'
+import { useHumanCheck } from '#/lib/turnstile'
 
 const BUYER_KEY = 'shopi_buyer'
 const OTHER = 'other'
@@ -96,6 +97,7 @@ export function CheckoutView({
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [applied, setApplied] = useState<DiscountRule | null>(null)
+  const check = useHumanCheck('order', !demo)
 
   useEffect(() => {
     // Once per checkout visit; the bag changing size is not a new checkout.
@@ -156,6 +158,7 @@ export function CheckoutView({
     paused: t('This shop is taking a break. Message the seller on WhatsApp.'),
     bag: t('This bag link can no longer be used. Ask {shop} for a new one.', { shop: shop.name }),
     discount: t('That discount code no longer works, so it was taken off. Check the new total and place your order.'),
+    bot: t('We couldn’t check that you’re not a robot. Try again in a minute, or order from {shop} on WhatsApp.', { shop: shop.name }),
   }
 
   const bag = (
@@ -235,6 +238,7 @@ export function CheckoutView({
           <span className="font-mono text-[20px] font-medium tracking-tight">{tzs(total)}</span>
         </div>
       </div>
+      <div ref={check.slot} />
       <ErrorText>{error || blocked}</ErrorText>
       <button form={FORM_ID} className="btn btn-lg w-full" disabled={busy || demo || paused || !!blocked || (!canLipa && !canCod)}>
         {demo ? t('Orders are off in this demo shop') : paused ? t('This shop is taking a break') : busy ? t('Placing your order') : t('Place order')}
@@ -271,6 +275,11 @@ export function CheckoutView({
               if ((!areas.length || form.areaId === OTHER) && !form.areaOther.trim()) return setError(t('Write your area'))
               setBusy(true)
               setError('')
+              const human = await check.token()
+              if (human === null) {
+                setBusy(false)
+                return setError(t('Tap the box above to show you’re not a robot, then try again.'))
+              }
               const res = await placeOrder({
                 data: {
                   shopId: shop.id,
@@ -279,6 +288,7 @@ export function CheckoutView({
                   ...form,
                   payment,
                   visit: visit(),
+                  human,
                 },
               })
               setBusy(false)

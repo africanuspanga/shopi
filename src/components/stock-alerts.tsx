@@ -7,6 +7,7 @@ import { askStockAlert, doneStockAlert, type StockAlert } from '#/lib/api/alerts
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
 import { imageOf, localPhone, optionText, timeAgo, waLink } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
+import { useHumanCheck } from '#/lib/turnstile'
 import { useOrigin } from '#/lib/share'
 
 const ASKED_KEY = 'shopi_alerts'
@@ -56,6 +57,7 @@ export function NotifySheet({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
+  const check = useHumanCheck('alert', open && !done)
   useEffect(() => {
     if (!open) return
     setDone(false)
@@ -73,7 +75,12 @@ export function NotifySheet({
   async function ask() {
     setBusy(true)
     setError('')
-    const res = await askStockAlert({ data: { shopId: shop.id, productId: product.id, size, phone } })
+    const human = await check.token()
+    if (human === null) {
+      setBusy(false)
+      return setError(t('Tap the box above to show you’re not a robot, then try again.'))
+    }
+    const res = await askStockAlert({ data: { shopId: shop.id, productId: product.id, size, phone, human } })
     setBusy(false)
     if ('error' in res) {
       return setError(
@@ -83,7 +90,9 @@ export function NotifySheet({
             ? t('Good news: it is in stock now. Close this and add it to your bag.')
             : res.error === 'demo'
               ? t('This is a demo shop. Messages are switched off.')
-              : t('Something went wrong. Try again.'),
+              : res.error === 'bot'
+                ? t('We couldn’t check that you’re not a robot. Wait a minute and try again.')
+                : t('Something went wrong. Try again.'),
       )
     }
     setDone(true)
@@ -127,6 +136,7 @@ export function NotifySheet({
               {t('Privacy')}
             </Link>
           </p>
+          <div ref={check.slot} />
           <ErrorText>{error}</ErrorText>
           <button className="btn btn-lg w-full" disabled={busy || phone.replace(/\D/g, '').length < 9}>
             <Bell size={17} strokeWidth={1.75} /> {busy ? t('Saving') : t('Notify me')}
