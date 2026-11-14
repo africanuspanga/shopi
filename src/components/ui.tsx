@@ -1,9 +1,34 @@
 import { Link, useRouter } from '@tanstack/react-router'
 import { ArrowLeft, ImageIcon, X } from 'lucide-react'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { STATUS_LABEL, imgUrl, type OrderStatus } from '#/lib/format'
 import { LANGUAGES, SWAHILI_ENABLED, useLang, useT, type Lang } from '#/lib/i18n'
 import { setLang } from '#/lib/api/session'
+
+let navigated = false
+
+/** Called once by the root: from the first move to another page on, screens that open use the entrance (`useEntrance`). */
+export function useWatchNavigation() {
+  const router = useRouter()
+  useEffect(
+    () =>
+      router.subscribe('onBeforeNavigate', (e) => {
+        if (e.pathChanged && e.fromLocation) navigated = true
+      }),
+    [router],
+  )
+}
+
+/**
+ * The entrance animation (`.rise`, `.rise-2`, `.rise-3`) for content that may be on the first page a visitor opens.
+ * That page arrives drawn by the server, and fading it in would hide it until the phone has run the page's scripts
+ * (1.3 s on a slow phone, the shop page's bio): so the first page shows at once, and screens opened after it rise.
+ * Read once, when the component mounts.
+ */
+export function useEntrance(name: 'rise' | 'rise-2' | 'rise-3' = 'rise') {
+  const [cls] = useState(() => (navigated ? name : ''))
+  return cls
+}
 
 /** Page frame. narrow: forms and buyer flows. wide: merchant screens and storefronts. */
 export function Page({ children, nav = false, wide = false, className = '' }: { children: ReactNode; nav?: boolean; wide?: boolean; className?: string }) {

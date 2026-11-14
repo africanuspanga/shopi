@@ -10,6 +10,7 @@ import type { PublicShop } from '#/lib/api/store'
 import { track } from '#/lib/analytics'
 import { imgUrl, localPhone, tzs, waLink } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
+import { useEntrance } from '#/components/ui'
 
 /** A bag the seller made for one buyer: shopi.tz/<shop>/b/<code>. It opens straight on checkout. */
 export const Route = createFileRoute('/$shop/b/$code')({
@@ -114,6 +115,7 @@ function BagPage() {
 
 /** A bag link that was ordered, cancelled or ran out of time. */
 function Ended({ shop, bag }: { shop: PublicShop; bag: PublicBag }) {
+  const rise = useEntrance()
   const t = useT()
   const chat = (text: string) =>
     shop.whatsapp ? (
@@ -152,7 +154,7 @@ function Ended({ shop, bag }: { shop: PublicShop; bag: PublicBag }) {
     <div className="min-h-dvh bg-page">
       <CheckoutHeader shop={shop} />
       <main className="mx-auto max-w-[560px] px-4 pt-8 pb-16 md:pt-16">
-        <section className="rise card flex flex-col items-center p-6 text-center md:p-10">
+        <section className={`${rise} card flex flex-col items-center p-6 text-center md:p-10`}>
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-well text-ink-2">
             <ShoppingBag size={20} strokeWidth={1.5} />
           </span>

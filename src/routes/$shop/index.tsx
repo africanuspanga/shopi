@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { BagButton, FactPills, ProductGrid, ShopFacts, ShopFooter, ShopTopBar, SocialLinks, onSale } from '#/components/shop'
 import { ShopNav } from '#/components/shop-nav'
-import { Chips, Empty, ShopAvatar, Toast } from '#/components/ui'
+import { Chips, Empty, ShopAvatar, Toast, useEntrance } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import { useCart } from '#/lib/cart'
 import { waLink } from '#/lib/format'
@@ -29,6 +29,8 @@ const parent = getRouteApi('/$shop')
 const NEW_DAYS = 30
 
 function Storefront() {
+  const rise = useEntrance()
+  const rise2 = useEntrance('rise-2')
   const t = useT()
   const { shop, products, areas, collections } = parent.useLoaderData()
   const cart = useCart(shop.id)
@@ -94,7 +96,7 @@ function Storefront() {
 
       <main className="mx-auto max-w-[1280px] px-4 md:px-10">
         <section className="grid gap-8 pt-8 pb-8 md:grid-cols-[minmax(0,1fr)_340px] md:items-end md:gap-16 md:pt-16 md:pb-14 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <div className="rise min-w-0">
+          <div className={`${rise} min-w-0`}>
             <div ref={nameRef} className="flex items-center gap-4 md:block">
               <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-16 w-16 text-[20px] md:h-24 md:w-24 md:text-[28px]" />
               <div className="min-w-0 md:mt-8">
@@ -130,7 +132,7 @@ function Storefront() {
               <FactPills shop={shop} areas={areas} />
             </div>
           </div>
-          <aside className="rise-2 hidden rounded-[20px] bg-page p-6 md:block">
+          <aside className={`${rise2} hidden rounded-[20px] bg-page p-6 md:block`}>
             <ShopFacts shop={shop} areas={areas} />
           </aside>
         </section>

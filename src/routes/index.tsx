@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { WhatsAppIcon } from '#/components/brand-icons'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { BioPreview, LinkPreview, MiniStore, NewOrderCard, OrderPreview, PaymentSlip, Phone, ProductPreview, SmsBubble } from '#/components/showcase'
-import { Wordmark } from '#/components/ui'
+import { Wordmark, useEntrance } from '#/components/ui'
 import { useT } from '#/lib/i18n'
 import { PLANS } from '#/lib/plans'
 import { SITE, canonical, ld } from '#/lib/seo'
@@ -140,11 +140,12 @@ function SectionTabs({ start, startLabel }: { start: string; startLabel: string 
 /* ---------- Hero ---------- */
 
 function Hero({ start, startLabel }: { start: string; startLabel: string }) {
+  const rise = useEntrance()
   const t = useT()
   return (
     <section id="top" className="relative">
       <Container className="grid items-center gap-12 pt-10 pb-16 md:pt-16 lg:min-h-[calc(100dvh-72px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,500px)] lg:gap-16 lg:pt-6 lg:pb-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
-        <div className="rise">
+        <div className={rise}>
           <h1 className="display text-[44px] text-balance sm:text-[60px] lg:text-[74px] xl:text-[84px]">
             {t('Stop answering')} <span className="whitespace-nowrap">“bei gani?”</span> {t('in your DMs')}
           </h1>
@@ -174,8 +175,9 @@ function Hero({ start, startLabel }: { start: string; startLabel: string }) {
 }
 
 function HeroVisual() {
+  const rise2 = useEntrance('rise-2')
   return (
-    <div className="rise-2 relative mx-auto h-[600px] w-full max-w-[360px] sm:h-[680px] sm:max-w-[560px]">
+    <div className={`${rise2} relative mx-auto h-[600px] w-full max-w-[360px] sm:h-[680px] sm:max-w-[560px]`}>
       <Phone className="absolute top-0 left-1/2 h-[600px] w-[300px] -translate-x-1/2 sm:h-[660px] sm:w-[328px]">
         <MiniStore />
       </Phone>

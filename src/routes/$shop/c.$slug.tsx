@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { NotFound } from '#/components/not-found'
 import { BagButton, ProductGrid, ShopFooter, ShopTopBar } from '#/components/shop'
 import { ShopNav } from '#/components/shop-nav'
-import { Empty, Toast } from '#/components/ui'
+import { Empty, Toast, useEntrance } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import { useCart } from '#/lib/cart'
 import { imgUrl } from '#/lib/format'
@@ -55,6 +55,7 @@ function CollectionNotFound() {
 }
 
 function CollectionPage() {
+  const rise = useEntrance()
   const t = useT()
   const { shop, products, areas, collections } = parent.useLoaderData()
   const { collection: c } = Route.useLoaderData()
@@ -95,7 +96,7 @@ function CollectionPage() {
       />
 
       <main className="mx-auto max-w-[1280px] px-4 md:px-10">
-        <section className="rise pt-8 pb-7 md:pt-16 md:pb-12">
+        <section className={`${rise} pt-8 pb-7 md:pt-16 md:pb-12`}>
           <Link to="/$shop" params={{ shop: shop.slug }} className="text-[14px] text-muted transition-colors hover:text-ink md:text-[15px]">
             {shop.name}
           </Link>

@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Check } from 'lucide-react'
-import { Page, TopBar } from '#/components/ui'
+import { Page, TopBar, useEntrance } from '#/components/ui'
 import { getMyPlan } from '#/lib/api/merchant'
 import { useLang, useT } from '#/lib/i18n'
 import { BILLING_LIVE, PLANS, SETUP_TRIAL_DAYS, type PlanState } from '#/lib/plans'
@@ -57,6 +57,7 @@ function PlanPage() {
 }
 
 function Status({ plan }: { plan: PlanState }) {
+  const rise = useEntrance()
   const t = useT()
   const lang = useLang()
   const date = (ms: number) =>
@@ -83,7 +84,7 @@ function Status({ plan }: { plan: PlanState }) {
   }
 
   return (
-    <section className="rise rounded-[28px] bg-ink p-6 text-white md:p-8">
+    <section className={`${rise} rounded-[28px] bg-ink p-6 text-white md:p-8`}>
       <p className="text-[14px] text-white/60">{t('Your plan')}</p>
       <h2 className="title mt-2 text-[26px] md:text-[34px]">{title}</h2>
       <p className="mt-2 text-[15px] text-white/75">{line}</p>

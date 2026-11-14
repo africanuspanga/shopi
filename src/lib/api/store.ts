@@ -63,26 +63,31 @@ const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram,
 export const getStorefront = createServerFn({ method: 'GET' })
   .validator((d: { slug: string }) => ({ slug: String(d.slug).toLowerCase() }))
   .handler(async ({ data }) => {
-    const shop = await first<PublicShop>(`SELECT ${SHOP_COLS} FROM shops WHERE slug = ? AND status IN ('active', 'demo')`, data.slug)
-    if (!shop) return null
-    const [products, areas, discount, collections, members] = await Promise.all([
-      all<Omit<PublicProduct, 'images' | 'sizes'> & { images: string; sizes: string | null }>(
+    // One round trip: the database is in Europe and shop pages are read from Africa, so each trip costs about 170 ms.
+    // Every query finds the shop by its slug itself instead of waiting for the shop's row.
+    const shopId = `(SELECT id FROM shops WHERE slug = ?1 AND status IN ('active', 'demo'))`
+    const q = (sql: string, ...params: unknown[]) => db().prepare(sql).bind(data.slug, ...params)
+    const [shopRows, productRows, areaRows, discountRows, collectionRows, memberRows] = await db().batch([
+      q(`SELECT ${SHOP_COLS} FROM shops WHERE slug = ?1 AND status IN ('active', 'demo')`),
+      q(
         `SELECT id, slug, name, description, price, compare_price, stock, sizes, option_name, images, created_at FROM products
-         WHERE shop_id = ? AND active = 1 ORDER BY created_at DESC`,
-        shop.id,
+         WHERE shop_id = ${shopId} AND active = 1 ORDER BY created_at DESC`,
       ),
-      all<{ id: string; name: string; fee: number }>(
-        'SELECT id, name, fee FROM delivery_areas WHERE shop_id = ? ORDER BY sort',
-        shop.id,
-      ),
-      first('SELECT 1 FROM discounts WHERE shop_id = ? AND active = 1 AND (ends_at IS NULL OR ends_at > ?) LIMIT 1', shop.id, now()),
-      all<Omit<PublicCollection, 'productIds'>>('SELECT id, slug, name, description FROM collections WHERE shop_id = ? ORDER BY sort, created_at', shop.id),
-      all<{ collection_id: string; product_id: string }>(
+      q(`SELECT id, name, fee FROM delivery_areas WHERE shop_id = ${shopId} ORDER BY sort`),
+      q(`SELECT 1 FROM discounts WHERE shop_id = ${shopId} AND active = 1 AND (ends_at IS NULL OR ends_at > ?2) LIMIT 1`, now()),
+      q(`SELECT id, slug, name, description FROM collections WHERE shop_id = ${shopId} ORDER BY sort, created_at`),
+      q(
         `SELECT cp.collection_id, cp.product_id FROM collection_products cp JOIN collections c ON c.id = cp.collection_id
-         WHERE c.shop_id = ? ORDER BY cp.sort`,
-        shop.id,
+         WHERE c.shop_id = ${shopId} ORDER BY cp.sort`,
       ),
     ])
+    const shop = (shopRows.results[0] as PublicShop | undefined) ?? null
+    if (!shop) return null
+    const products = productRows.results as (Omit<PublicProduct, 'images' | 'sizes'> & { images: string; sizes: string | null })[]
+    const areas = areaRows.results as { id: string; name: string; fee: number }[]
+    const discount = discountRows.results[0]
+    const collections = collectionRows.results as Omit<PublicCollection, 'productIds'>[]
+    const members = memberRows.results as { collection_id: string; product_id: string }[]
     const visible = new Set(products.map((p) => p.id))
     return {
       shop,

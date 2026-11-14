@@ -1,4 +1,5 @@
 import { HeadContent, Outlet, Scripts, createRootRoute, useMatches } from '@tanstack/react-router'
+import { useWatchNavigation } from '#/components/ui'
 import { getSession } from '#/lib/api/session'
 import { LangProvider, asLang } from '#/lib/i18n'
 import appCss from '../styles.css?url'
@@ -35,6 +36,7 @@ export const Route = createRootRoute({
 
 function Root() {
   const { session } = Route.useRouteContext()
+  useWatchNavigation()
   return (
     <LangProvider value={session.lang}>
       <Outlet />

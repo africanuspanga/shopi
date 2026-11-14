@@ -6,7 +6,7 @@ import { ShareActions } from '#/components/share'
 import { BagButton, OptionChip, Price, ProductCard, ShopFooter, ShopTopBar, Tag, shownPrice } from '#/components/shop'
 import { NotFound } from '#/components/not-found'
 import { NotifySheet, useAsked } from '#/components/stock-alerts'
-import { Img, Toast } from '#/components/ui'
+import { Img, Toast, useEntrance } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import { lineKey, useCart } from '#/lib/cart'
 import { OPTION_KINDS, imgUrl, optionKind, optionText, priceOf, tzs, waLink } from '#/lib/format'
@@ -64,6 +64,7 @@ function ProductNotFound() {
 const parent = getRouteApi('/$shop')
 
 function ProductPage() {
+  const rise = useEntrance()
   const t = useT()
   const navigate = useNavigate()
   const { shop, products, areas } = parent.useLoaderData()
@@ -223,7 +224,7 @@ function ProductPage() {
             )}
           </div>
 
-          <div className="rise px-4 pt-6 md:px-0 md:pt-2">
+          <div className={`${rise} px-4 pt-6 md:px-0 md:pt-2`}>
             <nav aria-label={t('Breadcrumb')}>
               <ol className="flex min-w-0 items-center gap-1.5 text-[14px] text-muted">
                 <li className="min-w-0 truncate">

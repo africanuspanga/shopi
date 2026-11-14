@@ -165,6 +165,10 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
 One easing, `--ease-out` (`cubic-bezier(0.22, 1, 0.36, 1)`): 120 to 180ms for feedback, 300 to 500ms for entrances.
 Hover colours in `styles.css` sit inside `@media (hover: hover)` (Tailwind's `hover:` already does this): on a phone a tap
 would leave the button stuck in its hover colour. Keep new hover rules there too.
+Entrances (`.rise`, `.rise-2`, `.rise-3`) on content that can be on the first page a visitor opens go through `useEntrance()`
+(`ui.tsx`), never a bare class: the server-drawn first page shows at once, and screens opened after a move inside the app
+rise. A fade on the first page hides it until the phone has run the scripts (the shop's bio waited 1.3 s on a slow phone,
+and the shop page's LCP was 4.4 s). Things that appear after an action (toasts, the save bar) keep the plain class.
 Animate only colour, opacity and transform. No looping animation except spinners while uploading.
 Presses scale to about 0.97. Respect `prefers-reduced-motion`.
 

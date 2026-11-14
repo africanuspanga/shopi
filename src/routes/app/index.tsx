@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, ReceiptText, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { Delta, Empty, Img, LangSwitch, Money, Page, ShopAvatar, StatusPill, Toast, scrubIndex } from '#/components/ui'
+import { Delta, Empty, Img, LangSwitch, Money, Page, ShopAvatar, StatusPill, Toast, scrubIndex, useEntrance } from '#/components/ui'
 import { getDashboard } from '#/lib/api/merchant'
 import { timeAgo, tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
@@ -17,6 +17,9 @@ const n = (v: number) => Math.round(v).toLocaleString('en-US')
 const compact = (v: number) => (v >= 1e6 ? `${(v / 1e6).toFixed(v >= 1e7 ? 0 : 1)}M` : v >= 1e3 ? `${Math.round(v / 1e3)}k` : String(Math.round(v)))
 
 function Dashboard() {
+  const rise = useEntrance()
+  const rise2 = useEntrance('rise-2')
+  const rise3 = useEntrance('rise-3')
   const t = useT()
   const lang = useLang()
   const d = Route.useLoaderData()
@@ -74,7 +77,7 @@ function Dashboard() {
       <PlanRow plan={d.plan} />
 
       {d.backInStock.length > 0 && (
-        <section className="rise card mt-6 overflow-hidden md:mt-8">
+        <section className={`${rise} card mt-6 overflow-hidden md:mt-8`}>
           <div className="px-5 pt-5 md:px-6">
             <h2 className="flex items-center gap-2.5 text-[16px] font-semibold">
               <span className="signal shrink-0" />
@@ -98,7 +101,7 @@ function Dashboard() {
       )}
 
       {setupDone < setupSteps.length && (
-        <section className="rise card mt-6 p-5 md:mt-8 md:p-6">
+        <section className={`${rise} card mt-6 p-5 md:mt-8 md:p-6`}>
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-[16px] font-semibold">{t('Finish setting up your shop')}</h2>
@@ -131,7 +134,7 @@ function Dashboard() {
 
       <div className="mt-6 grid gap-4 md:mt-8 lg:grid-cols-12">
         {/* Today: the one dark card */}
-        <section className="rise relative flex min-h-[220px] flex-col overflow-hidden rounded-[24px] bg-ink p-6 text-white md:p-7 lg:col-span-5">
+        <section className={`${rise} relative flex min-h-[220px] flex-col overflow-hidden rounded-[24px] bg-ink p-6 text-white md:p-7 lg:col-span-5`}>
           <p className="text-[14px] text-white/60">{t('Sales today')}</p>
           <p className="mt-3 text-[44px] leading-none font-semibold tracking-[-0.04em] [font-stretch:108%] md:text-[56px]">
             <Money value={d.today.total} cur="text-[0.36em] text-white/50 tracking-normal" />
@@ -158,7 +161,7 @@ function Dashboard() {
         </section>
 
         {/* What needs the seller now */}
-        <section className="rise-2 card flex flex-col p-2 lg:col-span-4">
+        <section className={`${rise2} card flex flex-col p-2 lg:col-span-4`}>
           <h2 className="px-4 pt-3 pb-2 text-[15px] font-semibold">{t('Needs you')}</h2>
           <TodoRow f="check" signal={d.queue.toConfirm > 0} count={d.queue.toConfirm} label={t('Payments to check')} sub={t('Buyers sent proof')} />
           <TodoRow f="send" count={d.queue.toSend} label={t('Orders to send')} sub={t('Paid and confirmed')} />
@@ -166,7 +169,7 @@ function Dashboard() {
         </section>
 
         {/* Shop link */}
-        <section className="rise-3 card flex flex-col p-6 lg:col-span-3">
+        <section className={`${rise3} card flex flex-col p-6 lg:col-span-3`}>
           <h2 className="text-[15px] font-semibold">{t('Your shop link')}</h2>
           <p className="code mt-3 truncate text-[17px]">shopi.tz/{shop.slug}</p>
           <dl className="mt-auto grid grid-cols-2 gap-3 pt-6">
@@ -444,6 +447,7 @@ function SalesChart({ days, total, className = '' }: { days: { day: number; tota
 
 /** One quiet line about the plan: trial days left, or that the trial or plan has ended. Paid plans stay quiet until the last month. */
 function PlanRow({ plan }: { plan: PlanState | null }) {
+  const rise = useEntrance()
   const t = useT()
   if (!plan || plan.kind === 'demo' || (plan.kind === 'paid' && plan.daysLeft > 30)) return null
   const soon = (plan.kind === 'trial' || plan.kind === 'paid') && plan.daysLeft <= 3
@@ -456,7 +460,7 @@ function PlanRow({ plan }: { plan: PlanState | null }) {
           ? t('Your shop is taking a break')
           : t('Your free trial has ended. You can keep selling for now.')
   return (
-    <Link to="/app/plan" className="rise card mt-6 flex items-center gap-3 px-5 py-4 transition-colors hover:bg-page md:mt-8">
+    <Link to="/app/plan" className={`${rise} card mt-6 flex items-center gap-3 px-5 py-4 transition-colors hover:bg-page md:mt-8`}>
       {(soon || plan.kind === 'ended') && <span className="signal shrink-0" aria-hidden />}
       <span className="min-w-0 flex-1 truncate text-[15px] font-medium">{text}</span>
       <span className="flex shrink-0 items-center gap-1 text-[14px] text-ink-2">

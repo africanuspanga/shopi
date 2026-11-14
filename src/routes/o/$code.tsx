@@ -3,7 +3,7 @@ import { Check, Copy, ImageDown, MapPin, Printer, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { MadeWithShopi } from '#/components/shop'
-import { ErrorText, Img, ShopAvatar } from '#/components/ui'
+import { ErrorText, Img, ShopAvatar, useEntrance } from '#/components/ui'
 import { getTrackedOrder, submitPaymentSms } from '#/lib/api/store'
 import { optionText, timeAgo, tzs, waLink, type OrderStatus, formatTin } from '#/lib/format'
 import { LangProvider, asLang, useLang, useT } from '#/lib/i18n'
@@ -41,6 +41,8 @@ function TrackPage() {
 const DONE: Record<OrderStatus, number> = { awaiting_payment: 0, payment_claimed: 1, confirmed: 2, dispatched: 3, delivered: 4, cancelled: 0 }
 
 function Track() {
+  const rise = useEntrance()
+  const rise2 = useEntrance('rise-2')
   const t = useT()
   const lang = useLang()
   const router = useRouter()
@@ -171,7 +173,7 @@ function Track() {
 
       <main className="mx-auto max-w-[1080px] px-4 pb-16 md:grid md:grid-cols-[minmax(0,1fr)_380px] md:items-start md:gap-10 md:px-10 print:block">
         <div className="min-w-0 space-y-4 print:hidden">
-          <section className="rise card p-6 md:p-8">
+          <section className={`${rise} card p-6 md:p-8`}>
             <p className="meta">
               {t('Order')} <span className="code text-ink">#{o.code}</span> · {timeAgo(o.created_at, lang)}
             </p>
@@ -197,7 +199,7 @@ function Track() {
           </section>
 
           {needsPayment && (
-            <section className="rise-2 card p-6 md:p-8">
+            <section className={`${rise2} card p-6 md:p-8`}>
               <Step n={1} title={t('Pay by mobile money')} />
               <div className="mt-5 divide-y divide-line rounded-[16px] bg-page px-5">
                 <CopyRow
@@ -270,7 +272,7 @@ function Track() {
           )}
         </div>
 
-        <aside className="rise-2 mt-8 md:sticky md:top-6 md:mt-0 print:mx-auto print:mt-0 print:max-w-[420px]">
+        <aside className={`${rise2} mt-8 md:sticky md:top-6 md:mt-0 print:mx-auto print:mt-0 print:max-w-[420px]`}>
           <div className="receipt px-5 pt-5 pb-6">
             <div className="flex items-baseline justify-between">
               <p className="text-[15px] font-semibold">{receiptTitle}</p>

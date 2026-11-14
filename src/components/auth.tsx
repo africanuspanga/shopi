@@ -2,11 +2,12 @@ import { Link } from '@tanstack/react-router'
 import { Eye, EyeOff } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { MiniStore, NewOrderCard, Phone } from '#/components/showcase'
-import { LangSwitch, Wordmark } from '#/components/ui'
+import { LangSwitch, Wordmark, useEntrance } from '#/components/ui'
 import { useT } from '#/lib/i18n'
 
 /** Sign-in and sign-up: the form on the left, the product on a dark panel on the right (desktop only). */
 export function AuthLayout({ children, topRight, aside }: { children: ReactNode; topRight?: ReactNode; aside?: ReactNode }) {
+  const rise = useEntrance()
   return (
     <div className="min-h-dvh bg-page lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="flex min-h-dvh flex-col px-4 pt-[max(8px,env(safe-area-inset-top))] pb-10 md:px-10">
@@ -19,7 +20,7 @@ export function AuthLayout({ children, topRight, aside }: { children: ReactNode;
             <LangSwitch />
           </div>
         </header>
-        <main className="rise mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-8">{children}</main>
+        <main className={`${rise} mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-8`}>{children}</main>
       </div>
       <aside className="sticky top-0 hidden h-dvh p-3 lg:block">
         <div className="relative flex h-full flex-col overflow-hidden rounded-[32px] bg-ink p-10 text-white">{aside ?? <ProductAside />}</div>
