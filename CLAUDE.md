@@ -307,6 +307,14 @@ Logs start with `[jobs]` (Workers Logs); a failed task fails the run, so it show
   npx wrangler d1 create shopi-restore && npx wrangler d1 execute shopi-restore --remote --file b.sql
   ```
   Check it, then point `d1_databases` at it. `sqlite3 x.db < b.sql` also opens a backup locally.
+- **Alerts by email** (set up 14 Nov in the dashboard: Observability > Monitors, beta; they email africanuspanga@gmail.com,
+  repeating every 6 h while active). Both read Workers Logs (`logs.workersLogs`) for `scriptName = 'shopi'`:
+  - "shopi.tz: server errors (5xx)": `httpStatus >= 500`, 3 or more in 5 minutes (threshold 0.6, averaged over 5m).
+  - "shopi: crash or failed nightly job / backup": outcome not `ok` and not `canceled`, 1 or more in a minute. A failed job
+    run throws, so it lands here.
+  The monitor SQL is picky: no `OR` or `IN` on `"attributes"['$workers.…']` fields, and at most two or three plain `AND`ed
+  conditions ("recursion limit exceeded"). Neither monitor sees an outage where requests never reach the Worker (DNS, a
+  deploy that drops the custom domain); an outside uptime check would.
 - Add new periodic work as a task in `runJob`, not on a request path. The 13 Nov purge-on-read for alerts was moved here.
 
 ## Analytics
