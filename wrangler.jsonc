@@ -24,6 +24,8 @@
 		{ "binding": "MEDIA", "bucket_name": "shopi-media" },
 		{ "binding": "BACKUPS", "bucket_name": "shopi-backups" }
 	],
+	// Web push (src/server/push.ts): the public half of the key pair. The private half is the secret VAPID_PRIVATE_KEY.
+	"vars": { "VAPID_PUBLIC_KEY": "BOs5C8-7GroE_fa6Z_9CKv5P54wQhM72EEybJGVoYIsk3VGsJpELSF8PHB45ykXn1qPzDx16gz3svC1_4XHesyU" },
 	// NIGHTLY and WEEKLY in src/server/jobs.ts: the clean-up the Privacy page promises, and the database backup.
 	"triggers": { "crons": ["0 0 * * *", "30 0 * * SUN"] }
 }

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef } from 'react'
  * The box shows only when Cloudflare wants a tap. The server checks the token (`src/server/turnstile.ts`).
  * Used on sign-up, checkout and "Notify me".
  */
-const SITE_KEY = '0x4AAAAAAA_SHOPI_SITE_KEY'
+const SITE_KEY = '0x4AAAAAAGA6i1KgmOVokoYS'
 /** Cloudflare's test key: always passes, on any address. Used everywhere but shopi.tz (local work, tunnels). */
 const TEST_KEY = '1x00000000000000000000AA'
 
