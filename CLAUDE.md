@@ -52,9 +52,11 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/routes/app/collections/` | Collections: the list (order, share), `new` and `$id` (`CollectionForm` in `components/collections.tsx`) |
 | `src/routes/app/discounts.tsx` | Discount codes: each code with its uses, on/off, Share (as a link) and the new/edit sheet |
 | `src/components/stock-alerts.tsx` | Back in stock: `NotifySheet` (a buyer leaves a WhatsApp number), `useAsked`, `WaitingCard` (the seller's list, a prefilled WhatsApp message each, Done) |
+| `src/components/phone-app.tsx` | The seller's phone: `PhoneAlertsCard` (Home) and `PhoneAppSettings` (Shop settings) for notifications and installing |
+| `src/lib/push.ts`, `src/server/push.ts`, `public/sw.js` | Web push: `usePhoneApp` and the install offer (browser), `notifySeller` (server), the service worker that shows them |
 | `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
 | `src/server.ts` | The Worker entry: TanStack Start answers requests; `scheduled` runs the cron jobs in `src/server/jobs.ts` |
-| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `session.ts` |
+| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `push.ts` (notification subscriptions), `session.ts` |
 | `src/lib/seo.ts` | Search: `SITE`, `canonical()`, titles and descriptions per page, JSON-LD (`ld`, `storeSchema`, `productSchema`, `breadcrumbSchema`); `src/routes/sitemap[.]xml.ts` |
 | `src/lib/analytics.ts` | The buyer-side tracker: visitor ID, 30-minute visits, traffic source, `?s=` link tags, `track()` |
 | `src/routes/api/e.ts` | Receives analytics events (sendBeacon); drops bots, records device and city |
@@ -262,6 +264,18 @@ domain are lowercase.
   can't run the check can still order. The site key is in code (Cloudflare's always-pass test key anywhere but shopi.tz);
   `TURNSTILE_SECRET` is a Worker secret, and without it everything passes. Locally `.dev.vars` holds the always-pass test
   secret; `2x0000000000000000000000000000000AA` always fails, and the site key `3x00000000000000000000FF` always asks for a tap.
+- Notifications on the seller's phone (Web Push; `push_subscriptions`, one row per phone or browser). Home shows
+  `PhoneAlertsCard` until they are on ("Not now" hides it 14 days); Shop settings has the full controls, a test and
+  Turn off. On iPhone, Apple allows them only once Shopi is on the Home Screen, so the card explains that instead.
+  `placeOrder` sends "New order: TSh …" and `submitPaymentSms` sends "Check a payment: TSh …" (`notifySeller`, after the
+  response, in the language the seller used when turning them on), both opening `/app/orders/<id>`; an open app refreshes.
+  Sending uses `@block65/webcrypto-web-push` (aes128gcm and RFC 8292 VAPID, which Apple requires; the older `aesgcm`
+  libraries fail on iPhones). Addresses are accepted only from Google, Apple, Mozilla and Microsoft push hosts, because
+  the server posts to them. Keys: `VAPID_PUBLIC_KEY` is a var in `wrangler.jsonc`, `VAPID_PRIVATE_KEY` a secret; locally
+  `.dev.vars` holds a separate pair; without them nothing is sent and the card says it didn't turn on. The service
+  worker (`/sw.js`, scope `/`) is registered only from the seller app; it caches nothing. The manifest's `id` is `/app`.
+  Testing in Playwright needs a persistent profile (`launchPersistentContext`; push is off in incognito) and a few
+  seconds after launch before the first push arrives.
 - Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
   sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.
 - The bag lives in the buyer's localStorage (`useCart`), so the server never knows it: `useCart().ready` is false until it has

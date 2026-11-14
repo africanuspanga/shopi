@@ -1,10 +1,11 @@
-import { Link, Outlet, createFileRoute, redirect, useLocation } from '@tanstack/react-router'
+import { Link, Outlet, createFileRoute, redirect, useLocation, useRouter } from '@tanstack/react-router'
 import { ArrowUpRight, ChartColumn, House, Layers, Package, PenLine, Plus, ReceiptText, ShoppingBag, Store, TicketPercent } from 'lucide-react'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import { getNavCounts } from '#/lib/api/merchant'
 import { useT } from '#/lib/i18n'
-import { useState } from 'react'
+import { catchInstallPrompt } from '#/lib/push'
+import { useEffect, useState } from 'react'
 
 export const Route = createFileRoute('/app')({
   beforeLoad: ({ context }) => {
@@ -30,6 +31,16 @@ function useTabs() {
 }
 
 function AppLayout() {
+  const router = useRouter()
+  // Chrome offers to install Shopi once per visit: keep the offer for the Install buttons (components/phone-app.tsx).
+  useEffect(() => catchInstallPrompt(), [])
+  // A notification for a new order or payment refreshes what the open app shows (public/sw.js posts the message).
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    const onMessage = (e: MessageEvent) => e.data?.type === 'shopi-push' && router.invalidate()
+    navigator.serviceWorker.addEventListener('message', onMessage)
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage)
+  }, [router])
   return (
     <div className="min-h-dvh bg-page md:pl-[248px]">
       <Sidebar />

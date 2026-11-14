@@ -3,13 +3,14 @@ import { shopPlan } from '#/server/plan'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequestUrl } from '@tanstack/react-start/server'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
-import { imageOf, normalizePhone, optionKind, parseSizes, priceOf, type OrderStatus, type Size } from '#/lib/format'
+import { imageOf, normalizePhone, optionKind, parseSizes, priceOf, tzs, type OrderStatus, type Size } from '#/lib/format'
 import { moveStock } from '#/server/stock'
 import { openBag } from '#/server/bags'
 import { liveDiscount } from '#/server/discounts'
 import { discountOff } from '#/lib/discounts'
 import { LIMITS } from '#/server/limits'
 import { isHuman } from '#/server/turnstile'
+import { notifySeller, orderLine } from '#/server/push'
 import { namesMatch, parsePaymentSms, type PaymentCheck } from '#/lib/payment-sms'
 
 export type PublicShop = {
@@ -254,6 +255,13 @@ export const placeOrder = createServerFn({ method: 'POST' })
       // Cash on delivery is confirmed at once, so stock is held now.
       await moveStock(id, -1)
     }
+    const items = lines.reduce((n, l) => n + l.qty, 0)
+    notifySeller(shop.id, (t) => ({
+      title: t('New order: {total}', { total: tzs(subtotal - off + fee) }),
+      body: orderLine(t, { name, area: area?.name ?? '', items }),
+      url: `/app/orders/${id}`,
+      tag: `order-${id}`,
+    }))
     return { ok: true as const, code }
   })
 
@@ -304,8 +312,9 @@ export const submitPaymentSms = createServerFn({ method: 'POST' })
     sms: String(d.sms ?? '').slice(0, 1000),
   }))
   .handler(async ({ data }) => {
-    const order = await first<{ id: string; total: number; status: OrderStatus; lipa_name: string }>(
-      `SELECT o.id, o.total, o.status, s.lipa_name FROM orders o JOIN shops s ON s.id = o.shop_id WHERE o.code = ?`,
+    const order = await first<{ id: string; shop_id: string; code: string; customer_name: string; total: number; status: OrderStatus; lipa_name: string }>(
+      `SELECT o.id, o.shop_id, o.code, o.customer_name, o.total, o.status, s.lipa_name FROM orders o JOIN shops s ON s.id = o.shop_id
+       WHERE o.code = ?`,
       data.code,
     )
     if (!order) return { error: 'order' as const }
@@ -332,5 +341,11 @@ export const submitPaymentSms = createServerFn({ method: 'POST' })
     } catch {
       return { error: 'reused' as const }
     }
+    notifySeller(order.shop_id, (t) => ({
+      title: t('Check a payment: {total}', { total: tzs(order.total) }),
+      body: t('{name} sent the payment SMS for order #{code}.', { name: order.customer_name, code: order.code }),
+      url: `/app/orders/${order.id}`,
+      tag: `order-${order.id}`,
+    }))
     return { ok: true as const, check }
   })

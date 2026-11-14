@@ -32,6 +32,7 @@ function Privacy() {
           <li>{t('How you are paid: your Lipa Namba, its name and network. Shopi never holds your money.')}</li>
           <li>{t('Your products, photos, prices and stock, and the orders your shop receives.')}</li>
           <li>{t('Your plan and its payments.')}</li>
+          <li>{t('If you turn on notifications: the address your phone’s browser gives for sending them. It is deleted when you turn them off or it stops working.')}</li>
         </ul>
       </Section>
 
@@ -67,7 +68,7 @@ function Privacy() {
           <li>{t('The seller you order from sees your order details. Other sellers do not.')}</li>
           <li>
             {t(
-              'Companies that run parts of Shopi for us, only for that purpose: Cloudflare (hosting, database, photo storage, and the check that keeps bots out of sign-up, checkout and back-in-stock requests), and, when you use them, our payment partner Settlo Pay, Google (maps) and Meta (WhatsApp and Instagram).',
+              'Companies that run parts of Shopi for us, only for that purpose: Cloudflare (hosting, database, photo storage, and the check that keeps bots out of sign-up, checkout and back-in-stock requests), and, when you use them, our payment partner Settlo Pay, Google (maps), Meta (WhatsApp and Instagram), and your phone’s notification service (Google, Apple or Mozilla), which carries notifications it cannot read.',
             )}
           </li>
           <li>{t('Authorities, when Tanzanian law requires it.')}</li>

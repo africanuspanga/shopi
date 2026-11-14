@@ -11,6 +11,9 @@ export const Route = createRootRoute({
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
       { name: 'theme-color', content: '#f4f3f0' },
+      // Added to an iPhone's Home Screen, Shopi opens as its own app (and only then may it send notifications).
+      { name: 'apple-mobile-web-app-capable', content: 'yes' },
+      { name: 'apple-mobile-web-app-title', content: 'Shopi' },
       { title: 'Shopi · Your shop in one link' },
       { name: 'description', content: 'An online shop in one link for sellers on Instagram, TikTok and WhatsApp. Buyers order by themselves and pay your Lipa Namba or cash on delivery.' },
       // Link previews (WhatsApp, Instagram, X). Shop and product pages replace the image and text with their own.

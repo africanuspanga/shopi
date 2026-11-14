@@ -2,6 +2,7 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, ReceiptText, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Delta, Empty, Img, LangSwitch, Money, Page, ShopAvatar, StatusPill, Toast, scrubIndex, useEntrance } from '#/components/ui'
+import { PhoneAlertsCard } from '#/components/phone-app'
 import { getDashboard } from '#/lib/api/merchant'
 import { timeAgo, tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
@@ -75,6 +76,7 @@ function Dashboard() {
       </header>
 
       <PlanRow plan={d.plan} />
+      <PhoneAlertsCard />
 
       {d.backInStock.length > 0 && (
         <section className={`${rise} card mt-6 overflow-hidden md:mt-8`}>

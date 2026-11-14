@@ -2,6 +2,7 @@ import { Link, createFileRoute, useBlocker, useRouter } from '@tanstack/react-ro
 import { Camera, Check, ChevronRight, Copy, LogOut, Plus, TicketPercent, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
+import { PhoneAppSettings } from '#/components/phone-app'
 import { ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoice, Switch, Toast, TopBar } from '#/components/ui'
 import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
@@ -266,6 +267,10 @@ function ShopSettings() {
           <Link to="/app/plan" className="btn btn-ghost">
             {t('See your plan')} <ChevronRight size={16} strokeWidth={1.6} />
           </Link>
+        </Group>
+
+        <Group title={t('Notifications')} sub={t('New orders and payments to check, on this phone, even when Shopi is closed.')}>
+          <PhoneAppSettings />
         </Group>
 
         <Group title={t('Account')} sub={t('You are logged in on this phone.')}>
