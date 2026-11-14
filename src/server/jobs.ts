@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers'
 import { db, now, run } from '#/server/db'
 import { ALERT_DAYS } from '#/server/alerts'
+import { purgeLimits } from '#/server/limits'
 
 // Cron schedules, in UTC (Tanzania is UTC+3). They must match "triggers" in wrangler.jsonc.
 export const NIGHTLY = '0 0 * * *' // 03:00 in Dar
@@ -20,6 +21,7 @@ export async function runJob(cron: string) {
           ['alerts', purgeAlerts],
           ['visits', purgeVisits],
           ['sessions', purgeSessions],
+          ['limits', purgeLimits],
         ]
       : cron === WEEKLY
         ? [['backup', backupDatabase]]

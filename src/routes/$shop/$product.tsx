@@ -180,7 +180,7 @@ function ProductPage() {
               }}
             >
               {images.map((k, i) => (
-                <Img key={k ?? i} k={k} alt={photoAlt(k, i)} eager={i === 0} className="aspect-[4/5] w-full shrink-0 snap-center" />
+                <Img key={k ?? i} k={k} alt={photoAlt(k, i)} priority={i === 0} className="aspect-[4/5] w-full shrink-0 snap-center" />
               ))}
             </div>
 

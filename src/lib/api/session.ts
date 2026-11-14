@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { getCookie, setCookie } from '@tanstack/react-start/server'
 import { currentUser, endSession, hashPassword, startSession, verifyPassword } from '#/server/auth'
 import { first, newId, now, run } from '#/server/db'
+import { LIMITS, clientIp, count, forget, overLimit } from '#/server/limits'
 import { normalizePhone } from '#/lib/format'
 import { asLang, type Lang } from '#/lib/i18n'
 
@@ -31,6 +32,9 @@ export const signup = createServerFn({ method: 'POST' })
     password: String(d.password ?? ''),
   }))
   .handler(async ({ data }) => {
+    const ipKey = `signup-ip:${clientIp()}`
+    if (await overLimit(ipKey, LIMITS.signupIp)) return { error: 'limit' as const }
+    await count(ipKey)
     if (!data.name) return { error: 'name' as const }
     if (!data.phone) return { error: 'phone' as const }
     if (data.password.length < 6) return { error: 'password' as const }
@@ -55,11 +59,22 @@ export const login = createServerFn({ method: 'POST' })
     password: String(d.password ?? ''),
   }))
   .handler(async ({ data }) => {
+    // A flood from one IP, or 10 wrong passwords for one number in an hour, waits. The same answer either way.
+    const ipKey = `login-ip:${clientIp()}`
+    const phoneKey = `login:${data.phone}`
+    if ((await overLimit(ipKey, LIMITS.loginIp)) || (data.phone && (await overLimit(phoneKey, LIMITS.loginFails)))) {
+      return { error: 'limit' as const }
+    }
+    await count(ipKey)
     const user = await first<{ id: string; pass_hash: string }>(
       'SELECT id, pass_hash FROM users WHERE phone = ?',
       data.phone,
     )
-    if (!user || !(await verifyPassword(data.password, user.pass_hash))) return { error: 'invalid' as const }
+    if (!user || !(await verifyPassword(data.password, user.pass_hash))) {
+      if (data.phone) await count(phoneKey)
+      return { error: 'invalid' as const }
+    }
+    await forget(phoneKey)
     await startSession(user.id)
     return { ok: true as const }
   })

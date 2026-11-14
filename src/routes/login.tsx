@@ -38,7 +38,8 @@ function Login() {
           setError('')
           const res = await login({ data: form })
           setBusy(false)
-          if ('error' in res) return setError(t('That phone number and password do not match.'))
+          if ('error' in res)
+            return setError(res.error === 'limit' ? t('Too many tries. Wait an hour and try again, or message the Shopi team on WhatsApp.') : t('That phone number and password do not match.'))
           await router.invalidate()
           router.navigate({ to: '/app' })
         }}

@@ -12,10 +12,16 @@ export const Route = createRootRoute({
       { name: 'theme-color', content: '#f4f3f0' },
       { title: 'Shopi · Your shop in one link' },
       { name: 'description', content: 'An online shop in one link for sellers on Instagram, TikTok and WhatsApp. Buyers order by themselves and pay your Lipa Namba or cash on delivery.' },
+      // Link previews (WhatsApp, Instagram, X). Shop and product pages replace the image and text with their own.
+      { property: 'og:site_name', content: 'Shopi' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:description', content: 'An online shop in one link for sellers on Instagram, TikTok and WhatsApp. Buyers order by themselves and pay your Lipa Namba or cash on delivery.' },
+      { property: 'og:image', content: 'https://shopi.tz/og.png' },
+      { name: 'twitter:card', content: 'summary_large_image' },
     ],
     links: [
-      { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-      { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
+      // The body font starts loading with the page instead of after the stylesheet.
+      { rel: 'preload', href: '/fonts/mona-sans-latin.v4.woff2', as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' },
       { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
       { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
       { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },

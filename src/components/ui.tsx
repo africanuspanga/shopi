@@ -98,6 +98,7 @@ export function Img({
   alt,
   className = '',
   eager = false,
+  priority = false,
   size = 'full',
   sizes,
 }: {
@@ -105,6 +106,8 @@ export function Img({
   alt: string
   className?: string
   eager?: boolean
+  /** The page's main photo (what phones measure as "loaded"): fetched before anything else. */
+  priority?: boolean
   size?: 'full' | 'thumb'
   sizes?: string
 }) {
@@ -121,7 +124,8 @@ export function Img({
       srcSet={sizes ? `${imgUrl(k, 'thumb')} 600w, ${imgUrl(k)} 1200w` : undefined}
       sizes={sizes}
       alt={alt}
-      loading={eager ? 'eager' : 'lazy'}
+      loading={eager || priority ? 'eager' : 'lazy'}
+      fetchPriority={priority ? 'high' : undefined}
       decoding="async"
       className={`bg-well object-cover ${className}`}
     />

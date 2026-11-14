@@ -100,7 +100,8 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
 
 ### Type
 - **Mona Sans** (variable width and weight) for everything; **Geist Mono** for order codes, links,
-  receipts, SMS text and small meta. Loaded from Google Fonts in `styles.css`.
+  receipts, SMS text and small meta. Served from shopi.tz (`public/fonts`, `@font-face` in `styles.css`, the body font
+  preloaded in `__root.tsx`); never load fonts from Google, it delayed the first paint by about a second.
 - `.display`: width 112%, weight 600, tracking -0.045em, line-height 0.95. Hero headlines, shop names, the closing line.
 - `.title`: width 106%, weight 600, tracking -0.03em. Page and section titles.
 - Body 15 to 17px (400); labels and buttons 14 to 15px (500); captions 13px; meta 12px mono (`.meta`); codes `.code`.

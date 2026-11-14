@@ -25,6 +25,7 @@ function Signup() {
     phone: t('That phone number looks wrong. Example: 0754 123 456'),
     password: t('Use at least 6 characters for the password.'),
     exists: t('This number already has a shop. Log in instead.'),
+    limit: t('Too many tries. Wait an hour and try again, or message the Shopi team on WhatsApp.'),
   }
   return (
     <AuthLayout

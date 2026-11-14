@@ -33,7 +33,7 @@ export function LegalPage({ title, lead, children }: { title: string; lead: stri
         <p className="mt-5 text-[17px] leading-relaxed text-ink-2 md:text-[18px]">{lead}</p>
         <div className="mt-10 space-y-10">{children}</div>
         <p className="mt-16 border-t border-line pt-6 text-[14px] leading-relaxed text-muted">
-          {t('Shopi is run by Driftmark Technologies Limited, Dar es Salaam, Tanzania. Questions: hello@shopi.tz')}
+          {withEmailLink(t('Shopi is run by Driftmark Technologies Limited, Dar es Salaam, Tanzania. Questions: hello@shopi.tz'))}
         </p>
       </main>
     </div>
@@ -46,5 +46,22 @@ export function Section({ title, children }: { title: string; children: ReactNod
       <h2 className="title text-[22px] md:text-[26px]">{title}</h2>
       <div className="mt-3 space-y-3 text-[16px] leading-relaxed text-ink-2 [&_li]:pl-1 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5">{children}</div>
     </section>
+  )
+}
+
+const EMAIL = 'hello@shopi.tz'
+
+/** Text that names Shopi's email, with the address as a link that opens the mail app. */
+function withEmailLink(text: string) {
+  const at = text.indexOf(EMAIL)
+  if (at < 0) return text
+  return (
+    <>
+      {text.slice(0, at)}
+      <a href={`mailto:${EMAIL}`} className="font-medium text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink">
+        {EMAIL}
+      </a>
+      {text.slice(at + EMAIL.length)}
+    </>
   )
 }

@@ -483,7 +483,7 @@ function Finale({ start, startLabel, signedIn }: { start: string; startLabel: st
             <p className="max-w-[22rem] text-[15px] leading-relaxed text-white/60">{t('An online shop in one link, for sellers on Instagram, TikTok and WhatsApp in Tanzania.')}</p>
             {cols.map((c) => (
               <div key={c.title}>
-                <p className="text-[13px] text-white/40">{c.title}</p>
+                <p className="text-[13px] text-white/55">{c.title}</p>
                 <ul className="mt-4 space-y-3 text-[15px]">
                   {c.links.map(([href, label]) => (
                     <li key={label}>
@@ -502,10 +502,15 @@ function Finale({ start, startLabel, signedIn }: { start: string; startLabel: st
               </div>
             ))}
             <div>
-              <p className="text-[13px] text-white/40">{t('Company')}</p>
+              <p className="text-[13px] text-white/55">{t('Company')}</p>
               <ul className="mt-4 space-y-3 text-[15px] text-white/75">
                 <li>Driftmark Technologies Limited</li>
                 <li>Dar es Salaam, Tanzania</li>
+                <li>
+                  <a href="mailto:hello@shopi.tz" className="code text-[14px] transition-colors hover:text-white">
+                    hello@shopi.tz
+                  </a>
+                </li>
                 <li>
                   <Link to="/terms" className="transition-colors hover:text-white">
                     {t('Terms')}
@@ -518,7 +523,7 @@ function Finale({ start, startLabel, signedIn }: { start: string; startLabel: st
               </ul>
             </div>
           </div>
-          <div className="mx-auto flex max-w-[1280px] flex-col gap-3 border-t border-white/10 px-6 py-6 text-[13px] text-white/40 md:flex-row md:items-center md:justify-between md:px-10">
+          <div className="mx-auto flex max-w-[1280px] flex-col gap-3 border-t border-white/10 px-6 py-6 text-[13px] text-white/55 md:flex-row md:items-center md:justify-between md:px-10">
             <p>© {new Date().getFullYear()} Driftmark Technologies Limited</p>
             <p className="flex items-center gap-2.5">
               {t('Payments powered by')}
