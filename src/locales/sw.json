@@ -1072,5 +1072,13 @@
   "opened {date}": "lilifunguliwa {date}",
   "{n}% of sign-ups": "{n}% ya waliojisajili",
   "{n}/4 set up": "Maandalizi {n}/4",
-  "{plan} until {date}": "{plan} hadi {date}"
+  "{plan} until {date}": "{plan} hadi {date}",
+  "We can’t read that link. Copy it from your Instagram, TikTok or WhatsApp profile.": "Link hiyo haisomeki. Inakili kutoka kwenye profile yako ya Instagram, TikTok au WhatsApp.",
+  "That WhatsApp link hides the number. Type your WhatsApp number below.": "Link hiyo ya WhatsApp inaficha namba. Andika namba yako ya WhatsApp hapo chini.",
+  "Your WhatsApp number is filled in below.": "Namba yako ya WhatsApp imejazwa hapo chini.",
+  "Your {site} is added to your shop.": "{site} yako imeongezwa kwenye duka lako.",
+  "From your {site}: a shop name and link to start from. Change them below.": "Kutoka {site} yako: jina la duka na link ya kuanzia. Yabadilishe hapo chini.",
+  "Opening your link": "Tunafungua link yako",
+  "Your Instagram, TikTok or WhatsApp link": "Link ya Instagram, TikTok au WhatsApp yako",
+  "Paste the link to your page and we fill in what we can.": "Bandika link ya ukurasa wako, tutajaza tunachoweza."
 }

@@ -256,6 +256,11 @@ domain are lowercase.
   page's `WaitingCard` gives a prefilled wa.me message per person and a check that deletes the alert, and Home shows
   "Back in stock, and buyers are waiting" once what they asked for can be bought (`getDashboard().backInStock`).
   Alerts are deleted when done and after 90 days at most (Privacy page), by the nightly job (below).
+- Setup's "Your Instagram, TikTok or WhatsApp link" (`src/lib/social.ts`, `readSocialLink`): a pasted profile link fills
+  a first shop name and link (`nameFromHandle`), that social handle (saved by `createShop` and shown again in step 3), or
+  the WhatsApp number. Nothing is fetched from Meta; only a TikTok short link (vm.tiktok.com) is opened on the server
+  (`expandSocialLink`, TikTok hosts only, the redirect alone is read). A `wa.me/message/…` link hides the number, so the
+  seller is asked to type it.
 - Bot check (Cloudflare Turnstile) on sign-up, checkout and "Notify me". The browser side is `useHumanCheck(action)` in
   `src/lib/turnstile.tsx`: the script loads only on those screens (for Notify me, when the sheet opens), the check runs
   unseen, and a box appears in the `slot` div above the button only when Cloudflare wants a tap (the first press then asks

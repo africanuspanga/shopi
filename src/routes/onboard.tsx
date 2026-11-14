@@ -1,12 +1,13 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
-import { Check, ImageIcon, Loader2, X } from 'lucide-react'
+import { Check, ImageIcon, Link2, Loader2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { AuthLayout, StepBar } from '#/components/auth'
 import { ErrorText, Field, ShopAvatar, ShopLangChoice } from '#/components/ui'
-import { checkSlug, createShop, saveShopBasics } from '#/lib/api/merchant'
-import { CATEGORIES, mapsLink, slugify, tinDigits } from '#/lib/format'
+import { checkSlug, createShop, expandSocialLink, saveShopBasics } from '#/lib/api/merchant'
+import { CATEGORIES, mapsLink, normalizePhone, slugify, tinDigits } from '#/lib/format'
 import { useLang, useT, type Lang } from '#/lib/i18n'
 import { setLang } from '#/lib/api/session'
+import { nameFromHandle, readSocialLink, type SocialFind } from '#/lib/social'
 
 export const Route = createFileRoute('/onboard')({
   beforeLoad: ({ context }) => {
@@ -31,6 +32,10 @@ function Onboard() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [created, setCreated] = useState(false)
+  // A link the seller pasted from their Instagram, TikTok or WhatsApp (lib/social.ts) and what it filled in.
+  const [link, setLink] = useState('')
+  const [linkNote, setLinkNote] = useState<{ ok: boolean; text: string } | null>(null)
+  const [socials, setSocials] = useState({ instagram: '', tiktok: '', facebook: '' })
   // The shop's language, first: choosing it also switches these screens and the seller's app to it.
   const lang = useLang()
   const [shopLang, setShopLang] = useState<Lang>(lang)
@@ -78,6 +83,37 @@ function Onboard() {
 
   const categoryLabel = t(CATEGORIES.find((c) => c.id === category)?.label ?? 'Other')
 
+  function applyFind(found: SocialFind | null) {
+    if (!found) return setLinkNote({ ok: false, text: t('We can’t read that link. Copy it from your Instagram, TikTok or WhatsApp profile.') })
+    if (found.kind === 'hidden') return setLinkNote({ ok: false, text: t('That WhatsApp link hides the number. Type your WhatsApp number below.') })
+    if (found.kind === 'whatsapp') {
+      setWhatsapp(normalizePhone(found.phone) || `+${found.phone}`)
+      return setLinkNote({ ok: true, text: t('Your WhatsApp number is filled in below.') })
+    }
+    if (found.kind === 'short') return
+    const site = found.kind === 'instagram' ? 'Instagram' : found.kind === 'tiktok' ? 'TikTok' : 'Facebook'
+    setSocials((s) => ({ ...s, [found.kind]: found.kind === 'facebook' ? `facebook.com/${found.handle}` : found.handle }))
+    const named = !!name.trim()
+    if (!named) setName(nameFromHandle(found.handle))
+    setLinkNote({
+      ok: true,
+      text: named
+        ? t('Your {site} is added to your shop.', { site })
+        : t('From your {site}: a shop name and link to start from. Change them below.', { site }),
+    })
+  }
+
+  async function readLink(value: string) {
+    setLink(value)
+    if (!value.trim()) return setLinkNote(null)
+    // Wait for something that looks like a whole link before saying it can't be read.
+    if (!/[./]/.test(value) || value.trim().length < 8) return setLinkNote(null)
+    const found = readSocialLink(value)
+    if (found?.kind !== 'short') return applyFind(found)
+    setLinkNote({ ok: true, text: t('Opening your link') })
+    applyFind((await expandSocialLink({ data: { url: found.url } })).found)
+  }
+
   const finish = async () => {
     await router.invalidate()
     router.navigate({ to: '/app' })
@@ -86,7 +122,7 @@ function Onboard() {
   if (created)
     return (
       <AuthLayout aside={<ShopPreview name={name} slug={slug} category={categoryLabel} />}>
-        <BasicsStep onDone={finish} />
+        <BasicsStep onDone={finish} initial={socials} />
       </AuthLayout>
     )
 
@@ -110,7 +146,7 @@ function Onboard() {
           e.preventDefault()
           setBusy(true)
           setError('')
-          const res = await createShop({ data: { name, slug, category, whatsapp, lang: shopLang } })
+          const res = await createShop({ data: { name, slug, category, whatsapp, lang: shopLang, ...socials } })
           setBusy(false)
           if ('error' in res) return setError(res.error === 'name' ? t('Enter a shop name.') : t('That link is taken. Try another.'))
           setCreated(true)
@@ -118,6 +154,34 @@ function Onboard() {
         }}
       >
         <ShopLangChoice value={shopLang} onChange={chooseLang} hint={t('Buyers see your shop in this language. You can change it later in Shop settings.')} />
+        <Field
+          label={t('Your Instagram, TikTok or WhatsApp link')}
+          aside={t('Optional')}
+          hint={
+            linkNote ? (
+              <span className={`flex items-start gap-1.5 ${linkNote.ok ? 'text-ink-2' : 'text-bad'}`}>
+                {linkNote.ok && <Check size={14} strokeWidth={2.5} className="mt-0.5 shrink-0 text-ok" />}
+                {linkNote.text}
+              </span>
+            ) : (
+              t('Paste the link to your page and we fill in what we can.')
+            )
+          }
+        >
+          <span className="input flex items-center gap-2.5">
+            <Link2 size={16} strokeWidth={1.6} className="shrink-0 text-muted" />
+            <input
+              className="min-w-0 flex-1 bg-transparent outline-none"
+              value={link}
+              onChange={(e) => readLink(e.target.value)}
+              placeholder="instagram.com/dukalako"
+              inputMode="url"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+          </span>
+        </Field>
         <Field label={t('Shop name')}>
           <input className="input" placeholder="Zuri Fashion" value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
@@ -160,9 +224,9 @@ function Onboard() {
 }
 
 /** Step 3, optional: where buyers find the shop, and its socials. "Skip for now" leaves everything for Shop settings. */
-function BasicsStep({ onDone }: { onDone: () => Promise<void> }) {
+function BasicsStep({ onDone, initial }: { onDone: () => Promise<void>; initial: { instagram: string; tiktok: string; facebook: string } }) {
   const t = useT()
-  const [f, setF] = useState({ location: '', maps_url: '', tin: '', instagram: '', tiktok: '', facebook: '' })
+  const [f, setF] = useState({ location: '', maps_url: '', tin: '', ...initial })
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value })

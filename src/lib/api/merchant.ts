@@ -5,6 +5,7 @@ import { removePhotos } from '#/server/media'
 import { moveStock, sizesTotal } from '#/server/stock'
 import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, imageOf, normalizePhone, optionKind, parseSizes, productSlug, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink, tinDigits } from '#/lib/format'
 import { shopPlan } from '#/server/plan'
+import { TIKTOK_SHORT, readSocialLink } from '#/lib/social'
 import { withReadiness, type AlertRow } from '#/server/alerts'
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
@@ -49,13 +50,19 @@ export const checkSlug = createServerFn({ method: 'GET' })
   })
 
 export const createShop = createServerFn({ method: 'POST' })
-  .validator((d: { name: string; slug: string; category: string; whatsapp: string; lang: string }) => ({
-    name: str(d.name, 60),
-    slug: slugify(d.slug),
-    category: CATEGORIES.some((c) => c.id === d.category) ? d.category : 'other',
-    whatsapp: normalizePhone(str(d.whatsapp)),
-    lang: d.lang === 'sw' ? 'sw' : 'en',
-  }))
+  .validator(
+    (d: { name: string; slug: string; category: string; whatsapp: string; lang: string; instagram?: string; tiktok?: string; facebook?: string }) => ({
+      name: str(d.name, 60),
+      slug: slugify(d.slug),
+      category: CATEGORIES.some((c) => c.id === d.category) ? d.category : 'other',
+      whatsapp: normalizePhone(str(d.whatsapp)),
+      lang: d.lang === 'sw' ? 'sw' : 'en',
+      // From a link the seller pasted at setup (lib/social.ts).
+      instagram: str(d.instagram, 60).replace(/^@/, ''),
+      tiktok: str(d.tiktok, 60).replace(/^@/, ''),
+      facebook: str(d.facebook, 100),
+    }),
+  )
   .handler(async ({ data }) => {
     const user = await requireUser()
     const existing = await first<{ slug: string }>('SELECT slug FROM shops WHERE owner_id = ?', user.id)
@@ -64,7 +71,8 @@ export const createShop = createServerFn({ method: 'POST' })
     if (data.slug.length < 3 || RESERVED_SLUGS.has(data.slug)) return { error: 'slug' as const }
     if (await first('SELECT 1 FROM shops WHERE slug = ?', data.slug)) return { error: 'slug_taken' as const }
     await run(
-      `INSERT INTO shops (id, owner_id, slug, name, category, whatsapp, lang, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO shops (id, owner_id, slug, name, category, whatsapp, lang, instagram, tiktok, facebook, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       newId(),
       user.id,
       data.slug,
@@ -72,9 +80,43 @@ export const createShop = createServerFn({ method: 'POST' })
       data.category,
       data.whatsapp || user.phone,
       data.lang,
+      data.instagram,
+      data.tiktok,
+      data.facebook,
       now(),
     )
     return { ok: true as const, slug: data.slug }
+  })
+
+/**
+ * A TikTok short link (vm.tiktok.com/…) pasted at setup, opened to see which profile it leads to. Only TikTok's own
+ * hosts are ever requested, and only the redirect is read.
+ */
+export const expandSocialLink = createServerFn({ method: 'POST' })
+  .validator((d: { url: string }) => ({ url: str(d.url, 300) }))
+  .handler(async ({ data }) => {
+    await requireUser()
+    let url = data.url
+    for (let hop = 0; hop < 4; hop++) {
+      let u: URL
+      try {
+        u = new URL(url)
+      } catch {
+        return { found: null }
+      }
+      if (u.protocol !== 'https:' || !TIKTOK_SHORT.test(u.hostname)) return { found: null }
+      const found = readSocialLink(u.href)
+      if (found && found.kind !== 'short') return { found }
+      try {
+        const res = await fetch(u.href, { redirect: 'manual', headers: { 'user-agent': 'Mozilla/5.0 (Linux; Android 14) Shopi' }, signal: AbortSignal.timeout(4000) })
+        const next = res.headers.get('location')
+        if (!next) return { found: null }
+        url = new URL(next, u).href
+      } catch {
+        return { found: null }
+      }
+    }
+    return { found: null }
   })
 
 /** The optional setup step: where the shop is and its socials. Empty fields stay empty; "Skip for now" never calls this. */

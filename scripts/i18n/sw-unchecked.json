@@ -98,5 +98,13 @@
   "opened {date}",
   "{n}% of sign-ups",
   "{n}/4 set up",
-  "{plan} until {date}"
+  "{plan} until {date}",
+  "We can’t read that link. Copy it from your Instagram, TikTok or WhatsApp profile.",
+  "That WhatsApp link hides the number. Type your WhatsApp number below.",
+  "Your WhatsApp number is filled in below.",
+  "Your {site} is added to your shop.",
+  "From your {site}: a shop name and link to start from. Change them below.",
+  "Opening your link",
+  "Your Instagram, TikTok or WhatsApp link",
+  "Paste the link to your page and we fill in what we can."
 ]
