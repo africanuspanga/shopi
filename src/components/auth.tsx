@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { Eye, EyeOff } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { MiniStore, NewOrderCard, Phone } from '#/components/showcase'
-import { Wordmark } from '#/components/ui'
+import { LangSwitch, Wordmark } from '#/components/ui'
 import { useT } from '#/lib/i18n'
 
 /** Sign-in and sign-up: the form on the left, the product on a dark panel on the right (desktop only). */
@@ -14,7 +14,10 @@ export function AuthLayout({ children, topRight, aside }: { children: ReactNode;
           <Link to="/" aria-label="Shopi">
             <Wordmark className="h-[22px] w-auto" />
           </Link>
-          {topRight}
+          <div className="flex items-center gap-3">
+            {topRight}
+            <LangSwitch />
+          </div>
         </header>
         <main className="rise mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-8">{children}</main>
       </div>

@@ -1,6 +1,6 @@
-import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
+import { HeadContent, Outlet, Scripts, createRootRoute, useMatches } from '@tanstack/react-router'
 import { getSession } from '#/lib/api/session'
-import { LangProvider } from '#/lib/i18n'
+import { LangProvider, asLang } from '#/lib/i18n'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -36,9 +36,23 @@ function Root() {
   )
 }
 
+/** The page's language for <html lang>: a shop's pages and order pages in the shop's, everything else in the visitor's. */
+function useDocumentLang() {
+  return useMatches({
+    select: (matches) => {
+      for (const m of matches) {
+        const shop = (m.loaderData as { shop?: { lang?: string } } | undefined)?.shop
+        if ((m.routeId === '/$shop' || m.routeId === '/o/$code') && shop) return asLang(shop.lang)
+      }
+      return asLang((matches[0]?.context as { session?: { lang?: string } } | undefined)?.session?.lang)
+    },
+  })
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const lang = useDocumentLang()
   return (
-    <html lang="en">
+    <html lang={lang}>
       <head>
         <HeadContent />
       </head>

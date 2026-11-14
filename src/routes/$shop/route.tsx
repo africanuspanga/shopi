@@ -5,6 +5,7 @@ import { ignoreShop } from '#/lib/analytics'
 import { getStorefront } from '#/lib/api/store'
 import { cleanCode, codeKey } from '#/lib/discounts'
 import { imgUrl } from '#/lib/format'
+import { LangProvider, asLang } from '#/lib/i18n'
 import { shopDescription, shopTitle } from '#/lib/seo'
 
 export const Route = createFileRoute('/$shop')({
@@ -60,11 +61,12 @@ function ShopLayout() {
       /* storage blocked: the buyer can still type the code */
     }
   }, [shop.id])
+  // Buyers see the shop in the language its seller chose: the shop, product pages, checkout and bag links.
   return (
-    <>
+    <LangProvider value={asLang(shop.lang)}>
       {shop.status === 'demo' && <DemoBanner />}
       {paused && <BreakBanner whatsapp={shop.whatsapp} name={shop.name} />}
       <Outlet />
-    </>
+    </LangProvider>
   )
 }

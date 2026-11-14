@@ -171,14 +171,24 @@ Presses scale to about 0.97. Respect `prefers-reduced-motion`.
 Plain and specific, about this product. No exclamation marks, no greeting headlines (titles name the place or period),
 no hype words, no claims we cannot back. Changes say what they compare to ("↓ 19% vs the 7 days before").
 Write English as the key: every string goes through `t()` from `src/lib/i18n.tsx`, Swahili goes in
-`src/locales/sw.json`, and `SWAHILI_ENABLED` turns it on.
-- `scripts/i18n/sw-draft.json` is a full first draft (every string, 14 Nov 2026). `sw.json` holds only what the team approved.
-- `python3 scripts/i18n/export.py` writes `../design/translations/Shopi-translations.xlsx`: column D starts with the approved
-  Swahili (status Done) or the draft (status Check). The team corrects column D and marks rows Done;
-  `python3 scripts/i18n/import.py <file>` writes `sw.json` and says how many rows are still not Done.
-- A new string: add its Swahili to `sw-draft.json` in the same change (same `{placeholders}`, brands in English), then
-  export again. Words used so far: duka, oda, kapu (bag), bidhaa, delivery, lipa ukipokea (cash on delivery),
-  pesa kwa simu (mobile money), ghairi (cancel), code ya punguzo (never "kodi", which means tax), kifurushi (plan).
+`src/locales/sw.json`. Swahili is on (`SWAHILI_ENABLED`); the team approved every string on 14 Nov 2026.
+- **Who sees which language:** sellers read the app in their own language (the `shopi_lang` cookie, the `LangSwitch` on
+  Home, Shop settings and the sign-up and log-in screens). Buyers see a shop in the language its seller chose
+  (`shops.lang`): `$shop/route.tsx` and the order page wrap their pages in `<LangProvider value={asLang(shop.lang)}>`, and
+  buyer pages have no switch. `<html lang>` follows the same rule (`useDocumentLang` in `__root.tsx`), and so do the search
+  titles and descriptions (`src/lib/seo.ts` translates with the shop's language).
+- **Choosing it:** the first question on "Name your shop" (`ShopLangChoice`); choosing also switches the seller's own app
+  to it. Changed later in Shop settings. Shops opened before 14 Nov stay English until their seller chooses.
+- **The sheet:** `python3 scripts/i18n/export.py` writes `../design/translations/Shopi-translations.xlsx`. Approved rows show
+  Done; rows still to check show Check (the draft, or Swahili listed in `scripts/i18n/sw-unchecked.json`). The team
+  corrects column D and marks rows Done; `python3 scripts/i18n/import.py <file>` writes `sw.json` from that sheet and
+  clears those rows from `sw-unchecked.json`. Always import a sheet exported after the latest code: import writes only the
+  rows the sheet has.
+- **A new string:** add its Swahili to `sw.json` and `sw-draft.json` in the same change (same `{placeholders}`, brands in
+  English) and its English key to `sw-unchecked.json`, then export again for the team. Match the team's words: duka, oda,
+  kapu (bag), bidhaa, delivery, share (not "shiriki"), taslimu (cash), lipa ukipokea (cash on delivery), pesa kwa simu
+  (mobile money), ghairi (cancel), code ya punguzo (never "kodi", which means tax), kifurushi (plan), Mwanzo (Home),
+  Mipangilio ya duka (Shop settings).
 
 ### Logo
 "shopi" is Mona Sans ExtraBold at 120% width, lowercase, with the i's dot drawn as a perfect-circle Moto dot as wide as the
@@ -200,6 +210,7 @@ domain are lowercase.
 - `python3 scripts/backfill-thumbs.py [--remote]` makes missing small copies (Pillow); safe to run again.
 
 ## Product rules the UI depends on
+- Shop `lang`: `sw` or `en`, the language buyers see the shop in (see Copy). Read it with `asLang()`.
 - Shop `status`: `active`, or `demo` for a sample shop (Zee's Store). A demo shop shows `DemoBanner` on every page, has
   `noindex`, and `placeOrder` refuses its orders (`error: 'demo'`); checkout disables the button too. Any other status hides the shop.
 - Plans (`src/lib/plans.ts`): a trial (14 days, 30 with setup done), then Twiga or Tembo yearly. `planState()` is the one

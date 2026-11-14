@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { BagButton, FactPills, ProductGrid, ShopFacts, ShopFooter, ShopTopBar, SocialLinks, onSale } from '#/components/shop'
 import { ShopNav } from '#/components/shop-nav'
-import { Chips, Empty, LangSwitch, ShopAvatar, Toast } from '#/components/ui'
+import { Chips, Empty, ShopAvatar, Toast } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import { useCart } from '#/lib/cart'
 import { waLink } from '#/lib/format'
@@ -82,7 +82,6 @@ function Storefront() {
         reveal={pastName}
         right={
           <>
-            <LangSwitch />
             <button type="button" className="icon-btn hidden sm:inline-flex" aria-label={t('Share shop')} onClick={share}>
               <Share2 size={17} strokeWidth={1.6} />
             </button>

@@ -2,11 +2,11 @@ import { Link, createFileRoute, useBlocker, useRouter } from '@tanstack/react-ro
 import { Camera, Check, ChevronRight, Copy, LogOut, Plus, TicketPercent, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
-import { ErrorText, Field, LangSwitch, Page, ShopAvatar, Switch, Toast, TopBar } from '#/components/ui'
+import { ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoice, Switch, Toast, TopBar } from '#/components/ui'
 import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
 import { CATEGORIES, NETWORKS, mapsLink, tinDigits } from '#/lib/format'
-import { useT } from '#/lib/i18n'
+import { asLang, useT } from '#/lib/i18n'
 import { uploadImage } from '#/lib/upload'
 
 export const Route = createFileRoute('/app/shop')({
@@ -119,6 +119,11 @@ function ShopSettings() {
                 </button>
               </div>
             </Field>
+            <ShopLangChoice
+              value={asLang(s.lang)}
+              onChange={(lang) => setS({ ...s, lang })}
+              hint={t('The language buyers see: your shop, checkout and order pages.')}
+            />
             <Field label={t('Short bio')} aside={`${s.bio.length}/300`}>
               <textarea className="input" maxLength={300} value={s.bio} onChange={set('bio')} placeholder={t('e.g. Kitenge outfits made in Sinza. Delivery across Dar the same day.')} />
             </Field>

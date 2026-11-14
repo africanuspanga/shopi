@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { NotFound } from '#/components/not-found'
 import { BagButton, ProductGrid, ShopFooter, ShopTopBar } from '#/components/shop'
 import { ShopNav } from '#/components/shop-nav'
-import { Empty, LangSwitch, Toast } from '#/components/ui'
+import { Empty, Toast } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import { useCart } from '#/lib/cart'
 import { imgUrl } from '#/lib/format'
@@ -84,7 +84,6 @@ function CollectionPage() {
         shop={shop}
         right={
           <>
-            <LangSwitch />
             <button type="button" className="icon-btn hidden sm:inline-flex" aria-label={t('Share collection')} onClick={share}>
               <Share2 size={17} strokeWidth={1.6} />
             </button>

@@ -1,6 +1,7 @@
 import type React from 'react'
 import type { PublicCollection, PublicProduct, PublicShop } from '#/lib/api/store'
 import { CATEGORIES, OPTION_KINDS, imgUrl, optionKind, priceSpan, tzs } from '#/lib/format'
+import { asLang, translate } from '#/lib/i18n'
 
 /**
  * The live address. Canonical links and the sitemap always name it, so a tagged link (?s=ig, ?code=EID10) or a test copy
@@ -39,46 +40,62 @@ const join = (a: string, b: string) => {
   return lead ? `${lead}${/[.!?…]$/.test(lead) ? '' : '.'} ${b}` : b
 }
 
-/** "Lipa Namba or cash on delivery": how this shop takes payment. */
-function payWords(shop: Pick<PublicShop, 'lipa_number' | 'cod_enabled'>) {
-  const ways = [shop.lipa_number && 'Lipa Namba', shop.cod_enabled && 'cash on delivery'].filter(Boolean)
-  return ways.length ? `pay by ${ways.join(' or ')}` : 'order on WhatsApp'
+type T = (en: string, vars?: Record<string, string | number>) => string
+
+/** Search and link-preview text reads in the shop's language, like its pages. */
+const tFor = (shop: Pick<PublicShop, 'lang'>): T => (en, vars) => translate(asLang(shop.lang), en, vars)
+
+/** The last sentence: how to order and pay at this shop. */
+function payLine(shop: Pick<PublicShop, 'lipa_number' | 'cod_enabled'>, t: T) {
+  if (shop.lipa_number && shop.cod_enabled) return t('Order online and pay by Lipa Namba or cash on delivery.')
+  if (shop.lipa_number) return t('Order online and pay by Lipa Namba.')
+  if (shop.cod_enabled) return t('Order online and pay cash on delivery.')
+  return t('Order online, or ask the seller on WhatsApp.')
 }
 
-const where = (shop: Pick<PublicShop, 'location'>) => (shop.location.trim() ? ` in ${shop.location.trim()}` : '')
+const placeOf = (shop: Pick<PublicShop, 'location'>) => shop.location.trim()
 
 /** What the shop sells, in words: "Cosmetics", or "Shop" when the seller chose Other. */
-function kindOf(shop: Pick<PublicShop, 'category'>) {
+function kindOf(shop: Pick<PublicShop, 'category'>, t: T) {
   const c = CATEGORIES.find((x) => x.id === shop.category)
-  return c && c.id !== 'other' ? c.label : 'Shop'
+  return t(c && c.id !== 'other' ? c.label : 'Shop')
 }
 
 export function shopTitle(shop: PublicShop) {
-  const kind = kindOf(shop)
-  return fitTitle(`${shop.name} · ${kind}${where(shop)} · Shopi`, `${shop.name} · ${kind}${where(shop)}`, `${shop.name} · ${kind} · Shopi`, `${shop.name} · Shopi`)
+  const t = tFor(shop)
+  const kind = kindOf(shop, t)
+  const place = placeOf(shop)
+  const what = place ? t('{kind} in {place}', { kind, place }) : kind
+  return fitTitle(`${shop.name} · ${what} · Shopi`, `${shop.name} · ${what}`, `${shop.name} · ${kind} · Shopi`, `${shop.name} · Shopi`)
 }
 
 export function shopDescription(shop: PublicShop, products: number) {
-  const facts = `Shop ${products} ${products === 1 ? 'product' : 'products'} from ${shop.name}${where(shop)}. Order online and ${payWords(shop)}.`
-  return clip(join(shop.bio, facts))
+  const t = tFor(shop)
+  const vars = { n: products, shop: shop.name, place: placeOf(shop) }
+  const facts = placeOf(shop)
+    ? t(products === 1 ? 'Shop {n} product from {shop} in {place}.' : 'Shop {n} products from {shop} in {place}.', vars)
+    : t(products === 1 ? 'Shop {n} product from {shop}.' : 'Shop {n} products from {shop}.', vars)
+  return clip(join(shop.bio, `${facts} ${payLine(shop, t)}`))
 }
 
 /** "TSh 40,000", or "From TSh 35,000" when options cost different amounts. */
-function priceWords(p: PublicProduct) {
+function priceWords(p: PublicProduct, t: T) {
   const { min, max } = priceSpan(p)
-  return min === max ? tzs(min) : `From ${tzs(min)}`
+  return min === max ? tzs(min) : t('From {price}', { price: tzs(min) })
 }
 
 export function productTitle(p: PublicProduct, shop: PublicShop) {
-  const price = priceWords(p)
+  const price = priceWords(p, tFor(shop))
   return fitTitle(`${p.name} · ${price} · ${shop.name}`, `${p.name} · ${price}`)
 }
 
 export function productDescription(p: PublicProduct, shop: PublicShop) {
-  const options = p.sizes?.length ? ` ${OPTION_KINDS[optionKind(p.option_name)].label}: ${p.sizes.map((s) => s.label).join(', ')}.` : ''
-  const facts = `${priceWords(p)} at ${shop.name}${where(shop)}.${options} Order online and ${payWords(shop)}.`
+  const t = tFor(shop)
+  const vars = { price: priceWords(p, t), shop: shop.name, place: placeOf(shop) }
+  const at = placeOf(shop) ? t('{price} at {shop} in {place}.', vars) : t('{price} at {shop}.', vars)
+  const options = p.sizes?.length ? ` ${t(OPTION_KINDS[optionKind(p.option_name)].label)}: ${p.sizes.map((s) => s.label).join(', ')}.` : ''
   // A long description from the seller says it best; a short one gets the facts after it.
-  return p.description.trim().length >= 120 ? clip(p.description) : clip(join(p.description, facts))
+  return p.description.trim().length >= 120 ? clip(p.description) : clip(join(p.description, `${at}${options} ${payLine(shop, t)}`))
 }
 
 export function collectionTitle(c: PublicCollection, shop: PublicShop) {
@@ -86,8 +103,10 @@ export function collectionTitle(c: PublicCollection, shop: PublicShop) {
 }
 
 export function collectionDescription(c: PublicCollection, shop: PublicShop) {
+  const t = tFor(shop)
   const n = c.productIds.length
-  return clip(join(c.description || `${c.name} from ${shop.name}`, `${n} ${n === 1 ? 'product' : 'products'}${where(shop)}. Order online and ${payWords(shop)}.`))
+  const lead = c.description || t('{name} from {shop}', { name: c.name, shop: shop.name })
+  return clip(join(lead, `${t(n === 1 ? '{n} product' : '{n} products', { n })}. ${payLine(shop, t)}`))
 }
 
 /** The shop as a store: name, link, logo, area, WhatsApp and socials. */

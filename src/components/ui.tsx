@@ -2,7 +2,7 @@ import { Link, useRouter } from '@tanstack/react-router'
 import { ArrowLeft, ImageIcon, X } from 'lucide-react'
 import { useEffect, type ReactNode } from 'react'
 import { STATUS_LABEL, imgUrl, type OrderStatus } from '#/lib/format'
-import { SWAHILI_ENABLED, useLang, useT, type Lang } from '#/lib/i18n'
+import { LANGUAGES, SWAHILI_ENABLED, useLang, useT, type Lang } from '#/lib/i18n'
 import { setLang } from '#/lib/api/session'
 
 /** Page frame. narrow: forms and buyer flows. wide: merchant screens and storefronts. */
@@ -218,6 +218,25 @@ export function LangSwitch() {
     >
       {next.toUpperCase()}
     </button>
+  )
+}
+
+/** The language buyers see a shop in: two big chips, Kiswahili and English. */
+export function ShopLangChoice({ value, onChange, hint }: { value: Lang; onChange: (lang: Lang) => void; hint: string }) {
+  const t = useT()
+  if (!SWAHILI_ENABLED) return null
+  return (
+    <div className="field" role="group" aria-label={t('Shop language')}>
+      <span className="label">{t('Shop language')}</span>
+      <div className="grid grid-cols-2 gap-2">
+        {LANGUAGES.map(([id, name]) => (
+          <button key={id} type="button" lang={id} className="chip h-12 justify-center text-[15px]" aria-pressed={value === id} onClick={() => onChange(id)}>
+            {name}
+          </button>
+        ))}
+      </div>
+      <small className="hint">{hint}</small>
+    </div>
   )
 }
 

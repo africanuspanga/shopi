@@ -1,7 +1,8 @@
 """
 Builds the translation sheet from the code: every t('...') and msg('...') string, the screen it is on,
 notes about {placeholders}, and Swahili for the team to check: what is already approved (src/locales/sw.json,
-status Done), or else the draft (scripts/i18n/sw-draft.json, status Check) for the team to correct in place.
+status Done, unless it is listed in scripts/i18n/sw-unchecked.json), or else the draft (scripts/i18n/sw-draft.json,
+status Check) for the team to correct in place.
 
     python3 scripts/i18n/export.py      ->  ../design/translations/Shopi-translations.xlsx
 
@@ -112,6 +113,8 @@ def main():
     found = collect()
     drafts = json.loads((APP / 'scripts/i18n/sw-draft.json').read_text())
     done = json.loads((APP / 'src/locales/sw.json').read_text())
+    # Swahili Claude added after the team's last pass: live in the app, still to be checked.
+    unchecked = set(json.loads((APP / 'scripts/i18n/sw-unchecked.json').read_text()))
     order = [name for _, name in SCREENS] + ['Other']
     rows = sorted(found.items(), key=lambda kv: (order.index(kv[1]['screens'][0]), kv[1]['files'][0]))
 
@@ -122,7 +125,7 @@ def main():
     ws.append(head)
     for i, (en, info) in enumerate(rows, 1):
         sw = done.get(en) or drafts.get(en, '')
-        status = 'Done' if done.get(en) else 'Check' if sw else 'To do'
+        status = 'Check' if en in unchecked and sw else 'Done' if done.get(en) else 'Check' if sw else 'To do'
         ws.append([i, ' / '.join(info['screens']), en, sw, drafts.get(en, ''), notes_for(en, info['screens']), status, ', '.join(info['files'][:3])])
 
     bold = Font(bold=True, color='FFFFFF')

@@ -3,10 +3,10 @@ import { Check, Copy, ImageDown, MapPin, Printer, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { MadeWithShopi } from '#/components/shop'
-import { ErrorText, Img, LangSwitch, ShopAvatar } from '#/components/ui'
+import { ErrorText, Img, ShopAvatar } from '#/components/ui'
 import { getTrackedOrder, submitPaymentSms } from '#/lib/api/store'
 import { optionText, timeAgo, tzs, waLink, type OrderStatus, formatTin } from '#/lib/format'
-import { useLang, useT } from '#/lib/i18n'
+import { LangProvider, asLang, useLang, useT } from '#/lib/i18n'
 import { shareLink, useOrigin } from '#/lib/share'
 import { drawReceipt } from '#/lib/receipt-image'
 import { NotFound } from '#/components/not-found'
@@ -24,8 +24,18 @@ export const Route = createFileRoute('/o/$code')({
   notFoundComponent: () => (
     <NotFound title="We can't find this order" body="Check the order code in your link, or ask the seller to send it again on WhatsApp." />
   ),
-  component: Track,
+  component: TrackPage,
 })
+
+/** The buyer's order page reads in the language the shop's seller chose, like the shop itself. */
+function TrackPage() {
+  const o = Route.useLoaderData()
+  return (
+    <LangProvider value={asLang(o.shop.lang)}>
+      <Track />
+    </LangProvider>
+  )
+}
 
 /** How many of the four steps are behind the buyer. */
 const DONE: Record<OrderStatus, number> = { awaiting_payment: 0, payment_claimed: 1, confirmed: 2, dispatched: 3, delivered: 4, cancelled: 0 }
@@ -157,7 +167,6 @@ function Track() {
           <ShopAvatar name={o.shop.name} logo={o.shop.logo_key} className="h-9 w-9 text-[13px]" />
           <span className="truncate text-[15px] font-semibold">{o.shop.name}</span>
         </Link>
-        <LangSwitch />
       </header>
 
       <main className="mx-auto max-w-[1080px] px-4 pb-16 md:grid md:grid-cols-[minmax(0,1fr)_380px] md:items-start md:gap-10 md:px-10 print:block">

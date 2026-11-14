@@ -3,10 +3,10 @@ import { getCookie, setCookie } from '@tanstack/react-start/server'
 import { currentUser, endSession, hashPassword, startSession, verifyPassword } from '#/server/auth'
 import { first, newId, now, run } from '#/server/db'
 import { normalizePhone } from '#/lib/format'
-import { SWAHILI_ENABLED, type Lang } from '#/lib/i18n'
+import { asLang, type Lang } from '#/lib/i18n'
 
 export const getSession = createServerFn({ method: 'GET' }).handler(async () => {
-  const lang: Lang = SWAHILI_ENABLED && getCookie('shopi_lang') === 'sw' ? 'sw' : 'en'
+  const lang: Lang = asLang(getCookie('shopi_lang'))
   const user = await currentUser()
   const shop = user
     ? await first<{ id: string; slug: string; name: string; logo_key: string | null }>(

@@ -21,18 +21,24 @@ APP = Path(__file__).resolve().parents[2]
 def main(path):
     ws = load_workbook(path, read_only=True)['Translations']
     rows = ws.iter_rows(min_row=2, values_only=True)
-    out, bad, unchecked = {}, [], 0
+    out, bad, unchecked, done = {}, [], 0, set()
     for row in rows:
         en, sw = (row[2] or '').strip(), (row[3] or '').strip()
         if not en or not sw:
             continue
-        if (row[6] or '').strip() != 'Done':
+        if (row[6] or '').strip() == 'Done':
+            done.add(en)
+        else:
             unchecked += 1
         if sorted(re.findall(r'\{\w+\}', en)) != sorted(re.findall(r'\{\w+\}', sw)):
             bad.append((row[0], en, sw))
             continue
         out[en] = sw
     (APP / 'src/locales/sw.json').write_text(json.dumps(out, ensure_ascii=False, indent=2, sort_keys=True) + '\n')
+    # Rows the team marked Done are no longer waiting for a check.
+    unchecked_path = APP / 'scripts/i18n/sw-unchecked.json'
+    unchecked = set(json.loads(unchecked_path.read_text())) - done
+    unchecked_path.write_text(json.dumps(sorted(unchecked), ensure_ascii=False, indent=2) + '\n')
     print(f'{len(out)} translations written to src/locales/sw.json')
     if unchecked:
         print(f'  {unchecked} of them are not marked Done yet (still the draft, or a question). Check them before switching Swahili on.')

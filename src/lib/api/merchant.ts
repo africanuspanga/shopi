@@ -35,6 +35,8 @@ export type ShopRow = {
   lipa_network: string
   lipa_is_personal: number
   cod_enabled: number
+  /** The language buyers see the shop in: 'sw' or 'en'. */
+  lang: string
 }
 export type AreaRow = { id: string; name: string; fee: number }
 
@@ -47,11 +49,12 @@ export const checkSlug = createServerFn({ method: 'GET' })
   })
 
 export const createShop = createServerFn({ method: 'POST' })
-  .validator((d: { name: string; slug: string; category: string; whatsapp: string }) => ({
+  .validator((d: { name: string; slug: string; category: string; whatsapp: string; lang: string }) => ({
     name: str(d.name, 60),
     slug: slugify(d.slug),
     category: CATEGORIES.some((c) => c.id === d.category) ? d.category : 'other',
     whatsapp: normalizePhone(str(d.whatsapp)),
+    lang: d.lang === 'sw' ? 'sw' : 'en',
   }))
   .handler(async ({ data }) => {
     const user = await requireUser()
@@ -61,13 +64,14 @@ export const createShop = createServerFn({ method: 'POST' })
     if (data.slug.length < 3 || RESERVED_SLUGS.has(data.slug)) return { error: 'slug' as const }
     if (await first('SELECT 1 FROM shops WHERE slug = ?', data.slug)) return { error: 'slug_taken' as const }
     await run(
-      `INSERT INTO shops (id, owner_id, slug, name, category, whatsapp, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO shops (id, owner_id, slug, name, category, whatsapp, lang, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       newId(),
       user.id,
       data.slug,
       data.name,
       data.category,
       data.whatsapp || user.phone,
+      data.lang,
       now(),
     )
     return { ok: true as const, slug: data.slug }
@@ -116,7 +120,7 @@ export const updateShop = createServerFn({ method: 'POST' })
     await run(
       `UPDATE shops SET name = ?, bio = ?, category = ?, logo_key = ?, whatsapp = ?, instagram = ?, tiktok = ?,
          facebook = ?, location = ?, maps_url = ?, tin = ?, hours = ?, lipa_number = ?, lipa_name = ?, lipa_network = ?,
-         lipa_is_personal = ?, cod_enabled = ? WHERE id = ?`,
+         lipa_is_personal = ?, cod_enabled = ?, lang = COALESCE(?, lang) WHERE id = ?`,
       str(data.name, 60) || shop.name,
       str(data.bio, 300),
       CATEGORIES.some((c) => c.id === data.category) ? data.category : 'other',
@@ -134,6 +138,7 @@ export const updateShop = createServerFn({ method: 'POST' })
       str(data.lipa_network, 30),
       data.lipa_is_personal ? 1 : 0,
       data.cod_enabled ? 1 : 0,
+      data.lang === 'sw' || data.lang === 'en' ? data.lang : null,
       shop.id,
     )
     // A replaced logo leaves storage.

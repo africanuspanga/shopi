@@ -2,10 +2,11 @@ import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { Check, ImageIcon, Loader2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { AuthLayout, StepBar } from '#/components/auth'
-import { ErrorText, Field, ShopAvatar } from '#/components/ui'
+import { ErrorText, Field, ShopAvatar, ShopLangChoice } from '#/components/ui'
 import { checkSlug, createShop, saveShopBasics } from '#/lib/api/merchant'
 import { CATEGORIES, mapsLink, slugify, tinDigits } from '#/lib/format'
-import { useT } from '#/lib/i18n'
+import { useLang, useT, type Lang } from '#/lib/i18n'
+import { setLang } from '#/lib/api/session'
 
 export const Route = createFileRoute('/onboard')({
   beforeLoad: ({ context }) => {
@@ -30,6 +31,15 @@ function Onboard() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [created, setCreated] = useState(false)
+  // The shop's language, first: choosing it also switches these screens and the seller's app to it.
+  const lang = useLang()
+  const [shopLang, setShopLang] = useState<Lang>(lang)
+  const chooseLang = async (next: Lang) => {
+    setShopLang(next)
+    if (next === lang) return
+    await setLang({ data: { lang: next } })
+    router.invalidate()
+  }
 
   useEffect(() => {
     if (!slugTouched) setSlug(slugify(name))
@@ -100,13 +110,14 @@ function Onboard() {
           e.preventDefault()
           setBusy(true)
           setError('')
-          const res = await createShop({ data: { name, slug, category, whatsapp } })
+          const res = await createShop({ data: { name, slug, category, whatsapp, lang: shopLang } })
           setBusy(false)
           if ('error' in res) return setError(res.error === 'name' ? t('Enter a shop name.') : t('That link is taken. Try another.'))
           setCreated(true)
           window.scrollTo(0, 0)
         }}
       >
+        <ShopLangChoice value={shopLang} onChange={chooseLang} hint={t('Buyers see your shop in this language. You can change it later in Shop settings.')} />
         <Field label={t('Shop name')}>
           <input className="input" placeholder="Zuri Fashion" value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
