@@ -1,6 +1,7 @@
 """
 Builds the translation sheet from the code: every t('...') and msg('...') string, the screen it is on,
-notes about {placeholders}, and the old Swahili as a draft for the team to correct.
+notes about {placeholders}, and Swahili for the team to check: what is already approved (src/locales/sw.json,
+status Done), or else the draft (scripts/i18n/sw-draft.json, status Check) for the team to correct in place.
 
     python3 scripts/i18n/export.py      ->  ../design/translations/Shopi-translations.xlsx
 
@@ -24,6 +25,8 @@ SCREENS = [
     ('routes/onboard.tsx', 'Open your shop (setup)'),
     ('routes/app/index.tsx', 'Seller dashboard: home'),
     ('routes/app/route.tsx', 'Seller dashboard: menu'),
+    ('routes/app/analytics.tsx', 'Seller dashboard: analytics'),
+    ('routes/app/plan.tsx', 'Seller dashboard: your plan'),
     ('routes/app/bags/', 'Seller dashboard: bag links'),
     ('components/bag-links.tsx', 'Seller dashboard: bag links'),
     ('routes/app/discounts.tsx', 'Seller dashboard: discount codes'),
@@ -45,7 +48,11 @@ SCREENS = [
     ('lib/discounts.ts', 'Buyer: checkout'),
     ('lib/format.ts', 'Shared labels (categories, order status, time)'),
     ('components/', 'Shared components'),
+    ('routes/terms.tsx', 'Terms (legal)'),
+    ('routes/privacy.tsx', 'Privacy (legal)'),
+    ('routes/data-deletion.tsx', 'Delete your data (legal)'),
 ]
+LEGAL = ('Terms (legal)', 'Privacy (legal)', 'Delete your data (legal)')
 PLACEHOLDER_NOTES = {
     'n': 'a number', 'name': "a person's first name", 'shop': 'the shop name', 'code': 'the order code, like D6XS76',
     'product': 'a product name', 'price': 'a price, like TSh 60,000', 'url': 'a web link',
@@ -91,9 +98,11 @@ def collect():
     return found
 
 
-def notes_for(en):
+def notes_for(en, screens):
     keys = re.findall(r'\{(\w+)\}', en)
     parts = [f'Keep {{{k}}} as it is ({PLACEHOLDER_NOTES.get(k, "filled in by the app")}).' for k in dict.fromkeys(keys)]
+    if any(s in LEGAL for s in screens):
+        parts.append('Legal text: the lawyer checks the English first; match its meaning exactly.')
     if 'Shopi' in en:
         parts.append('Keep Shopi, WhatsApp, Instagram, TikTok and Lipa Namba in English.')
     return ' '.join(parts)
@@ -109,11 +118,12 @@ def main():
     wb = Workbook()
     ws = wb.active
     ws.title = 'Translations'
-    head = ['#', 'Screen', 'English (do not edit)', 'Swahili (fill in)', 'Old Swahili draft (reference only)', 'Notes', 'Status', 'Where in the code']
+    head = ['#', 'Screen', 'English (do not edit)', 'Swahili (check and correct)', 'First draft (reference only)', 'Notes', 'Status', 'Where in the code']
     ws.append(head)
     for i, (en, info) in enumerate(rows, 1):
-        ws.append([i, ' / '.join(info['screens']), en, done.get(en, ''), drafts.get(en, ''), notes_for(en),
-                   'Done' if done.get(en) else 'To do', ', '.join(info['files'][:3])])
+        sw = done.get(en) or drafts.get(en, '')
+        status = 'Done' if done.get(en) else 'Check' if sw else 'To do'
+        ws.append([i, ' / '.join(info['screens']), en, sw, drafts.get(en, ''), notes_for(en, info['screens']), status, ', '.join(info['files'][:3])])
 
     bold = Font(bold=True, color='FFFFFF')
     for c in ws[1]:
@@ -131,7 +141,7 @@ def main():
         ws.column_dimensions[col].width = w
     ws.freeze_panes = 'D2'
     ws.auto_filter.ref = ws.dimensions
-    dv = DataValidation(type='list', formula1='"To do,Done,Question"', allow_blank=True)
+    dv = DataValidation(type='list', formula1='"To do,Check,Done,Question"', allow_blank=True)
     ws.add_data_validation(dv)
     dv.add(f'G2:G{ws.max_row}')
 
@@ -139,14 +149,17 @@ def main():
     for line in [
         'Shopi translation sheet',
         '',
-        '1. Write the Swahili in column D, next to the English in column C. Leave column C as it is.',
-        '2. Column E is the old Swahili from the first version. Use it if it is right, rewrite it if it is not.',
+        '1. Column D holds the Swahili, next to the English in column C. Leave column C as it is.',
+        '2. Rows marked Check have a first draft in column D. Read each one; if it is wrong or sounds stiff, rewrite it in column D. Then set Status to Done.',
+        '   Column E keeps that first draft for reference. Rows marked To do have no Swahili yet: write it in column D.',
         '3. Words in curly brackets, like {name} or {n}, are filled in by the app. Copy them into your Swahili exactly.',
         '4. Keep brand and product names in English: Shopi, WhatsApp, Instagram, TikTok, Lipa Namba, M-Pesa, Mixx by Yas, Airtel Money, HaloPesa.',
         '5. Say "mobile money" (pesa kwa simu), never assume M-Pesa.',
         '6. Write the way a Dar seller talks to customers: short, friendly, clear. Buttons are 1 to 3 words.',
         '7. No emojis and no long dashes. Set column G to Done when a row is finished, or Question if you are unsure.',
         '8. Send the file back as it is (.xlsx). We import it with one command.',
+        '',
+        '9. Legal pages (Terms, Privacy, Delete your data): the lawyer checks the English first. Translate the final English.',
         '',
         f'Rows: {len(rows)}',
     ]:

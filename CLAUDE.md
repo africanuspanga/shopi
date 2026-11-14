@@ -172,6 +172,13 @@ Plain and specific, about this product. No exclamation marks, no greeting headli
 no hype words, no claims we cannot back. Changes say what they compare to ("↓ 19% vs the 7 days before").
 Write English as the key: every string goes through `t()` from `src/lib/i18n.tsx`, Swahili goes in
 `src/locales/sw.json`, and `SWAHILI_ENABLED` turns it on.
+- `scripts/i18n/sw-draft.json` is a full first draft (every string, 14 Nov 2026). `sw.json` holds only what the team approved.
+- `python3 scripts/i18n/export.py` writes `../design/translations/Shopi-translations.xlsx`: column D starts with the approved
+  Swahili (status Done) or the draft (status Check). The team corrects column D and marks rows Done;
+  `python3 scripts/i18n/import.py <file>` writes `sw.json` and says how many rows are still not Done.
+- A new string: add its Swahili to `sw-draft.json` in the same change (same `{placeholders}`, brands in English), then
+  export again. Words used so far: duka, oda, kapu (bag), bidhaa, delivery, lipa ukipokea (cash on delivery),
+  pesa kwa simu (mobile money), ghairi (cancel), code ya punguzo (never "kodi", which means tax), kifurushi (plan).
 
 ### Logo
 "shopi" is Mona Sans ExtraBold at 120% width, lowercase, with the i's dot drawn as a perfect-circle Moto dot as wide as the
