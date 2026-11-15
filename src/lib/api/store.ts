@@ -38,6 +38,10 @@ export type PublicShop = {
   status: string
   /** The language buyers see the shop in: 'sw' or 'en' (`asLang`). */
   lang: string
+  /** The shop's look (src/lib/theme.ts): its colour (#rrggbb, null = Shopi orange), heading style, cover photo. */
+  theme_color: string | null
+  theme_font: string | null
+  cover_key: string | null
 }
 export type PublicProduct = {
   id: string
@@ -59,7 +63,7 @@ export type PublicProduct = {
 export type PublicCollection = { id: string; slug: string; name: string; description: string; productIds: string[] }
 
 const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram, tiktok, facebook, location, maps_url, tin, hours,
-  lipa_number, lipa_name, lipa_network, cod_enabled, status, lang`
+  lipa_number, lipa_name, lipa_network, cod_enabled, status, lang, theme_color, theme_font, cover_key`
 
 export const getStorefront = createServerFn({ method: 'GET' })
   .validator((d: { slug: string }) => ({ slug: String(d.slug).toLowerCase() }))
@@ -280,7 +284,7 @@ export type TrackedOrder = {
   payment_method: 'lipa' | 'cod'
   payment_check: string | null
   created_at: number
-  shop: { id: string; slug: string; name: string; logo_key: string | null; whatsapp: string; lipa_number: string; lipa_name: string; lipa_network: string; tin: string; lang: string }
+  shop: { id: string; slug: string; name: string; logo_key: string | null; whatsapp: string; lipa_number: string; lipa_name: string; lipa_network: string; tin: string; lang: string; theme_color: string | null }
   /** option: the kind of option on the line (see OPTION_KINDS); null means size. */
   lines: { name: string; price: number; qty: number; image: string | null; variant: string | null; option: string | null }[]
 }
@@ -296,7 +300,7 @@ export const getTrackedOrder = createServerFn({ method: 'GET' })
     if (!order) return null
     const [shop, lines] = await Promise.all([
       first<TrackedOrder['shop']>(
-        'SELECT id, slug, name, logo_key, whatsapp, lipa_number, lipa_name, lipa_network, tin, lang FROM shops WHERE id = ?',
+        'SELECT id, slug, name, logo_key, whatsapp, lipa_number, lipa_name, lipa_network, tin, lang, theme_color FROM shops WHERE id = ?',
         order.shop_id,
       ),
       all<TrackedOrder['lines'][number]>('SELECT name, price, qty, image, variant, option FROM order_items WHERE order_id = ?', order.id),

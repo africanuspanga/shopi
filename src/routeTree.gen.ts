@@ -31,6 +31,7 @@ import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppAnalyticsRouteImport } from './routes/app/analytics'
 import { Route as AppDiscountsRouteImport } from './routes/app/discounts'
+import { Route as AppLookRouteImport } from './routes/app/look'
 import { Route as AppPlanRouteImport } from './routes/app/plan'
 import { Route as AppShopRouteImport } from './routes/app/shop'
 import { Route as ImgSplatRouteImport } from './routes/img/$'
@@ -162,6 +163,11 @@ const AppDiscountsRoute = AppDiscountsRouteImport.update({
   path: '/discounts',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppLookRoute = AppLookRouteImport.update({
+  id: '/look',
+  path: '/look',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppPlanRoute = AppPlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/discounts': typeof AppDiscountsRoute
+  '/app/look': typeof AppLookRoute
   '/app/plan': typeof AppPlanRoute
   '/app/shop': typeof AppShopRoute
   '/img/$': typeof ImgSplatRoute
@@ -326,6 +333,7 @@ export interface FileRoutesByTo {
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/discounts': typeof AppDiscountsRoute
+  '/app/look': typeof AppLookRoute
   '/app/plan': typeof AppPlanRoute
   '/app/shop': typeof AppShopRoute
   '/img/$': typeof ImgSplatRoute
@@ -371,6 +379,7 @@ export interface FileRoutesById {
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/discounts': typeof AppDiscountsRoute
+  '/app/look': typeof AppLookRoute
   '/app/plan': typeof AppPlanRoute
   '/app/shop': typeof AppShopRoute
   '/img/$': typeof ImgSplatRoute
@@ -417,6 +426,7 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/app/analytics'
     | '/app/discounts'
+    | '/app/look'
     | '/app/plan'
     | '/app/shop'
     | '/img/$'
@@ -459,6 +469,7 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/app/analytics'
     | '/app/discounts'
+    | '/app/look'
     | '/app/plan'
     | '/app/shop'
     | '/img/$'
@@ -503,6 +514,7 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/app/analytics'
     | '/app/discounts'
+    | '/app/look'
     | '/app/plan'
     | '/app/shop'
     | '/img/$'
@@ -704,6 +716,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDiscountsRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/look': {
+      id: '/app/look'
+      path: '/look'
+      fullPath: '/app/look'
+      preLoaderRoute: typeof AppLookRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/plan': {
       id: '/app/plan'
       path: '/plan'
@@ -872,6 +891,7 @@ const ShopRouteRouteWithChildren = ShopRouteRoute._addFileChildren(
 interface AppRouteRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppDiscountsRoute: typeof AppDiscountsRoute
+  AppLookRoute: typeof AppLookRoute
   AppPlanRoute: typeof AppPlanRoute
   AppShopRoute: typeof AppShopRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -893,6 +913,7 @@ interface AppRouteRouteChildren {
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppDiscountsRoute: AppDiscountsRoute,
+  AppLookRoute: AppLookRoute,
   AppPlanRoute: AppPlanRoute,
   AppShopRoute: AppShopRoute,
   AppIndexRoute: AppIndexRoute,

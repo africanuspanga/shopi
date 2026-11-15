@@ -35,6 +35,38 @@
   src: url("/fonts/geist-mono-latin-ext.v6.woff2") format("woff2");
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
+/* Shop styles (src/lib/theme.ts): one font per style, used only for a shop's name and headings, and only on shops that
+   chose it (a browser downloads a face only when text uses it). Latin subsets from Fontsource, OFL (shop-fonts-OFL.txt). */
+@font-face {
+  font-family: "Shop Elegant";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/shop-elegant.v1.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Shop Bold";
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/shop-bold.v1.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Shop Friendly";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/shop-friendly.v1.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Shop Modern";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/shop-modern.v1.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Shop Handmade";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/shop-handmade.v1.woff2") format("woff2");
+}
 @import "tailwindcss";
 
 /*
@@ -65,6 +97,10 @@
   --color-moto: #ff4f17;
   --color-moto-ink: #c4380a;
   --color-moto-soft: #fff0e8;
+  /* Text on a Moto fill, and Moto on the black capsule. A shop's own colour (src/lib/theme.ts) sets all of these. */
+  --color-on-moto: #0a0a0a;
+  --color-moto-lit: #ff4f17;
+  --color-on-moto-lit: #0a0a0a;
 
   /* Meaning only: small dots and short text */
   --color-ok: #15803d;
@@ -123,6 +159,45 @@ body {
     font-family: var(--font-mono);
     font-weight: 500;
     letter-spacing: 0.02em;
+  }
+
+  /* A shop's style for its name and headings (data-font on the shop, product and collection pages; never checkout).
+     Each font gets its own spacing; Caveat's letters run small, so it is scaled to Mona Sans's x-height. */
+  [data-font] :is(.display, .title) {
+    font-family: var(--shop-font), var(--font-sans);
+    font-stretch: 100%;
+    letter-spacing: var(--shop-track);
+  }
+  [data-font] .display {
+    line-height: var(--shop-leading, 1);
+  }
+  [data-font="elegant"] {
+    --shop-font: "Shop Elegant";
+    --shop-track: -0.015em;
+  }
+  [data-font="bold"] {
+    --shop-font: "Shop Bold";
+    --shop-track: 0.005em;
+    --shop-leading: 1.02;
+  }
+  [data-font="bold"] :is(.display, .title) {
+    font-weight: 400;
+  }
+  [data-font="friendly"] {
+    --shop-font: "Shop Friendly";
+    --shop-track: -0.01em;
+  }
+  [data-font="modern"] {
+    --shop-font: "Shop Modern";
+    --shop-track: -0.035em;
+  }
+  [data-font="handmade"] {
+    --shop-font: "Shop Handmade";
+    --shop-track: 0;
+    --shop-leading: 0.9;
+  }
+  [data-font="handmade"] :is(.display, .title) {
+    font-size-adjust: ex-height 0.517;
   }
 
   /* Surfaces */
@@ -184,6 +259,16 @@ body {
   @media (hover: hover) {
     .btn-quiet:hover {
       background: var(--color-raised);
+    }
+  }
+  /* A buyer's main step in a shop (Add to bag, Checkout, Place order): the shop's colour when white text on it reads
+     well, else ink (--shop-button, set by themeStyle). */
+  .btn-shop {
+    background: var(--shop-button, var(--color-ink));
+  }
+  @media (hover: hover) {
+    .btn-shop:hover {
+      background: color-mix(in oklab, var(--shop-button, var(--color-ink)) 86%, white);
     }
   }
   .btn-sm {

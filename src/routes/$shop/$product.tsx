@@ -10,6 +10,7 @@ import { Img, Toast, useEntrance } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import { lineKey, useCart } from '#/lib/cart'
 import { OPTION_KINDS, imgUrl, optionKind, optionText, priceOf, tzs, waLink } from '#/lib/format'
+import { fontAttr, fontPreload } from '#/lib/theme'
 import { useT } from '#/lib/i18n'
 import { breadcrumbSchema, canonical, homeCollection, productDescription, productPath, productSchema, productTitle } from '#/lib/seo'
 import { shareLink, useOrigin } from '#/lib/share'
@@ -50,7 +51,7 @@ export const Route = createFileRoute('/$shop/$product')({
           [p.name, path],
         ]),
       ],
-      links: [canonical(path)],
+      links: [canonical(path), ...fontPreload(shop.theme_font)],
     }
   },
   notFoundComponent: ProductNotFound,
@@ -153,7 +154,7 @@ function ProductPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-card pb-28 md:pb-0">
+    <div className="min-h-dvh bg-card pb-28 md:pb-0" data-font={fontAttr(shop.theme_font)}>
       <div className="hidden md:block">
         <ShopTopBar
           shop={shop}
@@ -287,11 +288,11 @@ function ProductPage() {
             <div className="mt-8 hidden gap-3 md:flex">
               {!canNotify && <Qty qty={qty} max={max} onChange={setQty} big />}
               {added ? (
-                <Link to="/$shop/checkout" params={{ shop: shop.slug }} className="btn btn-lg flex-1">
+                <Link to="/$shop/checkout" params={{ shop: shop.slug }} className="btn btn-shop btn-lg flex-1">
                   {t('Go to checkout')} <span className="tnum text-white/60">{tzs(bagTotal)}</span>
                 </Link>
               ) : canNotify ? (
-                <button type="button" className="btn btn-lg flex-1" disabled={asked} onClick={() => setNotify(true)}>
+                <button type="button" className="btn btn-shop btn-lg flex-1" disabled={asked} onClick={() => setNotify(true)}>
                   {asked ? <Check size={18} strokeWidth={2.25} /> : <Bell size={18} strokeWidth={1.75} />}
                   {asked ? t('You’ll get a WhatsApp message') : t('Notify me when it’s back')}
                 </button>
@@ -460,7 +461,7 @@ function Qty({ qty, max, onChange, big = false }: { qty: number; max: number; on
 function AddButton({ label, onAdd, big = false }: { label?: string; onAdd: () => void; big?: boolean }) {
   const t = useT()
   return (
-    <button type="button" className={`btn flex-1 ${big ? 'btn-lg' : 'px-8'}`} onClick={onAdd}>
+    <button type="button" className={`btn btn-shop flex-1 ${big ? 'btn-lg' : 'px-8'}`} onClick={onAdd}>
       {label ?? t('Add to bag')}
     </button>
   )

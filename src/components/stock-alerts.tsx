@@ -138,7 +138,7 @@ export function NotifySheet({
           </p>
           <div ref={check.slot} />
           <ErrorText>{error}</ErrorText>
-          <button className="btn btn-lg w-full" disabled={busy || phone.replace(/\D/g, '').length < 9}>
+          <button className="btn btn-shop btn-lg w-full" disabled={busy || phone.replace(/\D/g, '').length < 9}>
             <Bell size={17} strokeWidth={1.75} /> {busy ? t('Saving') : t('Notify me')}
           </button>
         </form>

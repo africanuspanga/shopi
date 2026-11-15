@@ -4,13 +4,14 @@ import { useEffect, useRef, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { BagButton, FactPills, ProductGrid, ShopFacts, ShopFooter, ShopTopBar, SocialLinks, onSale } from '#/components/shop'
 import { ShopNav } from '#/components/shop-nav'
-import { Chips, Empty, ShopAvatar, Toast, useEntrance } from '#/components/ui'
+import { Chips, Empty, Img, ShopAvatar, Toast, useEntrance } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import { useCart } from '#/lib/cart'
 import { waLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 import { canonical, shopDescription, storeSchema } from '#/lib/seo'
 import { shareLink, useOrigin } from '#/lib/share'
+import { fontAttr, fontPreload } from '#/lib/theme'
 
 export const Route = createFileRoute('/$shop/')({
   // Only what the head needs: the shop page's own address and the store's structured data.
@@ -20,7 +21,10 @@ export const Route = createFileRoute('/$shop/')({
   },
   head: ({ loaderData }) =>
     loaderData
-      ? { meta: [storeSchema(loaderData.shop, shopDescription(loaderData.shop, loaderData.count))], links: [canonical(`/${loaderData.shop.slug}`)] }
+      ? {
+          meta: [storeSchema(loaderData.shop, shopDescription(loaderData.shop, loaderData.count))],
+          links: [canonical(`/${loaderData.shop.slug}`), ...fontPreload(loaderData.shop.theme_font)],
+        }
       : {},
   component: Storefront,
 })
@@ -38,6 +42,7 @@ function Storefront() {
   const [filter, setFilter] = useState('all')
   const [copied, setCopied] = useState(false)
   const url = `${useOrigin()}/${shop.slug}`
+  const cover = !!shop.cover_key
 
   // Phones: the top bar waits until the shop's name has scrolled out of view.
   const nameRef = useRef<HTMLDivElement>(null)
@@ -78,7 +83,7 @@ function Storefront() {
   }
 
   return (
-    <div className="min-h-dvh bg-card pb-28 md:pb-0">
+    <div className="min-h-dvh bg-card pb-28 md:pb-0" data-font={fontAttr(shop.theme_font)}>
       <ShopTopBar
         shop={shop}
         reveal={pastName}
@@ -95,11 +100,23 @@ function Storefront() {
       />
 
       <main className="mx-auto max-w-[1280px] px-4 md:px-10">
-        <section className="grid gap-8 pt-8 pb-8 md:grid-cols-[minmax(0,1fr)_340px] md:items-end md:gap-16 md:pt-16 md:pb-14 lg:grid-cols-[minmax(0,1fr)_380px]">
+        {cover && (
+          <div className="mt-2 aspect-[2/1] overflow-hidden rounded-[20px] bg-well md:mt-8 md:aspect-[16/5] md:rounded-[28px]">
+            {/* Phones get the 600px copy: the cover is the first thing they paint, and data costs money. */}
+            <Img k={shop.cover_key} alt="" priority sizes="(min-width: 768px) 1200px, 50vw" className="h-full w-full" />
+          </div>
+        )}
+        <section
+          className={`grid gap-8 pb-8 md:grid-cols-[minmax(0,1fr)_340px] md:gap-16 md:pb-14 lg:grid-cols-[minmax(0,1fr)_380px] ${cover ? 'pt-0 md:items-start' : 'pt-8 md:items-end md:pt-16'}`}
+        >
           <div className={`${rise} min-w-0`}>
-            <div ref={nameRef} className="flex items-center gap-4 md:block">
-              <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-16 w-16 text-[20px] md:h-24 md:w-24 md:text-[28px]" />
-              <div className="min-w-0 md:mt-8">
+            <div ref={nameRef} className={`flex gap-4 md:block ${cover ? 'items-end' : 'items-center'}`}>
+              <ShopAvatar
+                name={shop.name}
+                logo={shop.logo_key}
+                className={`h-16 w-16 shrink-0 text-[20px] md:h-24 md:w-24 md:text-[28px] ${cover ? 'relative -mt-8 ml-3 ring-4 ring-card md:-mt-12 md:ml-8' : ''}`}
+              />
+              <div className={`min-w-0 ${cover ? 'pb-1 md:mt-6 md:pb-0' : 'md:mt-8'}`}>
                 <h1 className="display text-[30px] break-words md:text-[60px] lg:text-[72px]">{shop.name}</h1>
                 {shop.location && (
                   <p className="mt-1.5 flex items-center gap-1.5 text-[14px] text-muted md:mt-4 md:text-[15px]">
@@ -132,7 +149,8 @@ function Storefront() {
               <FactPills shop={shop} areas={areas} />
             </div>
           </div>
-          <aside className={`${rise2} hidden rounded-[20px] bg-page p-6 md:block`}>
+          {/* Under a cover the logo overlaps its edge, so both columns start at the top and the card keeps clear of it. */}
+          <aside className={`${rise2} hidden rounded-[20px] bg-page p-6 md:block ${cover ? 'md:mt-8' : ''}`}>
             <ShopFacts shop={shop} areas={areas} />
           </aside>
         </section>

@@ -8,6 +8,7 @@ import { Empty, Toast, useEntrance } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import { useCart } from '#/lib/cart'
 import { imgUrl } from '#/lib/format'
+import { fontAttr, fontPreload } from '#/lib/theme'
 import { useT } from '#/lib/i18n'
 import { breadcrumbSchema, canonical, collectionDescription, collectionTitle } from '#/lib/seo'
 import { shareLink, useOrigin } from '#/lib/share'
@@ -41,7 +42,7 @@ export const Route = createFileRoute('/$shop/c/$slug')({
           [c.name, path],
         ]),
       ],
-      links: [canonical(path)],
+      links: [canonical(path), ...fontPreload(shop.theme_font)],
     }
   },
   notFoundComponent: CollectionNotFound,
@@ -80,7 +81,7 @@ function CollectionPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-card pb-28 md:pb-0">
+    <div className="min-h-dvh bg-card pb-28 md:pb-0" data-font={fontAttr(shop.theme_font)}>
       <ShopTopBar
         shop={shop}
         right={

@@ -240,7 +240,7 @@ export function CheckoutView({
       </div>
       <div ref={check.slot} />
       <ErrorText>{error || blocked}</ErrorText>
-      <button form={FORM_ID} className="btn btn-lg w-full" disabled={busy || demo || paused || !!blocked || (!canLipa && !canCod)}>
+      <button form={FORM_ID} className="btn btn-shop btn-lg w-full" disabled={busy || demo || paused || !!blocked || (!canLipa && !canCod)}>
         {demo ? t('Orders are off in this demo shop') : paused ? t('This shop is taking a break') : busy ? t('Placing your order') : t('Place order')}
       </button>
       {foot && <p className="text-center text-[13px] leading-5 text-muted">{foot}</p>}

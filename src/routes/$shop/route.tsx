@@ -7,6 +7,7 @@ import { cleanCode, codeKey } from '#/lib/discounts'
 import { imgUrl } from '#/lib/format'
 import { LangProvider, asLang } from '#/lib/i18n'
 import { shopDescription, shopTitle } from '#/lib/seo'
+import { themeStyle } from '#/lib/theme'
 
 export const Route = createFileRoute('/$shop')({
   loader: async ({ params }) => {
@@ -17,7 +18,7 @@ export const Route = createFileRoute('/$shop')({
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [] }
     const { shop, products, origin } = loaderData
-    const cover = products[0]?.images[0] ?? shop.logo_key
+    const cover = shop.cover_key ?? products[0]?.images[0] ?? shop.logo_key
     const description = shopDescription(shop, products.length)
     return {
       meta: [
@@ -62,11 +63,14 @@ function ShopLayout() {
     }
   }, [shop.id])
   // Buyers see the shop in the language its seller chose: the shop, product pages, checkout and bag links.
+  // The shop's colour, if it chose one, replaces Moto on all of them (src/lib/theme.ts).
   return (
     <LangProvider value={asLang(shop.lang)}>
-      {shop.status === 'demo' && <DemoBanner />}
-      {paused && <BreakBanner whatsapp={shop.whatsapp} name={shop.name} />}
-      <Outlet />
+      <div className="contents" style={themeStyle(shop.theme_color)}>
+        {shop.status === 'demo' && <DemoBanner />}
+        {paused && <BreakBanner whatsapp={shop.whatsapp} name={shop.name} />}
+        <Outlet />
+      </div>
     </LangProvider>
   )
 }

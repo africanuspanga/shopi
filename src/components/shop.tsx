@@ -79,7 +79,7 @@ export function OptionChip({
 
 export function Tag({ children, hot = false }: { children: ReactNode; hot?: boolean }) {
   return (
-    <span className={`tnum inline-flex h-6 items-center rounded-full px-2.5 text-[12px] font-medium ${hot ? 'bg-moto text-ink' : 'bg-card text-ink'}`}>
+    <span className={`tnum inline-flex h-6 items-center rounded-full px-2.5 text-[12px] font-medium ${hot ? 'bg-moto text-on-moto' : 'bg-card text-ink'}`}>
       {children}
     </span>
   )
@@ -157,7 +157,7 @@ export function ProductCard({
             type="button"
             aria-label={inBag ? t('{name}: {n} in your bag. Add another', { name: p.name, n: inBag }) : t('Add {name} to bag', { name: p.name })}
             onClick={() => onQuickAdd(p)}
-            className={`pointer-events-auto absolute right-2.5 bottom-2.5 flex h-10 min-w-10 items-center justify-center rounded-full px-2.5 shadow-[0_0_0_2px_rgb(255_255_255/0.85),0_6px_16px_-6px_rgb(10_10_10/0.35)] transition-[transform,background-color,color] duration-150 ease-out active:scale-95 ${inBag ? 'bg-moto text-ink' : 'bg-ink text-white hover:bg-ink-2'}`}
+            className={`pointer-events-auto absolute right-2.5 bottom-2.5 flex h-10 min-w-10 items-center justify-center rounded-full px-2.5 shadow-[0_0_0_2px_rgb(255_255_255/0.85),0_6px_16px_-6px_rgb(10_10_10/0.35)] transition-[transform,background-color,color] duration-150 ease-out active:scale-95 ${inBag ? 'bg-moto text-on-moto' : 'bg-ink text-white hover:bg-ink-2'}`}
           >
             {inBag ? <span className="tnum text-[15px] font-semibold">{inBag}</span> : <BagPlusIcon />}
           </button>
@@ -202,7 +202,7 @@ export function QuickAddSheet({ shopSlug, p, onClose, onAdd }: { shopSlug: strin
           </div>
         </div>
       )}
-      <button type="button" className="btn btn-lg mt-6 w-full" disabled={!!p.sizes && !chosen} onClick={() => onAdd(chosen?.label ?? null)}>
+      <button type="button" className="btn btn-shop btn-lg mt-6 w-full" disabled={!!p.sizes && !chosen} onClick={() => onAdd(chosen?.label ?? null)}>
         {p.sizes && !chosen ? t(kind.choose) : t('Add to bag')}
       </button>
     </Sheet>
@@ -260,7 +260,7 @@ export function BagButton({ shopSlug, count }: { shopSlug: string; count: number
       className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-card pr-1 pl-4 text-[14px] font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)] transition-colors hover:bg-well"
     >
       {t('Bag')}
-      <span className={`tnum flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] transition-colors ${count ? 'bg-moto text-ink' : 'bg-ink text-white'}`}>
+      <span className={`tnum flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] transition-colors ${count ? 'bg-moto text-on-moto' : 'bg-ink text-white'}`}>
         {count}
       </span>
     </Link>

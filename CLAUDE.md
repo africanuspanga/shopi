@@ -40,6 +40,8 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/routes/app/products/import.tsx`, `src/components/import.tsx` | Bulk import from a sheet: pick (file, paste, template), match columns, check, run in chunks, done |
 | `src/lib/sheet.ts`, `src/lib/import.ts` | Reading .xlsx/CSV/pasted rows in the browser (no library); column guessing and the row rules (`buildDrafts`) |
 | `src/server/products.ts` | `cleanProduct()` (the one set of product rules for the form and the import) and product slugs |
+| `src/lib/theme.ts` | A shop's look: the 12 colours, the 6 font styles, `themeStyle()` (the CSS variables), the readability maths, `logoColors()` |
+| `src/routes/app/look.tsx`, `src/components/look.tsx`, `src/lib/api/look.ts` | Shop look: cover, colour (logo suggestions, tested, own), style of the name, live preview; `saveShopLook` |
 | `src/components/auth.tsx` | `AuthLayout` (form left, dark product panel right), `StepBar`, `PasswordInput` |
 | `src/components/showcase.tsx` | Coded product previews for the landing and auth pages (phone, mini store, order card, payment slip) |
 | `src/components/brand-icons.tsx` | One-colour social icons, plus `WhatsAppMark` (WhatsApp's green mark) |
@@ -92,6 +94,8 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `moto` | `#ff4f17` | **The one accent** (see rules) |
 | `moto-ink` | `#c4380a` | Moto as text on white ("Only 2 left") |
 | `moto-soft` | `#fff0e8` | Background of the "Check payment" status |
+| `on-moto` | `#0a0a0a` | Text on a Moto fill (bag counts, sale tags). Use it instead of `text-ink` on `bg-moto` |
+| `moto-lit` / `on-moto-lit` | `#ff4f17` / `#0a0a0a` | Moto on the black capsule (active tab, bag count) and the text on it |
 | `ok` / `wait` / `bad` | `#15803d` / `#b45309` / `#d92d20` | Meaning only: status dots, check icons, errors |
 
 **Moto rules.** Moto marks what is hot or needs the seller, and the active tab in the floating bottom nav:
@@ -100,6 +104,12 @@ today's bar in charts, the `.signal` dot, the active bottom-nav icon, and the lo
 Primary buttons are **never** Moto; they are ink. Text on Moto is ink, never white (white fails contrast).
 No gradients between hues, no glows, no coloured shadows. The only gradient allowed is a neutral fade
 (white to transparent) under floating bars.
+
+**A shop's own colour** (Shop look, `src/lib/theme.ts`) replaces Moto on that shop's buyer pages (shop, product,
+collection, checkout, bag links, the order page) by setting the tokens above on a wrapper (`themeStyle`), so components
+keep using `moto`, `on-moto`, `moto-ink` and `moto-lit`. Shopi orange stays the default; the seller app and Shopi's logo
+dot stay Moto. The buyer's main step (`.btn-shop`: Add to bag, Go to checkout, Place order, Notify me, send payment proof)
+takes the colour only when white text on it reaches 4.5:1; otherwise it stays ink. Other buttons stay black and white.
 
 **WhatsApp.** Buttons that open a WhatsApp chat stay black or white; only `WhatsAppMark` carries WhatsApp's
 green. Never make a green button. Quiet icon rows may use the one-colour `WhatsAppIcon`.
@@ -111,6 +121,10 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
 - `.display`: width 112%, weight 600, tracking -0.045em, line-height 0.95. Hero headlines, shop names, the closing line.
 - `.title`: width 106%, weight 600, tracking -0.03em. Page and section titles.
 - Body 15 to 17px (400); labels and buttons 14 to 15px (500); captions 13px; meta 12px mono (`.meta`); codes `.code`.
+- **Shop styles** (Shop look): a shop may set its name and headings (`.display`, `.title`) in one of 5 other fonts
+  (Playfair Display, Anton, Fredoka, Space Grotesk, Caveat; `public/fonts/shop-*.v1.woff2`, OFL in `shop-fonts-OFL.txt`)
+  through `data-font` on the shop, product and collection pages only (`fontAttr()`; never checkout, money or the seller
+  app). Each has its own spacing in `styles.css`; the page preloads its file (`fontPreload()`).
 - Weights 400, 500, 600 only. Sentence case everywhere. No uppercase tracked labels, no italics, no negative tracking under 16px.
 - Numbers: `.tnum` gives lining figures, **not** tabular ones: Mona Sans's tabular zero is slashed and reads as code on a price.
   Align money columns right instead. Mono (receipts) stays tabular. Money is always `TSh 60,000` via `tzs()`;
@@ -264,6 +278,13 @@ domain are lowercase.
   the WhatsApp number. Nothing is fetched from Meta; only a TikTok short link (vm.tiktok.com) is opened on the server
   (`expandSocialLink`, TikTok hosts only, the redirect alone is read). A `wa.me/message/…` link hides the number, so the
   seller is asked to type it.
+- Shop look (`/app/look`, from Shop settings; migration `0017_shop_look.sql`): `shops.theme_color` (#rrggbb, NULL = Shopi
+  orange), `theme_font` (NULL = clean) and `cover_key` (uploaded at 1600 px with the 600 px copy; a replaced cover leaves
+  storage). Colours: "From your logo" (`logoColors()`: up to 3 from the logo's pixels, leaving out white, black, greys and
+  soft edges; none for a black-and-white logo), 12 tested colours, or any colour with a note when text is darkened or
+  buttons stay black. `shopColors()` derives the fill, text on it, the colour as text (darkened to 4.5:1 on sand), on the
+  black capsule (lightened to 3:1, white for near-black) and a pale wash. The cover shows above the shop's name with the
+  logo over its edge; phones load the 600 px copy; it is also the link preview image. Not gated by plan yet (C6).
 - Bulk import (`/app/products/import`; entry points: Import on Products, the + sheet, and a card on an empty Products page).
   The browser reads the file: `.xlsx` is unzipped with `DecompressionStream` and read with `DOMParser` (`src/lib/sheet.ts`,
   first visible sheet with data), CSV/TSV with delimiter detection and a Windows-1252 fallback; old `.xls` is refused with

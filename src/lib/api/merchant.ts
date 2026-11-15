@@ -39,6 +39,10 @@ export type ShopRow = {
   cod_enabled: number
   /** The language buyers see the shop in: 'sw' or 'en'. */
   lang: string
+  /** The shop's look, saved by saveShopLook (src/lib/api/look.ts). */
+  theme_color: string | null
+  theme_font: string | null
+  cover_key: string | null
 }
 export type AreaRow = { id: string; name: string; fee: number }
 

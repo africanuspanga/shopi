@@ -7,6 +7,7 @@ import { ErrorText, Img, ShopAvatar, useEntrance } from '#/components/ui'
 import { getTrackedOrder, submitPaymentSms } from '#/lib/api/store'
 import { optionText, timeAgo, tzs, waLink, type OrderStatus, formatTin } from '#/lib/format'
 import { LangProvider, asLang, useLang, useT } from '#/lib/i18n'
+import { themeStyle } from '#/lib/theme'
 import { shareLink, useOrigin } from '#/lib/share'
 import { drawReceipt } from '#/lib/receipt-image'
 import { NotFound } from '#/components/not-found'
@@ -27,12 +28,14 @@ export const Route = createFileRoute('/o/$code')({
   component: TrackPage,
 })
 
-/** The buyer's order page reads in the language the shop's seller chose, like the shop itself. */
+/** The buyer's order page reads in the language the shop's seller chose, in the shop's colour, like the shop itself. */
 function TrackPage() {
   const o = Route.useLoaderData()
   return (
     <LangProvider value={asLang(o.shop.lang)}>
-      <Track />
+      <div className="contents" style={themeStyle(o.shop.theme_color)}>
+        <Track />
+      </div>
     </LangProvider>
   )
 }
@@ -234,7 +237,7 @@ function Track() {
                 )}
                 <button
                   type="button"
-                  className="btn btn-lg mt-4 w-full"
+                  className="btn btn-shop btn-lg mt-4 w-full"
                   disabled={busy || sms.trim().length < 20}
                   onClick={async () => {
                     setBusy(true)

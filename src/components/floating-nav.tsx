@@ -87,7 +87,7 @@ export function NavTab({ icon: Icon, label, active = false, badge, ...target }: 
       className={`flex h-full min-w-0 flex-col items-center justify-center gap-1 rounded-full text-[11px] font-medium transition-colors duration-200 ${active ? 'bg-white/[0.09] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.1),inset_0_1px_0_rgb(255_255_255/0.08)]' : 'text-white/55 active:text-white'}`}
     >
       <span className="relative">
-        <Icon size={20} strokeWidth={active ? 2 : 1.6} className={active ? 'text-moto' : ''} />
+        <Icon size={20} strokeWidth={active ? 2 : 1.6} className={active ? 'text-moto-lit' : ''} />
         {badge}
       </span>
       <span className="max-w-full truncate px-1">{label}</span>
@@ -109,7 +109,7 @@ export function NavCenter({ icon: Icon, label, badge, ...target }: { icon: Icon;
 export function NavCount({ n }: { n: number }) {
   if (!n) return null
   return (
-    <span className="tnum absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-moto px-1 text-[11px] font-semibold text-ink ring-2 ring-ink">
+    <span className="tnum absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-moto-lit px-1 text-[11px] font-semibold text-on-moto-lit ring-2 ring-ink">
       {n > 99 ? '99+' : n}
     </span>
   )

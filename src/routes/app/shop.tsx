@@ -1,5 +1,5 @@
 import { Link, createFileRoute, useBlocker, useRouter } from '@tanstack/react-router'
-import { Camera, Check, ChevronRight, Copy, LogOut, Plus, TicketPercent, X } from 'lucide-react'
+import { Camera, Check, ChevronRight, Copy, LogOut, Palette, Plus, TicketPercent, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
 import { PhoneAppSettings } from '#/components/phone-app'
@@ -8,6 +8,7 @@ import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
 import { CATEGORIES, NETWORKS, mapsLink, tinDigits } from '#/lib/format'
 import { asLang, useT } from '#/lib/i18n'
+import { FONTS, MOTO, asFont, cleanHex } from '#/lib/theme'
 import { uploadImage } from '#/lib/upload'
 
 export const Route = createFileRoute('/app/shop')({
@@ -167,6 +168,18 @@ function ShopSettings() {
                 maxLength={11}
               />
             </Field>
+          </div>
+        </Group>
+
+        <Group title={t('Shop look')} sub={t('Your colour, the style of your name, and a cover photo.')}>
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="h-10 w-10 shrink-0 rounded-full shadow-[inset_0_0_0_1px_rgb(10_10_10/0.1)]" style={{ background: cleanHex(s.theme_color) ?? MOTO }} />
+            <p className="min-w-0 flex-1 text-[14px] text-ink-2">
+              {t(FONTS.find((f) => f.id === asFont(s.theme_font))!.name)} · {s.cover_key ? t('With a cover photo') : t('No cover photo')}
+            </p>
+            <Link to="/app/look" className="btn btn-ghost">
+              <Palette size={16} strokeWidth={1.6} /> {t('Change the look')} <ChevronRight size={16} strokeWidth={1.6} />
+            </Link>
           </div>
         </Group>
 
