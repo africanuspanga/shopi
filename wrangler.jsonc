@@ -8,7 +8,9 @@
 	// Deploys replace the Worker's custom domains with this list, so a domain missing here goes offline.
 	// www.shopi.tz is not a Worker domain: a Cloudflare Redirect Rule (dashboard, zone shopi.tz) sends it
 	// to shopi.tz with a 301.
-	"routes": [{ "pattern": "shopi.tz", "custom_domain": true }],
+	// shopi.tz itself, plus every shop's own domain (Cloudflare for SaaS custom hostnames reach the Worker through */*;
+	// www.shopi.tz keeps its redirect rule, which runs before Workers).
+	"routes": [{ "pattern": "shopi.tz", "custom_domain": true }, { "pattern": "*/*", "zone_name": "shopi.tz" }],
 	"workers_dev": false,
 	"upload_source_maps": true,
 	"d1_databases": [
