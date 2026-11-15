@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute, redirect, useLocation, useRouter } from '@tanstack/react-router'
-import { ArrowUpRight, ChartColumn, House, Layers, Package, PenLine, Plus, ReceiptText, ShoppingBag, Store, TicketPercent } from 'lucide-react'
+import { ArrowUpRight, ChartColumn, FileSpreadsheet, House, Layers, Package, PenLine, Plus, ReceiptText, ShoppingBag, Store, TicketPercent } from 'lucide-react'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import { getNavCounts } from '#/lib/api/merchant'
@@ -155,6 +155,7 @@ function BottomNav() {
             { to: '/app/products/new', icon: Package, title: t('Add product'), sub: t('Photos, price, sizes and stock') },
             { to: '/app/bags/new', icon: ShoppingBag, title: t('Send a bag link'), sub: t('Build a bag for a buyer; they add delivery and pay') },
             { to: '/app/orders/new', icon: PenLine, title: t('Record a sale'), sub: t('A sale in person, on a call or in a chat') },
+            { to: '/app/products/import', icon: FileSpreadsheet, title: t('Import products'), sub: t('Many at once, from Excel or Google Sheets') },
           ].map((x) => (
             <Link key={x.to} to={x.to} onClick={() => setAdding(false)} className="flex items-center gap-4 rounded-[18px] bg-page px-4 py-4 transition-colors hover:bg-well">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-white">

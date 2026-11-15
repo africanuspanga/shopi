@@ -51,6 +51,9 @@ export function productSlug(name: string) {
   return out || 'product'
 }
 
+/** A collection's link name: "Eid 2026" -> "eid-2026". */
+export const collectionSlug = (name: string) => productSlug(name).slice(0, 40).replace(/-+$/, '') || 'collection'
+
 /**
  * A Google Maps link for a shop, cleaned to https. '' when empty, null when it isn't a Google Maps link.
  * Accepts maps.app.goo.gl, goo.gl/maps, google.com/maps (any Google country domain) and maps.google.com.
@@ -96,6 +99,12 @@ export function linkTag(s: string) {
 }
 
 /** Words a product link may not be, because the shop's own pages use them (b: bag links, c: collections). */
+/** The first of base, base-2, base-3… that `taken` doesn't hold (and that isn't a reserved word). */
+export function freeSlug(base: string, taken: Set<string>, reserved: Set<string> = new Set()) {
+  if (!taken.has(base) && !reserved.has(base)) return base
+  for (let i = 2; ; i++) if (!taken.has(`${base}-${i}`)) return `${base}-${i}`
+}
+
 export const RESERVED_PRODUCT_SLUGS = new Set(['checkout', 'p', 'b', 'c', 'bag', 'cart', 'order', 'orders', 'about'])
 
 export const RESERVED_SLUGS = new Set([

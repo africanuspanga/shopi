@@ -16,6 +16,8 @@ export const LIMITS = {
   uncheckedSignup: { max: 5, window: 60 * MINUTE },
   uncheckedOrder: { max: 3, window: 60 * MINUTE },
   uncheckedAlert: { max: 5, window: 60 * MINUTE },
+  // Photos a shop's bulk import fetches from links (src/routes/api/photo.ts): a big sheet, not an open proxy.
+  photoFetch: { max: 1500, window: 60 * MINUTE },
 } as const
 
 /** The visitor's IP as Cloudflare saw it. */

@@ -37,6 +37,9 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/components/not-found.tsx` | Not-found pages for missing shops, products and orders |
 | `src/components/share.tsx` | `ShareActions` (WhatsApp, copy link, native share) and `prettyUrl` |
 | `src/components/product-form.tsx` | New and edit product: photos, options editor (kind, stock, own price, own photo), save guards, "send this product" |
+| `src/routes/app/products/import.tsx`, `src/components/import.tsx` | Bulk import from a sheet: pick (file, paste, template), match columns, check, run in chunks, done |
+| `src/lib/sheet.ts`, `src/lib/import.ts` | Reading .xlsx/CSV/pasted rows in the browser (no library); column guessing and the row rules (`buildDrafts`) |
+| `src/server/products.ts` | `cleanProduct()` (the one set of product rules for the form and the import) and product slugs |
 | `src/components/auth.tsx` | `AuthLayout` (form left, dark product panel right), `StepBar`, `PasswordInput` |
 | `src/components/showcase.tsx` | Coded product previews for the landing and auth pages (phone, mini store, order card, payment slip) |
 | `src/components/brand-icons.tsx` | One-colour social icons, plus `WhatsAppMark` (WhatsApp's green mark) |
@@ -57,7 +60,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/lib/push.ts`, `src/server/push.ts`, `public/sw.js` | Web push: `usePhoneApp` and the install offer (browser), `notifySeller` (server), the service worker that shows them |
 | `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
 | `src/server.ts` | The Worker entry: TanStack Start answers requests; `scheduled` runs the cron jobs in `src/server/jobs.ts` |
-| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `push.ts` (notification subscriptions), `session.ts` |
+| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `push.ts` (notification subscriptions), `imports.ts` (bulk import), `session.ts` |
 | `src/lib/seo.ts` | Search: `SITE`, `canonical()`, titles and descriptions per page, JSON-LD (`ld`, `storeSchema`, `productSchema`, `breadcrumbSchema`); `src/routes/sitemap[.]xml.ts` |
 | `src/lib/analytics.ts` | The buyer-side tracker: visitor ID, 30-minute visits, traffic source, `?s=` link tags, `track()` |
 | `src/routes/api/e.ts` | Receives analytics events (sendBeacon); drops bots, records device and city |
@@ -261,6 +264,22 @@ domain are lowercase.
   the WhatsApp number. Nothing is fetched from Meta; only a TikTok short link (vm.tiktok.com) is opened on the server
   (`expandSocialLink`, TikTok hosts only, the redirect alone is read). A `wa.me/message/…` link hides the number, so the
   seller is asked to type it.
+- Bulk import (`/app/products/import`; entry points: Import on Products, the + sheet, and a card on an empty Products page).
+  The browser reads the file: `.xlsx` is unzipped with `DecompressionStream` and read with `DOMParser` (`src/lib/sheet.ts`,
+  first visible sheet with data), CSV/TSV with delimiter detection and a Windows-1252 fallback; old `.xls` is refused with
+  how to save as `.xlsx`. `guessFields()` matches column names in English and Swahili (Shopify and WooCommerce exports
+  too) and then sniffs values; the seller can change every column. Row rules (`buildDrafts`, top of `lib/import.ts`):
+  one product per row; a row with a name used above plus a size adds that option (a stock sheet); a row with no name but
+  an option or photo continues the product above (Shopify); "S:3, M:5" lists options with stock; a price only in "Was"
+  becomes the price; "Example:"/"Mfano:" rows (the template's) are left out; names already in the shop are left out, so
+  a sheet imported twice, or after a dropped connection, adds only what is missing. Photos are links or file names:
+  links go through `/api/photo` (logged-in sellers, `LIMITS.photoFetch` 1,500 an hour per shop, public hosts only,
+  15 MB, image bytes checked, Google Drive and Dropbox share links made direct; every refusal is a 4xx so bad links never
+  trip the 5xx alert), file names match photos the seller picks on the check screen. Either way the browser shrinks and
+  uploads them with `uploadImage`, like the form. `importProducts` saves 20 at a time through `cleanProduct`, makes
+  missing collections, dates the rows so the sheet's first row shows first, and keeps any product without a photo hidden.
+  Up to 1,000 products per import. The template is a CSV with a byte-order mark, columns in the seller's language.
+  Landing copy puts bulk import in Tembo; it is not gated yet (the founder's C6 decides).
 - Bot check (Cloudflare Turnstile) on sign-up, checkout and "Notify me". The browser side is `useHumanCheck(action)` in
   `src/lib/turnstile.tsx`: the script loads only on those screens (for Notify me, when the sheet opens), the check runs
   unseen, and a box appears in the `slot` div above the button only when Cloudflare wants a tap (the first press then asks

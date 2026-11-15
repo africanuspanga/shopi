@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { requireShop } from '#/server/auth'
 import { all, db, first, newId, now, run } from '#/server/db'
-import { productSlug } from '#/lib/format'
+import { collectionSlug, freeSlug } from '#/lib/format'
 
 /** A collection in the seller's list: its products in order, and the first photos for its cover. */
 export type CollectionRow = {
@@ -42,10 +42,8 @@ export const listCollections = createServerFn({ method: 'GET' }).handler(async (
 
 /** A link name for a collection that the shop's other collections don't use: eid, then eid-2. */
 async function uniqueSlug(shopId: string, name: string) {
-  const base = productSlug(name).slice(0, 40).replace(/-+$/, '') || 'collection'
   const taken = new Set((await all<{ slug: string }>('SELECT slug FROM collections WHERE shop_id = ?', shopId)).map((r) => r.slug))
-  if (!taken.has(base)) return base
-  for (let i = 2; ; i++) if (!taken.has(`${base}-${i}`)) return `${base}-${i}`
+  return freeSlug(collectionSlug(name), taken)
 }
 
 /** Makes or changes a collection: its name, line, and products in the seller's order. The link stays on rename. */

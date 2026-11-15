@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Layers, Plus, Search, Share2 } from 'lucide-react'
+import { FileSpreadsheet, Layers, Plus, Search, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import { Tag } from '#/components/shop'
 import { ShareActions, prettyUrl } from '#/components/share'
@@ -50,6 +50,9 @@ function Products() {
             <Link to="/app/collections" className="btn btn-ghost btn-sm h-10">
               <Layers size={15} strokeWidth={1.75} /> {t('Collections')}
             </Link>
+            <Link to="/app/products/import" className="btn btn-ghost btn-sm h-10 w-10 px-0 md:w-auto md:px-[14px]" aria-label={t('Import products')}>
+              <FileSpreadsheet size={15} strokeWidth={1.75} /> <span className="hidden md:inline">{t('Import')}</span>
+            </Link>
             <Link to="/app/products/new" className="btn btn-sm hidden h-10 md:inline-flex">
               <Plus size={16} strokeWidth={2} /> {t('Add product')}
             </Link>
@@ -84,6 +87,20 @@ function Products() {
             <span className="mt-0.5 block text-[13px] text-muted">{t('Photo, price, sizes')}</span>
           </span>
         </Link>
+        {products.length === 0 && (
+          <Link
+            to="/app/products/import"
+            className="group flex aspect-[4/5] flex-col items-center justify-center gap-3 rounded-[16px] border border-dashed border-line-strong text-center transition-colors hover:border-ink hover:bg-card"
+          >
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-well text-ink transition-transform group-active:scale-95">
+              <FileSpreadsheet size={20} strokeWidth={1.75} />
+            </span>
+            <span className="px-4">
+              <span className="block text-[14px] font-medium">{t('Import from a sheet')}</span>
+              <span className="mt-0.5 block text-[13px] text-muted">{t('Excel, Google Sheets or CSV')}</span>
+            </span>
+          </Link>
+        )}
         {shown.map((p) => (
           <div key={p.id} className="group relative">
           <Link to="/app/products/$id" params={{ id: p.id }} className="block">
@@ -100,7 +117,7 @@ function Products() {
               {p.stock == null ? t('Not counted') : t('{n} left', { n: p.stock })} · {t('{n} views', { n: p.views >= 1000 ? `${(p.views / 1000).toFixed(1).replace(/\.0$/, '')}k` : p.views })}
             </p>
           </Link>
-          {p.active && !out(p) && (
+          {!!p.active && !out(p) && (
             <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[4/5]">
               <button
                 type="button"

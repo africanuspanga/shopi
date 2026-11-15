@@ -26,6 +26,7 @@ import { Route as ShopProductRouteImport } from './routes/$shop/$product'
 import { Route as ShopCheckoutRouteImport } from './routes/$shop/checkout'
 import { Route as ApiERouteImport } from './routes/api/e'
 import { Route as ApiExportRouteImport } from './routes/api/export'
+import { Route as ApiPhotoRouteImport } from './routes/api/photo'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppAnalyticsRouteImport } from './routes/app/analytics'
@@ -48,6 +49,7 @@ import { Route as AppOrdersIdRouteImport } from './routes/app/orders/$id'
 import { Route as AppOrdersNewRouteImport } from './routes/app/orders/new'
 import { Route as AppProductsIndexRouteImport } from './routes/app/products/index'
 import { Route as AppProductsIdRouteImport } from './routes/app/products/$id'
+import { Route as AppProductsImportRouteImport } from './routes/app/products/import'
 import { Route as AppProductsNewRouteImport } from './routes/app/products/new'
 
 const IndexRoute = IndexRouteImport.update({
@@ -133,6 +135,11 @@ const ApiERoute = ApiERouteImport.update({
 const ApiExportRoute = ApiExportRouteImport.update({
   id: '/api/export',
   path: '/api/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPhotoRoute = ApiPhotoRouteImport.update({
+  id: '/api/photo',
+  path: '/api/photo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUploadRoute = ApiUploadRouteImport.update({
@@ -245,6 +252,11 @@ const AppProductsIdRoute = AppProductsIdRouteImport.update({
   path: '/products/$id',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppProductsImportRoute = AppProductsImportRouteImport.update({
+  id: '/products/import',
+  path: '/products/import',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppProductsNewRoute = AppProductsNewRouteImport.update({
   id: '/products/new',
   path: '/products/new',
@@ -268,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/$shop/checkout': typeof ShopCheckoutRoute
   '/api/e': typeof ApiERoute
   '/api/export': typeof ApiExportRoute
+  '/api/photo': typeof ApiPhotoRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/discounts': typeof AppDiscountsRoute
@@ -287,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/app/orders/$id': typeof AppOrdersIdRoute
   '/app/orders/new': typeof AppOrdersNewRoute
   '/app/products/$id': typeof AppProductsIdRoute
+  '/app/products/import': typeof AppProductsImportRoute
   '/app/products/new': typeof AppProductsNewRoute
   '/app/bags/': typeof AppBagsIndexRoute
   '/app/collections/': typeof AppCollectionsIndexRoute
@@ -308,6 +322,7 @@ export interface FileRoutesByTo {
   '/$shop/checkout': typeof ShopCheckoutRoute
   '/api/e': typeof ApiERoute
   '/api/export': typeof ApiExportRoute
+  '/api/photo': typeof ApiPhotoRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/discounts': typeof AppDiscountsRoute
@@ -327,6 +342,7 @@ export interface FileRoutesByTo {
   '/app/orders/$id': typeof AppOrdersIdRoute
   '/app/orders/new': typeof AppOrdersNewRoute
   '/app/products/$id': typeof AppProductsIdRoute
+  '/app/products/import': typeof AppProductsImportRoute
   '/app/products/new': typeof AppProductsNewRoute
   '/app/bags': typeof AppBagsIndexRoute
   '/app/collections': typeof AppCollectionsIndexRoute
@@ -351,6 +367,7 @@ export interface FileRoutesById {
   '/$shop/checkout': typeof ShopCheckoutRoute
   '/api/e': typeof ApiERoute
   '/api/export': typeof ApiExportRoute
+  '/api/photo': typeof ApiPhotoRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/discounts': typeof AppDiscountsRoute
@@ -370,6 +387,7 @@ export interface FileRoutesById {
   '/app/orders/$id': typeof AppOrdersIdRoute
   '/app/orders/new': typeof AppOrdersNewRoute
   '/app/products/$id': typeof AppProductsIdRoute
+  '/app/products/import': typeof AppProductsImportRoute
   '/app/products/new': typeof AppProductsNewRoute
   '/app/bags/': typeof AppBagsIndexRoute
   '/app/collections/': typeof AppCollectionsIndexRoute
@@ -395,6 +413,7 @@ export interface FileRouteTypes {
     | '/$shop/checkout'
     | '/api/e'
     | '/api/export'
+    | '/api/photo'
     | '/api/upload'
     | '/app/analytics'
     | '/app/discounts'
@@ -414,6 +433,7 @@ export interface FileRouteTypes {
     | '/app/orders/$id'
     | '/app/orders/new'
     | '/app/products/$id'
+    | '/app/products/import'
     | '/app/products/new'
     | '/app/bags/'
     | '/app/collections/'
@@ -435,6 +455,7 @@ export interface FileRouteTypes {
     | '/$shop/checkout'
     | '/api/e'
     | '/api/export'
+    | '/api/photo'
     | '/api/upload'
     | '/app/analytics'
     | '/app/discounts'
@@ -454,6 +475,7 @@ export interface FileRouteTypes {
     | '/app/orders/$id'
     | '/app/orders/new'
     | '/app/products/$id'
+    | '/app/products/import'
     | '/app/products/new'
     | '/app/bags'
     | '/app/collections'
@@ -477,6 +499,7 @@ export interface FileRouteTypes {
     | '/$shop/checkout'
     | '/api/e'
     | '/api/export'
+    | '/api/photo'
     | '/api/upload'
     | '/app/analytics'
     | '/app/discounts'
@@ -496,6 +519,7 @@ export interface FileRouteTypes {
     | '/app/orders/$id'
     | '/app/orders/new'
     | '/app/products/$id'
+    | '/app/products/import'
     | '/app/products/new'
     | '/app/bags/'
     | '/app/collections/'
@@ -518,6 +542,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ApiERoute: typeof ApiERoute
   ApiExportRoute: typeof ApiExportRoute
+  ApiPhotoRoute: typeof ApiPhotoRoute
   ApiUploadRoute: typeof ApiUploadRoute
   ImgSplatRoute: typeof ImgSplatRoute
   OCodeRoute: typeof OCodeRoute
@@ -642,6 +667,13 @@ declare module '@tanstack/react-router' {
       path: '/api/export'
       fullPath: '/api/export'
       preLoaderRoute: typeof ApiExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/photo': {
+      id: '/api/photo'
+      path: '/api/photo'
+      fullPath: '/api/photo'
+      preLoaderRoute: typeof ApiPhotoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/upload': {
@@ -798,6 +830,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProductsIdRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/products/import': {
+      id: '/app/products/import'
+      path: '/products/import'
+      fullPath: '/app/products/import'
+      preLoaderRoute: typeof AppProductsImportRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/products/new': {
       id: '/app/products/new'
       path: '/products/new'
@@ -843,6 +882,7 @@ interface AppRouteRouteChildren {
   AppOrdersIdRoute: typeof AppOrdersIdRoute
   AppOrdersNewRoute: typeof AppOrdersNewRoute
   AppProductsIdRoute: typeof AppProductsIdRoute
+  AppProductsImportRoute: typeof AppProductsImportRoute
   AppProductsNewRoute: typeof AppProductsNewRoute
   AppBagsIndexRoute: typeof AppBagsIndexRoute
   AppCollectionsIndexRoute: typeof AppCollectionsIndexRoute
@@ -863,6 +903,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppOrdersIdRoute: AppOrdersIdRoute,
   AppOrdersNewRoute: AppOrdersNewRoute,
   AppProductsIdRoute: AppProductsIdRoute,
+  AppProductsImportRoute: AppProductsImportRoute,
   AppProductsNewRoute: AppProductsNewRoute,
   AppBagsIndexRoute: AppBagsIndexRoute,
   AppCollectionsIndexRoute: AppCollectionsIndexRoute,
@@ -889,6 +930,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ApiERoute: ApiERoute,
   ApiExportRoute: ApiExportRoute,
+  ApiPhotoRoute: ApiPhotoRoute,
   ApiUploadRoute: ApiUploadRoute,
   ImgSplatRoute: ImgSplatRoute,
   OCodeRoute: OCodeRoute,

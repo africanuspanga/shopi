@@ -2,8 +2,9 @@ import { createServerFn } from '@tanstack/react-start'
 import { requireShop, requireUser } from '#/server/auth'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
 import { removePhotos } from '#/server/media'
-import { moveStock, sizesTotal } from '#/server/stock'
-import { CATEGORIES, RESERVED_PRODUCT_SLUGS, RESERVED_SLUGS, imageOf, normalizePhone, optionKind, parseSizes, productSlug, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink, tinDigits } from '#/lib/format'
+import { cleanProduct, uniqueProductSlug, type ProductInput } from '#/server/products'
+import { moveStock } from '#/server/stock'
+import { CATEGORIES, RESERVED_SLUGS, imageOf, normalizePhone, optionKind, parseSizes, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink, tinDigits } from '#/lib/format'
 import { shopPlan } from '#/server/plan'
 import { TIKTOK_SHORT, readSocialLink } from '#/lib/social'
 import { withReadiness, type AlertRow } from '#/server/alerts'
@@ -397,56 +398,13 @@ export const getMyProduct = createServerFn({ method: 'GET' })
     return row ? toProduct(row) : null
   })
 
-/** A link name for a product that no other product in the shop uses: gauni-la-jua, then gauni-la-jua-2. */
-async function uniqueProductSlug(shopId: string, name: string, exceptId = '') {
-  const base = productSlug(name)
-  const taken = new Set(
-    (await all<{ slug: string }>('SELECT slug FROM products WHERE shop_id = ? AND slug IS NOT NULL AND id != ?', shopId, exceptId)).map((r) => r.slug),
-  )
-  if (!taken.has(base) && !RESERVED_PRODUCT_SLUGS.has(base)) return base
-  for (let i = 2; ; i++) if (!taken.has(`${base}-${i}`)) return `${base}-${i}`
-}
-
 export const saveProduct = createServerFn({ method: 'POST' })
-  .validator(
-    (d: {
-      id?: string
-      name: string
-      description: string
-      price: number | string
-      compare_price?: number | string | null
-      stock?: number | string | null
-      /** Each option may have its own price (empty: the product's) and photo (one of `images`). */
-      sizes?: { label: string; stock: number | string | null; price?: number | string | null; image?: string | null }[] | null
-      option_name?: string | null
-      images: string[]
-      active: boolean
-    }) => d,
-  )
+  .validator((d: ProductInput & { id?: string; active: boolean }) => d)
   .handler(async ({ data }) => {
     const { shop } = await requireShop()
-    const name = str(data.name, 100)
-    const price = int(data.price)
-    if (!name) return { error: 'name' as const }
-    if (!price) return { error: 'price' as const }
-    const compare = data.compare_price ? int(data.compare_price) || null : null
-    const count = (v: number | string | null | undefined) => (v === '' || v == null ? null : int(v))
-    const photos = (data.images ?? []).slice(0, 6).map((k) => str(k, 100))
-    const sizes: Size[] = []
-    for (const s of data.sizes ?? []) {
-      const label = str(s.label, 20)
-      if (!label || sizes.some((x) => x.label.toLowerCase() === label.toLowerCase())) continue
-      const own = s.price === '' || s.price == null ? 0 : int(s.price)
-      const image = s.image && photos.includes(s.image) ? s.image : null
-      // An option's price only counts when it differs from the product's.
-      sizes.push({ label, stock: count(s.stock), ...(own && own !== price ? { price: own } : {}), ...(image ? { image } : {}) })
-    }
-    // With sizes, the product's stock is their total.
-    const stock = sizes.length ? sizesTotal(sizes) : count(data.stock)
-    const sizesJson = sizes.length ? JSON.stringify(sizes.slice(0, 20)) : null
-    const kind = optionKind(data.option_name)
-    const optionName = sizes.length && kind !== 'size' ? kind : null
-    const images = JSON.stringify(photos)
+    const p = cleanProduct(data)
+    if ('error' in p) return p
+    const images = JSON.stringify(p.photos)
     if (data.id) {
       // The link name stays when a product is renamed, so links already shared keep working.
       const current = await first<{ slug: string | null; images: string }>(
@@ -454,23 +412,23 @@ export const saveProduct = createServerFn({ method: 'POST' })
         data.id,
         shop.id,
       )
-      const slug = current?.slug ?? (await uniqueProductSlug(shop.id, name, data.id))
+      const slug = current?.slug ?? (await uniqueProductSlug(shop.id, p.name, data.id))
       await run(
         `UPDATE products SET name = ?, description = ?, price = ?, compare_price = ?, stock = ?, sizes = ?, option_name = ?, images = ?,
            active = ?, slug = ? WHERE id = ? AND shop_id = ?`,
-        name, str(data.description, 2000), price, compare, stock, sizesJson, optionName, images, data.active ? 1 : 0, slug, data.id, shop.id,
+        p.name, p.description, p.price, p.compare, p.stock, p.sizes, p.optionName, images, data.active ? 1 : 0, slug, data.id, shop.id,
       )
       // Photos taken off the product leave storage too (removePhotos keeps any a past order shows).
-      const kept = new Set(JSON.parse(images) as string[])
+      const kept = new Set(p.photos)
       if (current) await removePhotos(shop.id, (JSON.parse(current.images) as string[]).filter((k) => !kept.has(k)))
       return { ok: true as const, id: data.id, slug }
     }
     const id = newId()
-    const slug = await uniqueProductSlug(shop.id, name)
+    const slug = await uniqueProductSlug(shop.id, p.name)
     await run(
       `INSERT INTO products (id, shop_id, slug, name, description, price, compare_price, stock, sizes, option_name, images, active, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      id, shop.id, slug, name, str(data.description, 2000), price, compare, stock, sizesJson, optionName, images, data.active ? 1 : 0, now(),
+      id, shop.id, slug, p.name, p.description, p.price, p.compare, p.stock, p.sizes, p.optionName, images, data.active ? 1 : 0, now(),
     )
     return { ok: true as const, id, slug }
   })

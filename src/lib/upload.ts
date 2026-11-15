@@ -18,7 +18,7 @@ async function encode(bitmap: ImageBitmap, max: number): Promise<Blob> {
  * Shrinks a phone photo in the browser (longest side 1200px, WebP) before upload: saves the seller's data and our storage.
  * Then uploads a 600px copy for grids and thumbnails; if that fails, pages fall back to the full photo.
  */
-export async function uploadImage(file: File, max = 1200): Promise<string> {
+export async function uploadImage(file: Blob, max = 1200): Promise<string> {
   const bitmap = await createImageBitmap(file)
   const full = await encode(bitmap, max)
   const res = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': full.type }, body: full })
