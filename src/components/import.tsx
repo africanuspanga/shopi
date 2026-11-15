@@ -16,7 +16,7 @@ import {
   type Field as SheetField,
   type Issue,
 } from '#/lib/import'
-import { useT } from '#/lib/i18n'
+import { msg, useT } from '#/lib/i18n'
 import { SHEET_ACCEPT, SheetError, parseDelimited, readSheetFile, type SheetRow } from '#/lib/sheet'
 import { uploadImage } from '#/lib/upload'
 
@@ -29,11 +29,11 @@ const KINDS = Object.keys(OPTION_KINDS) as OptionKind[]
 const GUIDE: [string, string, string?][] = [
   [TEMPLATE_COLUMNS[0], 'Gauni la maua'],
   [TEMPLATE_COLUMNS[1], '45000'],
-  [TEMPLATE_COLUMNS[2], '55000', 'Shows it as a sale'],
+  [TEMPLATE_COLUMNS[2], '55000', msg('Shows it as a sale')],
   [TEMPLATE_COLUMNS[3], '12'],
-  [TEMPLATE_COLUMNS[4], 'S:3, M:5, L:2', 'A size and how many'],
+  [TEMPLATE_COLUMNS[4], 'S:3, M:5, L:2', msg('A size and how many')],
   [TEMPLATE_COLUMNS[5], 'Gauni la pamba…'],
-  [TEMPLATE_COLUMNS[6], 'https://… gauni-1.jpg', 'Links, or the names of photo files'],
+  [TEMPLATE_COLUMNS[6], 'https://… gauni-1.jpg', msg('Links, or the names of photo files')],
   [TEMPLATE_COLUMNS[7], 'Magauni'],
 ]
 
