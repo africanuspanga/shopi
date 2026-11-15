@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowUpRight, Banknote, Check, Clock, FileText, MapPin, Smartphone, Truck } from 'lucide-react'
+import { ArrowUpRight, Banknote, Check, Clock, FileText, MapPin, Search, Smartphone, Truck, X } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppMark } from '#/components/brand-icons'
 import { Img, Sheet, ShopAvatar, Toast, Wordmark } from '#/components/ui'
@@ -27,6 +27,47 @@ export function shownPrice(p: Priced, size?: string | null) {
   return { price: min, compare_price: min === max ? was(min) : null, from: min !== max }
 }
 export const onSale = (p: Priced) => !!shownPrice(p).compare_price
+/** Text as a buyer types it, for matching: lowercase, accents off. */
+const fold = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+
+/**
+ * Whether a product matches what a buyer typed: every word is in its name or description, or is one of its options
+ * still in stock ("m", "42", "red"). The shop's search field and the phone's search sheet share this.
+ */
+export function matchesSearch(p: PublicProduct, query: string) {
+  const words = fold(query).split(/\s+/).filter(Boolean)
+  if (!words.length) return true
+  const text = fold(`${p.name} ${p.description}`)
+  const options = (p.sizes ?? []).filter((s) => s.stock == null || s.stock > 0).map((s) => fold(s.label))
+  return words.every((w) => text.includes(w) || options.includes(w))
+}
+
+/** The shop's own search field: filters the products on the page as the buyer types. */
+export function ShopSearch({ value, onChange, shopName, className = '' }: { value: string; onChange: (v: string) => void; shopName: string; className?: string }) {
+  const t = useT()
+  return (
+    <label className={`input flex h-11 items-center gap-2 px-4 md:h-10 ${className}`}>
+      <Search size={16} strokeWidth={1.6} className="shrink-0 text-muted" />
+      <input
+        type="text"
+        inputMode="search"
+        enterKeyHint="search"
+        className="min-w-0 flex-1 bg-transparent text-[15px] outline-none md:text-[14px]"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => e.key === 'Escape' && onChange('')}
+        placeholder={t('Search {shop}', { shop: shopName })}
+        aria-label={t('Search {shop}', { shop: shopName })}
+      />
+      {value && (
+        <button type="button" className="-mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-well hover:text-ink" aria-label={t('Clear search')} onClick={() => onChange('')}>
+          <X size={15} strokeWidth={1.75} />
+        </button>
+      )}
+    </label>
+  )
+}
+
 export const discount = (p: Priced) => {
   const s = shownPrice(p)
   return Math.round((1 - s.price / (s.compare_price || s.price)) * 100)

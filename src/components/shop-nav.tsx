@@ -3,7 +3,7 @@ import { Info, Search, Share2, ShoppingBag, Store } from 'lucide-react'
 import { useState } from 'react'
 import { WhatsAppIcon } from '#/components/brand-icons'
 import { FloatingNav, NavCenter, NavCount, NavTab } from '#/components/floating-nav'
-import { Price, ShopFacts, SocialLinks, onSale, Tag, discount, shownPrice } from '#/components/shop'
+import { Price, ShopFacts, SocialLinks, onSale, Tag, discount, matchesSearch, shownPrice } from '#/components/shop'
 import { Img, Sheet, ShopAvatar } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
@@ -64,15 +64,8 @@ export function ShopNav({
 function SearchSheet({ open, onClose, shop, products }: { open: boolean; onClose: () => void; shop: PublicShop; products: PublicProduct[] }) {
   const t = useT()
   const [q, setQ] = useState('')
-  const needle = q.trim().toLowerCase()
-  const results = needle
-    ? products.filter(
-        (p) =>
-          p.name.toLowerCase().includes(needle) ||
-          p.description.toLowerCase().includes(needle) ||
-          (p.sizes ?? []).some((s) => s.label.toLowerCase() === needle && (s.stock == null || s.stock > 0)),
-      )
-    : products.slice(0, 6)
+  const needle = q.trim()
+  const results = needle ? products.filter((p) => matchesSearch(p, needle)) : products.slice(0, 6)
   return (
     <Sheet open={open} onClose={onClose} title={t('Search {shop}', { shop: shop.name })}>
       <label className="input flex items-center gap-2 px-4">

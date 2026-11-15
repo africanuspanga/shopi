@@ -150,7 +150,9 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
 ### Layout patterns
 - **Storefront** (`/$shop`): white page, sticky `ShopTopBar` with `BagButton` (on phones it uses `reveal`: hidden until the
   shop's name scrolls out of view, so the name never shows twice), shop header (avatar, display name,
-  location, bio, WhatsApp, share, socials), `FactPills` on phones and a `ShopFacts` card on desktop, filter chips,
+  location, bio, WhatsApp, share, socials), `FactPills` on phones and a `ShopFacts` card on desktop, a search field (`ShopSearch`,
+  shops with 6+ products: above the chips on phones, at the right of the chips row on desktop; it filters the grid as the
+  buyer types, across the whole shop, with `matchesSearch()`, which the capsule's search sheet shares), filter chips,
   2/3/4-column grid, `ShopFooter`. On phones the bag lives in the floating capsule (below).
 - **Product page:** swipe gallery with a photo counter on phones; a large photo with thumbnails on desktop;
   option chips (an option with its own photo brings it up), a details table, a "Share with a friend" box, a sticky add bar on phones.

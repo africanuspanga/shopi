@@ -1,5 +1,8 @@
 [
   "A size and how many",
   "Links, or the names of photo files",
-  "Shows it as a sale"
+  "Shows it as a sale",
+  "At least 6 characters",
+  "Use at least 6 characters for the password.",
+  "Clear search"
 ]

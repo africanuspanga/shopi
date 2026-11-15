@@ -2,7 +2,7 @@ import { createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { MapPin, Share2, Store } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
-import { BagButton, FactPills, ProductGrid, ShopFacts, ShopFooter, ShopTopBar, SocialLinks, onSale } from '#/components/shop'
+import { BagButton, FactPills, ProductGrid, ShopFacts, ShopFooter, ShopSearch, ShopTopBar, SocialLinks, matchesSearch, onSale } from '#/components/shop'
 import { ShopNav } from '#/components/shop-nav'
 import { Chips, Empty, Img, ShopAvatar, Toast, useEntrance } from '#/components/ui'
 import { track } from '#/lib/analytics'
@@ -32,6 +32,8 @@ export const Route = createFileRoute('/$shop/')({
 const parent = getRouteApi('/$shop')
 
 const NEW_DAYS = 30
+/** Shops this size or bigger get a search field on the page (phones also have Search in the capsule). */
+const SEARCH_FROM = 6
 
 function Storefront() {
   const rise = useEntrance()
@@ -41,6 +43,8 @@ function Storefront() {
   const cart = useCart(shop.id)
   // 'all', 'new', 'sale', or a collection's id.
   const [filter, setFilter] = useState('all')
+  // What the buyer typed in the shop's search field: it searches the whole shop, whatever chip was on.
+  const [q, setQ] = useState('')
   const [copied, setCopied] = useState(false)
   const url = shopAddress(useOrigin(), shop.slug)
   const cover = !!shop.cover_key
@@ -65,13 +69,23 @@ function Storefront() {
   // The seller's collections come first in the chips, in their order, once they hold something to show.
   const groups = collections.filter((c) => c.productIds.length > 0)
   const group = groups.find((c) => c.id === filter)
-  const shown = group
-    ? group.productIds.flatMap((id) => products.filter((p) => p.id === id))
-    : filter === 'sale'
-      ? products.filter(onSale)
-      : filter === 'new'
-        ? products.filter(isNew)
-        : products
+  const searching = q.trim().length > 0
+  const shown = searching
+    ? products.filter((p) => matchesSearch(p, q))
+    : group
+      ? group.productIds.flatMap((id) => products.filter((p) => p.id === id))
+      : filter === 'sale'
+        ? products.filter(onSale)
+        : filter === 'new'
+          ? products.filter(isNew)
+          : products
+  const found = t(shown.length === 1 ? '{n} product' : '{n} products', { n: shown.length })
+  // A search field once there is something to search through.
+  const searchable = products.length >= SEARCH_FROM
+  const search = (v: string) => {
+    setQ(v)
+    if (v.trim()) setFilter('all')
+  }
   const showFilters = products.length > 0 && (groups.length > 0 || (counts.new > 0 && counts.new < products.length) || counts.sale > 0)
 
   async function share() {
@@ -156,22 +170,32 @@ function Storefront() {
           </aside>
         </section>
 
-        <div className="flex items-center justify-between gap-4 border-t border-line pt-5 md:pt-6">
-          {showFilters ? (
-            <Chips
-              value={filter}
-              onChange={setFilter}
-              options={[
-                { id: 'all', label: t('All'), count: products.length },
-                ...groups.map((c) => ({ id: c.id, label: c.name, count: c.productIds.length })),
-                ...(counts.new > 0 && counts.new < products.length ? [{ id: 'new', label: t('New in'), count: counts.new }] : []),
-                ...(counts.sale > 0 ? [{ id: 'sale', label: t('On sale'), count: counts.sale }] : []),
-              ]}
-            />
-          ) : (
-            <h2 className="title text-[18px]">{t('All products')}</h2>
-          )}
-          {products.length > 0 && <p className="meta hidden shrink-0 md:block">{t(shown.length === 1 ? '{n} product' : '{n} products', { n: shown.length })}</p>}
+        <div className="border-t border-line pt-5 md:pt-6">
+          {searchable && <ShopSearch value={q} onChange={search} shopName={shop.name} className="mb-4 md:hidden" />}
+          {searching && showFilters && <p className="meta -mt-1 mb-3 md:hidden">{found}</p>}
+          <div className="flex items-center justify-between gap-4">
+            {showFilters ? (
+              <Chips
+                value={searching ? '' : filter}
+                onChange={(f) => {
+                  setFilter(f)
+                  setQ('')
+                }}
+                options={[
+                  { id: 'all', label: t('All'), count: products.length },
+                  ...groups.map((c) => ({ id: c.id, label: c.name, count: c.productIds.length })),
+                  ...(counts.new > 0 && counts.new < products.length ? [{ id: 'new', label: t('New in'), count: counts.new }] : []),
+                  ...(counts.sale > 0 ? [{ id: 'sale', label: t('On sale'), count: counts.sale }] : []),
+                ]}
+              />
+            ) : (
+              <h2 className="title text-[18px]">{searching ? found : t('All products')}</h2>
+            )}
+            <div className="hidden shrink-0 items-center gap-4 md:flex">
+              {products.length > 0 && <p className="meta">{found}</p>}
+              {searchable && <ShopSearch value={q} onChange={search} shopName={shop.name} className="w-64 lg:w-72" />}
+            </div>
+          </div>
         </div>
 
         {products.length === 0 ? (
@@ -184,8 +208,14 @@ function Storefront() {
           </div>
         ) : (
           <>
-            {group?.description && <p className="fade pt-5 text-[15px] leading-relaxed text-ink-2 md:pt-6">{group.description}</p>}
-            <ProductGrid shop={shop} products={shown} cart={cart} />
+            {!searching && group?.description && <p className="fade pt-5 text-[15px] leading-relaxed text-ink-2 md:pt-6">{group.description}</p>}
+            {searching && shown.length === 0 ? (
+              <p className="mt-6 rounded-[20px] bg-page px-5 py-10 text-center text-[15px] leading-relaxed text-muted">
+                {t('Nothing matches "{q}". Try another word, or ask the seller on WhatsApp.', { q: q.trim() })}
+              </p>
+            ) : (
+              <ProductGrid shop={shop} products={shown} cart={cart} />
+            )}
           </>
         )}
       </main>

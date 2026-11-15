@@ -862,7 +862,7 @@
   "Up to {n} order": "Hadi oda {n}",
   "Up to {n} orders": "Hadi oda {n}",
   "Uploading": "Inapakia",
-  "Use at least 6 characters for the password.": "Nenosiri liwe na herufi 6 au zaidi.",
+  "Use at least 6 characters for the password.": "Nenosiri liwe na angalau herufi 6.",
   "Use buyers’ details only to handle their order and to reply to them, and keep them safe.": "Tumia taarifa za wanunuzi kushughulikia oda zao na kuwajibu tu, na zilinde.",
   "Use code {code} for {off} at {shop}:": "Tumia code {code} kwenye {shop} ({off}):",
   "Use the phone number you signed up with.": "Tumia namba ya simu uliyojisajili nayo.",
@@ -1254,5 +1254,6 @@
   "Type": "Aina",
   "Points to": "Inaelekeza kwa",
   "It usually works within minutes and can take up to a day. To make {apex} open your shop too, turn on forwarding from {apex} to https://{host} in the same place.": "Kwa kawaida inafanya kazi ndani ya dakika chache na inaweza kuchukua hadi siku moja. Ili {apex} ifungue duka lako pia, washa forwarding kutoka {apex} kwenda https://{host} hapo hapo.",
-  "Copy {what}": "Nakili {what}"
+  "Copy {what}": "Nakili {what}",
+  "Clear search": "Futa utafutaji"
 }
