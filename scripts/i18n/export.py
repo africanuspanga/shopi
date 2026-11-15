@@ -35,6 +35,7 @@ SCREENS = [
     ('components/collections.tsx', 'Seller dashboard: collections'),
     ('routes/app/orders/$id.tsx', 'Seller dashboard: one order'),
     ('routes/app/orders/', 'Seller dashboard: orders'),
+    ('routes/app/domain.tsx', 'Seller dashboard: your own domain'),
     ('routes/app/look.tsx', 'Seller dashboard: shop look'),
     ('components/look.tsx', 'Seller dashboard: shop look'),
     ('lib/theme.ts', 'Seller dashboard: shop look'),

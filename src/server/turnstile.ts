@@ -1,4 +1,5 @@
 import { env } from 'cloudflare:workers'
+import { isShopDomain } from '#/server/domains'
 import { clientIp, count, overLimit } from '#/server/limits'
 
 /** What each form says it is, checked against the token so one form's token can't be spent on another. */
@@ -55,5 +56,7 @@ async function verify(secret: string, token: string, action: HumanAction): Promi
   }
   // Cloudflare's test keys (local work) answer for example.com with no action.
   if (res.metadata?.result_with_testing_key) return 'human'
-  return res.action === action && res.hostname === HOST ? 'human' : 'bot'
+  if (res.action !== action) return 'bot'
+  // shopi.tz, or a shop's own domain (src/server/domains.ts).
+  return res.hostname === HOST || (!!res.hostname && (await isShopDomain(res.hostname))) ? 'human' : 'bot'
 }

@@ -8,6 +8,7 @@ import { Chips, Empty, Img, ShopAvatar, Toast, useEntrance } from '#/components/
 import { track } from '#/lib/analytics'
 import { useCart } from '#/lib/cart'
 import { waLink } from '#/lib/format'
+import { shopAddress } from '#/lib/host'
 import { useT } from '#/lib/i18n'
 import { canonical, shopDescription, storeSchema } from '#/lib/seo'
 import { shareLink, useOrigin } from '#/lib/share'
@@ -41,7 +42,7 @@ function Storefront() {
   // 'all', 'new', 'sale', or a collection's id.
   const [filter, setFilter] = useState('all')
   const [copied, setCopied] = useState(false)
-  const url = `${useOrigin()}/${shop.slug}`
+  const url = shopAddress(useOrigin(), shop.slug)
   const cover = !!shop.cover_key
 
   // Phones: the top bar waits until the shop's name has scrolled out of view.

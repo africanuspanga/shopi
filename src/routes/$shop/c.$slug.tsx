@@ -9,6 +9,7 @@ import { track } from '#/lib/analytics'
 import { useCart } from '#/lib/cart'
 import { imgUrl } from '#/lib/format'
 import { fontAttr, fontPreload } from '#/lib/theme'
+import { shopAddress } from '#/lib/host'
 import { useT } from '#/lib/i18n'
 import { breadcrumbSchema, canonical, collectionDescription, collectionTitle } from '#/lib/seo'
 import { shareLink, useOrigin } from '#/lib/share'
@@ -62,7 +63,7 @@ function CollectionPage() {
   const { collection: c } = Route.useLoaderData()
   const cart = useCart(shop.id)
   const [copied, setCopied] = useState(false)
-  const url = `${useOrigin()}/${shop.slug}/c/${c.slug}`
+  const url = shopAddress(useOrigin(), shop.slug, `/c/${c.slug}`)
   const items = c.productIds.flatMap((id) => products.filter((p) => p.id === id))
   const others = collections.filter((x) => x.productIds.length > 0 || x.id === c.id)
 

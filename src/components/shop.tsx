@@ -7,6 +7,7 @@ import type { PublicProduct, PublicShop } from '#/lib/api/store'
 import { track } from '#/lib/analytics'
 import { lineKey, type Cart } from '#/lib/cart'
 import { OPTION_KINDS, imageOf, optionKind, optionText, priceOf, priceSpan, tzs, waLink, formatTin, type Size } from '#/lib/format'
+import { SHOPI_ORIGIN } from '#/lib/host'
 import { useT } from '#/lib/i18n'
 
 type Priced = Pick<PublicProduct, 'price' | 'compare_price'> & { sizes?: Size[] | null }
@@ -393,7 +394,7 @@ export function DemoBanner() {
   return (
     <div className="bg-ink px-4 py-2.5 text-center text-[13px] leading-5 text-white">
       {t('Demo shop with sample products. Orders are switched off.')}{' '}
-      <a href="/" className="font-medium whitespace-nowrap underline decoration-white/40 underline-offset-4 hover:decoration-white">
+      <a href={`${SHOPI_ORIGIN}/`} className="font-medium whitespace-nowrap underline decoration-white/40 underline-offset-4 hover:decoration-white">
         {t('Open your own shop')}
       </a>
     </div>
@@ -418,7 +419,7 @@ export function BreakBanner({ whatsapp, name }: { whatsapp: string; name: string
 export function MadeWithShopi() {
   const t = useT()
   return (
-    <a href="/" className="mx-auto mt-12 flex w-fit items-center gap-2 text-[13px] text-muted transition-colors hover:text-ink">
+    <a href={`${SHOPI_ORIGIN}/`} className="mx-auto mt-12 flex w-fit items-center gap-2 text-[13px] text-muted transition-colors hover:text-ink">
       {t('Shop made with')} <Wordmark className="h-[14px] w-auto" />
     </a>
   )
@@ -440,7 +441,7 @@ export function ShopFooter({ shop }: { shop: PublicShop }) {
         <SocialLinks shop={shop} />
       </div>
       <a
-        href="/"
+        href={`${SHOPI_ORIGIN}/`}
         className="group mt-8 flex items-center justify-between gap-4 rounded-[20px] bg-page px-5 py-4 transition-colors hover:bg-well"
       >
         <span className="flex items-center gap-2 text-[13px] text-muted">

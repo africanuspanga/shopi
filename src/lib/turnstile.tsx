@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef } from 'react'
  * The box shows only when Cloudflare wants a tap. The server checks the token (`src/server/turnstile.ts`).
  * Used on sign-up, checkout and "Notify me".
  */
-const SITE_KEY = '0x4AAAAAAGA6i1KgmOVokoYS'
-/** Cloudflare's test key: always passes, on any address. Used everywhere but shopi.tz (local work, tunnels). */
+export const SITE_KEY = '0x4AAAAAAGA6i1KgmOVokoYS'
+/** Cloudflare's test key: always passes, on any address. Used everywhere but shopi.tz and shops' own domains (local work, tunnels). */
 const TEST_KEY = '1x00000000000000000000AA'
 
 type Turnstile = {
@@ -78,7 +78,8 @@ export function useHumanCheck(action: 'signup' | 'order' | 'alert', active = tru
         try {
           st.id =
             turnstile.render(el, {
-              sitekey: location.hostname === 'shopi.tz' ? SITE_KEY : TEST_KEY,
+              // The real key on shopi.tz and on a shop's own domain (which Shopi adds to the widget's hostnames).
+              sitekey: location.hostname === 'shopi.tz' || (location.protocol === 'https:' && window.__SHOPI_SHOP__?.host === location.hostname) ? SITE_KEY : TEST_KEY,
               action,
               appearance: 'interaction-only',
               size: 'flexible',

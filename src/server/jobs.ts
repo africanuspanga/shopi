@@ -2,6 +2,7 @@ import { env } from 'cloudflare:workers'
 import { db, now, run } from '#/server/db'
 import { ALERT_DAYS } from '#/server/alerts'
 import { purgeLimits } from '#/server/limits'
+import { refreshDomains } from '#/server/domains'
 
 // Cron schedules, in UTC (Tanzania is UTC+3). They must match "triggers" in wrangler.jsonc.
 export const NIGHTLY = '0 0 * * *' // 03:00 in Dar
@@ -22,6 +23,8 @@ export async function runJob(cron: string) {
           ['visits', purgeVisits],
           ['sessions', purgeSessions],
           ['limits', purgeLimits],
+          // Shops' own domains: one whose CNAME was removed stops being served (src/server/domains.ts).
+          ['domains', refreshDomains],
         ]
       : cron === WEEKLY
         ? [['backup', backupDatabase]]

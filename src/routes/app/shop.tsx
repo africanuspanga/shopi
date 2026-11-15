@@ -1,5 +1,5 @@
 import { Link, createFileRoute, useBlocker, useRouter } from '@tanstack/react-router'
-import { Camera, Check, ChevronRight, Copy, LogOut, Palette, Plus, TicketPercent, X } from 'lucide-react'
+import { Camera, Check, ChevronRight, Copy, Globe, LogOut, Palette, Plus, TicketPercent, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
 import { PhoneAppSettings } from '#/components/phone-app'
@@ -181,6 +181,12 @@ function ShopSettings() {
               <Palette size={16} strokeWidth={1.6} /> {t('Change the look')} <ChevronRight size={16} strokeWidth={1.6} />
             </Link>
           </div>
+        </Group>
+
+        <Group title={t('Your own domain')} sub={t('Your shop at your own address, like www.yourshop.co.tz.')}>
+          <Link to="/app/domain" className="btn btn-ghost">
+            <Globe size={16} strokeWidth={1.6} /> {t('Your own domain')} <ChevronRight size={16} strokeWidth={1.6} />
+          </Link>
         </Group>
 
         <Group title={t('Payments')} sub={t('Buyers pay you directly. Shopi never holds your money.')}>

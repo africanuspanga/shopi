@@ -41,6 +41,8 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/lib/sheet.ts`, `src/lib/import.ts` | Reading .xlsx/CSV/pasted rows in the browser (no library); column guessing and the row rules (`buildDrafts`) |
 | `src/server/products.ts` | `cleanProduct()` (the one set of product rules for the form and the import) and product slugs |
 | `src/lib/theme.ts` | A shop's look: the 12 colours, the 6 font styles, `themeStyle()` (the CSS variables), the readability maths, `logoColors()` |
+| `src/lib/host.ts`, `src/server/domains.ts`, `src/server/cloudflare.ts` | Shops' own domains: the address rewrite (`shopRewrite`), domain lookup and status, Cloudflare's API (custom hostnames, the Turnstile widget's hostnames) |
+| `src/routes/app/domain.tsx`, `src/lib/api/domains.ts` | "Your own domain": connect, the CNAME to add, status, disconnect |
 | `src/routes/app/look.tsx`, `src/components/look.tsx`, `src/lib/api/look.ts` | Shop look: cover, colour (logo suggestions, tested, own), style of the name, live preview; `saveShopLook` |
 | `src/components/auth.tsx` | `AuthLayout` (form left, dark product panel right), `StepBar`, `PasswordInput` |
 | `src/components/showcase.tsx` | Coded product previews for the landing and auth pages (phone, mini store, order card, payment slip) |
@@ -285,6 +287,20 @@ domain are lowercase.
   buttons stay black. `shopColors()` derives the fill, text on it, the colour as text (darkened to 4.5:1 on sand), on the
   black capsule (lightened to 3:1, white for near-black) and a pale wash. The cover shows above the shop's name with the
   logo over its edge; phones load the 600 px copy; it is also the link preview image. Not gated by plan yet (C6).
+- Own domains (`/app/domain`, from Shop settings; migration `0018_domains.sql`, one per shop): the seller adds
+  `www.theirshop.co.tz` (a bare name is refused with the www. version offered, since most DNS hosts can't CNAME it; they
+  forward the bare name at their registrar) and a CNAME to `customers.shopi.tz`. `addDomain` registers a Cloudflare for
+  SaaS custom hostname (HTTP validation, so the CNAME is all they add); the page and the nightly job ask Cloudflare again
+  (`refreshDomain`) until it is active with a certificate, then add it to the Turnstile widget's hostnames (10 per widget
+  on the free plan, shopi.tz included; when full, that domain's orders use the unchecked allowance and the logs say so).
+  Serving: `src/server.ts` looks the host up (`shopForHost`, cached a minute), sends Shopi's own pages (`SHOPI_PAGES`)
+  and unknown hosts to shopi.tz, and puts `window.__SHOPI_SHOP__` in the page; the router's `rewrite` (`shopRewrite`)
+  reads `/gauni` as `/<shop>/gauni` and writes links without the prefix, sending links to Shopi's pages to shopi.tz
+  (full page loads). `/o/`, `/img/`, `/api/` and files stay on the shop's domain; `/<shop>/…` redirects to the clean
+  address. Share links use `shopAddress()`. The bot check uses the real site key on a shop's https domain and the
+  server accepts tokens whose hostname is an active domain. Canonical links still point at shopi.tz (a per-domain
+  canonical and sitemap are for later). Off until `CF_API_TOKEN` is set (`cfReady()`); the page says so.
+  Locally, a row with hostname `something.localhost` and status `active` serves that shop at http://something.localhost:3000.
 - Bulk import (`/app/products/import`; entry points: Import on Products, the + sheet, and a card on an empty Products page).
   The browser reads the file: `.xlsx` is unzipped with `DecompressionStream` and read with `DOMParser` (`src/lib/sheet.ts`,
   first visible sheet with data), CSV/TSV with delimiter detection and a Windows-1252 fallback; old `.xls` is refused with

@@ -11,6 +11,7 @@ import { track } from '#/lib/analytics'
 import { lineKey, useCart } from '#/lib/cart'
 import { OPTION_KINDS, imgUrl, optionKind, optionText, priceOf, tzs, waLink } from '#/lib/format'
 import { fontAttr, fontPreload } from '#/lib/theme'
+import { shopAddress } from '#/lib/host'
 import { useT } from '#/lib/i18n'
 import { breadcrumbSchema, canonical, homeCollection, productDescription, productPath, productSchema, productTitle } from '#/lib/seo'
 import { shareLink, useOrigin } from '#/lib/share'
@@ -128,7 +129,7 @@ function ProductPage() {
   }
 
   async function share() {
-    const how = await shareLink(`${origin}/${shop.slug}/${p.slug ?? p.id}`, p.name)
+    const how = await shareLink(shopAddress(origin, shop.slug, `/${p.slug ?? p.id}`), p.name)
     if (how === 'copied') {
       setCopied(true)
       setTimeout(() => setCopied(false), 1800)
@@ -347,7 +348,7 @@ function ProductPage() {
               <p className="mt-0.5 text-[13px] text-muted">{t('Send it on WhatsApp, or copy the link for anywhere else')}</p>
               <div className="mt-4">
                 <ShareActions
-                  url={`${origin}/${shop.slug}/${p.slug ?? p.id}`}
+                  url={shopAddress(origin, shop.slug, `/${p.slug ?? p.id}`)}
                   title={p.name}
                   text={t('{name}, {price}, at {shop}', { name: p.name, price: tzs(p.price), shop: shop.name })}
                   onShared={(how) => track('share', { shopId: shop.id, productId: p.id, detail: how })}
