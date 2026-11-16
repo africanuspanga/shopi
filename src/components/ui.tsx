@@ -174,13 +174,25 @@ export function ShopAvatar({ name, logo, className = 'h-10 w-10 text-[14px]' }: 
 }
 
 /** Money with a quiet currency: "TSh" small, the figure large. */
-export function Money({ value, className = '', cur = 'text-[0.5em] text-current/55' }: { value: number; className?: string; cur?: string }) {
+/** short: from a million up, "TSh 10.99M" (the full figure in the title); for number cards too narrow for every digit. */
+export function Money({ value, className = '', cur = 'text-[0.5em] text-current/55', short = false }: { value: number; className?: string; cur?: string; short?: boolean }) {
+  const full = Math.round(value).toLocaleString('en-US')
+  const cut = short && Math.abs(value) >= 1e6
   return (
-    <span className={`tnum whitespace-nowrap ${className}`}>
+    <span className={`tnum whitespace-nowrap ${className}`} title={cut ? `TSh ${full}` : undefined}>
       <span className={`mr-[0.25em] align-[0.12em] font-medium ${cur}`}>TSh</span>
-      {Math.round(value).toLocaleString('en-US')}
+      {cut ? shortNumber(value) : full}
     </span>
   )
+}
+
+/** 10,990,000 → 10.99M; 125,400,000 → 125.4M; 2,300,000,000 → 2.3B. Three or four figures, never rounded up a unit. */
+export function shortNumber(value: number) {
+  const [div, unit] = Math.abs(value) >= 1e9 ? [1e9, 'B'] : [1e6, 'M']
+  const v = value / div
+  const places = Math.abs(v) >= 100 ? 1 : 2
+  const f = 10 ** places
+  return `${(Math.trunc(v * f) / f).toLocaleString('en-US', { maximumFractionDigits: places })}${unit}`
 }
 
 /** Change against the period before. Up is ink, down is muted: no traffic lights on a seller's own numbers. */

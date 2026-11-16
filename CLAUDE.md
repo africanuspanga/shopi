@@ -378,6 +378,10 @@ Set the flag by hand in D1 (`UPDATE users SET is_admin = 1 WHERE phone = '+255â€
   proofs with a low amount or another name; how buyers pay; the funnel from sign-up to fifth order (all time); every
   shop with its seller, plan, setup, products, visits, orders, sales and last order (search); order sources;
   sales by category; sign-ups without a shop, each with a WhatsApp link.
+- **Header and phones** (`q-admin-fix`, 16 Nov): Seller app and Log out sit beside the wordmark. On phones the range chips
+  stick to the top; number cards are two-up and never cut a figure (`Money short`: "TSh 10.99M" from a million up, the full
+  figure on desktop and in the title); each shop is two lines (name and sales; plan, orders, last order) and a tap opens
+  the table's other columns with View shop and WhatsApp. The full redesign is roadmap item `q-admin`.
 - **Not yet:** the assistant's numbers, actions on a shop (suspend, change plan, reset password) and the audit log.
   Add each with its feature, and log every action once actions exist.
 - One D1 batch, per-shop subqueries. Fine for hundreds of shops; move to nightly totals with `stats_daily` well before thousands.

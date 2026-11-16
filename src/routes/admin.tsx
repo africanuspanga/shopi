@@ -1,9 +1,10 @@
-import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import { ArrowUpRight, Search } from 'lucide-react'
+import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
+import { ArrowUpRight, ChevronDown, LogOut, Search } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { WhatsAppIcon } from '#/components/brand-icons'
-import { Delta, Money, Page, TopBar, Wordmark } from '#/components/ui'
+import { Delta, Money, Page, Wordmark } from '#/components/ui'
 import { ADMIN_RANGES, getOwnerDashboard, type AdminDays, type AdminShop, type OwnerDashboard } from '#/lib/api/admin'
+import { logout } from '#/lib/api/session'
 import { CATEGORIES, localPhone, timeAgo, waLink } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 
@@ -26,6 +27,7 @@ const share = (part: number, whole: number) => (whole ? Math.round((part / whole
 
 function OwnerPage() {
   const t = useT()
+  const router = useRouter()
   const d = Route.useLoaderData()
   const vs = t('vs the {n} days before', { n: d.days })
   const aov = d.now.sold ? d.now.sales / d.now.sold : 0
@@ -33,24 +35,47 @@ function OwnerPage() {
 
   return (
     <Page wide>
-      <div className="mb-6 flex items-center justify-between md:mb-8">
+      <div className="mb-5 flex items-center justify-between gap-3 md:mb-8">
         <Link to="/admin" aria-label="Shopi">
           <Wordmark className="h-[22px] w-auto" />
         </Link>
-        <Link to="/app" className="btn btn-ghost btn-sm">
-          {t('Your shop')}
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to="/app" className="btn btn-ghost btn-sm">
+            {t('Seller app')}
+          </Link>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={async () => {
+              await logout()
+              await router.invalidate()
+              router.navigate({ to: '/login' })
+            }}
+          >
+            <LogOut size={15} strokeWidth={1.6} /> {t('Log out')}
+          </button>
+        </div>
       </div>
-      <TopBar title={t('Owner dashboard')} sub={t('Every shop on Shopi. Last {n} days, in Tanzania time; demo shops are not counted.', { n: d.days })} right={<Ranges days={d.days} className="hidden md:flex" />} />
-      <Ranges days={d.days} className="-mt-2 mb-5 md:hidden" />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-6">
+      <header className="flex items-end gap-6 md:mb-8">
+        <div className="min-w-0 flex-1">
+          <h1 className="title text-[24px] md:text-[30px]">{t('Owner dashboard')}</h1>
+          <p className="mt-1 text-[14px] leading-5 text-pretty text-muted">{t('Every shop on Shopi. Last {n} days, in Tanzania time; demo shops are not counted.', { n: d.days })}</p>
+        </div>
+        <Ranges days={d.days} className="hidden shrink-0 md:flex" />
+      </header>
+      {/* Phones: the range stays under the thumb's reach while the numbers scroll. */}
+      <div className="sticky top-0 z-20 -mx-4 mb-2 bg-page px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 md:hidden">
+        <Ranges days={d.days} wide />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <Kpi label={t('Sign-ups')} value={n(d.now.signups)} delta={<Delta now={d.now.signups} before={d.before.signups} label={vs} />} />
         <Kpi label={t('New shops')} value={n(d.now.shops)} delta={<Delta now={d.now.shops} before={d.before.shops} label={vs} />} />
         <Kpi label={t('Active shops')} value={n(d.now.active)} delta={<Delta now={d.now.active} before={d.before.active} label={vs} />} />
         <Kpi label={t('Orders')} value={n(d.now.orders)} delta={<Delta now={d.now.orders} before={d.before.orders} label={vs} />} />
-        <Kpi label={t('Sales')} value={<Money value={d.now.sales} cur="text-[0.62em] text-muted" />} delta={<Delta now={d.now.sales} before={d.before.sales} label={vs} />} />
-        <Kpi label={t('Average order')} value={<Money value={aov} cur="text-[0.62em] text-muted" />} delta={<Delta now={aov} before={aovBefore} label={vs} />} />
+        <Kpi label={t('Sales')} value={<KpiMoney value={d.now.sales} />} delta={<Delta now={d.now.sales} before={d.before.sales} label={vs} />} />
+        <Kpi label={t('Average order')} value={<KpiMoney value={aov} />} delta={<Delta now={aov} before={aovBefore} label={vs} />} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-12">
@@ -67,12 +92,12 @@ function OwnerPage() {
   )
 }
 
-function Ranges({ days, className = '' }: { days: number; className?: string }) {
+function Ranges({ days, className = '', wide = false }: { days: number; className?: string; wide?: boolean }) {
   const t = useT()
   return (
     <div className={`flex gap-2 ${className}`} role="tablist" aria-label={t('Range')}>
       {ADMIN_RANGES.map((r) => (
-        <Link key={r} to="/admin" search={{ days: r }} role="tab" aria-selected={days === r} data-active={days === r} className="chip h-9">
+        <Link key={r} to="/admin" search={{ days: r }} role="tab" aria-selected={days === r} data-active={days === r} className={`chip ${wide ? 'h-11 flex-1 justify-center' : 'h-9'}`}>
           {t('{n} days', { n: r })}
         </Link>
       ))}
@@ -80,12 +105,22 @@ function Ranges({ days, className = '' }: { days: number; className?: string }) 
   )
 }
 
+/** A number card's money: every digit where the card is wide, "TSh 10.99M" from a million up on a phone's half-width card. */
+function KpiMoney({ value }: { value: number }) {
+  return (
+    <>
+      <Money value={value} short cur="text-[0.62em] text-muted" className="md:hidden" />
+      <Money value={value} cur="text-[0.62em] text-muted" className="hidden md:inline" />
+    </>
+  )
+}
+
 function Kpi({ label, value, delta }: { label: string; value: ReactNode; delta: ReactNode }) {
   return (
-    <div className="card p-4 md:p-5">
+    <div className="card min-w-0 p-4 md:p-5">
       <span className="block text-[13px] text-muted">{label}</span>
-      <span className="tnum mt-1.5 block truncate text-[20px] font-semibold tracking-[-0.02em] md:text-[26px]">{value}</span>
-      <span className="mt-1.5 block">{delta}</span>
+      <span className="tnum mt-1.5 block text-[20px] font-semibold tracking-[-0.02em] whitespace-nowrap md:text-[22px] lg:text-[26px]">{value}</span>
+      <span className="mt-1.5 block leading-[18px]">{delta}</span>
     </div>
   )
 }
@@ -106,7 +141,7 @@ function Row({ label, value, strong = false }: { label: ReactNode; value: ReactN
   return (
     <div className={`flex items-baseline justify-between gap-4 py-2.5 text-[14px] ${strong ? 'border-t border-line pt-3.5 font-medium' : ''}`}>
       <span className={strong ? '' : 'text-ink-2'}>{label}</span>
-      <span className="tnum text-right">{value}</span>
+      <span className="tnum shrink-0 text-right">{value}</span>
     </div>
   )
 }
@@ -220,6 +255,7 @@ function Shops({ shops, days, className }: { shops: AdminShop[]; days: number; c
   const lang = useLang()
   const planText = usePlanText()
   const [query, setQuery] = useState('')
+  const [open, setOpen] = useState<string | null>(null)
   const q = query.trim().toLowerCase()
   const shown = q ? shops.filter((s) => `${s.name} ${s.slug} ${s.owner} ${s.phone}`.toLowerCase().includes(q)) : shops
   const opened = (ms: number) => new Date(ms).toLocaleDateString(lang === 'sw' ? 'sw-TZ' : 'en-GB', { day: 'numeric', month: 'short', timeZone: 'Africa/Dar_es_Salaam' })
@@ -232,26 +268,48 @@ function Shops({ shops, days, className }: { shops: AdminShop[]; days: number; c
       </label>
       {!shown.length && <Nothing>{t('No shop matches.')}</Nothing>}
 
-      {/* Phones: two lines per shop. */}
+      {/* Phones: two lines per shop; a tap opens the rest of the table's columns. */}
       <ul className="divide-y divide-line md:hidden">
-        {shown.map((s) => (
-          <li key={s.id} className="py-3.5">
-            <div className="flex items-baseline justify-between gap-3">
-              <a href={`/${s.slug}`} target="_blank" rel="noreferrer" className="min-w-0 truncate text-[15px] font-medium">
-                {s.name}
-              </a>
-              <Money value={s.sales} className="shrink-0 text-[15px]" cur="text-[0.8em] text-muted" />
-            </div>
-            <div className="mt-1 flex items-center gap-2 text-[13px] text-muted">
-              <span className="truncate">
-                {planText(s)} · {t('{n}/4 set up', { n: s.setup })} · {t(s.orders === 1 ? '{n} order' : '{n} orders', { n: s.orders })}
-              </span>
-              <a href={waLink(s.phone, '')} target="_blank" rel="noreferrer" className="ml-auto shrink-0" aria-label={t('Message {name} on WhatsApp', { name: s.owner })}>
-                <WhatsAppIcon size={16} />
-              </a>
-            </div>
-          </li>
-        ))}
+        {shown.map((s) => {
+          const isOpen = open === s.id
+          return (
+            <li key={s.id} className={s.status === 'demo' ? 'text-muted' : ''}>
+              <button type="button" className="block w-full py-3.5 text-left" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : s.id)}>
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className="min-w-0 truncate text-[15px] font-medium">{s.name}</span>
+                  <Money value={s.sales} className="shrink-0 text-[15px]" cur="text-[0.8em] text-muted" />
+                </span>
+                <span className="mt-1 flex items-center gap-2 text-[13px] text-muted">
+                  <span className="min-w-0 truncate">
+                    {planText(s)} · {t(s.orders === 1 ? '{n} order' : '{n} orders', { n: n(s.orders) })}
+                  </span>
+                  <span className="meta ml-auto shrink-0">{s.last_order ? timeAgo(s.last_order, lang) : ''}</span>
+                  <ChevronDown size={16} strokeWidth={1.6} className={`shrink-0 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
+                </span>
+              </button>
+              {isOpen && (
+                <div className="mb-3.5 rounded-[14px] bg-page px-4 py-1.5 text-ink">
+                  <Row label={t('Seller')} value={<span className="[overflow-wrap:anywhere]">{s.owner}</span>} />
+                  <Row label={t('Set up')} value={`${s.setup}/4`} />
+                  <Row label={t('Products')} value={n(s.products)} />
+                  <Row label={t('Visits')} value={n(s.visits)} />
+                  <Row label={t('Last order')} value={s.last_order ? timeAgo(s.last_order, lang) : '—'} />
+                  <p className="meta py-2 [overflow-wrap:anywhere]">
+                    shopi.tz/{s.slug} · {t('opened {date}', { date: opened(s.created_at) })}
+                  </p>
+                  <div className="flex gap-2 pt-1 pb-2.5">
+                    <a href={`/${s.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm flex-1">
+                      {t('View shop')} <ArrowUpRight size={14} strokeWidth={1.6} />
+                    </a>
+                    <a href={waLink(s.phone, '')} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm flex-1" aria-label={t('Message {name} on WhatsApp', { name: s.owner })}>
+                      <WhatsAppIcon size={15} /> {localPhone(s.phone)}
+                    </a>
+                  </div>
+                </div>
+              )}
+            </li>
+          )
+        })}
       </ul>
 
       {/* Desktop: a table. */}
@@ -355,7 +413,7 @@ function NoShop({ d, className }: { d: OwnerDashboard; className?: string }) {
           {d.noShop.map((u) => (
             <li key={u.phone} className="flex items-center gap-3 py-2.5 text-[14px]">
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{u.name}</p>
+                <p className="line-clamp-2 font-medium [overflow-wrap:anywhere]">{u.name}</p>
                 <p className="meta">{timeAgo(u.created_at, lang)}</p>
               </div>
               <a

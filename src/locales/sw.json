@@ -768,6 +768,7 @@
   "Seller": "Muuzaji",
   "Seller TIN {tin}": "TIN ya muuzaji {tin}",
   "Seller accounts and shops: while the account is open. A shop on a break is kept so it can open again.": "Akaunti na maduka ya wauzaji: wakati akaunti iko wazi. Duka lililopumzika linahifadhiwa ili liweze kufunguliwa tena.",
+  "Seller app": "App ya muuzaji",
   "Seller checks": "Muuzaji anahakiki",
   "Sellers": "Wauzaji",
   "Sellers who log in get one cookie that keeps them logged in, and one that remembers their language. Buyers get no login cookie. The bag, the remembered checkout details and the random visitor ID are kept in your browser’s storage, and you can clear them at any time in your browser settings.": "Wauzaji wanaoingia wanapata cookie moja ya kuwafanya waendelee kuwa wameingia kwenye akaunti na nyingine ya kukumbuka lugha yao. Wanunuzi hawapati cookie ya kuingia. Kapu, taarifa za kuagiza zilizohifadhiwa na ID ya visitor inayotengenezwa bila mpangilio vinahifadhiwa kwenye browser yako. Unaweza kuvifuta wakati wowote kwenye mipangilio ya browser.",

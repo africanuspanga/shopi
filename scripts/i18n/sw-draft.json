@@ -1255,5 +1255,6 @@
   "Points to": "Inaelekeza kwa",
   "It usually works within minutes and can take up to a day. To make {apex} open your shop too, turn on forwarding from {apex} to https://{host} in the same place.": "Kwa kawaida inafanya kazi ndani ya dakika chache na inaweza kuchukua hadi siku moja. Ili {apex} ifungue duka lako pia, washa forwarding kutoka {apex} kwenda https://{host} hapo hapo.",
   "Copy {what}": "Nakili {what}",
-  "Clear search": "Futa utafutaji"
+  "Clear search": "Futa utafutaji",
+  "Seller app": "App ya muuzaji"
 }
