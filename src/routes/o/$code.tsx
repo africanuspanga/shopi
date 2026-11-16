@@ -1,9 +1,9 @@
-import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
+import { createFileRoute, notFound, useRouter } from '@tanstack/react-router'
 import { Check, Copy, ImageDown, MapPin, Printer, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
-import { MadeWithShopi } from '#/components/shop'
-import { ErrorText, Img, ShopAvatar, useEntrance } from '#/components/ui'
+import { MadeWithShopi, ShopTopBar } from '#/components/shop'
+import { ErrorText, Img, useEntrance } from '#/components/ui'
 import { getTrackedOrder, submitPaymentSms } from '#/lib/api/store'
 import { optionText, timeAgo, tzs, waLink, type OrderStatus, formatTin } from '#/lib/format'
 import { LangProvider, asLang, useLang, useT } from '#/lib/i18n'
@@ -167,12 +167,9 @@ function Track() {
 
   return (
     <div className="min-h-dvh bg-page print:bg-white">
-      <header className="mx-auto flex h-16 max-w-[1080px] items-center gap-3 px-4 md:h-20 md:px-10 print:hidden">
-        <Link to="/$shop" params={{ shop: o.shop.slug }} className="flex min-w-0 flex-1 items-center gap-2.5">
-          <ShopAvatar name={o.shop.name} logo={o.shop.logo_key} className="h-9 w-9 text-[13px]" />
-          <span className="truncate text-[15px] font-semibold">{o.shop.name}</span>
-        </Link>
-      </header>
+      <div className="mb-3 md:mb-6 print:hidden">
+        <ShopTopBar shop={o.shop} />
+      </div>
 
       <main className="mx-auto max-w-[1080px] px-4 pb-16 md:grid md:grid-cols-[minmax(0,1fr)_380px] md:items-start md:gap-10 md:px-10 print:block">
         <div className="min-w-0 space-y-4 print:hidden">

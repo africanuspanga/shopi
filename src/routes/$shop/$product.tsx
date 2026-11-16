@@ -1,5 +1,5 @@
-import { Link, createFileRoute, getRouteApi, notFound, redirect, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Bell, Check, Minus, Plus, Share2 } from 'lucide-react'
+import { Link, createFileRoute, getRouteApi, notFound, redirect } from '@tanstack/react-router'
+import { Bell, Check, Minus, Plus, Share2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { ShareActions } from '#/components/share'
@@ -68,7 +68,6 @@ const parent = getRouteApi('/$shop')
 function ProductPage() {
   const rise = useEntrance()
   const t = useT()
-  const navigate = useNavigate()
   const { shop, products, areas } = parent.useLoaderData()
   const { product: p, collection } = Route.useLoaderData()
   const cart = useCart(shop.id)
@@ -156,15 +155,19 @@ function ProductPage() {
 
   return (
     <div className="min-h-dvh bg-card pb-28 md:pb-0" data-font={fontAttr(shop.theme_font)}>
-      <div className="hidden md:block">
+      <div className="contents">
         <ShopTopBar
           shop={shop}
+          back
+          bagCount={cart.count}
           right={
             <>
               <button type="button" className="icon-btn" aria-label={t('Share')} onClick={share}>
                 <Share2 size={17} strokeWidth={1.6} />
               </button>
-              <BagButton shopSlug={shop.slug} count={cart.count} />
+              <span className="hidden md:block">
+                <BagButton shopSlug={shop.slug} count={cart.count} />
+              </span>
             </>
           }
         />
@@ -187,22 +190,6 @@ function ProductPage() {
               ))}
             </div>
 
-            <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4 pt-[max(16px,env(safe-area-inset-top))] md:hidden">
-              <button
-                type="button"
-                aria-label={t('Back')}
-                className="icon-btn bg-card/90 shadow-[0_1px_2px_rgb(10_10_10/0.08)] backdrop-blur"
-                onClick={() => (window.history.length > 1 ? window.history.back() : navigate({ to: '/$shop', params: { shop: shop.slug } }))}
-              >
-                <ArrowLeft size={18} strokeWidth={1.75} />
-              </button>
-              <div className="flex gap-2">
-                <button type="button" aria-label={t('Share')} className="icon-btn bg-card/90 shadow-[0_1px_2px_rgb(10_10_10/0.08)] backdrop-blur" onClick={share}>
-                  <Share2 size={17} strokeWidth={1.6} />
-                </button>
-                <BagButton shopSlug={shop.slug} count={cart.count} />
-              </div>
-            </div>
             {images.length > 1 && (
               <span className="tnum absolute right-4 bottom-4 rounded-full bg-ink/70 px-2.5 py-1 text-[12px] font-medium text-white backdrop-blur md:hidden">
                 {slide + 1} / {images.length}

@@ -30,7 +30,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | Path | What lives there |
 | --- | --- |
 | `src/styles.css` | The design system: tokens (`@theme`) and component classes. Read it first. |
-| `src/components/ui.tsx` | App-wide parts: `Page`, `TopBar`, `BackButton`, `Chips`, `StatusPill`, `Img`, `ShopAvatar`, `Money`, `Delta`, `Sheet`, `Field`, `Switch`, `Empty`, `Toast`, `TextLink`, `ErrorText`, `LangSwitch`, `Wordmark` |
+| `src/components/ui.tsx` | App-wide parts: `Page`, `TopBar`, `PhoneBar`, `BackButton`, `Chips`, `StatusPill`, `Img`, `ShopAvatar`, `Money`, `Delta`, `Sheet`, `Field`, `Switch`, `Empty`, `Toast`, `TextLink`, `ErrorText`, `LangSwitch`, `Wordmark` |
 | `src/components/shop.tsx` | Storefront parts: `ProductGrid` (the grid with quick add and its toast), `ProductCard` (quick add), `QuickAddSheet`, `Price`, `Tag`, `BagButton`, `ShopTopBar`, `ShopFacts`, `FactPills`, `SocialLinks`, `ShopFooter`, `MadeWithShopi` |
 | `src/components/floating-nav.tsx` | The phone capsule: `FloatingNav`, `NavTab`, `NavCenter`, `NavCount`, `useHideFloatingNav` |
 | `src/components/shop-nav.tsx` | The storefront's capsule with its search and info sheets |
@@ -148,13 +148,18 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
 - Motion: `.rise`, `.rise-2`, `.rise-3` (fade and rise on enter), `.fade`, `.sheet-up`.
 
 ### Layout patterns
-- **Storefront** (`/$shop`): white page, sticky `ShopTopBar` with `BagButton` (on phones it uses `reveal`: hidden until the
-  shop's name scrolls out of view, so the name never shows twice), shop header (avatar, display name,
-  location, bio, WhatsApp, share, socials), `FactPills` on phones and a `ShopFacts` card on desktop, a search field (`ShopSearch`,
+- **The top of a phone screen** (16 Nov, the founder's pick of three): one steady white bar with a hairline, always
+  there. Buyer pages use `ShopTopBar` (72px: the shop's logo and name in its own font, the bag at the right; `back` adds
+  an arrow on the product page and checkout). Seller pages use `PhoneBar` through `TopBar` (60px: back or logo, the
+  page's name, up to two actions; the sub line sits under the bar), and the log-in screens carry the same bar with the
+  wordmark. Because the bar names the place, phone pages don't repeat the name under it. The landing page keeps its
+  floating capsule. From `md` up nothing changed: pages keep their large titles.
+- **Storefront** (`/$shop`): white page, sticky `ShopTopBar`, shop header (on desktop: avatar and display name; on
+  phones the bar carries both, so the header starts at the location, then bio, WhatsApp, share, socials), `FactPills` on phones and a `ShopFacts` card on desktop, a search field (`ShopSearch`,
   shops with 6+ products: above the chips on phones, at the right of the chips row on desktop; it filters the grid as the
   buyer types, across the whole shop, with `matchesSearch()`, which the capsule's search sheet shares), filter chips,
-  2/3/4-column grid, `ShopFooter`. On phones the bag lives in the floating capsule (below).
-- **Product page:** swipe gallery with a photo counter on phones; a large photo with thumbnails on desktop;
+  2/3/4-column grid, `ShopFooter`. On phones the bag is in the top bar and in the floating capsule (below).
+- **Product page:** the top bar with Back, Share and the bag, then a swipe gallery with a photo counter on phones; a large photo with thumbnails on desktop;
   option chips (an option with its own photo brings it up), a details table, a "Share with a friend" box, a sticky add bar on phones.
 - **Checkout and order page:** sand page; on desktop a sticky right column holds the bag and the receipt.
 - **Seller app** (`/app`): sand page. Desktop has a 248px white sidebar (wordmark, shop card, nav, "Add product").

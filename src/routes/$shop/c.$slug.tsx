@@ -85,6 +85,7 @@ function CollectionPage() {
     <div className="min-h-dvh bg-card pb-28 md:pb-0" data-font={fontAttr(shop.theme_font)}>
       <ShopTopBar
         shop={shop}
+        bagCount={cart.count}
         right={
           <>
             <button type="button" className="icon-btn hidden sm:inline-flex" aria-label={t('Share collection')} onClick={share}>

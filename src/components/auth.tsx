@@ -10,8 +10,9 @@ export function AuthLayout({ children, topRight, aside }: { children: ReactNode;
   const rise = useEntrance()
   return (
     <div className="min-h-dvh bg-page lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <div className="flex min-h-dvh flex-col px-4 pt-[max(8px,env(safe-area-inset-top))] pb-10 md:px-10">
-        <header className="flex h-16 items-center justify-between">
+      <div className="flex min-h-dvh flex-col px-4 pb-10 md:px-10 md:pt-2">
+        {/* Phones: the same steady white bar as the rest of Shopi. */}
+        <header className="-mx-4 flex h-[60px] items-center justify-between border-b border-line bg-card px-4 pt-[env(safe-area-inset-top)] box-content md:mx-0 md:h-16 md:border-0 md:bg-transparent md:px-0 md:pt-0">
           <Link to="/" aria-label="Shopi">
             <Wordmark className="h-[22px] w-auto" />
           </Link>

@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, ReceiptText, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { Delta, Empty, Img, LangSwitch, Money, Page, ShopAvatar, StatusPill, Toast, scrubIndex, useEntrance } from '#/components/ui'
+import { Delta, Empty, Img, LangSwitch, Money, Page, PhoneBar, ShopAvatar, StatusPill, Toast, scrubIndex, useEntrance } from '#/components/ui'
 import { PhoneAlertsCard } from '#/components/phone-app'
 import { getDashboard } from '#/lib/api/merchant'
 import { timeAgo, tzs } from '#/lib/format'
@@ -51,28 +51,36 @@ function Dashboard() {
 
   return (
     <Page nav wide>
-      <header className="flex items-center gap-3 md:items-end">
-        <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-10 w-10 text-[14px] md:hidden" />
+      <PhoneBar
+        lead={<ShopAvatar name={shop.name} logo={shop.logo_key} className="h-9 w-9 text-[13px]" />}
+        title={shop.name}
+        right={
+          <>
+            <Link to="/app/analytics" className="icon-btn" aria-label={t('Analytics')}>
+              <ChartColumn size={18} strokeWidth={1.6} />
+            </Link>
+            <a href={`/${shop.slug}`} target="_blank" rel="noreferrer" className="icon-btn" aria-label={t('View shop')}>
+              <ArrowUpRight size={18} strokeWidth={1.6} />
+            </a>
+          </>
+        }
+      />
+      <div className="mb-4 flex items-center justify-between gap-3 md:hidden">
+        <p className="truncate text-[14px] text-muted">{date}</p>
+        <LangSwitch />
+      </div>
+      <header className="hidden items-end gap-3 md:flex">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] text-muted md:text-[14px]">{date}</p>
-          <h1 className="title mt-0.5 truncate text-[22px] md:mt-1 md:text-[34px]">
-            <span className="md:hidden">{shop.name}</span>
-            <span className="hidden md:inline">{t('Today at {shop}', { shop: shop.name })}</span>
-          </h1>
+          <p className="truncate text-[14px] text-muted">{date}</p>
+          <h1 className="title mt-1 truncate text-[34px]">{t('Today at {shop}', { shop: shop.name })}</h1>
         </div>
         <LangSwitch />
-        <a href={`/${shop.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm hidden md:inline-flex">
+        <a href={`/${shop.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
           {t('View shop')} <ArrowUpRight size={15} strokeWidth={1.75} />
         </a>
-        <button type="button" className="btn btn-sm hidden md:inline-flex" onClick={share}>
+        <button type="button" className="btn btn-sm" onClick={share}>
           <Share2 size={15} strokeWidth={1.75} /> {t('Share link')}
         </button>
-        <Link to="/app/analytics" className="icon-btn md:hidden" aria-label={t('Analytics')}>
-          <ChartColumn size={18} strokeWidth={1.6} />
-        </Link>
-        <a href={`/${shop.slug}`} target="_blank" rel="noreferrer" className="icon-btn md:hidden" aria-label={t('View shop')}>
-          <ArrowUpRight size={18} strokeWidth={1.6} />
-        </a>
       </header>
 
       <PlanRow plan={d.plan} />

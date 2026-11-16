@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowUpRight, Banknote, Check, Clock, FileText, MapPin, Search, Smartphone, Truck, X } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, Banknote, Check, Clock, FileText, MapPin, Search, Smartphone, Truck, X } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppMark } from '#/components/brand-icons'
 import { Img, Sheet, ShopAvatar, Toast, Wordmark } from '#/components/ui'
@@ -500,19 +500,47 @@ export function ShopFooter({ shop }: { shop: PublicShop }) {
  * The shop's name and logo, pinned to the top. With `reveal`, phones keep it out of sight until the page's own header
  * has scrolled away, so the name never shows twice; from md up it is always there.
  */
-export function ShopTopBar({ shop, right, reveal }: { shop: PublicShop; right?: ReactNode; reveal?: boolean }) {
-  const place =
-    reveal === undefined
-      ? 'sticky'
-      : `fixed inset-x-0 transition-transform duration-300 ease-out md:sticky md:translate-y-0 ${reveal ? 'translate-y-0' : '-translate-y-full'}`
+/**
+ * The bar at the top of every buyer page. On phones it is always there, 72px, with the shop's logo and name (in the
+ * shop's own font) and the bag at the right; the pages don't repeat the name under it. From `md` up it is the 64px bar
+ * with the page's own actions. `back` puts a back arrow first (product page, checkout); without `bagCount` no bag shows.
+ */
+export function ShopTopBar({
+  shop,
+  right,
+  back,
+  bagCount,
+}: {
+  shop: Pick<PublicShop, 'slug' | 'name' | 'logo_key'>
+  right?: ReactNode
+  back?: boolean
+  bagCount?: number
+}) {
+  const t = useT()
   return (
-    <header className={`${place} top-0 z-30 border-b border-line bg-card/90 backdrop-blur-md`}>
-      <div className="mx-auto flex h-16 max-w-[1280px] items-center gap-3 px-4 md:px-10">
+    <header className="sticky top-0 z-30 border-b border-line bg-card pt-[env(safe-area-inset-top)] md:bg-card/90 md:backdrop-blur-md">
+      <div className="mx-auto flex h-[72px] max-w-[1280px] items-center gap-3 px-4 md:h-16 md:px-10">
+        {back && (
+          <button type="button" aria-label={t('Back')} className="icon-btn md:hidden" onClick={() => (window.history.length > 1 ? window.history.back() : window.location.assign(`/${shop.slug}`))}>
+            <ArrowLeft size={18} strokeWidth={1.75} />
+          </button>
+        )}
         <Link to="/$shop" params={{ shop: shop.slug }} className="flex min-w-0 flex-1 items-center gap-3">
-          <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-9 w-9 text-[13px]" />
-          <span className="truncate text-[15px] font-semibold">{shop.name}</span>
+          <ShopAvatar name={shop.name} logo={shop.logo_key} className={`text-[13px] md:h-9 md:w-9 ${back ? 'h-9 w-9' : 'h-11 w-11'}`} />
+          <span className={`title truncate md:text-[15px] md:font-semibold ${back ? 'text-[17px]' : 'text-[20px]'}`}>{shop.name}</span>
         </Link>
         {right}
+        {bagCount !== undefined && (
+          <Link
+            to="/$shop/checkout"
+            params={{ shop: shop.slug }}
+            aria-label={t(bagCount === 1 ? 'Bag, {n} item' : 'Bag, {n} items', { n: bagCount })}
+            className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-card pr-1 pl-3.5 text-[14px] font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)] md:hidden"
+          >
+            {t('Bag')}
+            <span className={`tnum flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] transition-colors ${bagCount ? 'bg-moto text-on-moto' : 'bg-ink text-white'}`}>{bagCount}</span>
+          </Link>
+        )}
       </div>
     </header>
   )

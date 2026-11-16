@@ -55,17 +55,41 @@ export function BackButton({ to, label = 'Back' }: { to: string; label?: string 
   )
 }
 
-/** Screen header: optional back button, a title that names the place, and up to two actions. */
+/**
+ * The bar at the top of a seller screen on phones: always there, white, 60px, with what comes before the title (a back
+ * button, the shop's logo), the title and up to two actions. It sits at the top of a `Page` and stays while the page
+ * scrolls. From `md` up, pages show their own header instead.
+ */
+export function PhoneBar({ lead, title, right }: { lead?: ReactNode; title: ReactNode; right?: ReactNode }) {
+  return (
+    <div className="sticky top-0 z-30 -mx-4 -mt-[max(12px,env(safe-area-inset-top))] mb-4 border-b border-line bg-card pt-[env(safe-area-inset-top)] md:hidden">
+      <div className="flex h-[60px] items-center gap-2.5 px-4 [&_.btn]:h-10 [&_.btn]:px-4 [&_.btn]:text-[14px]">
+        {lead}
+        <h1 className="title min-w-0 flex-1 truncate text-[20px]">{title}</h1>
+        {right && <div className="flex shrink-0 items-center gap-2">{right}</div>}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Screen header: optional back button, a title that names the place, and up to two actions. On phones it is the
+ * `PhoneBar` with the sub line under it; from `md` up, the large title in the page.
+ */
 export function TopBar({ title, sub, back, right }: { title: ReactNode; sub?: ReactNode; back?: string; right?: ReactNode }) {
   return (
-    <header className="mb-6 flex min-h-12 items-center gap-3 md:mb-8">
-      {back && <BackButton to={back} />}
-      <div className="min-w-0 flex-1">
-        <h1 className="title truncate text-[24px] md:text-[30px]">{title}</h1>
-        {sub && <p className="mt-1 line-clamp-2 text-[14px] text-pretty text-muted">{sub}</p>}
-      </div>
-      {right && <div className="flex shrink-0 items-center gap-2">{right}</div>}
-    </header>
+    <>
+      <PhoneBar lead={back && <BackButton to={back} />} title={title} right={right} />
+      {sub && <p className="mb-5 text-[14px] text-pretty text-muted md:hidden">{sub}</p>}
+      <header className="mb-8 hidden min-h-12 items-center gap-3 md:flex">
+        {back && <BackButton to={back} />}
+        <div className="min-w-0 flex-1">
+          <h1 className="title truncate text-[30px]">{title}</h1>
+          {sub && <p className="mt-1 line-clamp-2 text-[14px] text-pretty text-muted">{sub}</p>}
+        </div>
+        {right && <div className="flex shrink-0 items-center gap-2">{right}</div>}
+      </header>
+    </>
   )
 }
 

@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { MapPin, Share2, Store } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { BagButton, FactPills, ProductGrid, ShopFacts, ShopFooter, ShopSearch, ShopTopBar, SocialLinks, matchesSearch, onSale } from '#/components/shop'
 import { ShopNav } from '#/components/shop-nav'
@@ -49,17 +49,6 @@ function Storefront() {
   const url = shopAddress(useOrigin(), shop.slug)
   const cover = !!shop.cover_key
 
-  // Phones: the top bar waits until the shop's name has scrolled out of view.
-  const nameRef = useRef<HTMLDivElement>(null)
-  const [pastName, setPastName] = useState(false)
-  useEffect(() => {
-    const el = nameRef.current
-    if (!el) return
-    const io = new IntersectionObserver(([e]) => setPastName(!e.isIntersecting && e.boundingClientRect.top < 0))
-    io.observe(el)
-    return () => io.disconnect()
-  }, [])
-
   useEffect(() => {
     track('view_shop', { shopId: shop.id })
   }, [shop.id])
@@ -101,7 +90,7 @@ function Storefront() {
     <div className="min-h-dvh bg-card pb-28 md:pb-0" data-font={fontAttr(shop.theme_font)}>
       <ShopTopBar
         shop={shop}
-        reveal={pastName}
+        bagCount={cart.count}
         right={
           <>
             <button type="button" className="icon-btn hidden sm:inline-flex" aria-label={t('Share shop')} onClick={share}>
@@ -125,14 +114,14 @@ function Storefront() {
           className={`grid gap-8 pb-8 md:grid-cols-[minmax(0,1fr)_340px] md:gap-16 md:pb-14 lg:grid-cols-[minmax(0,1fr)_380px] ${cover ? 'pt-0 md:items-start' : 'pt-8 md:items-end md:pt-16'}`}
         >
           <div className={`${rise} min-w-0`}>
-            <div ref={nameRef} className={`flex gap-4 md:block ${cover ? 'items-end' : 'items-center'}`}>
+            <div className={`flex gap-4 md:block ${cover ? 'items-end' : 'items-center'}`}>
               <ShopAvatar
                 name={shop.name}
                 logo={shop.logo_key}
-                className={`h-16 w-16 shrink-0 text-[20px] md:h-24 md:w-24 md:text-[28px] ${cover ? 'relative -mt-8 ml-3 ring-4 ring-card md:-mt-12 md:ml-8' : ''}`}
+                className={`h-16 w-16 shrink-0 text-[20px] md:h-24 md:w-24 md:text-[28px] ${cover ? 'relative -mt-8 ml-3 ring-4 ring-card md:-mt-12 md:ml-8' : ''} max-md:hidden`}
               />
               <div className={`min-w-0 ${cover ? 'pb-1 md:mt-6 md:pb-0' : 'md:mt-8'}`}>
-                <h1 className="display text-[30px] break-words md:text-[60px] lg:text-[72px]">{shop.name}</h1>
+                <h1 className={`display text-[30px] break-words md:text-[60px] lg:text-[72px] max-md:hidden`}>{shop.name}</h1>
                 {shop.location && (
                   <p className="mt-1.5 flex items-center gap-1.5 text-[14px] text-muted md:mt-4 md:text-[15px]">
                     <MapPin size={15} strokeWidth={1.6} className="shrink-0" />

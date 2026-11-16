@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { Banknote, Check, Minus, Plus, ShieldCheck, Smartphone, TicketPercent, Trash2 } from 'lucide-react'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { MadeWithShopi } from '#/components/shop'
-import { BackButton, ErrorText, Field, Img, ShopAvatar } from '#/components/ui'
+import { MadeWithShopi, ShopTopBar } from '#/components/shop'
+import { ErrorText, Field, Img } from '#/components/ui'
 import { checkDiscount } from '#/lib/api/discounts'
 import { placeOrder, type PublicShop } from '#/lib/api/store'
 import { track, visit } from '#/lib/analytics'
@@ -39,16 +39,17 @@ type Area = { id: string; name: string; fee: number }
 export function CheckoutHeader({ shop }: { shop: Pick<PublicShop, 'slug' | 'name' | 'logo_key'> }) {
   const t = useT()
   return (
-    <header className="mx-auto flex h-16 max-w-[1120px] items-center gap-3 px-4 md:h-20 md:px-10">
-      <BackButton to={`/${shop.slug}`} />
-      <Link to="/$shop" params={{ shop: shop.slug }} className="flex min-w-0 items-center gap-2.5">
-        <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-8 w-8 text-[12px]" />
-        <span className="truncate text-[15px] font-semibold">{shop.name}</span>
-      </Link>
-      <span className="ml-auto hidden items-center gap-1.5 text-[13px] text-muted sm:flex">
-        <ShieldCheck size={15} strokeWidth={1.6} /> {t('You pay the seller directly')}
-      </span>
-    </header>
+    <div className="mb-2 md:mb-4">
+      <ShopTopBar
+        shop={shop}
+        back
+        right={
+          <span className="hidden items-center gap-1.5 text-[13px] text-muted sm:flex">
+            <ShieldCheck size={15} strokeWidth={1.6} /> {t('You pay the seller directly')}
+          </span>
+        }
+      />
+    </div>
   )
 }
 
