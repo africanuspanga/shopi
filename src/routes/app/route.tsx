@@ -4,6 +4,7 @@ import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import { getNavCounts } from '#/lib/api/merchant'
 import { useT } from '#/lib/i18n'
+import { InstallRow } from '#/components/phone-app'
 import { catchInstallPrompt } from '#/lib/push'
 import { useEffect, useState } from 'react'
 
@@ -167,6 +168,7 @@ function BottomNav() {
               </span>
             </Link>
           ))}
+          <InstallRow onOpen={() => setAdding(false)} />
         </div>
       </Sheet>
     </>

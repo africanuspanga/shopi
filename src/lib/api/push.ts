@@ -37,6 +37,15 @@ export const savePushSubscription = createServerFn({ method: 'POST' })
     return { ok: true as const }
   })
 
+/** The seller opened Shopi from the Home Screen: remember when and on what, for the owner dashboard's install count. */
+export const markAppInstalled = createServerFn({ method: 'POST' })
+  .validator((d: { platform?: string }) => ({ platform: d?.platform === 'android' || d?.platform === 'ios' ? d.platform : 'other' }))
+  .handler(async ({ data }) => {
+    const { user } = await requireShop()
+    await run('UPDATE users SET app_seen_at = ?, app_platform = ? WHERE id = ?', now(), data.platform, user.id)
+    return { ok: true as const }
+  })
+
 export const removePushSubscription = createServerFn({ method: 'POST' })
   .validator((d: { endpoint: string }) => ({ endpoint: endpoint(d.endpoint) }))
   .handler(async ({ data }) => {

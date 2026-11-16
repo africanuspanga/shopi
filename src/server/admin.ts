@@ -94,7 +94,7 @@ const topProducts = (where: string, limit: number, ...params: unknown[]) =>
 const shopRows = (from: number, only?: string) =>
   q(
     `SELECT s.id, s.slug, s.name, s.status, s.category, s.logo_key, s.created_at, s.plan, s.trial_ends, s.paid_until, s.lang,
-       u.name owner, u.phone,
+       u.name owner, u.phone, u.app_seen_at, u.app_platform,
        (SELECT COUNT(*) FROM products p WHERE p.shop_id = s.id) products,
        (SELECT COUNT(*) FROM products p WHERE p.shop_id = s.id AND (p.images IS NULL OR p.images IN ('', '[]'))) no_photo,
        (SELECT COUNT(*) FROM delivery_areas a WHERE a.shop_id = s.id) areas,
@@ -115,7 +115,9 @@ const shopRows = (from: number, only?: string) =>
     only ?? null,
   )
 
-type ShopRow = Omit<AdminShop, 'plan' | 'setup' | 'noPhoto' | 'ordersEver' | 'last_login' | 'notifications' | 'look'> & {
+type ShopRow = Omit<AdminShop, 'plan' | 'setup' | 'noPhoto' | 'ordersEver' | 'last_login' | 'notifications' | 'look' | 'app' | 'appSeen'> & {
+  app_seen_at: number | null
+  app_platform: string | null
   plan: string
   trial_ends: number | null
   paid_until: number | null
@@ -153,6 +155,8 @@ function toShops(r: D1Result<unknown>, t: number): AdminShop[] {
       last_order: s.last_order,
       last_login: s.session_ends ? s.session_ends - SESSION_DAYS * DAY : null,
       notifications: !!s.push,
+      app: s.app_seen_at ? (s.app_platform ?? 'other') : null,
+      appSeen: s.app_seen_at,
       look: !!s.look,
       domain: s.domain,
     }
@@ -369,6 +373,7 @@ export async function useData(days: AdminDays) {
          ${shop('stock_alerts')} alerts,
          ${shop('links')} links,
          ${shop('push_subscriptions')} push,
+         (SELECT COUNT(*) FROM shops s JOIN users u ON u.id = s.owner_id WHERE s.status != 'demo' AND u.app_seen_at IS NOT NULL) installed,
          ${shop('domains', `status = 'active'`)} domain,
          ${own('theme_color IS NOT NULL')} colour,
          ${own('theme_font IS NOT NULL')} font,

@@ -34,6 +34,9 @@ export type AdminShop = {
   /** The seller's last log-in on any phone or browser. */
   last_login: number | null
   notifications: boolean
+  /** Opened Shopi from the Home Screen: on what, and when last (reported about weekly). */
+  app: string | null
+  appSeen: number | null
   look: boolean
   domain: string | null
 }

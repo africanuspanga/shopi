@@ -30,10 +30,10 @@ export const Route = createFileRoute('/api/admin-export')({
         }
         const body = [
           ['Shop', 'Link', 'Category', 'Opened', 'Seller', 'Phone', 'Last log-in', 'Language', 'Plan', 'Plan or trial ends', 'Set up (of 4)', 'Products', 'Products without a photo',
-            `Visits (${days} days)`, `Online orders (${days} days)`, `Sales TSh (${days} days)`, 'Online orders ever', 'Last order', 'Notifications', 'Own look', 'Own domain'],
+            `Visits (${days} days)`, `Online orders (${days} days)`, `Sales TSh (${days} days)`, 'Online orders ever', 'Last order', 'App installed', 'Notifications', 'Own look', 'Own domain'],
           ...shops.map((s) => [
             s.name, `https://shopi.tz/${s.slug}`, s.category, day(s.created_at), s.owner, `'${s.phone}`, day(s.last_login), s.lang, ...plan(s), s.setup, s.products, s.noPhoto,
-            s.visits, s.orders, s.sales, s.ordersEver, day(s.last_order), s.notifications ? 'yes' : 'no', s.look ? 'yes' : 'no', s.domain ?? '',
+            s.visits, s.orders, s.sales, s.ordersEver, day(s.last_order), s.app ?? 'no', s.notifications ? 'yes' : 'no', s.look ? 'yes' : 'no', s.domain ?? '',
           ]),
         ]
           .map((r) => r.map(cell).join(','))

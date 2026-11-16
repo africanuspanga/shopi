@@ -338,6 +338,14 @@ domain are lowercase.
   the server posts to them. Keys: `VAPID_PUBLIC_KEY` is a var in `wrangler.jsonc`, `VAPID_PRIVATE_KEY` a secret; locally
   `.dev.vars` holds a separate pair; without them nothing is sent and the card says it didn't turn on. The service
   worker (`/sw.js`, scope `/`) is registered only from the seller app; it caches nothing. The manifest's `id` is `/app`.
+  **Installing** (`q-pwa`, 16 Nov): "Put Shopi on your Home Screen" is a row in the + sheet (gone once installed), a row in
+  Shop settings and "Show me how" on Home's card for iPhones. Where Chrome offers its prompt the row installs in one tap;
+  otherwise `InstallSheet` shows three coded pictures (iPhone: Share, Add to Home Screen, open it; others: the browser's
+  menu), and on an iPhone inside Instagram's or TikTok's browser it says to open Safari first (`inAppBrowser()`).
+  The manifest has `shortcuts` (New product, Orders) and `screenshots` (`public/app-shots/`, taken from Zee's Store at
+  360x780 x3 and 1280x800 x1.5; retake them when Home, Orders or Products change). An installed app reports itself
+  (`markAppInstalled`, at most weekly per phone; `users.app_seen_at`, `app_platform`, migration `0019`), which the owner
+  dashboard shows per shop and under Product use. There is no dark `theme_color`: the seller app has no dark theme.
   Testing in Playwright needs a persistent profile (`launchPersistentContext`; push is off in incognito) and a few
   seconds after launch before the first push arrives.
 - Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
@@ -395,7 +403,7 @@ server function, and `/api/admin-export` answers 404). Set the flag by hand in D
   up is bad, like cancelled share). Today's bar is Moto. Charts read by hover or a sliding finger (`scrubIndex`).
   Number cards never cut a figure: `Money short` below `xl`.
 - **"Last log-in"** is worked out from the seller's newest session (`expires_at` minus `SESSION_DAYS`), not stored.
-- **Not there yet, because nothing records it:** app installed (comes with `q-pwa`), where a sign-up came from (`q-footer`
+- **Not there yet, because nothing records it:** where a sign-up came from (`q-footer`
   adds `ref`), searches that found nothing, how often the bot check passed or refused, 5xx counts (Workers Logs only),
   the photo bucket's size. Actions on a shop (suspend, extend a trial, change plan) arrive with billing, each written
   to an `admin_log` table.

@@ -1397,5 +1397,21 @@
   "Its story": "Historia yake",
   "Cancelled orders": "Oda zilizoghairiwa",
   "Sales, all time": "Mauzo, muda wote",
-  "Last {n} days": "Siku {n} zilizopita"
+  "Last {n} days": "Siku {n} zilizopita",
+  "Put Shopi on your Home Screen": "Weka Shopi kwenye Home Screen yako",
+  "It opens like an app, one tap from your orders.": "Inafunguka kama app, mbofyo mmoja tu kufika kwenye oda zako.",
+  "Show me how": "Nionyeshe jinsi",
+  "On iPhone, put Shopi on your Home Screen first. Then open it from there and turn on notifications.": "Kwenye iPhone, weka Shopi kwenye Home Screen kwanza. Kisha ifungue kutoka hapo na uwashe arifa.",
+  "Tap Share": "Bofya Share",
+  "The square with an arrow, at the bottom of Safari.": "Mraba wenye mshale, chini kwenye Safari.",
+  "Choose Add to Home Screen": "Chagua Add to Home Screen",
+  "Scroll down the list if you don’t see it.": "Shuka chini kwenye orodha usipoiona.",
+  "Open Shopi from your Home Screen": "Fungua Shopi kutoka Home Screen yako",
+  "Then turn on notifications for new orders.": "Kisha washa arifa za oda mpya.",
+  "Open your browser’s menu": "Fungua menyu ya browser yako",
+  "The three dots at the top of Chrome.": "Nukta tatu juu kwenye Chrome.",
+  "Choose Add to Home screen": "Chagua Add to Home screen",
+  "It may say Install app.": "Inaweza kuandikwa Install app.",
+  "First open shopi.tz in Safari. This app’s own browser can’t add to the Home Screen.": "Kwanza fungua shopi.tz kwenye Safari. Browser ya app hii haiwezi kuweka kwenye Home Screen.",
+  "App on the Home Screen": "App kwenye Home Screen"
 }

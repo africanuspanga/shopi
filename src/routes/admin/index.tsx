@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Bell, Download, Globe, Palette, Search } from 'lucide-react'
+import { Bell, Download, Globe, Palette, Search, Smartphone } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { BarList, Card, Change, DayChart, Gauge, Kpi, KpiMoney, Nothing, ProductTable, Row, WeekdayBars, num, pct, useDates } from '#/components/admin'
 import { WhatsAppIcon } from '#/components/brand-icons'
@@ -209,6 +209,7 @@ function Shops({ d }: { d: OwnerSection<'shops'> }) {
   const shown = inFilter(filter).filter((s) => !q || `${s.name} ${s.slug} ${s.owner} ${s.phone} ${s.domain ?? ''}`.toLowerCase().includes(q))
   const flags = (s: AdminShop) => (
     <span className="flex items-center gap-1.5 text-muted">
+      {s.app && <Smartphone size={14} strokeWidth={1.6} aria-label={t('App on the Home Screen')} />}
       {s.notifications && <Bell size={14} strokeWidth={1.6} aria-label={t('Notifications on')} />}
       {s.look && <Palette size={14} strokeWidth={1.6} aria-label={t('Own look')} />}
       {s.domain && <Globe size={14} strokeWidth={1.6} aria-label={t('Own domain')} />}
@@ -527,6 +528,7 @@ function Use({ d }: { d: OwnerSection<'use'> }) {
     ['manual', t('Sales recorded by hand')],
     ['links', t('Tagged links')],
     ['alerts', t('Buyers waiting for stock')],
+    ['installed', t('App on the Home Screen')],
     ['push', t('Notifications on')],
     ['colour', t('Own colour')],
     ['font', t('Own style of name')],
@@ -550,7 +552,7 @@ function Use({ d }: { d: OwnerSection<'use'> }) {
     <div className="grid gap-3 md:gap-4 lg:grid-cols-12">
       <Card title={t('Tools in use')} sub={t('How many of the {n} shops use each one, all time', { n: num(f.shops) })} className="lg:col-span-7">
         <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
-          {[feature.slice(0, 10), feature.slice(10)].map((half, i) => (
+          {[feature.slice(0, 11), feature.slice(11)].map((half, i) => (
             <BarList key={i} empty="" total={f.shops || 1} rows={half.map(([k, label]) => ({ label, value: f[k] ?? 0, text: `${num(f[k] ?? 0)} · ${pct(f[k] ?? 0, f.shops)}%` }))} />
           ))}
         </div>

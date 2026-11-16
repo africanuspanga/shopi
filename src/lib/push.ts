@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getPushKey, removePushSubscription, savePushSubscription, testPush } from '#/lib/api/push'
+import { getPushKey, markAppInstalled, removePushSubscription, savePushSubscription, testPush } from '#/lib/api/push'
 
 /**
  * The seller's phone: installing Shopi as an app, and notifications for new orders (sent by `src/server/push.ts`,
@@ -27,6 +27,7 @@ export function catchInstallPrompt() {
   }
   window.addEventListener('beforeinstallprompt', onPrompt)
   window.addEventListener('appinstalled', onInstalled)
+  reportInstalled()
   return () => {
     window.removeEventListener('beforeinstallprompt', onPrompt)
     window.removeEventListener('appinstalled', onInstalled)
@@ -36,6 +37,24 @@ export function catchInstallPrompt() {
 export const isInstalled = () =>
   typeof window !== 'undefined' &&
   (window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true)
+
+const SEEN_KEY = 'shopi_app_seen'
+const WEEK = 7 * 86400_000
+
+/** Opened from the Home Screen: tell the server, at most once a week from this phone. */
+function reportInstalled() {
+  if (!isInstalled()) return
+  try {
+    if (Date.now() - Number(localStorage.getItem(SEEN_KEY) ?? 0) < WEEK) return
+    localStorage.setItem(SEEN_KEY, String(Date.now()))
+  } catch {
+    return // no storage: don't write on every screen
+  }
+  markAppInstalled({ data: { platform: isIos() ? 'ios' : /Android/.test(navigator.userAgent) ? 'android' : 'other' } }).catch(() => {})
+}
+
+/** An app's own browser (Instagram, TikTok, Facebook): on iPhone it can't add to the Home Screen; Safari can. */
+export const inAppBrowser = () => /Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|BytedanceWebview/i.test(navigator.userAgent)
 
 const isIos = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
 
@@ -55,10 +74,12 @@ export function usePhoneApp() {
   const [state, setState] = useState<AlertState>('loading')
   const [canInstall, setCanInstall] = useState(false)
   const [installed, setInstalled] = useState(false)
+  const [apple, setApple] = useState(false)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     setInstalled(isInstalled())
+    setApple(isIos())
     const sync = () => setCanInstall(!!installPrompt && !isInstalled())
     sync()
     installListeners.add(sync)
@@ -140,5 +161,6 @@ export function usePhoneApp() {
     }
   }, [])
 
-  return { state, busy, canInstall, installed, ios: state === 'ios', install, turnOn, turnOff, test }
+  // `ios`: an iPhone tab that must be installed before notifications work. `apple`: any iPhone or iPad, for the install guide.
+  return { state, busy, canInstall, installed, ios: state === 'ios', apple, install, turnOn, turnOff, test }
 }

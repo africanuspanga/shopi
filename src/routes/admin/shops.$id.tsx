@@ -100,6 +100,7 @@ function ShopPage() {
           <Row label={t('Link')} value={<span className="code">{s.domain ?? `shopi.tz/${s.slug}`}</span>} />
           <Row label={t('Language')} value={s.lang === 'sw' ? 'Kiswahili' : 'English'} />
           <Row label={t('Set up')} value={`${s.setup}/4`} />
+          <Row label={t('App on the Home Screen')} value={s.app ? `${s.app === 'ios' ? 'iPhone' : s.app === 'android' ? 'Android' : t('Yes')} · ${ago(s.appSeen)}` : t('No')} />
           <Row label={t('Notifications on')} value={on(s.notifications)} />
           <Row label={t('Own look')} value={on(s.look)} />
           <Row label={t('Own domain')} value={s.domain ?? t('No')} />
