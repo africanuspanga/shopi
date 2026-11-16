@@ -6,7 +6,7 @@ import { ErrorText, Field, ShopAvatar, ShopLangChoice } from '#/components/ui'
 import { checkSlug, createShop, expandSocialLink, saveShopBasics } from '#/lib/api/merchant'
 import { CATEGORIES, mapsLink, normalizePhone, slugify, tinDigits } from '#/lib/format'
 import { useLang, useT, type Lang } from '#/lib/i18n'
-import { setLang } from '#/lib/api/session'
+import { logout, setLang } from '#/lib/api/session'
 import { nameFromHandle, readSocialLink, type SocialFind } from '#/lib/social'
 
 export const Route = createFileRoute('/onboard')({
@@ -119,21 +119,36 @@ function Onboard() {
     router.navigate({ to: '/app' })
   }
 
+  // Someone on the wrong account (another number, or an owner with no shop) needs a way out of setup.
+  const leave = (
+    <button
+      type="button"
+      className="text-[14px] font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
+      onClick={async () => {
+        await logout()
+        await router.invalidate()
+        router.navigate({ to: '/login' })
+      }}
+    >
+      {t('Log out')}
+    </button>
+  )
+
   if (created)
     return (
-      <AuthLayout aside={<ShopPreview name={name} slug={slug} category={categoryLabel} />}>
+      <AuthLayout topRight={leave} aside={<ShopPreview name={name} slug={slug} category={categoryLabel} />}>
         <BasicsStep onDone={finish} initial={socials} />
       </AuthLayout>
     )
 
   return (
-    <AuthLayout aside={<ShopPreview name={name} slug={slug} category={categoryLabel} />}>
+    <AuthLayout topRight={leave} aside={<ShopPreview name={name} slug={slug} category={categoryLabel} />}>
       <StepBar step={2} of={3} />
       <h1 className="title mt-6 text-[32px] md:text-[38px]">{t('Name your shop')}</h1>
       <p className="mt-2 text-[15px] text-muted">{t('Choose the link with care: it stays the same, so the places you share it keep working.')}</p>
 
       <div className="mt-6 flex items-center gap-3 rounded-[18px] bg-card p-3 shadow-[inset_0_0_0_1px_var(--color-line)] lg:hidden">
-        <ShopAvatar name={name || 'R'} logo={null} className="h-11 w-11 text-[15px]" />
+        <ShopAvatar name={name || 'S'} logo={null} className="h-11 w-11 text-[15px]" />
         <div className="min-w-0">
           <p className="truncate text-[15px] font-semibold">{name || t('Your shop')}</p>
           <p className="code truncate text-[13px] text-muted">shopi.tz/{slug || 'yourshop'}</p>
@@ -301,7 +316,7 @@ function ShopPreview({ name, slug, category }: { name: string; slug: string; cat
           </span>
         </div>
         <div className="pt-6">
-          <ShopAvatar name={name || 'R'} logo={null} className="h-16 w-16 text-[20px]" />
+          <ShopAvatar name={name || 'S'} logo={null} className="h-16 w-16 text-[20px]" />
           <p className={`display mt-5 text-[36px] break-words ${name ? '' : 'text-faint'}`}>{name || t('Your shop')}</p>
           <span className="mt-4 inline-flex h-8 items-center rounded-full bg-page px-3 text-[13px] text-ink-2">{category}</span>
         </div>

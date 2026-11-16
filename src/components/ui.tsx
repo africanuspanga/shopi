@@ -168,7 +168,7 @@ export function ShopAvatar({ name, logo, className = 'h-10 w-10 text-[14px]' }: 
     .join('')
   return (
     <span aria-hidden className={`flex shrink-0 items-center justify-center rounded-full bg-ink font-semibold text-white ${className}`}>
-      {initials || 'R'}
+      {initials || 'S'}
     </span>
   )
 }
