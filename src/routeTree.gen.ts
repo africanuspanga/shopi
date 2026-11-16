@@ -11,7 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShopRouteRouteImport } from './routes/$shop/route'
-import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as DataDeletionRouteImport } from './routes/data-deletion'
 import { Route as LoginRouteImport } from './routes/login'
@@ -24,6 +24,8 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ShopIndexRouteImport } from './routes/$shop/index'
 import { Route as ShopProductRouteImport } from './routes/$shop/$product'
 import { Route as ShopCheckoutRouteImport } from './routes/$shop/checkout'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as ApiAdminExportRouteImport } from './routes/api/admin-export'
 import { Route as ApiERouteImport } from './routes/api/e'
 import { Route as ApiExportRouteImport } from './routes/api/export'
 import { Route as ApiPhotoRouteImport } from './routes/api/photo'
@@ -40,6 +42,7 @@ import { Route as OCodeRouteImport } from './routes/o/$code'
 import { Route as ShopBCodeRouteImport } from './routes/$shop/b.$code'
 import { Route as ShopCSlugRouteImport } from './routes/$shop/c.$slug'
 import { Route as ShopPIdRouteImport } from './routes/$shop/p.$id'
+import { Route as AdminShopsIdRouteImport } from './routes/admin/shops.$id'
 import { Route as AppBagsIndexRouteImport } from './routes/app/bags/index'
 import { Route as AppBagsIdRouteImport } from './routes/app/bags/$id'
 import { Route as AppBagsNewRouteImport } from './routes/app/bags/new'
@@ -64,7 +67,7 @@ const ShopRouteRoute = ShopRouteRouteImport.update({
   path: '/$shop',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
+const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => rootRouteImport,
@@ -128,6 +131,16 @@ const ShopCheckoutRoute = ShopCheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
   getParentRoute: () => ShopRouteRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const ApiAdminExportRoute = ApiAdminExportRouteImport.update({
+  id: '/api/admin-export',
+  path: '/api/admin-export',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiERoute = ApiERouteImport.update({
   id: '/api/e',
@@ -209,6 +222,11 @@ const ShopPIdRoute = ShopPIdRouteImport.update({
   path: '/p/$id',
   getParentRoute: () => ShopRouteRoute,
 } as any)
+const AdminShopsIdRoute = AdminShopsIdRouteImport.update({
+  id: '/shops/$id',
+  path: '/shops/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AppBagsIndexRoute = AppBagsIndexRouteImport.update({
   id: '/bags/',
   path: '/bags/',
@@ -278,8 +296,8 @@ const AppProductsNewRoute = AppProductsNewRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$shop': typeof ShopRouteRouteWithChildren
+  '/admin': typeof AdminRouteRouteWithChildren
   '/app': typeof AppRouteRouteWithChildren
-  '/admin': typeof AdminRoute
   '/data-deletion': typeof DataDeletionRoute
   '/login': typeof LoginRoute
   '/onboard': typeof OnboardRoute
@@ -290,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/$shop/$product': typeof ShopProductRoute
   '/$shop/checkout': typeof ShopCheckoutRoute
+  '/api/admin-export': typeof ApiAdminExportRoute
   '/api/e': typeof ApiERoute
   '/api/export': typeof ApiExportRoute
   '/api/photo': typeof ApiPhotoRoute
@@ -303,10 +322,12 @@ export interface FileRoutesByFullPath {
   '/img/$': typeof ImgSplatRoute
   '/o/$code': typeof OCodeRoute
   '/$shop/': typeof ShopIndexRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/$shop/b/$code': typeof ShopBCodeRoute
   '/$shop/c/$slug': typeof ShopCSlugRoute
   '/$shop/p/$id': typeof ShopPIdRoute
+  '/admin/shops/$id': typeof AdminShopsIdRoute
   '/app/bags/$id': typeof AppBagsIdRoute
   '/app/bags/new': typeof AppBagsNewRoute
   '/app/collections/$id': typeof AppCollectionsIdRoute
@@ -323,7 +344,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/data-deletion': typeof DataDeletionRoute
   '/login': typeof LoginRoute
   '/onboard': typeof OnboardRoute
@@ -334,6 +354,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/$shop/$product': typeof ShopProductRoute
   '/$shop/checkout': typeof ShopCheckoutRoute
+  '/api/admin-export': typeof ApiAdminExportRoute
   '/api/e': typeof ApiERoute
   '/api/export': typeof ApiExportRoute
   '/api/photo': typeof ApiPhotoRoute
@@ -347,10 +368,12 @@ export interface FileRoutesByTo {
   '/img/$': typeof ImgSplatRoute
   '/o/$code': typeof OCodeRoute
   '/$shop': typeof ShopIndexRoute
+  '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/$shop/b/$code': typeof ShopBCodeRoute
   '/$shop/c/$slug': typeof ShopCSlugRoute
   '/$shop/p/$id': typeof ShopPIdRoute
+  '/admin/shops/$id': typeof AdminShopsIdRoute
   '/app/bags/$id': typeof AppBagsIdRoute
   '/app/bags/new': typeof AppBagsNewRoute
   '/app/collections/$id': typeof AppCollectionsIdRoute
@@ -369,8 +392,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$shop': typeof ShopRouteRouteWithChildren
+  '/admin': typeof AdminRouteRouteWithChildren
   '/app': typeof AppRouteRouteWithChildren
-  '/admin': typeof AdminRoute
   '/data-deletion': typeof DataDeletionRoute
   '/login': typeof LoginRoute
   '/onboard': typeof OnboardRoute
@@ -381,6 +404,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/$shop/$product': typeof ShopProductRoute
   '/$shop/checkout': typeof ShopCheckoutRoute
+  '/api/admin-export': typeof ApiAdminExportRoute
   '/api/e': typeof ApiERoute
   '/api/export': typeof ApiExportRoute
   '/api/photo': typeof ApiPhotoRoute
@@ -394,10 +418,12 @@ export interface FileRoutesById {
   '/img/$': typeof ImgSplatRoute
   '/o/$code': typeof OCodeRoute
   '/$shop/': typeof ShopIndexRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/$shop/b/$code': typeof ShopBCodeRoute
   '/$shop/c/$slug': typeof ShopCSlugRoute
   '/$shop/p/$id': typeof ShopPIdRoute
+  '/admin/shops/$id': typeof AdminShopsIdRoute
   '/app/bags/$id': typeof AppBagsIdRoute
   '/app/bags/new': typeof AppBagsNewRoute
   '/app/collections/$id': typeof AppCollectionsIdRoute
@@ -417,8 +443,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$shop'
-    | '/app'
     | '/admin'
+    | '/app'
     | '/data-deletion'
     | '/login'
     | '/onboard'
@@ -429,6 +455,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/$shop/$product'
     | '/$shop/checkout'
+    | '/api/admin-export'
     | '/api/e'
     | '/api/export'
     | '/api/photo'
@@ -442,10 +469,12 @@ export interface FileRouteTypes {
     | '/img/$'
     | '/o/$code'
     | '/$shop/'
+    | '/admin/'
     | '/app/'
     | '/$shop/b/$code'
     | '/$shop/c/$slug'
     | '/$shop/p/$id'
+    | '/admin/shops/$id'
     | '/app/bags/$id'
     | '/app/bags/new'
     | '/app/collections/$id'
@@ -462,7 +491,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/data-deletion'
     | '/login'
     | '/onboard'
@@ -473,6 +501,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/$shop/$product'
     | '/$shop/checkout'
+    | '/api/admin-export'
     | '/api/e'
     | '/api/export'
     | '/api/photo'
@@ -486,10 +515,12 @@ export interface FileRouteTypes {
     | '/img/$'
     | '/o/$code'
     | '/$shop'
+    | '/admin'
     | '/app'
     | '/$shop/b/$code'
     | '/$shop/c/$slug'
     | '/$shop/p/$id'
+    | '/admin/shops/$id'
     | '/app/bags/$id'
     | '/app/bags/new'
     | '/app/collections/$id'
@@ -507,8 +538,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$shop'
-    | '/app'
     | '/admin'
+    | '/app'
     | '/data-deletion'
     | '/login'
     | '/onboard'
@@ -519,6 +550,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/$shop/$product'
     | '/$shop/checkout'
+    | '/api/admin-export'
     | '/api/e'
     | '/api/export'
     | '/api/photo'
@@ -532,10 +564,12 @@ export interface FileRouteTypes {
     | '/img/$'
     | '/o/$code'
     | '/$shop/'
+    | '/admin/'
     | '/app/'
     | '/$shop/b/$code'
     | '/$shop/c/$slug'
     | '/$shop/p/$id'
+    | '/admin/shops/$id'
     | '/app/bags/$id'
     | '/app/bags/new'
     | '/app/collections/$id'
@@ -554,8 +588,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ShopRouteRoute: typeof ShopRouteRouteWithChildren
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AppRouteRoute: typeof AppRouteRouteWithChildren
-  AdminRoute: typeof AdminRoute
   DataDeletionRoute: typeof DataDeletionRoute
   LoginRoute: typeof LoginRoute
   OnboardRoute: typeof OnboardRoute
@@ -564,6 +598,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  ApiAdminExportRoute: typeof ApiAdminExportRoute
   ApiERoute: typeof ApiERoute
   ApiExportRoute: typeof ApiExportRoute
   ApiPhotoRoute: typeof ApiPhotoRoute
@@ -592,7 +627,7 @@ declare module '@tanstack/react-router' {
       id: '/admin'
       path: '/admin'
       fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
+      preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -678,6 +713,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/$shop/checkout'
       preLoaderRoute: typeof ShopCheckoutRouteImport
       parentRoute: typeof ShopRouteRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/api/admin-export': {
+      id: '/api/admin-export'
+      path: '/api/admin-export'
+      fullPath: '/api/admin-export'
+      preLoaderRoute: typeof ApiAdminExportRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/e': {
       id: '/api/e'
@@ -790,6 +839,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$shop/p/$id'
       preLoaderRoute: typeof ShopPIdRouteImport
       parentRoute: typeof ShopRouteRoute
+    }
+    '/admin/shops/$id': {
+      id: '/admin/shops/$id'
+      path: '/shops/$id'
+      fullPath: '/admin/shops/$id'
+      preLoaderRoute: typeof AdminShopsIdRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/app/bags/': {
       id: '/app/bags/'
@@ -907,6 +963,20 @@ const ShopRouteRouteWithChildren = ShopRouteRoute._addFileChildren(
   ShopRouteRouteChildren,
 )
 
+interface AdminRouteRouteChildren {
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminShopsIdRoute: typeof AdminShopsIdRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminIndexRoute: AdminIndexRoute,
+  AdminShopsIdRoute: AdminShopsIdRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
 interface AppRouteRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppDiscountsRoute: typeof AppDiscountsRoute
@@ -960,8 +1030,8 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ShopRouteRoute: ShopRouteRouteWithChildren,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
   AppRouteRoute: AppRouteRouteWithChildren,
-  AdminRoute: AdminRoute,
   DataDeletionRoute: DataDeletionRoute,
   LoginRoute: LoginRoute,
   OnboardRoute: OnboardRoute,
@@ -970,6 +1040,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  ApiAdminExportRoute: ApiAdminExportRoute,
   ApiERoute: ApiERoute,
   ApiExportRoute: ApiExportRoute,
   ApiPhotoRoute: ApiPhotoRoute,

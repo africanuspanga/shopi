@@ -2,7 +2,7 @@ import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server
 import { first, newId, now, run } from './db'
 
 const COOKIE = 'shopi_sid'
-const SESSION_DAYS = 60
+export const SESSION_DAYS = 60
 const ITERATIONS = 100_000
 
 const b64 = (buf: ArrayBuffer | Uint8Array) =>
