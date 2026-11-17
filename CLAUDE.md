@@ -297,6 +297,14 @@ domain are lowercase.
   page's `WaitingCard` gives a prefilled wa.me message per person and a check that deletes the alert, and Home shows
   "Back in stock, and buyers are waiting" once what they asked for can be bought (`getDashboard().backInStock`).
   Alerts are deleted when done and after 90 days at most (Privacy page), by the nightly job (below).
+- Setup and a new shop's Home (17 Nov, the founder's OK on the onboarding review): "Name your shop" opens with a welcome
+  ("Welcome, {first name}. A name and a link, and your shop is open."); the note that the link never changes sits under
+  the link field. One category chip, "Clothes and fashion" (id `fashion`), replaced Fashion and Clothes. Step 3 asks only
+  where the shop is and its socials; the TIN and Google Maps link are in Shop settings only. Home shows one thing at a
+  time: no products yet, a large "Add your first product" card (then the trial row) and nothing else; once there is a
+  product, the notifications offer, the setup checklist and "Your shop is ready for its first order" (the link, Copy,
+  Share); the numbers, charts, best sellers and latest orders appear with the first order (`getDashboard().recent`).
+  The five-step setup (`o-flow`, decision n1) replaces the screens themselves later.
 - Setup's "Your Instagram, TikTok or WhatsApp link" (`src/lib/social.ts`, `readSocialLink`): a pasted profile link fills
   a first shop name and link (`nameFromHandle`), that social handle (saved by `createShop` and shown again in step 3), or
   the WhatsApp number. Nothing is fetched from Meta; only a TikTok short link (vm.tiktok.com) is opened on the server

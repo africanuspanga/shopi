@@ -139,9 +139,10 @@ export function timeAgo(ms: number, lang: Lang) {
 }
 
 export const CATEGORIES: { id: string; label: string }[] = [
-  { id: 'fashion', label: msg('Fashion') },
+  // "Fashion" and "Clothes" were two chips (Mitindo, Nguo) that sellers could not tell apart; one since 17 Nov 2026.
+  // No live shop had 'clothes'. The id stays 'fashion' so existing shops keep theirs.
+  { id: 'fashion', label: msg('Clothes and fashion') },
   { id: 'shoes', label: msg('Shoes') },
-  { id: 'clothes', label: msg('Clothes') },
   { id: 'electronics', label: msg('Electronics') },
   { id: 'food', label: msg('Food') },
   { id: 'cosmetics', label: msg('Cosmetics') },

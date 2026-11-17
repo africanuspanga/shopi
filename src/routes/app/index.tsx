@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, ReceiptText, Share2 } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, FileSpreadsheet, Plus, ReceiptText, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Delta, Empty, Img, LangSwitch, Money, Page, PhoneBar, ShopAvatar, StatusPill, Toast, scrubIndex, useEntrance } from '#/components/ui'
 import { PhoneAlertsCard } from '#/components/phone-app'
@@ -40,12 +40,26 @@ function Dashboard() {
     { done: d.setup.logo, label: t('Add a shop logo'), to: '/app/shop' },
   ]
   const setupDone = setupSteps.filter((s) => s.done).length
+  // A new shop sees one thing at a time (17 Nov): its first product, then the rest of setup and its link. The numbers,
+  // charts and the notifications offer wait for what makes them mean something: a product, then a first order.
+  const hasProducts = d.setup.products
+  const hasOrders = d.recent.length > 0
   const vs7 = t('vs the 7 days before')
 
   async function share() {
     if ((await shareLink(url, shop.name)) === 'copied') {
       setCopied(true)
       setTimeout(() => setCopied(false), 1800)
+    }
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    } catch {
+      window.prompt('', url)
     }
   }
 
@@ -83,8 +97,17 @@ function Dashboard() {
         </button>
       </header>
 
-      <PlanRow plan={d.plan} />
-      <PhoneAlertsCard />
+      {hasProducts ? (
+        <>
+          <PlanRow plan={d.plan} />
+          <PhoneAlertsCard />
+        </>
+      ) : (
+        <>
+          <FirstProductCard className={rise} />
+          <PlanRow plan={d.plan} />
+        </>
+      )}
 
       {d.backInStock.length > 0 && (
         <section className={`${rise} card mt-6 overflow-hidden md:mt-8`}>
@@ -110,7 +133,7 @@ function Dashboard() {
         </section>
       )}
 
-      {setupDone < setupSteps.length && (
+      {hasProducts && setupDone < setupSteps.length && (
         <section className={`${rise} card mt-6 p-5 md:mt-8 md:p-6`}>
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -142,191 +165,202 @@ function Dashboard() {
         </section>
       )}
 
-      <div className="mt-6 grid gap-4 md:mt-8 lg:grid-cols-12">
-        {/* Today: the one dark card */}
-        <section className={`${rise} relative flex min-h-[220px] flex-col overflow-hidden rounded-[24px] bg-ink p-6 text-white md:p-7 lg:col-span-5`}>
-          <p className="text-[14px] text-white/60">{t('Sales today')}</p>
-          <p className="mt-3 text-[44px] leading-none font-semibold tracking-[-0.04em] [font-stretch:108%] md:text-[56px]">
-            <Money value={d.today.total} cur="text-[0.36em] text-white/50 tracking-normal" />
-          </p>
-          <p className="mt-3 text-[14px] text-white/60">
-            {t(d.today.orders === 1 ? '{n} order today' : '{n} orders today', { n: d.today.orders })}
-            {yesterday > 0 && (
-              <>
-                {' · '}
-                <span className="text-white">
-                  {d.today.total >= yesterday ? '↑' : '↓'} {Math.abs(Math.round(((d.today.total - yesterday) / yesterday) * 100))}%
-                </span>{' '}
-                {t('vs yesterday')}
-              </>
+      {hasProducts && !hasOrders && (
+        <section className={`${rise2} card mt-6 p-6 md:mt-8 md:flex md:items-end md:justify-between md:gap-10 md:p-7`}>
+          <div className="min-w-0">
+            <h2 className="text-[16px] font-semibold">{t('Your shop is ready for its first order')}</h2>
+            <p className="mt-1 max-w-[52ch] text-[14px] leading-relaxed text-muted">
+              {t('Put your link in your Instagram bio and on your WhatsApp status. Your first order shows up here.')}
+            </p>
+            <p className="code mt-4 truncate text-[17px]">shopi.tz/{shop.slug}</p>
+            {d.visits.shop > 0 && <p className="meta mt-1">{t('{n} visits', { n: n(d.visits.shop) })} · {t('Last 7 days')}</p>}
+          </div>
+          <div className="mt-5 flex gap-2 md:mt-0 md:w-[300px] md:shrink-0">
+            <button type="button" className="btn btn-quiet flex-1" onClick={copyLink}>
+              <Copy size={16} strokeWidth={1.6} /> {t('Copy')}
+            </button>
+            <button type="button" className="btn flex-1" onClick={share}>
+              <Share2 size={16} strokeWidth={1.6} /> {t('Share')}
+            </button>
+          </div>
+        </section>
+      )}
+
+      {hasOrders && (
+        <div className="mt-6 grid gap-4 md:mt-8 lg:grid-cols-12">
+          {/* Today: the one dark card */}
+          <section className={`${rise} relative flex min-h-[220px] flex-col overflow-hidden rounded-[24px] bg-ink p-6 text-white md:p-7 lg:col-span-5`}>
+            <p className="text-[14px] text-white/60">{t('Sales today')}</p>
+            <p className="mt-3 text-[44px] leading-none font-semibold tracking-[-0.04em] [font-stretch:108%] md:text-[56px]">
+              <Money value={d.today.total} cur="text-[0.36em] text-white/50 tracking-normal" />
+            </p>
+            <p className="mt-3 text-[14px] text-white/60">
+              {t(d.today.orders === 1 ? '{n} order today' : '{n} orders today', { n: d.today.orders })}
+              {yesterday > 0 && (
+                <>
+                  {' · '}
+                  <span className="text-white">
+                    {d.today.total >= yesterday ? '↑' : '↓'} {Math.abs(Math.round(((d.today.total - yesterday) / yesterday) * 100))}%
+                  </span>{' '}
+                  {t('vs yesterday')}
+                </>
+              )}
+            </p>
+            <div className="mt-auto flex items-end justify-between gap-4 border-t border-white/10 pt-5">
+              <div>
+                <p className="text-[13px] text-white/50">{t('Last 7 days')}</p>
+                <p className="mt-1 text-[17px] font-medium">{tzs(d.sales.total)}</p>
+              </div>
+              <WeekBars days={d.days} />
+            </div>
+          </section>
+
+          {/* What needs the seller now */}
+          <section className={`${rise2} card flex flex-col p-2 lg:col-span-4`}>
+            <h2 className="px-4 pt-3 pb-2 text-[15px] font-semibold">{t('Needs you')}</h2>
+            <TodoRow f="check" signal={d.queue.toConfirm > 0} count={d.queue.toConfirm} label={t('Payments to check')} sub={t('Buyers sent proof')} />
+            <TodoRow f="send" count={d.queue.toSend} label={t('Orders to send')} sub={t('Paid and confirmed')} />
+            <TodoRow f="way" count={d.queue.onTheWay} label={t('On the way')} sub={t('With your rider')} />
+          </section>
+
+          {/* Shop link */}
+          <section className={`${rise3} card flex flex-col p-6 lg:col-span-3`}>
+            <h2 className="text-[15px] font-semibold">{t('Your shop link')}</h2>
+            <p className="code mt-3 truncate text-[17px]">shopi.tz/{shop.slug}</p>
+            <dl className="mt-auto grid grid-cols-2 gap-3 pt-6">
+              <div>
+                <dt className="text-[13px] text-muted">{t('Visits')}</dt>
+                <dd className="tnum mt-0.5 text-[20px] font-semibold tracking-[-0.02em]">{n(d.visits.shop)}</dd>
+              </div>
+              <div>
+                <dt className="text-[13px] text-muted">{t('Shares')}</dt>
+                <dd className="tnum mt-0.5 text-[20px] font-semibold tracking-[-0.02em]">{n(d.visits.share)}</dd>
+              </div>
+            </dl>
+            <p className="meta mt-1">{t('Last 7 days')}</p>
+            <div className="mt-4 flex gap-2">
+              <button type="button" className="btn btn-quiet btn-sm flex-1" onClick={copyLink}>
+                <Copy size={15} strokeWidth={1.6} /> {t('Copy')}
+              </button>
+              <button type="button" className="btn btn-sm flex-1" onClick={share}>
+                <Share2 size={15} strokeWidth={1.6} /> {t('Share')}
+              </button>
+            </div>
+          </section>
+
+          {/* Last 7 days */}
+          <div className="-mb-1 flex items-baseline justify-between px-1 pt-2 lg:col-span-12">
+            <h2 className="text-[15px] font-semibold">{t('Last 7 days')}</h2>
+            <Link to="/app/analytics" className="-my-2 flex items-center gap-1 py-2 text-[13px] text-muted transition-colors hover:text-ink">
+              {t('All numbers')} <ArrowRight size={14} strokeWidth={1.75} />
+            </Link>
+          </div>
+          <section className="card grid grid-cols-2 lg:col-span-12 lg:grid-cols-4">
+            <Stat label={t('Sales')} value={<Money value={d.sales.total} cur="text-[0.62em] text-muted" />} foot={<Delta now={d.sales.total} before={d.prev.total} label={vs7} />} className="border-r border-b border-line lg:border-b-0" />
+            <Stat label={t('Orders')} value={n(d.counts.all)} foot={<Delta now={d.counts.all} before={d.prev.orders} label={vs7} />} className="border-b border-line lg:border-r lg:border-b-0" />
+            <Stat label={t('Shop visits')} value={n(d.visits.shop)} foot={<Delta now={d.visits.shop} before={d.prev.visits} label={vs7} />} className="border-r border-line" />
+            <Stat label={t('Visits that ordered')} value={`${conversion}%`} foot={<Delta now={conversion} before={prevConversion} label={vs7} />} />
+          </section>
+
+          <SalesChart days={d.days} total={d.sales.total} className="lg:col-span-8" />
+
+          <section className="card p-6 lg:col-span-4">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-[15px] font-semibold">{t('Best sellers')}</h2>
+              <Link to="/app/products" className="-my-2 flex items-center gap-1 py-2 text-[13px] text-muted transition-colors hover:text-ink">
+                {t('All products')}
+              </Link>
+            </div>
+            {d.top.length === 0 ? (
+              <p className="mt-4 text-[14px] text-muted">{t('Your products will rank here once they get views and orders.')}</p>
+            ) : (
+              <ol className="mt-4 space-y-4">
+                {d.top.slice(0, 5).map((p, i) => {
+                  const max = Math.max(...d.top.map((x) => x.sold), 1)
+                  return (
+                    <li key={p.id}>
+                      <Link to="/app/products/$id" params={{ id: p.id }} className="group flex items-center gap-3">
+                        <span className="tnum w-3 shrink-0 text-[13px] text-muted">{i + 1}</span>
+                        <Img size="thumb" k={p.image} alt={p.name} className="h-11 w-11 shrink-0 rounded-[10px]" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <p className="truncate text-[14px] font-medium group-hover:underline group-hover:decoration-line-strong group-hover:underline-offset-4">{p.name}</p>
+                            <p className="tnum shrink-0 text-[14px] font-medium">{n(p.sold)}</p>
+                          </div>
+                          <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-well">
+                            <div className="h-full rounded-full bg-ink" style={{ width: `${(p.sold / max) * 100}%` }} />
+                          </div>
+                          <p className="meta mt-1.5">
+                            {t('{n} views', { n: compact(p.views) })} · {t('{n} shares', { n: compact(p.shares) })}
+                          </p>
+                        </div>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ol>
             )}
-          </p>
-          <div className="mt-auto flex items-end justify-between gap-4 border-t border-white/10 pt-5">
-            <div>
-              <p className="text-[13px] text-white/50">{t('Last 7 days')}</p>
-              <p className="mt-1 text-[17px] font-medium">{tzs(d.sales.total)}</p>
+          </section>
+
+          <section className="card overflow-hidden lg:col-span-12">
+            <div className="flex items-baseline justify-between px-6 pt-5 pb-3">
+              <h2 className="text-[15px] font-semibold">{t('Latest orders')}</h2>
+              <Link to="/app/orders" className="-my-2 flex items-center gap-1 py-2 text-[13px] text-muted transition-colors hover:text-ink">
+                {t('All orders')} <ArrowRight size={14} strokeWidth={1.75} />
+              </Link>
             </div>
-            <WeekBars days={d.days} />
-          </div>
-        </section>
-
-        {/* What needs the seller now */}
-        <section className={`${rise2} card flex flex-col p-2 lg:col-span-4`}>
-          <h2 className="px-4 pt-3 pb-2 text-[15px] font-semibold">{t('Needs you')}</h2>
-          <TodoRow f="check" signal={d.queue.toConfirm > 0} count={d.queue.toConfirm} label={t('Payments to check')} sub={t('Buyers sent proof')} />
-          <TodoRow f="send" count={d.queue.toSend} label={t('Orders to send')} sub={t('Paid and confirmed')} />
-          <TodoRow f="way" count={d.queue.onTheWay} label={t('On the way')} sub={t('With your rider')} />
-        </section>
-
-        {/* Shop link */}
-        <section className={`${rise3} card flex flex-col p-6 lg:col-span-3`}>
-          <h2 className="text-[15px] font-semibold">{t('Your shop link')}</h2>
-          <p className="code mt-3 truncate text-[17px]">shopi.tz/{shop.slug}</p>
-          <dl className="mt-auto grid grid-cols-2 gap-3 pt-6">
-            <div>
-              <dt className="text-[13px] text-muted">{t('Visits')}</dt>
-              <dd className="tnum mt-0.5 text-[20px] font-semibold tracking-[-0.02em]">{n(d.visits.shop)}</dd>
-            </div>
-            <div>
-              <dt className="text-[13px] text-muted">{t('Shares')}</dt>
-              <dd className="tnum mt-0.5 text-[20px] font-semibold tracking-[-0.02em]">{n(d.visits.share)}</dd>
-            </div>
-          </dl>
-          <p className="meta mt-1">{t('Last 7 days')}</p>
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              className="btn btn-quiet btn-sm flex-1"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(url)
-                  setCopied(true)
-                  setTimeout(() => setCopied(false), 1800)
-                } catch {
-                  window.prompt('', url)
-                }
-              }}
-            >
-              <Copy size={15} strokeWidth={1.6} /> {t('Copy')}
-            </button>
-            <button type="button" className="btn btn-sm flex-1" onClick={share}>
-              <Share2 size={15} strokeWidth={1.6} /> {t('Share')}
-            </button>
-          </div>
-        </section>
-
-        {/* Last 7 days */}
-        <div className="-mb-1 flex items-baseline justify-between px-1 pt-2 lg:col-span-12">
-          <h2 className="text-[15px] font-semibold">{t('Last 7 days')}</h2>
-          <Link to="/app/analytics" className="-my-2 flex items-center gap-1 py-2 text-[13px] text-muted transition-colors hover:text-ink">
-            {t('All numbers')} <ArrowRight size={14} strokeWidth={1.75} />
-          </Link>
-        </div>
-        <section className="card grid grid-cols-2 lg:col-span-12 lg:grid-cols-4">
-          <Stat label={t('Sales')} value={<Money value={d.sales.total} cur="text-[0.62em] text-muted" />} foot={<Delta now={d.sales.total} before={d.prev.total} label={vs7} />} className="border-r border-b border-line lg:border-b-0" />
-          <Stat label={t('Orders')} value={n(d.counts.all)} foot={<Delta now={d.counts.all} before={d.prev.orders} label={vs7} />} className="border-b border-line lg:border-r lg:border-b-0" />
-          <Stat label={t('Shop visits')} value={n(d.visits.shop)} foot={<Delta now={d.visits.shop} before={d.prev.visits} label={vs7} />} className="border-r border-line" />
-          <Stat label={t('Visits that ordered')} value={`${conversion}%`} foot={<Delta now={conversion} before={prevConversion} label={vs7} />} />
-        </section>
-
-        <SalesChart days={d.days} total={d.sales.total} className="lg:col-span-8" />
-
-        <section className="card p-6 lg:col-span-4">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-[15px] font-semibold">{t('Best sellers')}</h2>
-            <Link to="/app/products" className="-my-2 flex items-center gap-1 py-2 text-[13px] text-muted transition-colors hover:text-ink">
-              {t('All products')}
-            </Link>
-          </div>
-          {d.top.length === 0 ? (
-            <p className="mt-4 text-[14px] text-muted">{t('Your products will rank here once they get views and orders.')}</p>
-          ) : (
-            <ol className="mt-4 space-y-4">
-              {d.top.slice(0, 5).map((p, i) => {
-                const max = Math.max(...d.top.map((x) => x.sold), 1)
-                return (
-                  <li key={p.id}>
-                    <Link to="/app/products/$id" params={{ id: p.id }} className="group flex items-center gap-3">
-                      <span className="tnum w-3 shrink-0 text-[13px] text-muted">{i + 1}</span>
-                      <Img size="thumb" k={p.image} alt={p.name} className="h-11 w-11 shrink-0 rounded-[10px]" />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <p className="truncate text-[14px] font-medium group-hover:underline group-hover:decoration-line-strong group-hover:underline-offset-4">{p.name}</p>
-                          <p className="tnum shrink-0 text-[14px] font-medium">{n(p.sold)}</p>
-                        </div>
-                        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-well">
-                          <div className="h-full rounded-full bg-ink" style={{ width: `${(p.sold / max) * 100}%` }} />
-                        </div>
-                        <p className="meta mt-1.5">
-                          {t('{n} views', { n: compact(p.views) })} · {t('{n} shares', { n: compact(p.shares) })}
-                        </p>
+            {d.recent.length === 0 ? (
+              <div className="px-6 pb-6">
+                <Empty
+                  icon={<ReceiptText size={20} strokeWidth={1.5} />}
+                  title={t('No orders yet')}
+                  body={t('Share your link on Instagram and your WhatsApp status. New orders show up here.')}
+                  action={
+                    <button type="button" className="btn btn-sm" onClick={share}>
+                      <Share2 size={15} strokeWidth={1.6} /> {t('Share your link')}
+                    </button>
+                  }
+                />
+              </div>
+            ) : (
+              <div className="divide-y divide-line border-t border-line">
+                {d.recent.map((o) => (
+                  <Link
+                    key={o.id}
+                    to="/app/orders/$id"
+                    params={{ id: o.id }}
+                    className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-x-3 px-6 py-3 transition-colors hover:bg-page md:grid-cols-[44px_minmax(0,1.4fr)_minmax(0,1fr)_140px_120px] md:gap-x-6"
+                  >
+                    <Img size="thumb" k={o.image} alt="" className="h-11 w-11 rounded-[10px]" />
+                    {/* Phone: name and total, then status and time, so the name keeps its room. */}
+                    <div className="min-w-0 md:hidden">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="min-w-0 truncate text-[14px] font-medium">{o.customer_name || t('Sale recorded by you')}</p>
+                        <p className="tnum shrink-0 text-[14px] font-medium">{tzs(o.total)}</p>
                       </div>
-                    </Link>
-                  </li>
-                )
-              })}
-            </ol>
-          )}
-        </section>
-
-        <section className="card overflow-hidden lg:col-span-12">
-          <div className="flex items-baseline justify-between px-6 pt-5 pb-3">
-            <h2 className="text-[15px] font-semibold">{t('Latest orders')}</h2>
-            <Link to="/app/orders" className="-my-2 flex items-center gap-1 py-2 text-[13px] text-muted transition-colors hover:text-ink">
-              {t('All orders')} <ArrowRight size={14} strokeWidth={1.75} />
-            </Link>
-          </div>
-          {d.recent.length === 0 ? (
-            <div className="px-6 pb-6">
-              <Empty
-                icon={<ReceiptText size={20} strokeWidth={1.5} />}
-                title={t('No orders yet')}
-                body={t('Share your link on Instagram and your WhatsApp status. New orders show up here.')}
-                action={
-                  <button type="button" className="btn btn-sm" onClick={share}>
-                    <Share2 size={15} strokeWidth={1.6} /> {t('Share your link')}
-                  </button>
-                }
-              />
-            </div>
-          ) : (
-            <div className="divide-y divide-line border-t border-line">
-              {d.recent.map((o) => (
-                <Link
-                  key={o.id}
-                  to="/app/orders/$id"
-                  params={{ id: o.id }}
-                  className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-x-3 px-6 py-3 transition-colors hover:bg-page md:grid-cols-[44px_minmax(0,1.4fr)_minmax(0,1fr)_140px_120px] md:gap-x-6"
-                >
-                  <Img size="thumb" k={o.image} alt="" className="h-11 w-11 rounded-[10px]" />
-                  {/* Phone: name and total, then status and time, so the name keeps its room. */}
-                  <div className="min-w-0 md:hidden">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="min-w-0 truncate text-[14px] font-medium">{o.customer_name || t('Sale recorded by you')}</p>
-                      <p className="tnum shrink-0 text-[14px] font-medium">{tzs(o.total)}</p>
+                      <div className="flex h-6 items-center justify-between gap-3">
+                        <StatusPill status={o.status} />
+                        <p className="meta shrink-0">{timeAgo(o.created_at, lang)}</p>
+                      </div>
                     </div>
-                    <div className="flex h-6 items-center justify-between gap-3">
+                    <div className="hidden min-w-0 md:block">
+                      <p className="truncate text-[14px] font-medium">{o.customer_name || t('Sale recorded by you')}</p>
+                      <p className="meta mt-0.5 truncate">
+                        #{o.code} · {timeAgo(o.created_at, lang)}
+                      </p>
+                    </div>
+                    <p className="hidden truncate text-[14px] text-ink-2 md:block">{t(o.items === 1 ? '{n} item' : '{n} items', { n: o.items })}</p>
+                    <div className="hidden md:block">
                       <StatusPill status={o.status} />
-                      <p className="meta shrink-0">{timeAgo(o.created_at, lang)}</p>
                     </div>
-                  </div>
-                  <div className="hidden min-w-0 md:block">
-                    <p className="truncate text-[14px] font-medium">{o.customer_name || t('Sale recorded by you')}</p>
-                    <p className="meta mt-0.5 truncate">
-                      #{o.code} · {timeAgo(o.created_at, lang)}
-                    </p>
-                  </div>
-                  <p className="hidden truncate text-[14px] text-ink-2 md:block">{t(o.items === 1 ? '{n} item' : '{n} items', { n: o.items })}</p>
-                  <div className="hidden md:block">
-                    <StatusPill status={o.status} />
-                  </div>
-                  <p className="tnum hidden text-right text-[14px] font-medium md:block">{tzs(o.total)}</p>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
+                    <p className="tnum hidden text-right text-[14px] font-medium md:block">{tzs(o.total)}</p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
       <Toast show={copied}>{t('Link copied')}</Toast>
     </Page>
   )
@@ -454,6 +488,39 @@ function SalesChart({ days, total, className = '' }: { days: { day: number; tota
 }
 
 /** One quiet line about the plan: trial days left, or that the trial or plan has ended. Paid plans stay quiet until the last month. */
+/** A shop with no products yet: the one thing to do, large, before anything else on Home. */
+function FirstProductCard({ className = '' }: { className?: string }) {
+  const t = useT()
+  return (
+    <section className={`${className} card p-6 md:flex md:items-center md:gap-10 md:p-8`}>
+      <div className="min-w-0 flex-1">
+        <h2 className="title text-[26px] md:text-[32px]">{t('Add your first product')}</h2>
+        <p className="mt-2 max-w-[44ch] text-[15px] leading-relaxed text-ink-2">{t('A photo, a name and a price. Buyers can order it the moment you save it.')}</p>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+          <Link to="/app/products/new" className="btn btn-lg">
+            <Plus size={18} strokeWidth={2} /> {t('Add product')}
+          </Link>
+          <Link to="/app/products/import" className="btn btn-ghost btn-lg">
+            <FileSpreadsheet size={17} strokeWidth={1.75} /> {t('Import from a sheet')}
+          </Link>
+        </div>
+      </div>
+      {/* The empty product tile sellers will see on Products, as a picture of what comes next (desktop only). */}
+      <Link
+        to="/app/products/new"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="group hidden aspect-[4/5] w-[200px] shrink-0 flex-col items-center justify-center gap-3 rounded-[16px] border border-dashed border-line-strong text-center transition-colors hover:border-ink md:flex"
+      >
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ink text-white transition-transform group-active:scale-95">
+          <Plus size={20} strokeWidth={2} />
+        </span>
+        <span className="px-4 text-[13px] text-muted">{t('Photo, price, sizes')}</span>
+      </Link>
+    </section>
+  )
+}
+
 function PlanRow({ plan }: { plan: PlanState | null }) {
   const rise = useEntrance()
   const t = useT()

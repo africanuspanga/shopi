@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { AuthLayout, StepBar } from '#/components/auth'
 import { ErrorText, Field, ShopAvatar, ShopLangChoice } from '#/components/ui'
 import { checkSlug, createShop, expandSocialLink, saveShopBasics } from '#/lib/api/merchant'
-import { CATEGORIES, mapsLink, normalizePhone, slugify, tinDigits } from '#/lib/format'
+import { CATEGORIES, normalizePhone, slugify } from '#/lib/format'
 import { useLang, useT, type Lang } from '#/lib/i18n'
 import { logout, setLang } from '#/lib/api/session'
 import { nameFromHandle, readSocialLink, type SocialFind } from '#/lib/social'
@@ -22,6 +22,7 @@ function Onboard() {
   const t = useT()
   const router = useRouter()
   const { session } = Route.useRouteContext()
+  const firstName = (session.user?.name ?? '').trim().split(/\s+/)[0]
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [slugTouched, setSlugTouched] = useState(false)
@@ -145,7 +146,9 @@ function Onboard() {
     <AuthLayout topRight={leave} aside={<ShopPreview name={name} slug={slug} category={categoryLabel} />}>
       <StepBar step={2} of={3} />
       <h1 className="title mt-6 text-[32px] md:text-[38px]">{t('Name your shop')}</h1>
-      <p className="mt-2 text-[15px] text-muted">{t('Choose the link with care: it stays the same, so the places you share it keep working.')}</p>
+      <p className="mt-2 text-[15px] text-muted">
+        {firstName ? t('Welcome, {name}. A name and a link, and your shop is open.', { name: firstName }) : t('A name and a link, and your shop is open.')}
+      </p>
 
       <div className="mt-6 flex items-center gap-3 rounded-[18px] bg-card p-3 shadow-[inset_0_0_0_1px_var(--color-line)] lg:hidden">
         <ShopAvatar name={name || 'S'} logo={null} className="h-11 w-11 text-[15px]" />
@@ -200,7 +203,15 @@ function Onboard() {
         <Field label={t('Shop name')}>
           <input className="input" placeholder="Zuri Fashion" value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
-        <Field label={t('Shop link')} hint={status}>
+        <Field
+          label={t('Shop link')}
+          hint={
+            <>
+              {status}
+              <span className="mt-1 block text-muted">{t('It stays the same, so the links you share keep working.')}</span>
+            </>
+          }
+        >
           <span className={`input flex items-center ${free === false && !checking && slug.length >= 3 ? 'shadow-[inset_0_0_0_1.5px_var(--color-bad)]' : ''}`}>
             <span className="text-muted">shopi.tz/</span>
             <input
@@ -238,10 +249,13 @@ function Onboard() {
   )
 }
 
-/** Step 3, optional: where buyers find the shop, and its socials. "Skip for now" leaves everything for Shop settings. */
+/**
+ * Step 3, optional: where the shop is, and its socials. "Skip for now" leaves everything for Shop settings. The TIN and the
+ * Google Maps link were asked here until 17 Nov; they felt like paperwork two minutes in, so they live in Shop settings only.
+ */
 function BasicsStep({ onDone, initial }: { onDone: () => Promise<void>; initial: { instagram: string; tiktok: string; facebook: string } }) {
   const t = useT()
-  const [f, setF] = useState({ location: '', maps_url: '', tin: '', ...initial })
+  const [f, setF] = useState({ location: '', ...initial })
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value })
@@ -260,26 +274,18 @@ function BasicsStep({ onDone, initial }: { onDone: () => Promise<void>; initial:
         className="mt-6 space-y-5"
         onSubmit={async (e) => {
           e.preventDefault()
-          if (tinDigits(f.tin) === null) return setError(t('A TIN has 9 digits, like 123-456-789.'))
-          if (mapsLink(f.maps_url) === null) return setError(t('That isn’t a Google Maps link. In Google Maps, find your shop, tap Share and copy the link.'))
           setBusy(true)
           setError('')
           const res = await saveShopBasics({ data: f })
           if ('error' in res) {
             setBusy(false)
-            return setError(res.error === 'tin' ? t('A TIN has 9 digits, like 123-456-789.') : t('That isn’t a Google Maps link. In Google Maps, find your shop, tap Share and copy the link.'))
+            return setError(t('Something went wrong. Try again.'))
           }
           await onDone()
         }}
       >
         <Field label={t('Where you are')} aside={t('Optional')} hint={t('A street or a landmark buyers know')}>
           <input className="input" value={f.location} onChange={set('location')} placeholder={t('e.g. Kariakoo, Mtaa wa Congo')} />
-        </Field>
-        <Field label={t('Google Maps link')} aside={t('Optional')} hint={t('In Google Maps, find your shop, tap Share and paste the link. Buyers get directions.')}>
-          <input className="input" value={f.maps_url} onChange={set('maps_url')} placeholder="https://maps.app.goo.gl/…" inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
-        </Field>
-        <Field label={t('TIN (TRA)')} aside={t('Optional')} hint={t('The 9-digit number from TRA. Shown in your shop’s info and on receipts.')}>
-          <input className="input tnum" value={f.tin} onChange={set('tin')} placeholder="123-456-789" inputMode="numeric" maxLength={11} />
         </Field>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Instagram" aside={t('Optional')}>{handle('instagram')}</Field>
