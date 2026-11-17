@@ -75,7 +75,7 @@ export const getStorefront = createServerFn({ method: 'GET' })
     const [shopRows, productRows, areaRows, discountRows, collectionRows, memberRows] = await db().batch([
       q(`SELECT ${SHOP_COLS} FROM shops WHERE slug = ?1 AND status IN ('active', 'demo')`),
       q(
-        `SELECT id, slug, name, description, price, compare_price, stock, sizes, option_name, images, created_at FROM products
+        `SELECT id, slug, name, description, price, compare_price, stock, sizes, option_name, images, created_at, pick_rank FROM products
          WHERE shop_id = ${shopId} AND active = 1 ORDER BY created_at DESC`,
       ),
       q(`SELECT id, name, fee FROM delivery_areas WHERE shop_id = ${shopId} ORDER BY sort`),
@@ -88,7 +88,7 @@ export const getStorefront = createServerFn({ method: 'GET' })
     ])
     const shop = (shopRows.results[0] as PublicShop | undefined) ?? null
     if (!shop) return null
-    const products = productRows.results as (Omit<PublicProduct, 'images' | 'sizes'> & { images: string; sizes: string | null })[]
+    const products = productRows.results as (Omit<PublicProduct, 'images' | 'sizes'> & { images: string; sizes: string | null; pick_rank: number | null })[]
     const areas = areaRows.results as { id: string; name: string; fee: number }[]
     const discount = discountRows.results[0]
     const collections = collectionRows.results as Omit<PublicCollection, 'productIds'>[]
@@ -105,7 +105,12 @@ export const getStorefront = createServerFn({ method: 'GET' })
       ),
       /** The plan ended: the shop "takes a break". Its page stays up with WhatsApp; orders are refused. */
       paused: BILLING_LIVE && (await shopPlan(shop.id))?.kind === 'ended',
-      products: products.map((p) => ({ ...p, images: JSON.parse(p.images) as string[], sizes: parseSizes(p.sizes) })),
+      /** The seller's top picks that buyers can see, as product ids in the seller's order (the shop shows those in stock). */
+      picks: products
+        .filter((p) => p.pick_rank != null)
+        .sort((a, b) => a.pick_rank! - b.pick_rank!)
+        .map((p) => p.id),
+      products: products.map(({ pick_rank: _rank, ...p }): PublicProduct => ({ ...p, images: JSON.parse(p.images) as string[], sizes: parseSizes(p.sizes) })),
       // Link previews (WhatsApp, Instagram) need absolute image URLs.
       origin: getRequestUrl().origin,
     }

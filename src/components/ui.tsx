@@ -328,15 +328,27 @@ export function Field({ label, children, hint, aside }: { label: string; childre
 }
 
 /** A yes/no setting as a full row. */
-export function Switch({ label, sub, checked, onChange }: { label: string; sub?: string; checked: boolean; onChange: (v: boolean) => void }) {
+export function Switch({
+  label,
+  sub,
+  checked,
+  onChange,
+  disabled = false,
+}: {
+  label: string
+  sub?: string
+  checked: boolean
+  onChange: (v: boolean) => void
+  disabled?: boolean
+}) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-4 py-1">
+    <label className={`flex items-center justify-between gap-4 py-1 ${disabled ? 'cursor-default' : 'cursor-pointer'}`}>
       <span className="min-w-0">
-        <span className="block text-[15px] font-medium">{label}</span>
+        <span className={`block text-[15px] font-medium ${disabled ? 'text-muted' : ''}`}>{label}</span>
         {sub && <span className="mt-0.5 block text-[13px] text-muted">{sub}</span>}
       </span>
-      <span className="relative inline-flex shrink-0">
-        <input type="checkbox" className="peer sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span className={`relative inline-flex shrink-0 ${disabled ? 'opacity-50' : ''}`}>
+        <input type="checkbox" className="peer sr-only" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
         <span className="h-7 w-12 rounded-full bg-raised transition-colors duration-200 peer-checked:bg-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink" />
         <span className="absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgb(10_10_10/0.2)] transition-transform duration-200 ease-[var(--ease-out)] peer-checked:translate-x-5" />
       </span>

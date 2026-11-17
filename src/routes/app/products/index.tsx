@@ -2,6 +2,7 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { FileSpreadsheet, Layers, Plus, Search, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import { Tag } from '#/components/shop'
+import { TopPicksCard } from '#/components/picks'
 import { ShareActions, prettyUrl } from '#/components/share'
 import { Chips, Img, Page, Sheet, TopBar } from '#/components/ui'
 import { listMyProducts, type ProductRow } from '#/lib/api/merchant'
@@ -59,6 +60,8 @@ function Products() {
           </>
         }
       />
+
+      {products.length >= 2 && <TopPicksCard products={products} />}
 
       {products.length > 0 && (
         <Chips

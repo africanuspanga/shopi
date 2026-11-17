@@ -522,6 +522,7 @@ function Use({ d }: { d: OwnerSection<'use'> }) {
     ['socials', t('Social links')],
     ['options', t('Sizes or other options')],
     ['collections', t('Collections')],
+    ['picks', t('Top picks')],
     ['discounts', t('Discount codes')],
     ['discount_used', t('A discount code used on an order')],
     ['bags', t('Bag links')],
@@ -539,6 +540,7 @@ function Use({ d }: { d: OwnerSection<'use'> }) {
     ['tin', 'TIN'],
   ]
   const tap: Record<string, string> = {
+    'view_product:pick': t('Opened from Top picks'),
     'add_to_cart:quick': t('Added to bag, quick add'),
     'add_to_cart:page': t('Added to bag, product page'),
     add_to_cart: t('Added to bag'),

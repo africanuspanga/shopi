@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppMark } from '#/components/brand-icons'
 import { Img, Sheet, ShopAvatar, Toast, Wordmark } from '#/components/ui'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
-import { track } from '#/lib/analytics'
+import { openedFrom, track } from '#/lib/analytics'
 import { lineKey, type Cart } from '#/lib/cart'
 import { OPTION_KINDS, imageOf, optionKind, optionText, priceOf, priceSpan, tzs, waLink, formatTin, type Size } from '#/lib/format'
 import { SHOPI_ORIGIN } from '#/lib/host'
@@ -155,6 +155,7 @@ export function ProductCard({
   onQuickAdd,
   inBag = 0,
   eager = false,
+  sizes = GRID_SIZES,
 }: {
   shopSlug: string
   p: PublicProduct
@@ -162,6 +163,8 @@ export function ProductCard({
   onQuickAdd?: (p: PublicProduct) => void
   inBag?: number
   eager?: boolean
+  /** How wide the photo shows, for the browser's choice of the 600 or 1200 px copy. */
+  sizes?: string
 }) {
   const t = useT()
   const soldOut = p.stock === 0
@@ -177,10 +180,10 @@ export function ProductCard({
             k={p.images[0]}
             alt={p.name}
             eager={eager}
-            sizes={GRID_SIZES}
+            sizes={sizes}
             className={`absolute inset-0 h-full w-full transition-opacity duration-500 ease-out ${second && peek ? 'group-hover:opacity-0' : ''} ${soldOut ? 'opacity-50' : ''}`}
           />
-          {second && peek && <Img k={second} sizes={GRID_SIZES} alt="" className="absolute inset-0 h-full w-full opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100" />}
+          {second && peek && <Img k={second} sizes={sizes} alt=""className="absolute inset-0 h-full w-full opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100" />}
           <div className="absolute top-2.5 left-2.5 flex gap-1.5">
             {soldOut ? <Tag>{t('Sold out')}</Tag> : onSale(p) ? <Tag hot>−{discount(p)}%</Tag> : null}
           </div>
@@ -252,10 +255,10 @@ export function QuickAddSheet({ shopSlug, p, onClose, onAdd }: { shopSlug: strin
 }
 
 /**
- * A shop's products in a grid (2, 3 or 4 columns) with quick add: products with sizes open the sheet, others go
- * straight in the bag, and a toast says so. Used by the shop page and collection pages.
+ * Quick add from a row of product cards: products with options open the sheet, others go straight in the bag, and a
+ * toast says so. `ui` is the sheet and the toast, to render once beside the cards.
  */
-export function ProductGrid({ shop, products, cart }: { shop: Pick<PublicShop, 'id' | 'slug'>; products: PublicProduct[]; cart: Cart }) {
+function useQuickAdd(shop: Pick<PublicShop, 'id' | 'slug'>, cart: Cart) {
   const t = useT()
   const [quick, setQuick] = useState<PublicProduct | null>(null)
   const [added, setAdded] = useState('')
@@ -269,25 +272,76 @@ export function ProductGrid({ shop, products, cart }: { shop: Pick<PublicShop, '
     setTimeout(() => setAdded(''), 2200)
   }
 
+  return {
+    inBag,
+    open: (p: PublicProduct) => (p.sizes ? setQuick(p) : addToBag(p, null)),
+    ui: (
+      <>
+        <QuickAddSheet key={quick?.id ?? 'none'} shopSlug={shop.slug} p={quick} onClose={() => setQuick(null)} onAdd={(size) => quick && addToBag(quick, size)} />
+        <Toast show={!!added}>
+          <Check size={16} strokeWidth={2.25} /> {added}
+        </Toast>
+      </>
+    ),
+  }
+}
+
+/**
+ * A shop's products in a grid (2, 3 or 4 columns) with quick add. Used by the shop page and collection pages.
+ * `eager` is how many photos load at once: the shop page passes 0 when Top picks sit above the grid.
+ */
+export function ProductGrid({ shop, products, cart, eager = 4 }: { shop: Pick<PublicShop, 'id' | 'slug'>; products: PublicProduct[]; cart: Cart; eager?: number }) {
+  const quick = useQuickAdd(shop, cart)
   return (
     <>
       <div className="grid grid-cols-2 gap-x-3 gap-y-8 pt-5 md:grid-cols-3 md:gap-x-6 md:gap-y-12 md:pt-8 lg:grid-cols-4">
         {products.map((p, i) => (
-          <ProductCard
-            key={p.id}
-            shopSlug={shop.slug}
-            p={p}
-            eager={i < 4}
-            inBag={inBag(p.id)}
-            onQuickAdd={(x) => (x.sizes ? setQuick(x) : addToBag(x, null))}
-          />
+          <ProductCard key={p.id} shopSlug={shop.slug} p={p} eager={i < eager} inBag={quick.inBag(p.id)} onQuickAdd={quick.open} />
         ))}
       </div>
-      <QuickAddSheet key={quick?.id ?? 'none'} shopSlug={shop.slug} p={quick} onClose={() => setQuick(null)} onAdd={(size) => quick && addToBag(quick, size)} />
-      <Toast show={!!added}>
-        <Check size={16} strokeWidth={2.25} /> {added}
-      </Toast>
+      {quick.ui}
     </>
+  )
+}
+
+/** Top picks show once at least this many can be bought (roadmap q-picks). */
+export const MIN_PICKS = 2
+
+/** The seller's top picks a buyer can order now: visible (getStorefront sends only those) and not sold out, in the seller's order. */
+export function pickedProducts(picks: string[], products: PublicProduct[]) {
+  return picks.flatMap((id) => products.filter((p) => p.id === id && p.stock !== 0))
+}
+
+/**
+ * Top picks (roadmap q-picks, decision n6): up to four products the seller puts first, above the shop's chips and grid.
+ * On phones they are a row of larger cards to swipe, the next one peeking in; from md up they sit four across.
+ * The shop page shows it only with at least MIN_PICKS products; a tap on one tags its product view `pick`.
+ */
+export function TopPicks({ shop, products, cart }: { shop: Pick<PublicShop, 'id' | 'slug'>; products: PublicProduct[]; cart: Cart }) {
+  const t = useT()
+  const quick = useQuickAdd(shop, cart)
+  return (
+    <section aria-labelledby="top-picks" className="pb-8 md:pb-14">
+      <h2 id="top-picks" className="title text-[20px] md:text-[26px]">
+        {t('Top picks')}
+      </h2>
+      <div className="hide-scroll -mx-4 mt-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 md:mx-0 md:mt-6 md:grid md:grid-cols-4 md:gap-6 md:overflow-visible md:px-0">
+        {products.map((p, i) => (
+          <div key={p.id} className="w-[68%] max-w-[300px] shrink-0 snap-start md:w-auto md:max-w-none">
+            <ProductCard
+              shopSlug={shop.slug}
+              p={p}
+              eager={i < 2}
+              sizes="(min-width: 1024px) 25vw, (min-width: 768px) 22vw, 68vw"
+              inBag={quick.inBag(p.id)}
+              onQuickAdd={quick.open}
+              onOpen={() => openedFrom(p.id, 'pick')}
+            />
+          </div>
+        ))}
+      </div>
+      {quick.ui}
+    </section>
   )
 }
 

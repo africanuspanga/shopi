@@ -2,7 +2,7 @@ import { createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { MapPin, Share2, Store } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
-import { BagButton, FactPills, ProductGrid, ShopFacts, ShopFooter, ShopSearch, ShopTopBar, SocialLinks, matchesSearch, onSale } from '#/components/shop'
+import { BagButton, FactPills, MIN_PICKS, ProductGrid, ShopFacts, ShopFooter, ShopSearch, ShopTopBar, SocialLinks, TopPicks, matchesSearch, onSale, pickedProducts } from '#/components/shop'
 import { ShopNav } from '#/components/shop-nav'
 import { Chips, Empty, Img, ShopAvatar, Toast, useEntrance } from '#/components/ui'
 import { track } from '#/lib/analytics'
@@ -39,7 +39,7 @@ function Storefront() {
   const rise = useEntrance()
   const rise2 = useEntrance('rise-2')
   const t = useT()
-  const { shop, products, areas, collections } = parent.useLoaderData()
+  const { shop, products, areas, collections, picks } = parent.useLoaderData()
   const cart = useCart(shop.id)
   // 'all', 'new', 'sale', or a collection's id.
   const [filter, setFilter] = useState('all')
@@ -76,6 +76,9 @@ function Storefront() {
     if (v.trim()) setFilter('all')
   }
   const showFilters = products.length > 0 && (groups.length > 0 || (counts.new > 0 && counts.new < products.length) || counts.sale > 0)
+  // The seller's top picks that can be ordered now, above the chips once there are at least two.
+  const topPicks = pickedProducts(picks, products)
+  const showPicks = topPicks.length >= MIN_PICKS
 
   async function share() {
     const how = await shareLink(url, shop.name)
@@ -159,6 +162,8 @@ function Storefront() {
           </aside>
         </section>
 
+        {showPicks && <TopPicks shop={shop} products={topPicks} cart={cart} />}
+
         <div className="border-t border-line pt-5 md:pt-6">
           {searchable && <ShopSearch value={q} onChange={search} shopName={shop.name} className="mb-4 md:hidden" />}
           {searching && showFilters && <p className="meta -mt-1 mb-3 md:hidden">{found}</p>}
@@ -203,7 +208,7 @@ function Storefront() {
                 {t('Nothing matches "{q}". Try another word, or ask the seller on WhatsApp.', { q: q.trim() })}
               </p>
             ) : (
-              <ProductGrid shop={shop} products={shown} cart={cart} />
+              <ProductGrid shop={shop} products={shown} cart={cart} eager={showPicks ? 0 : 4} />
             )}
           </>
         )}

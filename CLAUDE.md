@@ -31,7 +31,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | --- | --- |
 | `src/styles.css` | The design system: tokens (`@theme`) and component classes. Read it first. |
 | `src/components/ui.tsx` | App-wide parts: `Page`, `TopBar`, `PhoneBar`, `BackButton`, `Chips`, `StatusPill`, `Img`, `ShopAvatar`, `Money`, `Delta`, `Sheet`, `Field`, `Switch`, `Empty`, `Toast`, `TextLink`, `ErrorText`, `LangSwitch`, `Wordmark` |
-| `src/components/shop.tsx` | Storefront parts: `ProductGrid` (the grid with quick add and its toast), `ProductCard` (quick add), `QuickAddSheet`, `Price`, `Tag`, `BagButton`, `ShopTopBar`, `ShopFacts`, `FactPills`, `SocialLinks`, `ShopFooter`, `MadeWithShopi` |
+| `src/components/shop.tsx` | Storefront parts: `ProductGrid` (the grid with quick add and its toast), `TopPicks` (the band above it) and `pickedProducts`, `ProductCard` (quick add), `QuickAddSheet`, `Price`, `Tag`, `BagButton`, `ShopTopBar`, `ShopFacts`, `FactPills`, `SocialLinks`, `ShopFooter`, `MadeWithShopi` |
 | `src/components/floating-nav.tsx` | The phone capsule: `FloatingNav`, `NavTab`, `NavCenter`, `NavCount`, `useHideFloatingNav` |
 | `src/components/shop-nav.tsx` | The storefront's capsule with its search and info sheets |
 | `src/components/not-found.tsx` | Not-found pages for missing shops, products and orders |
@@ -58,13 +58,14 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/components/checkout.tsx` | `CheckoutView` (bag, details, delivery, payment, receipt and Place order), shared by checkout and bag links; `CheckoutHeader` |
 | `src/components/product-picker.tsx` | `ProductPicker`: search the seller's products and pick one (Record a sale, bag links) |
 | `src/routes/app/collections/` | Collections: the list (order, share), `new` and `$id` (`CollectionForm` in `components/collections.tsx`) |
+| `src/components/picks.tsx`, `src/lib/api/picks.ts`, `src/server/picks.ts` | Top picks: the four slots on Products (`TopPicksCard`), `getMyPicks`/`savePicks`, `readPicks`/`writePicks`/`setPick` |
 | `src/routes/app/discounts.tsx` | Discount codes: each code with its uses, on/off, Share (as a link) and the new/edit sheet |
 | `src/components/stock-alerts.tsx` | Back in stock: `NotifySheet` (a buyer leaves a WhatsApp number), `useAsked`, `WaitingCard` (the seller's list, a prefilled WhatsApp message each, Done) |
 | `src/components/phone-app.tsx` | The seller's phone: `PhoneAlertsCard` (Home) and `PhoneAppSettings` (Shop settings) for notifications and installing |
 | `src/lib/push.ts`, `src/server/push.ts`, `public/sw.js` | Web push: `usePhoneApp` and the install offer (browser), `notifySeller` (server), the service worker that shows them |
 | `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
 | `src/server.ts` | The Worker entry: TanStack Start answers requests; `scheduled` runs the cron jobs in `src/server/jobs.ts` |
-| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `push.ts` (notification subscriptions), `imports.ts` (bulk import), `session.ts` |
+| `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `push.ts` (notification subscriptions), `imports.ts` (bulk import), `picks.ts` (top picks), `session.ts` |
 | `src/lib/seo.ts` | Search: `SITE`, `canonical()`, titles and descriptions per page, JSON-LD (`ld`, `storeSchema`, `productSchema`, `breadcrumbSchema`); `src/routes/sitemap[.]xml.ts` |
 | `src/lib/analytics.ts` | The buyer-side tracker: visitor ID, 30-minute visits, traffic source, `?s=` link tags, `track()` |
 | `src/routes/api/e.ts` | Receives analytics events (sendBeacon); drops bots, records device and city |
@@ -155,7 +156,7 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
   wordmark. Because the bar names the place, phone pages don't repeat the name under it. The landing page keeps its
   floating capsule. From `md` up nothing changed: pages keep their large titles.
 - **Storefront** (`/$shop`): white page, sticky `ShopTopBar`, shop header (on desktop: avatar and display name; on
-  phones the bar carries both, so the header starts at the location, then bio, WhatsApp, share, socials), `FactPills` on phones and a `ShopFacts` card on desktop, a search field (`ShopSearch`,
+  phones the bar carries both, so the header starts at the location, then bio, WhatsApp, share, socials), `FactPills` on phones and a `ShopFacts` card on desktop, the seller's Top picks (`TopPicks`, below), a search field (`ShopSearch`,
   shops with 6+ products: above the chips on phones, at the right of the chips row on desktop; it filters the grid as the
   buyer types, across the whole shop, with `matchesSearch()`, which the capsule's search sheet shares), filter chips,
   2/3/4-column grid, `ShopFooter`. On phones the bag is in the top bar and in the floating capsule (below).
@@ -274,6 +275,18 @@ domain are lowercase.
   collection with only the products buyers can see; the shop's chips list the non-empty ones first, in the seller's order
   (`orderCollections`), then New in and On sale. A product in several collections is fine; deleting a product takes it out.
   Seller: Collections in the sidebar, and a Collections button on Products (phones).
+- Top picks (`products.pick_rank`, 1 to 4 or NULL; migration `0020_top_picks.sql`; roadmap `q-picks`, decision n6): up to
+  four products the seller puts first. Seller: a four-slot card on Products (`TopPicksCard`, shown from 2 products): an
+  empty slot adds one through `ProductPicker` (visible products only, sold-out ones disabled), a filled slot opens a sheet
+  (Earlier, Later, Choose another product, Take out), and every change saves at once (`savePicks`). The product form has a
+  "Top pick" switch (sent only when it changes; disabled with a note when four are taken). `writePicks` clears the shop's
+  ranks and sets them 1..n in one batch (a partial unique index guards shop and rank); `setPick` appends or removes one.
+  Buyers: `getStorefront` returns `picks` (ids in order) from the same products query; the shop page shows `TopPicks`
+  above the chips only when at least 2 are visible and in stock (`pickedProducts`, `MIN_PICKS`), sold-out ones left out.
+  On phones it is a row of larger cards to swipe (68% wide, the next one peeking); from md up, four across. The label is
+  "Top picks" ("Chaguo letu"); "Best sellers" is kept for a list worked out from real orders. Opening one tags its
+  `view_product` with `pick` (`openedFrom`/`takeOpenedFrom` in `lib/analytics.ts`, a sessionStorage note kept 10 s).
+  With the band showing, the grid below loads no photos eagerly (`ProductGrid eager={0}`). Discover will use the picks.
 - Back-in-stock alerts (`stock_alerts`, helpers in `src/server/alerts.ts`): on the product page a sold-out product or option
   (sold-out option chips stay choosable, outlined with a line through) offers "Notify me when it's back": a sheet with the
   buyer's WhatsApp number (remembered from checkout) and a consent line; tapping the button is the consent. One alert per
@@ -401,7 +414,7 @@ server function, and `/api/admin-export` answers 404). Set the flag by hand in D
   trial ending, no orders yet, quiet 7 days, paying; search; Export; each row opens the shop's page; sign-ups without a
   shop); Money (sales, average order, cancelled share, plans and yearly income, sales by payment and category, top
   shops); Growth (sign-ups and new shops by day, the funnel to a fifth order, weekly cohorts for 8 weeks, where visits
-  and orders come from, phones, cities, delivery areas); Product use (how many shops use each tool, taps, top 20
+  and orders come from, phones, cities, delivery areas); Product use (how many shops use each tool, Top picks included; taps, with "Opened from Top picks"; top 20
   products); Health (payment proofs waiting, what the `limits` table held back in 24 hours, the newest backup, database
   size and row counts, own domains).
 - **Look:** change chips are the one place `ok` and `bad` colour a number (green up, red down; `flip` for numbers where
@@ -451,7 +464,7 @@ Logs start with `[jobs]` (Workers Logs); a failed task fails the run, so it show
   | Event | `detail` values |
   | --- | --- |
   | `view_shop` | —, `bag_link` when a bag link is opened, `collection` on a collection page |
-  | `view_product` | — |
+  | `view_product` | —, `pick` when opened from the shop's Top picks |
   | `add_to_cart` | `quick` or `page` |
   | `checkout_start` | — |
   | `whatsapp_click` | `shop`, `product`, `order`, `footer` |

@@ -8,6 +8,7 @@ import { CATEGORIES, RESERVED_SLUGS, imageOf, normalizePhone, optionKind, parseS
 import { shopPlan } from '#/server/plan'
 import { TIKTOK_SHORT, readSocialLink } from '#/lib/social'
 import { withReadiness, type AlertRow } from '#/server/alerts'
+import { setPick } from '#/server/picks'
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
 const int = (v: unknown) => {
@@ -375,6 +376,8 @@ export type ProductRow = {
   views: number
   /** Buyers waiting for a back-in-stock message. */
   waiting: number
+  /** 1 to 4 when the product is one of the shop's top picks, in the seller's order; null otherwise. */
+  pick_rank: number | null
 }
 
 type ProductDbRow = Omit<ProductRow, 'images' | 'sizes'> & { images: string; sizes: string | null }
@@ -403,12 +406,14 @@ export const getMyProduct = createServerFn({ method: 'GET' })
   })
 
 export const saveProduct = createServerFn({ method: 'POST' })
-  .validator((d: ProductInput & { id?: string; active: boolean }) => d)
+  /** pick: put it in the top picks (if there is room) or take it out; left out, the picks stay as they are. */
+  .validator((d: ProductInput & { id?: string; active: boolean; pick?: boolean }) => d)
   .handler(async ({ data }) => {
     const { shop } = await requireShop()
     const p = cleanProduct(data)
     if ('error' in p) return p
     const images = JSON.stringify(p.photos)
+    let saved: { ok: true; id: string; slug: string }
     if (data.id) {
       // The link name stays when a product is renamed, so links already shared keep working.
       const current = await first<{ slug: string | null; images: string }>(
@@ -425,16 +430,19 @@ export const saveProduct = createServerFn({ method: 'POST' })
       // Photos taken off the product leave storage too (removePhotos keeps any a past order shows).
       const kept = new Set(p.photos)
       if (current) await removePhotos(shop.id, (JSON.parse(current.images) as string[]).filter((k) => !kept.has(k)))
-      return { ok: true as const, id: data.id, slug }
+      saved = { ok: true, id: data.id, slug }
+    } else {
+      const id = newId()
+      const slug = await uniqueProductSlug(shop.id, p.name)
+      await run(
+        `INSERT INTO products (id, shop_id, slug, name, description, price, compare_price, stock, sizes, option_name, images, active, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        id, shop.id, slug, p.name, p.description, p.price, p.compare, p.stock, p.sizes, p.optionName, images, data.active ? 1 : 0, now(),
+      )
+      saved = { ok: true, id, slug }
     }
-    const id = newId()
-    const slug = await uniqueProductSlug(shop.id, p.name)
-    await run(
-      `INSERT INTO products (id, shop_id, slug, name, description, price, compare_price, stock, sizes, option_name, images, active, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      id, shop.id, slug, p.name, p.description, p.price, p.compare, p.stock, p.sizes, p.optionName, images, data.active ? 1 : 0, now(),
-    )
-    return { ok: true as const, id, slug }
+    if (typeof data.pick === 'boolean') await setPick(shop.id, saved.id, data.pick)
+    return saved
   })
 
 export const deleteProduct = createServerFn({ method: 'POST' })

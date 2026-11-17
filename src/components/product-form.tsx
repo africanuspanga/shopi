@@ -35,10 +35,15 @@ function initial(product?: ProductRow) {
       ? product.sizes.map((s) => ({ label: s.label, stock: s.stock == null ? '' : String(s.stock), price: s.price ? String(s.price) : '', image: s.image ?? '' }))
       : null,
     option: optionKind(product?.option_name),
+    pick: product?.pick_rank != null,
   }
 }
 
-export function ProductForm({ product, title, back, top }: { product?: ProductRow; title: string; back: string; top?: ReactNode }) {
+/** A shop has up to this many top picks (MAX_PICKS in src/server/picks.ts). */
+const MAX_PICKS = 4
+
+/** picks: the shop's top picks (product ids), so the form knows whether there is room for this one. */
+export function ProductForm({ product, title, back, top, picks = [] }: { product?: ProductRow; title: string; back: string; top?: ReactNode; picks?: string[] }) {
   const t = useT()
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -47,6 +52,9 @@ export function ProductForm({ product, title, back, top }: { product?: ProductRo
   const [images, setImages] = useState<string[]>(start.current.images)
   const [sizes, setSizes] = useState<SizeRow[] | null>(start.current.sizes)
   const [option, setOption] = useState<OptionKind>(start.current.option)
+  const [pick, setPick] = useState(start.current.pick)
+  // Room for one more pick: a product already in them always has its place.
+  const pickRoom = start.current.pick || picks.filter((id) => id !== product?.id).length < MAX_PICKS
   // The option whose photo is being chosen.
   const [photoFor, setPhotoFor] = useState<number | null>(null)
   const kind = OPTION_KINDS[option]
@@ -59,8 +67,9 @@ export function ProductForm({ product, title, back, top }: { product?: ProductRo
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value })
 
   const dirty =
-    JSON.stringify({ form, images, sizes, option }) !==
-      JSON.stringify({ form: start.current.form, images: start.current.images, sizes: start.current.sizes, option: start.current.option }) || uploading > 0
+    JSON.stringify({ form, images, sizes, option, pick }) !==
+      JSON.stringify({ form: start.current.form, images: start.current.images, sizes: start.current.sizes, option: start.current.option, pick: start.current.pick }) ||
+    uploading > 0
   useBlocker({
     shouldBlockFn: () => !leaving.current && dirty && !window.confirm(t('Leave without saving? Your changes to this product will be lost.')),
     enableBeforeUnload: () => !leaving.current && dirty,
@@ -94,6 +103,8 @@ export function ProductForm({ product, title, back, top }: { product?: ProductRo
           ? sizes.filter((s) => s.label.trim()).map((s) => ({ label: s.label.trim(), stock: s.stock, price: s.price, image: images.includes(s.image) ? s.image : null }))
           : [],
         option_name: option,
+        // Only a change is sent: the server then puts it in the picks (if there is room) or takes it out.
+        pick: pick !== start.current.pick ? pick : undefined,
       },
     })
     setBusy(false)
@@ -105,6 +116,9 @@ export function ProductForm({ product, title, back, top }: { product?: ProductRo
       setImages(blank.images)
       setSizes(blank.sizes)
       setOption(blank.option)
+      setPick(blank.pick)
+      // The next product needs to know whether the picks have room left.
+      if (pick) router.invalidate()
       setSavedOne(true)
       setTimeout(() => setSavedOne(false), 2200)
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -345,6 +359,21 @@ export function ProductForm({ product, title, back, top }: { product?: ProductRo
               checked={form.active}
               onChange={(v) => setForm({ ...form, active: v })}
             />
+            <div className="mt-4 border-t border-line pt-4">
+              <Switch
+                label={t('Top pick')}
+                sub={
+                  pick
+                    ? t('Buyers see it first, above the rest of your shop')
+                    : pickRoom
+                      ? t('One of up to 4 products buyers see first')
+                      : t('Your 4 top picks are taken. Change them on Products.')
+                }
+                checked={pick}
+                disabled={!pick && !pickRoom}
+                onChange={setPick}
+              />
+            </div>
           </Card>
 
           {product?.active ? (

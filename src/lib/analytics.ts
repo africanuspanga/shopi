@@ -119,6 +119,29 @@ export function ignoreShop(shopId: string) {
   ownShops.add(shopId)
 }
 
+/**
+ * Where a product page was opened from, for its `view_product` detail (today only 'pick', the Top picks band). The tap
+ * writes it; the product page reads it for that product within a few seconds. It is not cleared on read, so React's
+ * double effects in development read the same value (track() then drops the repeat).
+ */
+const FROM_KEY = 'shopi_from'
+const FROM_MS = 10_000
+export function openedFrom(productId: string, from: 'pick') {
+  try {
+    sessionStorage.setItem(FROM_KEY, JSON.stringify({ id: productId, from, at: Date.now() }))
+  } catch {
+    /* storage off: the view is counted without a detail */
+  }
+}
+export function takeOpenedFrom(productId: string): string | undefined {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(FROM_KEY) ?? 'null') as { id: string; from: string; at: number } | null
+    return v && v.id === productId && Date.now() - v.at < FROM_MS ? v.from : undefined
+  } catch {
+    return undefined
+  }
+}
+
 /** The same event twice within a moment is one event (a re-render, or React running effects twice in development). */
 const recent = new Map<string, number>()
 const REPEAT_MS = 1500

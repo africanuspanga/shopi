@@ -366,6 +366,7 @@ export async function useData(days: AdminDays) {
          ${shop('products')} products,
          ${shop('products', `sizes IS NOT NULL AND sizes NOT IN ('', '[]')`)} options,
          ${shop('collections')} collections,
+         ${shop('products', 'pick_rank IS NOT NULL')} picks,
          ${shop('discounts')} discounts,
          ${shop('orders', 'discount_code IS NOT NULL')} discount_used,
          ${shop('bag_links')} bags,
@@ -386,8 +387,11 @@ export async function useData(days: AdminDays) {
          ${own(`(instagram != '' OR tiktok != '' OR facebook != '')`)} socials`,
     ),
     q(
-      `SELECT type || CASE WHEN type IN ('add_to_cart') AND detail IS NOT NULL THEN ':' || detail ELSE '' END k, COUNT(*) n
-       FROM events WHERE ${LIVE} AND created_at >= ? AND type NOT IN ('view_shop', 'view_product') GROUP BY 1 ORDER BY n DESC`,
+      // Views are left out, except a product opened from a shop's Top picks.
+      `SELECT type || CASE WHEN type IN ('add_to_cart', 'view_product') AND detail IS NOT NULL THEN ':' || detail ELSE '' END k, COUNT(*) n
+       FROM events WHERE ${LIVE} AND created_at >= ?
+         AND (type NOT IN ('view_shop', 'view_product') OR (type = 'view_product' AND detail = 'pick'))
+       GROUP BY 1 ORDER BY n DESC`,
       from,
     ),
     topProducts(`s.status != 'demo' AND o.created_at >= ?`, 20, from),
@@ -473,6 +477,7 @@ export async function shopData(id: string, days: AdminDays) {
          (SELECT COUNT(*) FROM products WHERE shop_id = ?1 AND active = 0) hidden,
          (SELECT COUNT(*) FROM products WHERE shop_id = ?1 AND stock <= 0) sold_out,
          (SELECT COUNT(*) FROM collections WHERE shop_id = ?1) collections,
+         (SELECT COUNT(*) FROM products WHERE shop_id = ?1 AND pick_rank IS NOT NULL) picks,
          (SELECT COUNT(*) FROM discounts WHERE shop_id = ?1) discounts,
          (SELECT COUNT(*) FROM bag_links WHERE shop_id = ?1) bags,
          (SELECT COUNT(*) FROM stock_alerts WHERE shop_id = ?1) alerts,
@@ -506,7 +511,7 @@ export async function shopData(id: string, days: AdminDays) {
     best: rows<TopProduct>(best),
     latest: rows<LatestOrder>(latest),
     sources: rows<{ source: string; orders: number; sales: number }>(sources),
-    features: one<Record<'hidden' | 'sold_out' | 'collections' | 'discounts' | 'bags' | 'alerts' | 'manual' | 'to_check' | 'cancelled' | 'buyers' | 'sales_ever', number>>(features),
+    features: one<Record<'hidden' | 'sold_out' | 'collections' | 'picks' | 'discounts' | 'bags' | 'alerts' | 'manual' | 'to_check' | 'cancelled' | 'buyers' | 'sales_ever', number>>(features),
     dates: one<{ first_product: number | null; first_visit: number | null; first_order: number | null; fifth_order: number | null; location: string; whatsapp: string; instagram: string; tiktok: string }>(dates),
   }
 }

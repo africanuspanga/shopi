@@ -7,7 +7,7 @@ import { BagButton, OptionChip, Price, ProductCard, ShopFooter, ShopTopBar, Tag,
 import { NotFound } from '#/components/not-found'
 import { NotifySheet, useAsked } from '#/components/stock-alerts'
 import { Img, Toast, useEntrance } from '#/components/ui'
-import { track } from '#/lib/analytics'
+import { takeOpenedFrom, track } from '#/lib/analytics'
 import { lineKey, useCart } from '#/lib/cart'
 import { OPTION_KINDS, imgUrl, optionKind, optionText, priceOf, tzs, waLink } from '#/lib/format'
 import { fontAttr, fontPreload } from '#/lib/theme'
@@ -87,7 +87,7 @@ function ProductPage() {
   }
 
   useEffect(() => {
-    track('view_product', { shopId: shop.id, productId: p.id })
+    track('view_product', { shopId: shop.id, productId: p.id, detail: takeOpenedFrom(p.id) })
     setSize(p.sizes?.length === 1 ? p.sizes[0].label : null)
     setQty(1)
     setSlide(0)
