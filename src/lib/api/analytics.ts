@@ -2,6 +2,8 @@ import { createServerFn } from '@tanstack/react-start'
 import { requireShop } from '#/server/auth'
 import { all, first, now, run } from '#/server/db'
 import { linkTag } from '#/lib/format'
+import { can } from '#/lib/plans'
+import { shopPlan } from '#/server/plan'
 
 /*
  * Seller analytics: one call returns everything the Analytics page shows for a range of days.
@@ -64,6 +66,8 @@ export const getAnalytics = createServerFn({ method: 'GET' })
   .validator((d: { days?: number }) => ({ days: (RANGES as readonly number[]).includes(Number(d?.days)) ? (Number(d.days) as RangeDays) : 30 }))
   .handler(async ({ data }) => {
     const { shop } = await requireShop()
+    // 90 days is Tembo (17 Nov); a free shop asking for it gets 30.
+    if (data.days === 90 && !can(await shopPlan(shop.id), 'fullAnalytics')) data.days = 30
     const S = shop.id
     const t = now()
     const todayStart = Math.floor((t + TZ) / DAY) * DAY - TZ

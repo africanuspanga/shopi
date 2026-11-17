@@ -332,7 +332,7 @@ function Track() {
           </div>
           <p className="mt-4 text-center text-[13px] text-muted print:hidden">{t('Bookmark this page to follow your order.')}</p>
           <div className="print:hidden">
-            <MadeWithShopi shopSlug={o.shop.slug} invite />
+            {o.shop.badge && <MadeWithShopi shopSlug={o.shop.slug} invite />}
           </div>
         </aside>
       </main>

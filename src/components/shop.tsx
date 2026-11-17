@@ -514,17 +514,19 @@ export function ShopFooter({ shop }: { shop: PublicShop }) {
         </div>
         <SocialLinks shop={shop} />
       </div>
-      <a
-        href={refLink(shop.slug, 'footer')}
-        className="group mt-8 flex items-center justify-between gap-4 rounded-[20px] bg-page px-5 py-4 transition-colors hover:bg-well"
-      >
-        <span className="flex items-center gap-2 text-[13px] text-muted">
-          {t('Shop made with')} <Wordmark className="h-[14px] w-auto text-ink" />
-        </span>
-        <span className="flex items-center gap-1 text-[13px] font-medium">
-          {t('Open your own shop')} <ArrowUpRight size={15} strokeWidth={1.75} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-        </span>
-      </a>
+      {shop.badge && (
+        <a
+          href={refLink(shop.slug, 'footer')}
+          className="group mt-8 flex items-center justify-between gap-4 rounded-[20px] bg-page px-5 py-4 transition-colors hover:bg-well"
+        >
+          <span className="flex items-center gap-2 text-[13px] text-muted">
+            {t('Shop made with')} <Wordmark className="h-[14px] w-auto text-ink" />
+          </span>
+          <span className="flex items-center gap-1 text-[13px] font-medium">
+            {t('Open your own shop')} <ArrowUpRight size={15} strokeWidth={1.75} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </span>
+        </a>
+      )}
     </footer>
   )
 }

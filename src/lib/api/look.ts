@@ -3,6 +3,8 @@ import { requireShop } from '#/server/auth'
 import { first, run } from '#/server/db'
 import { removePhotos } from '#/server/media'
 import { MOTO, asFont, cleanHex } from '#/lib/theme'
+import { can } from '#/lib/plans'
+import { shopPlan } from '#/server/plan'
 
 /**
  * Saves a shop's look: colour (any #rrggbb; the readability rules are applied where it is shown, src/lib/theme.ts),
@@ -16,7 +18,9 @@ export const saveShopLook = createServerFn({ method: 'POST' })
     const color = cleanHex(data.color)
     const font = asFont(data.font)
     const cover = typeof data.cover === 'string' && data.cover.startsWith(`s/${shop.id}/`) ? data.cover.slice(0, 100) : null
-    const before = await first<{ cover_key: string | null }>('SELECT cover_key FROM shops WHERE id = ?', shop.id)
+    const before = await first<{ cover_key: string | null; theme_font: string | null }>('SELECT cover_key, theme_font FROM shops WHERE id = ?', shop.id)
+    // Shop fonts are Tembo (17 Nov); a shop that already used one keeps choosing until the grace ends.
+    if (font !== 'clean' && !can(await shopPlan(shop.id), 'fonts', { using: !!before?.theme_font })) return { error: 'tembo' as const }
     await run(
       'UPDATE shops SET theme_color = ?, theme_font = ?, cover_key = ? WHERE id = ?',
       color && color !== MOTO ? color : null,

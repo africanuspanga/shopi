@@ -250,9 +250,18 @@ domain are lowercase.
 - Shop `lang`: `sw` or `en`, the language buyers see the shop in (see Copy). Read it with `asLang()`.
 - Shop `status`: `active`, or `demo` for a sample shop (Zee's Store). A demo shop shows `DemoBanner` on every page, has
   `noindex`, and `placeOrder` refuses its orders (`error: 'demo'`); checkout disables the button too. Any other status hides the shop.
-- Plans (`src/lib/plans.ts`): a trial (14 days, 30 with setup done), then Twiga or Tembo yearly. `planState()` is the one
-  entitlement check. `BILLING_LIVE` stays false until sellers can pay in Shopi; then an ended shop takes a break
-  (`BreakBanner`, orders refused, nothing deleted).
+- Plans (`src/lib/plans.ts`, the founder's model of 17 Nov 2026): **Free** (TSh 0, no time limit, up to
+  `FREE_PRODUCTS` = 300 products) and **Tembo** (TSh 99,000 a year, flat; shown with "about TSh 8,250 a month"). No trial,
+  no Twiga, and a shop never pauses: a Tembo shop that doesn't renew goes back to Free. `planState()` gives demo, free or
+  tembo (`plan = 'tembo'` with `paid_until` in the future); `can(plan, feature, { using })` is the one entitlement check,
+  used by server functions and screens. Tembo features: `domain`, `fonts` (shops already using either keep it until
+  `GRACE_UNTIL`, the end of 31 Dec 2026), `hideBadge` (`shops.hide_badge`, migration 0022, a switch in Shop settings; buyer
+  pages read `shop.badge`), `fullAnalytics` (90 days, channels, funnel, hours, buyers and downloads, tagged links;
+  `/api/export` refuses free shops; a free shop asking for 90 days gets 30) and `unlimitedProducts` (`saveProduct` and
+  `importProducts` stop a free shop at 300 and say why). Demo shops get everything. The plan rides with the session
+  (`session.shop.plan`), so screens use `useCan()` and show `TemboLock` / `TemboPill` (`components/tembo.tsx`); the plan
+  cards and prices come from `PlanPrice` / `PlanItems` (`components/plans.tsx`), items not built yet carry "Soon".
+  `BILLING_LIVE` stays false until Tembo can be paid (Selcom through CV Chap Chap's proxy, roadmap `billing`).
 - Optional shop fields: `maps_url` (Google Maps links only, `mapsLink()`) gives buyers Directions; `tin` (9 digits, `tinDigits()`,
   shown as `formatTin()` 123-456-789) appears in `ShopFacts`, the Info sheet and on receipts, not in the phone pills.
 - Delivery fees are not in Shopi: buyer and seller agree them on WhatsApp. Shops list delivery areas by name only.

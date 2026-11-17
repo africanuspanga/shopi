@@ -1,3 +1,5 @@
+import { FREE_PRODUCTS, can } from '#/lib/plans'
+import { shopPlan } from '#/server/plan'
 import { createServerFn } from '@tanstack/react-start'
 import { requireShop } from '#/server/auth'
 import { all, db, first, newId, now } from '#/server/db'
@@ -19,7 +21,7 @@ export type ImportItem = Omit<ProductInput, 'images'> & {
 export type ImportResult = {
   added: { index: number; id: string; name: string }[]
   /** Left out here: already in the shop (a second try of the same sheet), or no name or price. */
-  skipped: { index: number; why: 'exists' | 'name' | 'price' }[]
+  skipped: { index: number; why: 'exists' | 'name' | 'price' | 'limit' }[]
   /** Collections this chunk made. */
   collections: string[]
   /** The time the products are dated from: pass it back with the next chunk. */
@@ -46,6 +48,8 @@ export const importProducts = createServerFn({ method: 'POST' })
       first<{ n: number | null }>('SELECT MAX(sort) n FROM collections WHERE shop_id = ?', shop.id),
     ])
     const have = new Set(names.map((r) => r.name.toLowerCase()))
+    // A free shop holds up to FREE_PRODUCTS; rows past it are left out and the done screen says why (17 Nov).
+    let room = can(await shopPlan(shop.id), 'unlimitedProducts') ? Infinity : FREE_PRODUCTS - names.length
     const colByName = new Map(cols.map((c) => [c.name.toLowerCase(), c.id]))
     const colSlugs = new Set(cols.map((c) => c.slug))
     let sort = lastSort?.n ?? -1
@@ -63,6 +67,11 @@ export const importProducts = createServerFn({ method: 'POST' })
         result.skipped.push({ index: item.index, why: 'exists' })
         continue
       }
+      if (room <= 0) {
+        result.skipped.push({ index: item.index, why: 'limit' })
+        continue
+      }
+      room--
       have.add(p.name.toLowerCase())
       const id = newId()
       const slug = freeSlug(productSlug(p.name), slugs, RESERVED_PRODUCT_SLUGS)

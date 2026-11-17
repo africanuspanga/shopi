@@ -2,6 +2,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { currentUser } from '#/server/auth'
 import { all, first, now } from '#/server/db'
 import { PAYMENT_LABEL, type PaymentMethod } from '#/lib/format'
+import { can } from '#/lib/plans'
+import { shopPlan } from '#/server/plan'
 
 /** CSV downloads for the logged-in seller: /api/export?what=orders|customers&days=7|30|90 */
 const DAY = 86_400_000
@@ -23,6 +25,8 @@ export const Route = createFileRoute('/api/export')({
         if (!user) return new Response('Log in first', { status: 401 })
         const shop = await first<{ id: string; slug: string }>('SELECT id, slug FROM shops WHERE owner_id = ?', user.id)
         if (!shop) return new Response('No shop', { status: 403 })
+        // Downloads are part of Tembo's full analytics (17 Nov).
+        if (!can(await shopPlan(shop.id), 'fullAnalytics')) return new Response('Downloads are part of Tembo', { status: 403 })
         const url = new URL(request.url)
         const what = url.searchParams.get('what') === 'customers' ? 'customers' : 'orders'
         const days = [7, 30, 90].includes(Number(url.searchParams.get('days'))) ? Number(url.searchParams.get('days')) : 30

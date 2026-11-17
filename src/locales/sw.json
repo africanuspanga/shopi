@@ -1497,5 +1497,17 @@
   "Your shop is free for as long as you like. Tembo adds more, once a year. No commission on your sales, ever.": "Duka lako ni bure kwa muda wowote unaotaka. Tembo inaongeza zaidi, mara moja kwa mwaka. Hakuna kamisheni kwenye mauzo yako, kamwe.",
   "Your shop is free: products, orders and payments, for as long as you like. Tembo, TSh 99,000 a year (about TSh 8,250 a month), adds your own domain, shop fonts, full analytics, unlimited products and SMS to your buyers. We take no commission on your sales.": "Duka lako ni bure: bidhaa, oda na malipo, kwa muda wowote unaotaka. Tembo, TSh 99,000 kwa mwaka (sawa na TSh 8,250 kwa mwezi), inaongeza domain yako mwenyewe, mitindo ya maandishi, takwimu kamili, bidhaa bila kikomo na SMS kwa wateja wako. Hatuchukui kamisheni kwenye mauzo yako.",
   "a year": "kwa mwaka",
-  "no time limit": "bila kikomo cha muda"
+  "no time limit": "bila kikomo cha muda",
+  "90 days, where your buyers come from, the steps from visit to order, your busiest hours, your buyers with downloads, and tagged links that show which post sells.": "Siku 90, wateja wako wanakotoka, hatua kutoka kutembelea hadi oda, saa zako zenye watu wengi, wateja wako pamoja na kupakua, na link maalum zinazoonyesha post ipi inauza.",
+  "A free shop holds up to 300 products. Tembo has no limit.": "Duka la Bure linaweza kuwa na bidhaa hadi 300. Tembo haina kikomo.",
+  "Buyers open your shop at your own address, like www.yourshop.co.tz, with your name in the link instead of Shopi’s. It is part of Tembo.": "Wateja wanafungua duka lako kwenye anwani yako mwenyewe, kama www.dukalako.co.tz, jina lako likiwa kwenye link badala ya la Shopi. Ni sehemu ya Tembo.",
+  "Full analytics": "Takwimu kamili",
+  "Hide “Shop made with Shopi”": "Ficha “Duka limetengenezwa na Shopi”",
+  "Part of Tembo": "Sehemu ya Tembo",
+  "Shop fonts": "Mitindo ya maandishi",
+  "Shop fonts are part of Tembo. Choose Clean, or see what Tembo adds.": "Mitindo ya maandishi ni sehemu ya Tembo. Chagua Safi, au ona Tembo inaongeza nini.",
+  "The line at the end of your shop’s pages": "Mstari ulio mwisho wa kurasa za duka lako",
+  "Your own domain is part of Tembo.": "Domain yako mwenyewe ni sehemu ya Tembo.",
+  "Your shop’s name and headings in one of five styles, from elegant to bold. Colour and cover stay free.": "Jina la duka lako na vichwa vya habari katika mojawapo ya mitindo mitano, kuanzia ya kifahari hadi mizito. Rangi na picha ya juu zinabaki bure.",
+  "{n} not added: a free shop holds up to 300 products. Tembo has no limit.": "{n} hazikuongezwa: duka la Bure linaweza kuwa na bidhaa hadi 300. Tembo haina kikomo."
 }

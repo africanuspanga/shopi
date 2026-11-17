@@ -2,6 +2,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { ArrowUpRight, Check, Copy, Globe, Loader2, RefreshCw } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
+import { TemboLock, useCan } from '#/components/tembo'
 import { ErrorText, Field, Page, TopBar } from '#/components/ui'
 import { addDomain, checkDomain, getMyDomain, removeDomain } from '#/lib/api/domains'
 import { splitDomain } from '#/lib/host'
@@ -17,6 +18,8 @@ export const Route = createFileRoute('/app/domain')({
 const POLL = 30_000
 
 function DomainPage() {
+  // Connecting is Tembo; a shop that already has its domain keeps managing it (src/lib/plans.ts, the 31 Dec grace).
+  const tembo = useCan('domain')
   const t = useT()
   const router = useRouter()
   const { ready, target, domain } = Route.useLoaderData()
@@ -58,6 +61,7 @@ function DomainPage() {
           taken: t('Another shop uses that domain.'),
           limit: t('Too many tries today. Try again tomorrow.'),
           off: t('Own domains aren’t switched on yet.'),
+          tembo: t('Your own domain is part of Tembo.'),
           fail: t('Something went wrong. Try again.'),
           apex: '',
         }[err],
@@ -90,7 +94,14 @@ function DomainPage() {
           </section>
         )}
 
-        {ready && !domain && (
+        {ready && !domain && !tembo && (
+          <TemboLock
+            title={t('Your own domain')}
+            body={t('Buyers open your shop at your own address, like www.yourshop.co.tz, with your name in the link instead of Shopi’s. It is part of Tembo.')}
+          />
+        )}
+
+        {ready && !domain && tembo && (
           <>
             <Step n={1} title={t('Buy a domain')}>
               <p className="text-[14px] leading-relaxed text-muted">{t('From a company that sells domains: a .co.tz from a Tanzanian registrar, or a .com. Shopi doesn’t sell domains.')}</p>

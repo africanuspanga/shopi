@@ -3,6 +3,7 @@ import { Camera, Check, ChevronRight, Copy, Globe, LogOut, Palette, Plus, Ticket
 import { useRef, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
 import { PhoneAppSettings } from '#/components/phone-app'
+import { useCan } from '#/components/tembo'
 import { ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoice, Switch, Toast, TopBar } from '#/components/ui'
 import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
@@ -28,6 +29,7 @@ function ShopSettings() {
   const data = Route.useLoaderData()
   const initial = useRef({ shop: data.shop, areas: data.areas.map((a) => ({ name: a.name, fee: String(a.fee) })) })
   const [s, setS] = useState(initial.current.shop)
+  const tembo = useCan('hideBadge')
   const [areas, setAreas] = useState(initial.current.areas)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -283,6 +285,15 @@ function ShopSettings() {
         </Group>
 
         <Group title={t('Plan')} sub={t('Free, or Tembo once a year. See what Tembo adds.')}>
+          <div className="mb-3 rounded-[16px] bg-page p-4">
+            <Switch
+              label={t('Hide “Shop made with Shopi”')}
+              sub={tembo ? t('The line at the end of your shop’s pages') : t('Part of Tembo')}
+              checked={tembo && !!s.hide_badge}
+              disabled={!tembo}
+              onChange={(v) => setS({ ...s, hide_badge: v ? 1 : 0 })}
+            />
+          </div>
           <Link to="/app/plan" className="btn btn-ghost">
             {t('See your plan')} <ChevronRight size={16} strokeWidth={1.6} />
           </Link>

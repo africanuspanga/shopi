@@ -108,7 +108,14 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
       },
     })
     setBusy(false)
-    if ('error' in res) return setError(res.error === 'name' ? t('Give the product a name.') : t('Enter a price.'))
+    if ('error' in res)
+      return setError(
+        res.error === 'name'
+          ? t('Give the product a name.')
+          : res.error === 'limit'
+            ? t('A free shop holds up to 300 products. Tembo has no limit.')
+            : t('Enter a price.'),
+      )
     if (again) {
       const blank = initial()
       start.current = blank

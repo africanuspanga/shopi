@@ -5,6 +5,8 @@ import { cfReady } from '#/server/cloudflare'
 import { dropDomain, refreshDomain, type DomainRow } from '#/server/domains'
 import { LIMITS, count, overLimit } from '#/server/limits'
 import { CNAME_TARGET, cleanDomain, isApex } from '#/lib/host'
+import { can } from '#/lib/plans'
+import { shopPlan } from '#/server/plan'
 
 export type MyDomain = {
   /** False until the founder has switched custom domains on (CF_API_TOKEN). */
@@ -36,6 +38,7 @@ export const addDomain = createServerFn({ method: 'POST' })
     if (!host) return { error: 'invalid' as const }
     if (isApex(host)) return { error: 'apex' as const, suggest: `www.${host}` }
     if (await mine(shop.id)) return { error: 'has' as const }
+    if (!can(await shopPlan(shop.id), 'domain')) return { error: 'tembo' as const }
     if (await first('SELECT 1 FROM domains WHERE hostname = ?', host)) return { error: 'taken' as const }
     const key = `domain:${shop.id}`
     if (await overLimit(key, LIMITS.domainAdd)) return { error: 'limit' as const }

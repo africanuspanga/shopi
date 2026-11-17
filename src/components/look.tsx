@@ -190,7 +190,8 @@ export function ColorPicker({ value, logo, onChange }: { value: string; logo: st
 
 /* ---------- Font ---------- */
 
-export function FontPicker({ value, name, onChange }: { value: FontId; name: string; onChange: (f: FontId) => void }) {
+/** `locked`: a free shop (fonts are Tembo); only the clean style can be chosen, the others show what Tembo gives. */
+export function FontPicker({ value, name, onChange, locked = false }: { value: FontId; name: string; onChange: (f: FontId) => void; locked?: boolean }) {
   const t = useT()
   return (
     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
@@ -199,8 +200,9 @@ export function FontPicker({ value, name, onChange }: { value: FontId; name: str
           key={f.id}
           type="button"
           aria-pressed={value === f.id}
+          disabled={locked && f.id !== 'clean'}
           onClick={() => onChange(f.id)}
-          className={`min-w-0 rounded-[16px] p-4 text-left transition-colors ${value === f.id ? 'bg-card shadow-[inset_0_0_0_2px_var(--color-ink)]' : 'bg-page hover:bg-well'}`}
+          className={`min-w-0 rounded-[16px] p-4 text-left transition-colors disabled:cursor-default disabled:opacity-55 ${value === f.id ? 'bg-card shadow-[inset_0_0_0_2px_var(--color-ink)]' : 'bg-page enabled:hover:bg-well'}`}
         >
           <span data-font={fontAttr(f.id)} className="block">
             <span className="display block truncate text-[24px]">{name || 'Duka'}</span>

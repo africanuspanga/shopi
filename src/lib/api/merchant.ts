@@ -6,6 +6,7 @@ import { cleanProduct, uniqueProductSlug, type ProductInput } from '#/server/pro
 import { moveStock } from '#/server/stock'
 import { CATEGORIES, RESERVED_SLUGS, imageOf, normalizePhone, optionKind, parseSizes, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink, tinDigits } from '#/lib/format'
 import { shopPlan } from '#/server/plan'
+import { FREE_PRODUCTS, can } from '#/lib/plans'
 import { TIKTOK_SHORT, readSocialLink } from '#/lib/social'
 import { withReadiness, type AlertRow } from '#/server/alerts'
 import { setPick } from '#/server/picks'
@@ -44,6 +45,8 @@ export type ShopRow = {
   theme_color: string | null
   theme_font: string | null
   cover_key: string | null
+  /** 1 when the seller hid the "Shop made with Shopi" line; it only counts while the shop has Tembo. */
+  hide_badge: number
 }
 export type AreaRow = { id: string; name: string; fee: number }
 
@@ -168,7 +171,7 @@ export const updateShop = createServerFn({ method: 'POST' })
     await run(
       `UPDATE shops SET name = ?, bio = ?, category = ?, logo_key = ?, whatsapp = ?, instagram = ?, tiktok = ?,
          facebook = ?, location = ?, maps_url = ?, tin = ?, hours = ?, lipa_number = ?, lipa_name = ?, lipa_network = ?,
-         lipa_is_personal = ?, cod_enabled = ?, lang = COALESCE(?, lang) WHERE id = ?`,
+         lipa_is_personal = ?, cod_enabled = ?, lang = COALESCE(?, lang), hide_badge = ? WHERE id = ?`,
       str(data.name, 60) || shop.name,
       str(data.bio, 300),
       CATEGORIES.some((c) => c.id === data.category) ? data.category : 'other',
@@ -187,6 +190,8 @@ export const updateShop = createServerFn({ method: 'POST' })
       data.lipa_is_personal ? 1 : 0,
       data.cod_enabled ? 1 : 0,
       data.lang === 'sw' || data.lang === 'en' ? data.lang : null,
+      // Hiding the Shopi line is Tembo; a free shop's switch saves as off.
+      data.hide_badge && can(await shopPlan(shop.id), 'hideBadge') ? 1 : 0,
       shop.id,
     )
     // A replaced logo leaves storage.
@@ -432,6 +437,9 @@ export const saveProduct = createServerFn({ method: 'POST' })
       if (current) await removePhotos(shop.id, (JSON.parse(current.images) as string[]).filter((k) => !kept.has(k)))
       saved = { ok: true, id: data.id, slug }
     } else {
+      // A free shop holds up to FREE_PRODUCTS; Tembo has no limit (17 Nov).
+      const held = await first<{ n: number }>('SELECT COUNT(*) n FROM products WHERE shop_id = ?', shop.id)
+      if ((held?.n ?? 0) >= FREE_PRODUCTS && !can(await shopPlan(shop.id), 'unlimitedProducts')) return { error: 'limit' as const }
       const id = newId()
       const slug = await uniqueProductSlug(shop.id, p.name)
       await run(

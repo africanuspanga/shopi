@@ -7,16 +7,19 @@ import { isHuman } from '#/server/turnstile'
 import { normalizePhone } from '#/lib/format'
 import { REF_COOKIE } from '#/lib/host'
 import { asLang, type Lang } from '#/lib/i18n'
+import { planState } from '#/lib/plans'
 
 export const getSession = createServerFn({ method: 'GET' }).handler(async () => {
   const lang: Lang = asLang(getCookie('shopi_lang'))
   const user = await currentUser()
-  const shop = user
-    ? await first<{ id: string; slug: string; name: string; logo_key: string | null }>(
-        'SELECT id, slug, name, logo_key FROM shops WHERE owner_id = ? LIMIT 1',
+  const row = user
+    ? await first<{ id: string; slug: string; name: string; logo_key: string | null; status: string; plan: string; paid_until: number | null }>(
+        'SELECT id, slug, name, logo_key, status, plan, paid_until FROM shops WHERE owner_id = ? LIMIT 1',
         user.id,
       )
     : null
+  // The plan (Free, Tembo, demo) rides with the session, so seller screens ask can() without another request.
+  const shop = row ? { id: row.id, slug: row.slug, name: row.name, logo_key: row.logo_key, plan: planState(row) } : null
   return { lang, user, shop }
 })
 

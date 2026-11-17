@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from '#/components/brand-icons'
 import { prettyUrl } from '#/components/share'
 import { Delta, Img, Money, Page, Toast, TopBar, scrubIndex } from '#/components/ui'
+import { TemboLock, TemboPill, useCan } from '#/components/tembo'
 import { RANGES, createLink, deleteLink, getAnalytics, type Analytics, type RangeDays } from '#/lib/api/analytics'
 import { tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
@@ -60,6 +61,7 @@ function AnalyticsPage() {
   const [metric, setMetric] = useState<Metric>('sales')
   const vs = t('vs the {n} days before', { n: a.days })
   const empty = !a.now.visits && !a.now.orders
+  const full = useCan('fullAnalytics')
 
   return (
     <Page nav wide>
@@ -84,32 +86,57 @@ function AnalyticsPage() {
         <Kpi label={t('Average order')} value={<Money value={a.now.aov} cur="text-[0.62em] text-muted" />} delta={<Delta now={a.now.aov} before={a.before.aov} label={vs} />} />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-12">
-        <TrendChart a={a} metric={metric} className="lg:col-span-12" />
-        <Channels a={a} className="lg:col-span-7" />
-        <Funnel a={a} className="lg:col-span-5" />
-        <Products a={a} className="lg:col-span-12" />
-        <When a={a} className="lg:col-span-7" />
-        <Clicks a={a} className="lg:col-span-5" />
-        <Areas a={a} className="lg:col-span-4" />
-        <Devices a={a} className="lg:col-span-4" />
-        <Sizes a={a} className="lg:col-span-4" />
-        <Buyers a={a} className="lg:col-span-7" />
-        <Links a={a} className="lg:col-span-5" />
-      </div>
+      {full ? (
+        <div className="mt-4 grid gap-4 lg:grid-cols-12">
+          <TrendChart a={a} metric={metric} className="lg:col-span-12" />
+          <Channels a={a} className="lg:col-span-7" />
+          <Funnel a={a} className="lg:col-span-5" />
+          <Products a={a} className="lg:col-span-12" />
+          <When a={a} className="lg:col-span-7" />
+          <Clicks a={a} className="lg:col-span-5" />
+          <Areas a={a} className="lg:col-span-4" />
+          <Devices a={a} className="lg:col-span-4" />
+          <Sizes a={a} className="lg:col-span-4" />
+          <Buyers a={a} className="lg:col-span-7" />
+          <Links a={a} className="lg:col-span-5" />
+        </div>
+      ) : (
+        // Free (17 Nov): the numbers, the chart and what sells; the deeper sections are Tembo's.
+        <div className="mt-4 grid gap-4 lg:grid-cols-12">
+          <TrendChart a={a} metric={metric} className="lg:col-span-12" />
+          <TemboLock
+            className="lg:col-span-12"
+            title={t('Full analytics')}
+            body={t('90 days, where your buyers come from, the steps from visit to order, your busiest hours, your buyers with downloads, and tagged links that show which post sells.')}
+          />
+          <Products a={a} className="lg:col-span-12" />
+          <Clicks a={a} className="lg:col-span-6" />
+          <Areas a={a} className="lg:col-span-6" />
+          <Devices a={a} className="lg:col-span-6" />
+          <Sizes a={a} className="lg:col-span-6" />
+        </div>
+      )}
     </Page>
   )
 }
 
 function RangePicker({ days, className = '' }: { days: number; className?: string }) {
   const t = useT()
+  const full = useCan('fullAnalytics')
   return (
     <div className={`flex gap-2 ${className}`} role="tablist" aria-label={t('Range')}>
-      {RANGES.map((d) => (
-        <Link key={d} to="/app/analytics" search={{ days: d }} role="tab" aria-selected={days === d} data-active={days === d} className="chip h-9">
-          {t('{n} days', { n: d })}
-        </Link>
-      ))}
+      {RANGES.map((d) =>
+        d === 90 && !full ? (
+          // 90 days is Tembo: the chip shows it and leads to the plan page.
+          <Link key={d} to="/app/plan" className="chip h-9 gap-1.5">
+            {t('{n} days', { n: d })} <TemboPill />
+          </Link>
+        ) : (
+          <Link key={d} to="/app/analytics" search={{ days: d }} role="tab" aria-selected={days === d} data-active={days === d} className="chip h-9">
+            {t('{n} days', { n: d })}
+          </Link>
+        ),
+      )}
     </div>
   )
 }

@@ -396,6 +396,8 @@ export type Outcome = {
   misses: PhotoMiss[]
   collections: string[]
   stopped: boolean
+  /** Rows left out because a free shop holds up to 300 products. */
+  limited?: number
   /** The connection dropped: what was added stays, and importing the sheet again adds the rest. */
   failed: boolean
 }
@@ -504,6 +506,7 @@ export async function runImport(
       for (const m of misses.get(d) ?? []) out.misses.push({ ...m, id: a.id })
     }
     out.collections.push(...res.collections)
+    out.limited = (out.limited ?? 0) + res.skipped.filter((x) => x.why === 'limit').length
   }
   return out
 }
@@ -564,6 +567,12 @@ export function DoneCard({ outcome, children }: { outcome: Outcome; children: Re
           <Row icon={<EyeOff size={13} strokeWidth={1.75} />} title={t('{n} hidden until they have a photo', { n: hidden })} sub={t('Open each one, add a photo and turn on Show in my shop.')} />
         )}
         {outcome.collections.length > 0 && <Row icon={<Layers size={13} strokeWidth={1.75} />} title={t('New collections: {names}', { names: outcome.collections.join(', ') })} />}
+        {!!outcome.limited && (
+          <Row
+            icon={<Layers size={13} strokeWidth={1.75} />}
+            title={t('{n} not added: a free shop holds up to 300 products. Tembo has no limit.', { n: outcome.limited })}
+          />
+        )}
       </div>
       {outcome.misses.length > 0 && (
         <section>

@@ -3,6 +3,7 @@ import { ArrowUpRight, Loader2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
 import { ColorPicker, CoverPicker, FontPicker, LookPreview, LookSection, type Look } from '#/components/look'
+import { TemboLock, useCan } from '#/components/tembo'
 import { ErrorText, Page, Toast, TopBar } from '#/components/ui'
 import { saveShopLook } from '#/lib/api/look'
 import { getMyShop, listMyProducts } from '#/lib/api/merchant'
@@ -24,6 +25,8 @@ function ShopLook() {
   const { shop, products } = Route.useLoaderData()
   const saved = useRef<Look>({ color: cleanHex(shop.theme_color) ?? MOTO, font: asFont(shop.theme_font), cover: shop.cover_key })
   const [look, setLook] = useState<Look>(saved.current)
+  // Shop fonts are Tembo; a shop that already chose one keeps choosing until the grace ends (src/lib/plans.ts).
+  const fonts = useCan('fonts', { using: !!shop.theme_font })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
@@ -39,7 +42,8 @@ function ShopLook() {
     setBusy(true)
     setError('')
     try {
-      await saveShopLook({ data: look })
+      const res = await saveShopLook({ data: look })
+      if ('error' in res) return setError(t('Shop fonts are part of Tembo. Choose Clean, or see what Tembo adds.'))
       saved.current = look
       setDone(true)
       setTimeout(() => setDone(false), 2200)
@@ -78,7 +82,14 @@ function ShopLook() {
             <ColorPicker value={look.color} logo={shop.logo_key} onChange={(color) => setLook({ ...look, color })} />
           </LookSection>
           <LookSection title={t('Style of your name')} sub={t('For your shop’s name and headings. Prices, details and checkout stay in Shopi’s letters so they are easy to read.')}>
-            <FontPicker value={look.font} name={shop.name} onChange={(font) => setLook({ ...look, font })} />
+            {!fonts && (
+              <TemboLock
+                className="mb-4"
+                title={t('Shop fonts')}
+                body={t('Your shop’s name and headings in one of five styles, from elegant to bold. Colour and cover stay free.')}
+              />
+            )}
+            <FontPicker value={look.font} name={shop.name} locked={!fonts} onChange={(font) => setLook({ ...look, font })} />
           </LookSection>
         </div>
         <aside className="hidden lg:sticky lg:top-6 lg:block">
