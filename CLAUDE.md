@@ -297,6 +297,13 @@ domain are lowercase.
   page's `WaitingCard` gives a prefilled wa.me message per person and a check that deletes the alert, and Home shows
   "Back in stock, and buyers are waiting" once what they asked for can be bought (`getDashboard().backInStock`).
   Alerts are deleted when done and after 90 days at most (Privacy page), by the nightly job (below).
+- "Open your own shop" (roadmap `q-footer`, migration `0021_signup_ref.sql`): every link from a shop to Shopi carries the
+  shop, `refLink(slug, 'footer' | 'order' | 'banner')` in `lib/host.ts` (`shopi.tz/?ref=<slug>&s=…`): the shop footer's
+  card, `MadeWithShopi` (checkout and bag links keep the quiet "Shop made with" line; the order page, where the buyer has
+  finished, adds "Open your own shop") and the demo banner. The landing keeps `ref` 30 days in the `shopi_ref` cookie (the
+  latest wins); `signup` stores the shop's id in `users.ref_shop` and clears the cookie. The Privacy page names both. The
+  owner dashboard shows "Sellers brought by shops" (Growth) and "Sellers it brought" (a shop's page). The invite reward
+  (`referral`, decision n13) builds on it.
 - Setup and a new shop's Home (17 Nov, the founder's OK on the onboarding review): "Name your shop" opens with a welcome
   ("Welcome, {first name}. A name and a link, and your shop is open."); the note that the link never changes sits under
   the link field. One category chip, "Clothes and fashion" (id `fashion`), replaced Fashion and Clothes. Step 3 asks only
@@ -436,8 +443,7 @@ server function, and `/api/admin-export` answers 404). Set the flag by hand in D
   up is bad, like cancelled share). Today's bar is Moto. Charts read by hover or a sliding finger (`scrubIndex`).
   Number cards never cut a figure: `Money short` below `xl`.
 - **"Last log-in"** is worked out from the seller's newest session (`expires_at` minus `SESSION_DAYS`), not stored.
-- **Not there yet, because nothing records it:** where a sign-up came from (`q-footer`
-  adds `ref`), searches that found nothing, how often the bot check passed or refused, 5xx counts (Workers Logs only),
+- **Not there yet, because nothing records it:** searches that found nothing, how often the bot check passed or refused, 5xx counts (Workers Logs only),
   the photo bucket's size. Actions on a shop (suspend, extend a trial, change plan) arrive with billing, each written
   to an `admin_log` table.
 - Fine for hundreds of shops; move to nightly totals with `stats_daily` well before thousands.

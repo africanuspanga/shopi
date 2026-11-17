@@ -28,6 +28,7 @@ function Privacy() {
       <Section title={t('What we collect from sellers')}>
         <ul>
           <li>{t('Your name, phone number and a password (we store only a scrambled form of it).')}</li>
+          <li>{t('If a shop’s “Open your own shop” link brought you to Shopi: which shop it was.')}</li>
           <li>{t('Your shop: its name, link, logo, bio, location, Google Maps link, opening hours, social accounts and WhatsApp number.')}</li>
           <li>{t('How you are paid: your Lipa Namba, its name and network. Shopi never holds your money.')}</li>
           <li>{t('Your products, photos, prices and stock, and the orders your shop receives.')}</li>
@@ -89,6 +90,7 @@ function Privacy() {
             'Sellers who log in get one cookie that keeps them logged in, and one that remembers their language. Buyers get no login cookie. The bag, the remembered checkout details and the random visitor ID are kept in your browser’s storage, and you can clear them at any time in your browser settings.',
           )}
         </p>
+        <p>{t('Opening Shopi from a shop’s “Open your own shop” link sets a cookie for 30 days that names that shop, so the shop is credited if you sign up.')}</p>
       </Section>
 
       <Section title={t('How long we keep it')}>

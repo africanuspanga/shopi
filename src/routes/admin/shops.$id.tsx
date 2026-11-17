@@ -114,6 +114,7 @@ function ShopPage() {
           <Row label={t('Products without a photo')} value={num(s.noPhoto)} />
           <Row label={t('Collections')} value={num(f.collections)} />
           <Row label={t('Top picks')} value={num(f.picks)} />
+          <Row label={t('Sellers it brought')} value={num(f.brought)} />
           <Row label={t('Discount codes')} value={num(f.discounts)} />
           <Row label={t('Bag links')} value={num(f.bags)} />
           <Row label={t('Buyers waiting for stock')} value={num(f.alerts)} />

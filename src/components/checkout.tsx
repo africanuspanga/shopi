@@ -390,7 +390,7 @@ export function CheckoutView({
 
           <div className="mt-10 md:hidden">{summary}</div>
           <div className="md:hidden">
-            <MadeWithShopi />
+            <MadeWithShopi shopSlug={shop.slug} />
           </div>
         </div>
 

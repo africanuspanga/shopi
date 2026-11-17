@@ -67,7 +67,7 @@ function ShopLayout() {
   return (
     <LangProvider value={asLang(shop.lang)}>
       <div className="contents" style={themeStyle(shop.theme_color)}>
-        {shop.status === 'demo' && <DemoBanner />}
+        {shop.status === 'demo' && <DemoBanner shopSlug={shop.slug} />}
         {paused && <BreakBanner whatsapp={shop.whatsapp} name={shop.name} />}
         <Outlet />
       </div>

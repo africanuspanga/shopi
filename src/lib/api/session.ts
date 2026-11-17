@@ -5,6 +5,7 @@ import { first, newId, now, run } from '#/server/db'
 import { LIMITS, clientIp, count, forget, overLimit } from '#/server/limits'
 import { isHuman } from '#/server/turnstile'
 import { normalizePhone } from '#/lib/format'
+import { REF_COOKIE } from '#/lib/host'
 import { asLang, type Lang } from '#/lib/i18n'
 
 export const getSession = createServerFn({ method: 'GET' }).handler(async () => {
@@ -44,14 +45,19 @@ export const signup = createServerFn({ method: 'POST' })
     const exists = await first('SELECT id FROM users WHERE phone = ?', data.phone)
     if (exists) return { error: 'exists' as const }
     const id = newId()
+    // The shop whose "Open your own shop" link brought them, if any (src/lib/host.ts, refLink).
+    const refSlug = String(getCookie(REF_COOKIE) ?? '')
+    const ref = /^[a-z0-9-]{3,40}$/.test(refSlug) ? await first<{ id: string }>(`SELECT id FROM shops WHERE slug = ? AND status IN ('active', 'demo')`, refSlug) : null
     await run(
-      'INSERT INTO users (id, phone, name, pass_hash, created_at) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO users (id, phone, name, pass_hash, created_at, ref_shop) VALUES (?, ?, ?, ?, ?, ?)',
       id,
       data.phone,
       data.name,
       await hashPassword(data.password),
       now(),
+      ref?.id ?? null,
     )
+    if (refSlug) setCookie(REF_COOKIE, '', { path: '/', maxAge: 0 })
     await startSession(id)
     return { ok: true as const }
   })

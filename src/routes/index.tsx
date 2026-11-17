@@ -5,6 +5,7 @@ import { WhatsAppIcon } from '#/components/brand-icons'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { BioPreview, LinkPreview, MiniStore, NewOrderCard, OrderPreview, PaymentSlip, Phone, ProductPreview, SmsBubble } from '#/components/showcase'
 import { Wordmark, useEntrance } from '#/components/ui'
+import { REF_COOKIE } from '#/lib/host'
 import { useT } from '#/lib/i18n'
 import { PLANS } from '#/lib/plans'
 import { SITE, canonical, ld } from '#/lib/seo'
@@ -37,6 +38,12 @@ function Landing() {
   const { session } = Route.useRouteContext()
   const start = session.user ? (session.shop ? '/app' : '/onboard') : '/signup'
   const startLabel = session.shop ? t('Go to my shop') : t('Start 14 days free')
+
+  // Arrived from a shop's "Open your own shop": remember which shop for 30 days, for sign-up (the latest one wins).
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref')
+    if (ref && /^[a-z0-9-]{3,40}$/.test(ref)) document.cookie = `${REF_COOKIE}=${ref}; Max-Age=${30 * 86400}; Path=/; SameSite=Lax; Secure`
+  }, [])
 
   return (
     <div className="min-h-dvh overflow-x-clip bg-page pb-24 text-ink md:pb-0">

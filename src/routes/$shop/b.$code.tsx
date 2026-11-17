@@ -165,7 +165,7 @@ function Ended({ shop, bag }: { shop: PublicShop; bag: PublicBag }) {
             {toShop}
           </div>
         </section>
-        <MadeWithShopi />
+        <MadeWithShopi shopSlug={shop.slug} />
       </main>
     </div>
   )

@@ -281,7 +281,7 @@ export async function moneyData(days: AdminDays) {
 
 export async function growthData(days: AdminDays) {
   const { t, from, prevFrom } = windowOf(days)
-  const [cur, prev, signups, shops, funnel, cohorts, sources, traffic, cities, areas, devices] = await db().batch([
+  const [cur, prev, signups, shops, funnel, cohorts, sources, traffic, cities, areas, devices, brought] = await db().batch([
     pulse(from, t + 1),
     pulse(prevFrom, from),
     q(`SELECT ${DAYNO} d, COUNT(*) v FROM users WHERE is_admin = 0 AND created_at >= ? GROUP BY 1`, from),
@@ -335,6 +335,14 @@ export async function growthData(days: AdminDays) {
        FROM events WHERE ${LIVE} AND type = 'view_shop' AND created_at >= ? GROUP BY 1 ORDER BY n DESC`,
       from,
     ),
+    // Sign-ups that came from a shop's "Open your own shop" link (users.ref_shop, q-footer), by that shop. Demo shops
+    // count here (Zee's banner is an invitation too), marked so they are not mistaken for a seller's.
+    q(
+      `SELECT s.name || CASE WHEN s.status = 'demo' THEN ' (demo)' ELSE '' END k, COUNT(*) n
+       FROM users u JOIN shops s ON s.id = u.ref_shop
+       WHERE u.is_admin = 0 AND u.created_at >= ? GROUP BY u.ref_shop ORDER BY n DESC LIMIT 8`,
+      from,
+    ),
   ])
   type Count = { k: string; n: number }
   return {
@@ -352,6 +360,7 @@ export async function growthData(days: AdminDays) {
     cities: rows<Count>(cities),
     areas: rows<Count>(areas),
     devices: rows<Count>(devices),
+    brought: rows<Count>(brought),
   }
 }
 
@@ -478,6 +487,7 @@ export async function shopData(id: string, days: AdminDays) {
          (SELECT COUNT(*) FROM products WHERE shop_id = ?1 AND stock <= 0) sold_out,
          (SELECT COUNT(*) FROM collections WHERE shop_id = ?1) collections,
          (SELECT COUNT(*) FROM products WHERE shop_id = ?1 AND pick_rank IS NOT NULL) picks,
+         (SELECT COUNT(*) FROM users WHERE ref_shop = ?1 AND is_admin = 0) brought,
          (SELECT COUNT(*) FROM discounts WHERE shop_id = ?1) discounts,
          (SELECT COUNT(*) FROM bag_links WHERE shop_id = ?1) bags,
          (SELECT COUNT(*) FROM stock_alerts WHERE shop_id = ?1) alerts,
@@ -511,7 +521,7 @@ export async function shopData(id: string, days: AdminDays) {
     best: rows<TopProduct>(best),
     latest: rows<LatestOrder>(latest),
     sources: rows<{ source: string; orders: number; sales: number }>(sources),
-    features: one<Record<'hidden' | 'sold_out' | 'collections' | 'picks' | 'discounts' | 'bags' | 'alerts' | 'manual' | 'to_check' | 'cancelled' | 'buyers' | 'sales_ever', number>>(features),
+    features: one<Record<'hidden' | 'sold_out' | 'collections' | 'picks' | 'brought' | 'discounts' | 'bags' | 'alerts' | 'manual' | 'to_check' | 'cancelled' | 'buyers' | 'sales_ever', number>>(features),
     dates: one<{ first_product: number | null; first_visit: number | null; first_order: number | null; fifth_order: number | null; location: string; whatsapp: string; instagram: string; tiktok: string }>(dates),
   }
 }

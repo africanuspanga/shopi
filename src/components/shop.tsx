@@ -7,7 +7,7 @@ import type { PublicProduct, PublicShop } from '#/lib/api/store'
 import { openedFrom, track } from '#/lib/analytics'
 import { lineKey, type Cart } from '#/lib/cart'
 import { OPTION_KINDS, imageOf, optionKind, optionText, priceOf, priceSpan, tzs, waLink, formatTin, type Size } from '#/lib/format'
-import { SHOPI_ORIGIN } from '#/lib/host'
+import { refLink } from '#/lib/host'
 import { useT } from '#/lib/i18n'
 
 type Priced = Pick<PublicProduct, 'price' | 'compare_price'> & { sizes?: Size[] | null }
@@ -457,12 +457,12 @@ export function SocialLinks({ shop, whatsapp = true, className = '' }: { shop: P
 }
 
 /** Across the top of every page of a sample shop, so buyers know at once that nothing here is for sale. */
-export function DemoBanner() {
+export function DemoBanner({ shopSlug }: { shopSlug: string }) {
   const t = useT()
   return (
     <div className="bg-ink px-4 py-2.5 text-center text-[13px] leading-5 text-white">
       {t('Demo shop with sample products. Orders are switched off.')}{' '}
-      <a href={`${SHOPI_ORIGIN}/`} className="font-medium whitespace-nowrap underline decoration-white/40 underline-offset-4 hover:decoration-white">
+      <a href={refLink(shopSlug, 'banner')} className="font-medium whitespace-nowrap underline decoration-white/40 underline-offset-4 hover:decoration-white">
         {t('Open your own shop')}
       </a>
     </div>
@@ -484,11 +484,31 @@ export function BreakBanner({ whatsapp, name }: { whatsapp: string; name: string
   )
 }
 
-export function MadeWithShopi() {
+/**
+ * The quiet line at the end of checkout, bag links and the order page. With `invite` (the order page, where the buyer has
+ * finished) it also says "Open your own shop"; checkout keeps only the line, so nothing pulls a buyer away mid-order.
+ * Either way the link carries the shop (refLink), so a seller who signs up from it is counted for that shop.
+ */
+export function MadeWithShopi({ shopSlug, invite = false }: { shopSlug: string; invite?: boolean }) {
   const t = useT()
   return (
-    <a href={`${SHOPI_ORIGIN}/`} className="mx-auto mt-12 flex w-fit items-center gap-2 text-[13px] text-muted transition-colors hover:text-ink">
-      {t('Shop made with')} <Wordmark className="h-[14px] w-auto" />
+    <a
+      href={refLink(shopSlug, invite ? 'order' : 'footer')}
+      className="group mx-auto mt-12 flex w-fit flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[13px] text-muted transition-colors hover:text-ink"
+    >
+      <span className="flex items-center gap-2">
+        {t('Shop made with')} <Wordmark className="h-[14px] w-auto" />
+      </span>
+      {invite && (
+        <span aria-hidden="true" className="text-faint">
+          ·
+        </span>
+      )}
+      {invite && (
+        <span className="flex items-center gap-1 font-medium text-ink">
+          {t('Open your own shop')} <ArrowUpRight size={14} strokeWidth={1.75} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </span>
+      )}
     </a>
   )
 }
@@ -509,7 +529,7 @@ export function ShopFooter({ shop }: { shop: PublicShop }) {
         <SocialLinks shop={shop} />
       </div>
       <a
-        href={`${SHOPI_ORIGIN}/`}
+        href={refLink(shop.slug, 'footer')}
         className="group mt-8 flex items-center justify-between gap-4 rounded-[20px] bg-page px-5 py-4 transition-colors hover:bg-well"
       >
         <span className="flex items-center gap-2 text-[13px] text-muted">

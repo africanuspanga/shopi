@@ -499,11 +499,14 @@ function Growth({ d }: { d: OwnerSection<'growth'> }) {
         <Card title={t('Phones')} sub={t('What buyers open shops on')} className="lg:col-span-4">
           <BarList empty={t('No visits yet')} total={visits || undefined} rows={d.devices.map((r) => ({ label: device[r.k] ?? r.k, value: r.n, text: share(r.n, visits) }))} />
         </Card>
-        <Card title={t('Cities')} sub={t('Where visitors are, last {n} days', { n: d.days })} className="lg:col-span-6">
+        <Card title={t('Cities')} sub={t('Where visitors are, last {n} days', { n: d.days })} className="lg:col-span-4">
           <BarList empty={t('No visits yet')} rows={d.cities.map((r) => ({ label: r.k, value: r.n }))} />
         </Card>
-        <Card title={t('Delivery areas')} sub={t('Where orders go, last {n} days', { n: d.days })} className="lg:col-span-6">
+        <Card title={t('Delivery areas')} sub={t('Where orders go, last {n} days', { n: d.days })} className="lg:col-span-4">
           <BarList empty={t('No orders yet')} rows={d.areas.map((r) => ({ label: r.k, value: r.n }))} />
+        </Card>
+        <Card title={t('Sellers brought by shops')} sub={t('Sign-ups from a shop’s “Open your own shop”, last {n} days', { n: d.days })} className="lg:col-span-4">
+          <BarList empty={t('None yet')} rows={d.brought.map((r) => ({ label: r.k, value: r.n, text: share(r.n, d.now.signups) }))} />
         </Card>
       </Grid>
     </>

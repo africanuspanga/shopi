@@ -7,6 +7,15 @@
  */
 
 export const SHOPI_ORIGIN = 'https://shopi.tz'
+
+/**
+ * Where "Open your own shop" goes from a shop's pages (roadmap q-footer): Shopi's landing with the shop that sent the
+ * visitor (`ref`) and where on the page (`s`). The landing keeps `ref` for 30 days in REF_COOKIE, and sign-up stores it
+ * as users.ref_shop, so the seller invite reward has its history when it ships.
+ */
+export const REF_COOKIE = 'shopi_ref'
+export const refLink = (shopSlug: string, from: 'footer' | 'order' | 'banner') =>
+  `${SHOPI_ORIGIN}/?ref=${encodeURIComponent(shopSlug)}&s=${from}`
 /** What sellers point their CNAME at: Cloudflare for SaaS's fallback origin on the shopi.tz zone. */
 export const CNAME_TARGET = 'customers.shopi.tz'
 
