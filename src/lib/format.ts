@@ -1,4 +1,11 @@
 import { msg, translate, type Lang } from '#/lib/i18n'
+/**
+ * Short day names, Sunday first (the order of getUTCDay). The Swahili ones are how sellers write them (the founder,
+ * 17 Nov 2026): Jumapili is J2, then J3, J4, J5, Alh, Ijm, Jmos. Charts on Home, Analytics and /admin use these.
+ */
+const SHORT_DAYS = { en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], sw: ['J2', 'J3', 'J4', 'J5', 'Alh', 'Ijm', 'Jmos'] }
+export const shortDay = (lang: string, day: number) => (lang === 'sw' ? SHORT_DAYS.sw : SHORT_DAYS.en)[day]
+
 export function tzs(n: number | null | undefined) {
   return `TSh ${Math.round(n ?? 0).toLocaleString('en-US')}`
 }

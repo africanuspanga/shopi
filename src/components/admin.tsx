@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Img, Money, scrubIndex, shortNumber } from '#/components/ui'
 import type { DayPoint } from '#/lib/admin'
-import { tzs } from '#/lib/format'
+import { shortDay, tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 
 /** Shared parts of the owner dashboard (/admin). */
@@ -172,7 +172,7 @@ export function DayChart({ points, money = false, total, chip, caption, classNam
 /** Seven bars, Monday first; the busiest day is ink and carries its figure. */
 export function WeekdayBars({ counts }: { counts: number[] }) {
   const lang = useLang()
-  const names = lang === 'sw' ? ['Jpi', 'Jtt', 'Jnn', 'Jtn', 'Alh', 'Iju', 'Jms'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const names = Array.from({ length: 7 }, (_, i) => shortDay(lang, i))
   const order = [1, 2, 3, 4, 5, 6, 0]
   const peak = Math.max(...counts, 1)
   const best = counts.indexOf(Math.max(...counts))

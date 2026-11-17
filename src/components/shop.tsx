@@ -1,8 +1,8 @@
-import { Link } from '@tanstack/react-router'
-import { ArrowLeft, ArrowUpRight, Banknote, Check, Clock, FileText, MapPin, Search, Smartphone, Truck, X } from 'lucide-react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { ArrowLeft, ArrowUpRight, Banknote, Clock, FileText, MapPin, Search, Smartphone, Truck, X } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppMark } from '#/components/brand-icons'
-import { Img, Sheet, ShopAvatar, Toast, Wordmark } from '#/components/ui'
+import { Img, Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
 import { openedFrom, track } from '#/lib/analytics'
 import { lineKey, type Cart } from '#/lib/cart'
@@ -130,38 +130,22 @@ export function Tag({ children, hot = false }: { children: ReactNode; hot?: bool
 /** How wide a grid photo shows: 2 columns on phones, 3 on tablets, 4 on desktop. */
 const GRID_SIZES = '(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw'
 
-/** The Shopi bag (bag_body in design/brand/glyphs.py) with a plus cut through its face where the logo has its dot. */
-function BagPlusIcon({ size = 20 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="17 23 66 66" aria-hidden="true">
-      <path
-        fill="currentColor"
-        fillRule="evenodd"
-        d="M28 38H72a3 3 0 0 1 3 2.6l4 33.4a10 10 0 0 1-10 12H31a10 10 0 0 1-10-12L25 40.6a3 3 0 0 1 3-2.6zM46.75 53H53.25V59.75H60V66.25H53.25V73H46.75V66.25H40V59.75H46.75Z"
-      />
-      <path d="M40 41V36a10 10 0 0 1 20 0V41" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
-    </svg>
-  )
-}
-
 /**
- * A product in a grid. On desktop, hovering shows the second photo. The round bag button adds it without leaving the grid;
- * once the product is in the bag it turns Moto and shows how many, like the bag count in the capsule.
+ * A product in a grid. On desktop, hovering shows the second photo. With `onBuy`, a "Buy" ("Nunua") pill sits on the photo:
+ * the 17 Nov research found a bag-and-plus icon unclear to buyers here, so the card says what it does in one word.
  */
 export function ProductCard({
   shopSlug,
   p,
   onOpen,
-  onQuickAdd,
-  inBag = 0,
+  onBuy,
   eager = false,
   sizes = GRID_SIZES,
 }: {
   shopSlug: string
   p: PublicProduct
   onOpen?: () => void
-  onQuickAdd?: (p: PublicProduct) => void
-  inBag?: number
+  onBuy?: (p: PublicProduct) => void
   eager?: boolean
   /** How wide the photo shows, for the browser's choice of the 600 or 1200 px copy. */
   sizes?: string
@@ -183,7 +167,7 @@ export function ProductCard({
             sizes={sizes}
             className={`absolute inset-0 h-full w-full transition-opacity duration-500 ease-out ${second && peek ? 'group-hover:opacity-0' : ''} ${soldOut ? 'opacity-50' : ''}`}
           />
-          {second && peek && <Img k={second} sizes={sizes} alt=""className="absolute inset-0 h-full w-full opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100" />}
+          {second && peek && <Img k={second} sizes={sizes} alt="" className="absolute inset-0 h-full w-full opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100" />}
           <div className="absolute top-2.5 left-2.5 flex gap-1.5">
             {soldOut ? <Tag>{t('Sold out')}</Tag> : onSale(p) ? <Tag hot>−{discount(p)}%</Tag> : null}
           </div>
@@ -196,15 +180,16 @@ export function ProductCard({
           {p.sizes && !soldOut && <p className="meta mt-1 line-clamp-1">{left.map((s) => s.label).join(' · ')}</p>}
         </div>
       </Link>
-      {onQuickAdd && !soldOut && (
+      {onBuy && !soldOut && (
         <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[4/5]">
+          {/* The shop's button colour (black unless white text reads on the shop's own colour), ringed so it holds on any photo. */}
           <button
             type="button"
-            aria-label={inBag ? t('{name}: {n} in your bag. Add another', { name: p.name, n: inBag }) : t('Add {name} to bag', { name: p.name })}
-            onClick={() => onQuickAdd(p)}
-            className={`pointer-events-auto absolute right-2.5 bottom-2.5 flex h-10 min-w-10 items-center justify-center rounded-full px-2.5 shadow-[0_0_0_2px_rgb(255_255_255/0.85),0_6px_16px_-6px_rgb(10_10_10/0.35)] transition-[transform,background-color,color] duration-150 ease-out active:scale-95 ${inBag ? 'bg-moto text-on-moto' : 'bg-ink text-white hover:bg-ink-2'}`}
+            aria-label={t('Buy {name}', { name: p.name })}
+            onClick={() => onBuy(p)}
+            className="btn btn-shop btn-sm pointer-events-auto absolute right-2.5 bottom-2.5 h-9 px-4 text-white shadow-[0_0_0_2px_rgb(255_255_255/0.85),0_6px_16px_-6px_rgb(10_10_10/0.35)]"
           >
-            {inBag ? <span className="tnum text-[15px] font-semibold">{inBag}</span> : <BagPlusIcon />}
+            {t('Buy')}
           </button>
         </div>
       )}
@@ -212,7 +197,7 @@ export function ProductCard({
   )
 }
 
-/** Quick add: pick a size and drop it in the bag without opening the product. */
+/** Buying from a card a product with options: choose one, then Buy puts it in the bag and opens checkout. */
 export function QuickAddSheet({ shopSlug, p, onClose, onAdd }: { shopSlug: string; p: PublicProduct | null; onClose: () => void; onAdd: (size: string | null) => void }) {
   const t = useT()
   const [size, setSize] = useState<string | null>(null)
@@ -221,7 +206,7 @@ export function QuickAddSheet({ shopSlug, p, onClose, onAdd }: { shopSlug: strin
   const low = chosen?.stock != null && chosen.stock > 0 && chosen.stock <= 3
   const kind = OPTION_KINDS[optionKind(p.option_name)]
   return (
-    <Sheet open onClose={onClose} title={t('Add to bag')}>
+    <Sheet open onClose={onClose} title={t(kind.choose)}>
       <div className="flex gap-4">
         <Img k={imageOf(p, chosen?.label)} size="thumb" alt={p.name} className="h-[100px] w-20 shrink-0 rounded-[12px]" />
         <div className="min-w-0 py-1">
@@ -248,55 +233,44 @@ export function QuickAddSheet({ shopSlug, p, onClose, onAdd }: { shopSlug: strin
         </div>
       )}
       <button type="button" className="btn btn-shop btn-lg mt-6 w-full" disabled={!!p.sizes && !chosen} onClick={() => onAdd(chosen?.label ?? null)}>
-        {p.sizes && !chosen ? t(kind.choose) : t('Add to bag')}
+        {t('Buy')}
       </button>
     </Sheet>
   )
 }
 
 /**
- * Quick add from a row of product cards: products with options open the sheet, others go straight in the bag, and a
- * toast says so. `ui` is the sheet and the toast, to render once beside the cards.
+ * Buy from a row of product cards: a product with options opens the sheet to choose one; then (or straight away) it goes in
+ * the bag and the buyer lands on checkout, with anything already in the bag. `ui` is the sheet, rendered once beside the cards.
  */
-function useQuickAdd(shop: Pick<PublicShop, 'id' | 'slug'>, cart: Cart) {
-  const t = useT()
+function useQuickBuy(shop: Pick<PublicShop, 'id' | 'slug'>, cart: Cart) {
+  const navigate = useNavigate()
   const [quick, setQuick] = useState<PublicProduct | null>(null)
-  const [added, setAdded] = useState('')
-  const inBag = (id: string) => cart.lines.reduce((n, l) => (l.productId === id ? n + l.qty : n), 0)
 
-  function addToBag(p: PublicProduct, size: string | null) {
+  function buy(p: PublicProduct, size: string | null) {
     cart.add(lineKey(p.id, size))
     track('add_to_cart', { shopId: shop.id, productId: p.id, detail: 'quick' })
     setQuick(null)
-    setAdded(size ? t('{name} ({option}) is in your bag', { name: p.name, option: optionText(t, p.option_name, size) }) : t('{name} is in your bag', { name: p.name }))
-    setTimeout(() => setAdded(''), 2200)
+    navigate({ to: '/$shop/checkout', params: { shop: shop.slug } })
   }
 
   return {
-    inBag,
-    open: (p: PublicProduct) => (p.sizes ? setQuick(p) : addToBag(p, null)),
-    ui: (
-      <>
-        <QuickAddSheet key={quick?.id ?? 'none'} shopSlug={shop.slug} p={quick} onClose={() => setQuick(null)} onAdd={(size) => quick && addToBag(quick, size)} />
-        <Toast show={!!added}>
-          <Check size={16} strokeWidth={2.25} /> {added}
-        </Toast>
-      </>
-    ),
+    open: (p: PublicProduct) => (p.sizes ? setQuick(p) : buy(p, null)),
+    ui: <QuickAddSheet key={quick?.id ?? 'none'} shopSlug={shop.slug} p={quick} onClose={() => setQuick(null)} onAdd={(size) => quick && buy(quick, size)} />,
   }
 }
 
 /**
- * A shop's products in a grid (2, 3 or 4 columns) with quick add. Used by the shop page and collection pages.
+ * A shop's products in a grid (2, 3 or 4 columns), each with Buy. Used by the shop page and collection pages.
  * `eager` is how many photos load at once: the shop page passes 0 when Top picks sit above the grid.
  */
 export function ProductGrid({ shop, products, cart, eager = 4 }: { shop: Pick<PublicShop, 'id' | 'slug'>; products: PublicProduct[]; cart: Cart; eager?: number }) {
-  const quick = useQuickAdd(shop, cart)
+  const quick = useQuickBuy(shop, cart)
   return (
     <>
       <div className="grid grid-cols-2 gap-x-3 gap-y-8 pt-5 md:grid-cols-3 md:gap-x-6 md:gap-y-12 md:pt-8 lg:grid-cols-4">
         {products.map((p, i) => (
-          <ProductCard key={p.id} shopSlug={shop.slug} p={p} eager={i < eager} inBag={quick.inBag(p.id)} onQuickAdd={quick.open} />
+          <ProductCard key={p.id} shopSlug={shop.slug} p={p} eager={i < eager} onBuy={quick.open} />
         ))}
       </div>
       {quick.ui}
@@ -319,7 +293,7 @@ export function pickedProducts(picks: string[], products: PublicProduct[]) {
  */
 export function TopPicks({ shop, products, cart }: { shop: Pick<PublicShop, 'id' | 'slug'>; products: PublicProduct[]; cart: Cart }) {
   const t = useT()
-  const quick = useQuickAdd(shop, cart)
+  const quick = useQuickBuy(shop, cart)
   return (
     <section aria-labelledby="top-picks" className="pb-8 md:pb-14">
       <h2 id="top-picks" className="title text-[20px] md:text-[26px]">
@@ -333,8 +307,7 @@ export function TopPicks({ shop, products, cart }: { shop: Pick<PublicShop, 'id'
               p={p}
               eager={i < 2}
               sizes="(min-width: 1024px) 25vw, (min-width: 768px) 22vw, 68vw"
-              inBag={quick.inBag(p.id)}
-              onQuickAdd={quick.open}
+              onBuy={quick.open}
               onOpen={() => openedFrom(p.id, 'pick')}
             />
           </div>

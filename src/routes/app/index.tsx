@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { Delta, Empty, Img, LangSwitch, Money, Page, PhoneBar, ShopAvatar, StatusPill, Toast, scrubIndex, useEntrance } from '#/components/ui'
 import { PhoneAlertsCard } from '#/components/phone-app'
 import { getDashboard } from '#/lib/api/merchant'
-import { timeAgo, tzs } from '#/lib/format'
+import { shortDay, timeAgo, tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import type { PlanState } from '#/lib/plans'
 import { shareLink, useOrigin } from '#/lib/share'
@@ -385,9 +385,7 @@ function SalesChart({ days, total, className = '' }: { days: { day: number; tota
     return [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].map((m) => m * pow).find((s) => s >= raw) ?? raw
   })()
   const top = step * 3
-  const SW_DAYS = ['Jpi', 'Jtt', 'Jnn', 'Jtn', 'Alh', 'Iju', 'Jms']
-  const EN_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  const dayName = (ms: number) => (lang === 'sw' ? SW_DAYS : EN_DAYS)[new Date(ms).getUTCDay()]
+  const dayName = (ms: number) => shortDay(lang, new Date(ms).getUTCDay())
   const longDay = (ms: number) => new Date(ms).toLocaleDateString(lang === 'sw' ? 'sw-TZ' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' })
   const chosen = days[sel]
   return (

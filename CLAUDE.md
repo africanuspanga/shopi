@@ -31,7 +31,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | --- | --- |
 | `src/styles.css` | The design system: tokens (`@theme`) and component classes. Read it first. |
 | `src/components/ui.tsx` | App-wide parts: `Page`, `TopBar`, `PhoneBar`, `BackButton`, `Chips`, `StatusPill`, `Img`, `ShopAvatar`, `Money`, `Delta`, `Sheet`, `Field`, `Switch`, `Empty`, `Toast`, `TextLink`, `ErrorText`, `LangSwitch`, `Wordmark` |
-| `src/components/shop.tsx` | Storefront parts: `ProductGrid` (the grid with quick add and its toast), `TopPicks` (the band above it) and `pickedProducts`, `ProductCard` (quick add), `QuickAddSheet`, `Price`, `Tag`, `BagButton`, `ShopTopBar`, `ShopFacts`, `FactPills`, `SocialLinks`, `ShopFooter`, `MadeWithShopi` |
+| `src/components/shop.tsx` | Storefront parts: `ProductGrid` (the grid with quick add and its toast), `TopPicks` (the band above it) and `pickedProducts`, `ProductCard` (with its Buy pill), `QuickAddSheet`, `Price`, `Tag`, `BagButton`, `ShopTopBar`, `ShopFacts`, `FactPills`, `SocialLinks`, `ShopFooter`, `MadeWithShopi` |
 | `src/components/floating-nav.tsx` | The phone capsule: `FloatingNav`, `NavTab`, `NavCenter`, `NavCount`, `useHideFloatingNav` |
 | `src/components/shop-nav.tsx` | The storefront's capsule with its search and info sheets |
 | `src/components/not-found.tsx` | Not-found pages for missing shops, products and orders |
@@ -102,7 +102,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `ok` / `wait` / `bad` | `#15803d` / `#b45309` / `#d92d20` | Meaning only: status dots, check icons, errors |
 
 **Moto rules.** Moto marks what is hot or needs the seller, and the active tab in the floating bottom nav:
-bag count once something is in it (also on a product card's quick-add button, which turns Moto and shows how many of that product are in the bag), sale tags, low stock, "Check payment" status, payments-to-check count,
+bag count once something is in it, sale tags, low stock, "Check payment" status, payments-to-check count,
 today's bar in charts, the `.signal` dot, the active bottom-nav icon, and the logo's full stop.
 Primary buttons are **never** Moto; they are ink. Text on Moto is ink, never white (white fails contrast).
 No gradients between hues, no glows, no coloured shadows. The only gradient allowed is a neutral fade
@@ -223,7 +223,9 @@ Write English as the key: every string goes through `t()` from `src/lib/i18n.tsx
   English) and its English key to `sw-unchecked.json`, then export again for the team. Match the team's words: duka, oda,
   kapu (bag), bidhaa, delivery, share (not "shiriki"), taslimu (cash), lipa ukipokea (cash on delivery), pesa kwa simu
   (mobile money), ghairi (cancel), code ya punguzo (never "kodi", which means tax), kifurushi (plan), Mwanzo (Home),
-  Mipangilio ya duka (Shop settings).
+  Mipangilio ya duka (Shop settings), Nunua (Buy), Weka notifications (Turn on notifications), Pakua Shopi app (Install
+  the app), and Copy on buttons, not Nakili (the founder, 17 Nov). Short days: J2 (Sunday), J3, J4, J5, Alh, Ijm, Jmos
+  (`shortDay()` in `lib/format.ts`).
 
 ### Logo
 "shopi" is Mona Sans ExtraBold at 120% width, lowercase, with the i's dot drawn as a perfect-circle Moto dot as wide as the
@@ -368,6 +370,11 @@ domain are lowercase.
   seconds after launch before the first push arrives.
 - Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
   sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.
+- Buy on product cards (17 Nov, the founder: the bag-and-plus icon was unclear to buyers here): every card in the shop's
+  grid, collections and Top picks carries a "Buy" pill ("Nunua", sentence case like every button) in the shop's button
+  colour (`.btn-shop`). It puts the product in the bag and opens checkout with whatever the bag already holds; a product
+  with options first opens `QuickAddSheet` titled "Choose your size" (or colour, style…) with one Buy button. Analytics
+  still records `add_to_cart` with detail `quick`. The product page keeps Add to bag for buyers who want several things.
 - The bag lives in the buyer's localStorage (`useCart`), so the server never knows it: `useCart().ready` is false until it has
   been read, and checkout waits for it instead of showing "Your bag is empty" (on a slow phone that would sit there for seconds).
 - Order statuses: `awaiting_payment` → `payment_claimed` (buyer pasted an SMS) → `confirmed` → `dispatched` → `delivered`,
@@ -465,7 +472,7 @@ Logs start with `[jobs]` (Workers Logs); a failed task fails the run, so it show
   | --- | --- |
   | `view_shop` | —, `bag_link` when a bag link is opened, `collection` on a collection page |
   | `view_product` | —, `pick` when opened from the shop's Top picks |
-  | `add_to_cart` | `quick` or `page` |
+  | `add_to_cart` | `quick` (Buy on a card, which then opens checkout) or `page` |
   | `checkout_start` | — |
   | `whatsapp_click` | `shop`, `product`, `order`, `footer` |
   | `social_click` | `instagram`, `tiktok`, `facebook` |
