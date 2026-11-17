@@ -521,25 +521,22 @@ function FirstProductCard({ className = '' }: { className?: string }) {
   )
 }
 
+/** The plan line on Home: a quiet way to Tembo for free shops, and Tembo's renewal in its last 30 days. */
 function PlanRow({ plan }: { plan: PlanState | null }) {
   const rise = useEntrance()
   const t = useT()
-  if (!plan || plan.kind === 'demo' || (plan.kind === 'paid' && plan.daysLeft > 30)) return null
-  const soon = (plan.kind === 'trial' || plan.kind === 'paid') && plan.daysLeft <= 3
+  if (!plan || plan.kind === 'demo' || (plan.kind === 'tembo' && plan.daysLeft > 30)) return null
+  const soon = plan.kind === 'tembo' && plan.daysLeft <= 3
   const text =
-    plan.kind === 'trial'
-      ? t(plan.daysLeft === 1 ? 'Free trial: {n} day left' : 'Free trial: {n} days left', { n: plan.daysLeft })
-      : plan.kind === 'paid'
-        ? t(plan.daysLeft === 1 ? 'Your plan ends in {n} day' : 'Your plan ends in {n} days', { n: plan.daysLeft })
-        : plan.paused
-          ? t('Your shop is taking a break')
-          : t('Your free trial has ended. You can keep selling for now.')
+    plan.kind === 'tembo'
+      ? t(plan.daysLeft === 1 ? 'Tembo ends in {n} day' : 'Tembo ends in {n} days', { n: plan.daysLeft })
+      : t('You are on Free')
   return (
     <Link to="/app/plan" className={`${rise} card mt-6 flex items-center gap-3 px-5 py-4 transition-colors hover:bg-page md:mt-8`}>
-      {(soon || plan.kind === 'ended') && <span className="signal shrink-0" aria-hidden />}
+      {soon && <span className="signal shrink-0" aria-hidden />}
       <span className="min-w-0 flex-1 truncate text-[15px] font-medium">{text}</span>
       <span className="flex shrink-0 items-center gap-1 text-[14px] text-ink-2">
-        {t('See plans')} <ChevronRight size={16} strokeWidth={1.6} />
+        {plan.kind === 'tembo' ? t('Renew') : t('See what Tembo adds')} <ChevronRight size={16} strokeWidth={1.6} />
       </span>
     </Link>
   )

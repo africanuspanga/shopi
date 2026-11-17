@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { LegalPage, Section } from '#/components/legal'
 import { useT } from '#/lib/i18n'
-import { PLANS, SETUP_TRIAL_DAYS, TRIAL_DAYS } from '#/lib/plans'
+import { FREE_PRODUCTS, TEMBO_PRICE } from '#/lib/plans'
 import { canonical } from '#/lib/seo'
 
 export const Route = createFileRoute('/terms')({
@@ -11,7 +11,6 @@ export const Route = createFileRoute('/terms')({
 
 function Terms() {
   const t = useT()
-  const price = (id: string) => `TSh ${PLANS.find((p) => p.id === id)!.price.toLocaleString('en-US')}`
   return (
     <LegalPage
       title={t('Terms')}
@@ -62,18 +61,15 @@ function Terms() {
 
       <Section title={t('Plans and payment')}>
         <ul>
+          <li>{t('A shop on Free costs nothing and has no time limit. It holds up to {n} products.', { n: FREE_PRODUCTS })}</li>
           <li>
-            {t('Every new shop starts with a free trial of {n} days, or {m} days once its setup is finished.', { n: TRIAL_DAYS, m: SETUP_TRIAL_DAYS })}
-          </li>
-          <li>
-            {t('After the trial, a shop needs a yearly plan: Twiga at {twiga} or Tembo at {tembo} a year. Prices may change; a change applies from your next year, and we tell you first.', {
-              twiga: price('twiga'),
-              tembo: price('tembo'),
+            {t('Tembo costs {price} a year and adds the features listed on the plan page. Prices may change; a change applies from your next year, and we tell you first.', {
+              price: `TSh ${TEMBO_PRICE.toLocaleString('en-US')}`,
             })}
           </li>
           <li>{t('Shopi takes no commission on your sales.')}</li>
-          <li>{t('Plans are paid in advance and are not refunded for the part of the year not used, unless the law requires it or we close your shop without a reason under these terms.')}</li>
-          <li>{t('If a plan ends unpaid, your shop takes a break: buyers can still see it and message you, but can’t order. Nothing is deleted, and paying opens it again.')}</li>
+          <li>{t('Tembo is paid in advance and is not refunded for the part of the year not used, unless the law requires it or we close your shop without a reason under these terms.')}</li>
+          <li>{t('If Tembo ends unpaid, your shop goes back to Free: it keeps selling, Tembo’s features switch off, and nothing is deleted.')}</li>
         </ul>
       </Section>
 

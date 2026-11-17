@@ -41,7 +41,7 @@ export type AdminShop = {
   domain: string | null
 }
 
-export const SHOP_FILTERS = ['all', 'ending', 'none', 'quiet', 'paid'] as const
+export const SHOP_FILTERS = ['all', 'none', 'quiet', 'tembo', 'renewing'] as const
 export type ShopFilter = (typeof SHOP_FILTERS)[number]
 
 const DAY = 86_400_000
@@ -50,10 +50,10 @@ const DAY = 86_400_000
 export function shopMatches(s: AdminShop, f: ShopFilter, at: number) {
   if (f === 'all') return true
   if (s.status === 'demo') return false
-  if (f === 'ending') return s.plan.kind === 'trial' && s.plan.daysLeft <= 7
   if (f === 'none') return s.ordersEver === 0
   if (f === 'quiet') return s.ordersEver > 0 && (s.last_order ?? 0) < at - 7 * DAY
-  return s.plan.kind === 'paid'
+  if (f === 'renewing') return s.plan.kind === 'tembo' && s.plan.daysLeft <= 30
+  return s.plan.kind === 'tembo'
 }
 
 export type DayPoint = { day: number; value: number }

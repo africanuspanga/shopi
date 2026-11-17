@@ -52,7 +52,7 @@ function BagPage() {
   const t = useT()
   const lang = useLang()
   const navigate = useNavigate()
-  const { shop, areas, paused } = parent.useLoaderData()
+  const { shop, areas } = parent.useLoaderData()
   const { bag } = Route.useLoaderData()
 
   useEffect(() => {
@@ -86,7 +86,6 @@ function BagPage() {
     <CheckoutView
       shop={shop}
       areas={areas}
-      paused={paused}
       lines={lines}
       title={t('Your bag is ready')}
       intro={

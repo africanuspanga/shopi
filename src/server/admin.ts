@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:workers'
 import type { AdminDays, AdminShop, DayPoint } from '#/lib/admin'
-import { PLANS, planState } from '#/lib/plans'
+import { TEMBO_PRICE, planState } from '#/lib/plans'
 import { SESSION_DAYS } from '#/server/auth'
 import { db, now } from '#/server/db'
 
@@ -147,7 +147,7 @@ function toShops(r: D1Result<unknown>, t: number): AdminShop[] {
       products: s.products,
       noPhoto: s.no_photo,
       setup,
-      plan: planState({ status: s.status, plan: s.plan, created_at: s.created_at, trial_ends: s.trial_ends, paid_until: s.paid_until }, setup === 4, t),
+      plan: planState({ status: s.status, plan: s.plan, paid_until: s.paid_until }, t),
       orders: s.orders,
       ordersEver: s.orders_ever,
       sales: s.sales,
@@ -166,17 +166,14 @@ function toShops(r: D1Result<unknown>, t: number): AdminShop[] {
 /** Plans right now, across the shops that count. */
 function plansOf(shops: AdminShop[]) {
   const live = shops.filter((s) => s.status !== 'demo')
-  const paid = (id: string) => live.filter((s) => s.plan.kind === 'paid' && s.plan.plan === id).length
-  const twiga = paid('twiga')
-  const tembo = paid('tembo')
+  const tembo = live.filter((s) => s.plan.kind === 'tembo').length
   return {
     shops: live.length,
-    trial: live.filter((s) => s.plan.kind === 'trial').length,
-    endingSoon: live.filter((s) => s.plan.kind === 'trial' && s.plan.daysLeft <= 7).length,
-    ended: live.filter((s) => s.plan.kind === 'ended').length,
-    twiga,
+    free: live.length - tembo,
     tembo,
-    yearly: PLANS.reduce((sum, p) => sum + p.price * (p.id === 'twiga' ? twiga : tembo), 0),
+    /** Tembo shops whose year ends within 30 days. */
+    renewing: live.filter((s) => s.plan.kind === 'tembo' && s.plan.daysLeft <= 30).length,
+    yearly: tembo * TEMBO_PRICE,
   }
 }
 

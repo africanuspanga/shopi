@@ -282,7 +282,7 @@ function ShopSettings() {
           </Link>
         </Group>
 
-        <Group title={t('Plan')} sub={t('Twiga or Tembo, paid once a year. See your trial and your plan.')}>
+        <Group title={t('Plan')} sub={t('Free, or Tembo once a year. See what Tembo adds.')}>
           <Link to="/app/plan" className="btn btn-ghost">
             {t('See your plan')} <ChevronRight size={16} strokeWidth={1.6} />
           </Link>

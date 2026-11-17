@@ -470,20 +470,6 @@ export function DemoBanner({ shopSlug }: { shopSlug: string }) {
 }
 
 /** A shop whose plan ended: still visible, orders off, WhatsApp still works. Nothing is deleted. */
-export function BreakBanner({ whatsapp, name }: { whatsapp: string; name: string }) {
-  const t = useT()
-  return (
-    <div className="bg-ink px-4 py-2.5 text-center text-[13px] leading-5 text-white">
-      {t('{shop} is taking a break. Orders are off for now.', { shop: name })}{' '}
-      {whatsapp && (
-        <a href={waLink(whatsapp)} className="font-medium whitespace-nowrap underline decoration-white/40 underline-offset-4 hover:decoration-white">
-          {t('Message on WhatsApp')}
-        </a>
-      )}
-    </div>
-  )
-}
-
 /**
  * The quiet line at the end of checkout, bag links and the order page. With `invite` (the order page, where the buyer has
  * finished) it also says "Open your own shop"; checkout keeps only the line, so nothing pulls a buyer away mid-order.

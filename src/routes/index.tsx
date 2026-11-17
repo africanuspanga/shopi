@@ -8,6 +8,7 @@ import { Wordmark, useEntrance } from '#/components/ui'
 import { REF_COOKIE } from '#/lib/host'
 import { useT } from '#/lib/i18n'
 import { PLANS } from '#/lib/plans'
+import { PlanItems, PlanPrice } from '#/components/plans'
 import { SITE, canonical, ld } from '#/lib/seo'
 
 export const Route = createFileRoute('/')({
@@ -37,7 +38,7 @@ function Landing() {
   const t = useT()
   const { session } = Route.useRouteContext()
   const start = session.user ? (session.shop ? '/app' : '/onboard') : '/signup'
-  const startLabel = session.shop ? t('Go to my shop') : t('Start 14 days free')
+  const startLabel = session.shop ? t('Go to my shop') : t('Open your free shop')
 
   // Arrived from a shop's "Open your own shop": remember which shop for 30 days, for sign-up (the latest one wins).
   useEffect(() => {
@@ -168,7 +169,7 @@ function Hero({ start, startLabel }: { start: string; startLabel: string }) {
             </a>
           </div>
           <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-[14px] text-ink-2">
-            {[t('14 days free'), t('No commission on sales'), t('Ready in 5 minutes')].map((x) => (
+            {[t('Free to start'), t('No commission on sales'), t('Ready in 5 minutes')].map((x) => (
               <li key={x} className="flex items-center gap-2">
                 <Check size={15} strokeWidth={2} className="text-ink" /> {x}
               </li>
@@ -387,37 +388,27 @@ function Pricing({ start }: { start: string }) {
     <section id="pricing" className="scroll-mt-24 py-20 md:py-28">
       <Container>
         <div className="max-w-[40rem]">
-          <H2>{t('Two plans, paid once a year')}</H2>
-          <Lead className="mt-6">{t('Every shop starts with 14 days free, or 30 when you finish setting up. No commission on your sales, ever.')}</Lead>
+          <H2>{t('Free to sell. Tembo when you grow.')}</H2>
+          <Lead className="mt-6">{t('Your shop is free for as long as you like. Tembo adds more, once a year. No commission on your sales, ever.')}</Lead>
         </div>
         <div className="mt-10 grid gap-4 md:mt-14 lg:grid-cols-2 lg:gap-6">
           {PLANS.map((p, i) => (
             <div key={p.name} className={`flex flex-col rounded-[32px] p-3 ${i === 1 ? 'bg-ink text-white' : 'bg-card'}`}>
               <div className={`rounded-[24px] p-6 md:p-8 ${i === 1 ? 'bg-white/[0.08]' : 'bg-page'}`}>
-                <p className="title text-[22px]">{p.name}</p>
+                <p className="title text-[22px]">{t(p.name)}</p>
                 <p className={`mt-1 text-[15px] ${i === 1 ? 'text-white/70' : 'text-ink-2'}`}>{t(p.lead)}</p>
-                <p className="mt-5 flex items-baseline gap-2 whitespace-nowrap">
-                  <span className="text-[20px] font-medium md:text-[24px]">TSh</span>
-                  <span className="display text-[56px] md:text-[72px]">{p.price.toLocaleString('en-US')}</span>
-                  <span className={`text-[15px] ${i === 1 ? 'text-white/70' : 'text-muted'}`}>/ {t('year')}</span>
-                </p>
+                <PlanPrice plan={p} dark={i === 1} className="mt-5" />
               </div>
-              <ul className="flex-1 space-y-3 px-6 pt-6 text-[15px] md:px-8">
-                {p.items.map((x) => (
-                  <li key={x} className="flex items-start gap-3">
-                    <Check size={17} strokeWidth={2} className="mt-[3px] shrink-0" /> {t(x)}
-                  </li>
-                ))}
-              </ul>
+              <PlanItems plan={p} dark={i === 1} className="flex-1 px-6 pt-6 md:px-8" />
               <div className="p-6 md:p-8">
                 <Link to={start} className={`btn btn-lg w-full ${i === 1 ? 'bg-white text-ink' : ''}`}>
-                  {t('Start 14 days free')}
+                  {i === 1 ? t('Start free, add Tembo any time') : t('Open your free shop')}
                 </Link>
               </div>
             </div>
           ))}
         </div>
-        <p className="mt-6 text-[14px] text-muted">{t('Pay by mobile money. If a plan ends unpaid, your shop takes a break and nothing is deleted.')}</p>
+        <p className="mt-6 text-[14px] text-muted">{t('Tembo is paid by mobile money. If it ends unpaid, your shop goes back to Free and keeps selling. Nothing is deleted.')}</p>
       </Container>
     </section>
   )
@@ -428,7 +419,7 @@ function Pricing({ start }: { start: string }) {
 function Faq() {
   const t = useT()
   const qs = [
-    [t('What does Shopi cost?'), t('Every shop starts with 14 days free, or 30 when you finish setting up. Then Twiga is TSh 49,000 a year and Tembo TSh 99,000 a year. We take no commission on your sales.')],
+    [t('What does Shopi cost?'), t('Your shop is free: products, orders and payments, for as long as you like. Tembo, TSh 99,000 a year (about TSh 8,250 a month), adds your own domain, shop fonts, full analytics, unlimited products and SMS to your buyers. We take no commission on your sales.')],
     [t('How do I get paid?'), t('The buyer pays your Lipa Namba or pays cash on delivery, the way they already pay sellers today. The money never passes through Shopi.')],
     [t('How do I know a buyer really paid?'), t('The buyer pastes the payment SMS. We check the amount, the name and the transaction ID, and refuse one already used. Still check your phone before you confirm.')],
     [t('Do I need a website or a developer?'), t('No. You open the shop on your phone in a few minutes and get a link to share.')],

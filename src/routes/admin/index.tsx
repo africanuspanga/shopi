@@ -190,9 +190,8 @@ export function usePlanText() {
   return (s: AdminShop) => {
     const p = s.plan
     if (p.kind === 'demo') return t('Demo')
-    if (p.kind === 'trial') return t(p.daysLeft === 1 ? 'Trial, {n} day left' : 'Trial, {n} days left', { n: p.daysLeft })
-    if (p.kind === 'paid') return t('{plan} until {date}', { plan: p.plan === 'twiga' ? 'Twiga' : 'Tembo', date: date(p.until) })
-    return t('Ended {date}', { date: date(p.until) })
+    if (p.kind === 'tembo') return t('{plan} until {date}', { plan: 'Tembo', date: date(p.until) })
+    return t('Free')
   }
 }
 
@@ -204,7 +203,7 @@ function Shops({ d }: { d: OwnerSection<'shops'> }) {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<ShopFilter>('all')
   const q = query.trim().toLowerCase()
-  const names: Record<ShopFilter, string> = { all: t('All'), ending: t('Trial ending'), none: t('No orders yet'), quiet: t('Quiet 7 days'), paid: t('Paying') }
+  const names: Record<ShopFilter, string> = { all: t('All'), none: t('No orders yet'), quiet: t('Quiet 7 days'), tembo: 'Tembo', renewing: t('Tembo ending in 30 days') }
   const inFilter = (f: ShopFilter) => d.shops.filter((s) => shopMatches(s, f, d.at))
   const shown = inFilter(filter).filter((s) => !q || `${s.name} ${s.slug} ${s.owner} ${s.phone} ${s.domain ?? ''}`.toLowerCase().includes(q))
   const flags = (s: AdminShop) => (
@@ -362,12 +361,10 @@ function MoneyTab({ d }: { d: OwnerSection<'money'> }) {
           <DayChart points={d.sales} money total={d.now.sales} chip={<Change now={d.now.sales} before={d.before.sales} />} caption={t('Sales, last {n} days', { n: d.days })} />
         </section>
         <Card title={t('Plans')} sub={t('Right now. Sellers can’t pay in Shopi yet, so no shop pauses.')} className="lg:col-span-4">
-          <Row label={t('On a free trial')} value={num(d.plans.trial)} />
-          <Row label={t('Trial ends within 7 days')} value={num(d.plans.endingSoon)} />
-          <Row label={t('Trial or plan ended')} value={num(d.plans.ended)} />
-          <Row label="Twiga" value={num(d.plans.twiga)} />
+          <Row label={t('Free')} value={num(d.plans.free)} />
           <Row label="Tembo" value={num(d.plans.tembo)} />
-          <Row label={t('Yearly income from paid plans')} value={<Money value={d.plans.yearly} cur="text-[0.8em] text-muted" />} strong />
+          <Row label={t('Tembo ending in 30 days')} value={num(d.plans.renewing)} />
+          <Row label={t('Yearly income from Tembo')} value={<Money value={d.plans.yearly} cur="text-[0.8em] text-muted" />} strong />
         </Card>
         <Card title={t('How buyers pay')} sub={t('Sales by payment, last {n} days', { n: d.days })} className="lg:col-span-4">
           <BarList

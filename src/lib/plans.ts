@@ -1,72 +1,87 @@
-/** Plans and the trial, in one place: the landing page, the seller's plan page and the server all read this. */
+/**
+ * Plans, in one place: the landing page, the Terms, the seller's plan page, the server and the owner dashboard read this.
+ * Since 17 Nov 2026 (the founder): two prices only, Free (TSh 0) and Tembo (TSh 99,000 a year, flat: Driftmark absorbs
+ * Selcom's fee, no VAT). No trial: the free shop is the trial, and it stays open for as long as the seller likes.
+ */
 
 export const DAY = 86_400_000
-export const TRIAL_DAYS = 14
-/** A shop that finishes setup (product, Lipa Namba, delivery areas, logo) gets this many days instead. */
-export const SETUP_TRIAL_DAYS = 30
 
 /**
- * Off until sellers can pay inside Shopi. While off, a shop whose trial has ended keeps selling and is
- * told that payment opens soon; nothing pauses. Turn on in the same release as billing.
+ * Off until sellers can pay for Tembo inside Shopi (Selcom, as CV Chap Chap does it). While off, Tembo features show
+ * "Included in Tembo" and that payment opens soon. Turn on in the same release as billing.
  */
 export const BILLING_LIVE = false
 
-export type PlanId = 'twiga' | 'tembo'
+export type PlanId = 'free' | 'tembo'
 
-export const PLANS: { id: PlanId; name: string; price: number; lead: string; items: string[] }[] = [
+export const TEMBO_PRICE = 99_000
+/** Shown beside the yearly price, so it reads as small as it is (the founder's ask). */
+export const TEMBO_MONTH = Math.round(TEMBO_PRICE / 12)
+/** A free shop holds up to this many products; Tembo has no limit. */
+export const FREE_PRODUCTS = 300
+/** Shops that used fonts or their own domain before Tembo existed keep them until the end of 31 Dec 2026 in Dar. */
+export const GRACE_UNTIL = Date.parse('2026-12-31T21:00:00Z')
+
+/** What a plan card lists. `soon`: not built yet, so the card says so (no claims we cannot back). */
+export type PlanItem = { text: string; soon?: boolean }
+
+export const PLANS: { id: PlanId; name: string; price: number; lead: string; items: PlanItem[] }[] = [
   {
-    id: 'twiga',
-    name: 'Twiga',
-    price: 49_000,
-    lead: 'Everything a seller needs to take orders from one link.',
+    id: 'free',
+    name: 'Free',
+    price: 0,
+    lead: 'Everything you need to sell from one link.',
     items: [
-      'Your shop at shopi.tz/yourname',
-      'Unlimited products, 6 photos each',
-      'Lipa Namba and cash on delivery',
-      'Orders, sizes and stock',
-      'Shopi assistant, 100 chats a month',
-      'AI product descriptions, 50 a month',
-      'Analytics for 90 days',
-      'Your customer list',
+      { text: 'Your shop at shopi.tz/yourname' },
+      { text: 'Up to 300 products, with bulk import' },
+      { text: 'Lipa Namba and cash on delivery' },
+      { text: 'Orders, sizes and stock' },
+      { text: 'Bag links, discount codes and collections' },
+      { text: 'Your colour and cover photo' },
+      { text: 'Analytics for 7 and 30 days' },
     ],
   },
   {
     id: 'tembo',
     name: 'Tembo',
-    price: 99_000,
-    lead: 'For shops that sell every day, with a team.',
+    price: TEMBO_PRICE,
+    lead: 'For shops that sell every day.',
     items: [
-      'Everything in Twiga',
-      '10 photos per product, bulk import',
-      'Shopi assistant, 500 chats a month',
-      'Unlimited AI product descriptions',
-      'Analytics for 12 months, with export',
-      'Your own domain, fonts and colours',
-      'Hide “Made with Shopi”',
-      '3 staff accounts',
-      'Campaigns to your customers',
+      { text: 'Everything in Free' },
+      { text: 'Unlimited products' },
+      { text: 'Your own domain and shop fonts' },
+      { text: 'No “Shop made with Shopi” line' },
+      { text: 'Full analytics: 90 days, channels, buyers and downloads' },
+      { text: '500 SMS a year to your buyers, many sent automatically', soon: true },
+      { text: 'Unlimited AI product descriptions', soon: true },
     ],
   },
 ]
 
-export type PlanInput = { status: string; plan: string; created_at: number; trial_ends: number | null; paid_until: number | null }
+export type PlanInput = { status: string; plan: string; paid_until: number | null }
 
 export type PlanState =
   | { kind: 'demo' }
-  | { kind: 'trial'; until: number; daysLeft: number; setupBonus: boolean }
-  | { kind: 'paid'; plan: PlanId; until: number; daysLeft: number }
-  /** The trial or the paid year is over. `paused` only once sellers can pay in Shopi. */
-  | { kind: 'ended'; plan: PlanId | null; until: number; paused: boolean }
+  | { kind: 'free' }
+  | { kind: 'tembo'; until: number; daysLeft: number }
 
-export function planState(s: PlanInput, setupDone: boolean, at = Date.now()): PlanState {
+export function planState(s: PlanInput, at = Date.now()): PlanState {
   if (s.status === 'demo') return { kind: 'demo' }
-  const days = (until: number) => Math.max(0, Math.ceil((until - at) / DAY))
-  const plan = s.plan === 'twiga' || s.plan === 'tembo' ? s.plan : null
-  if (s.paid_until && plan) {
-    if (s.paid_until > at) return { kind: 'paid', plan, until: s.paid_until, daysLeft: days(s.paid_until) }
-    return { kind: 'ended', plan, until: s.paid_until, paused: BILLING_LIVE }
+  if (s.plan === 'tembo' && s.paid_until && s.paid_until > at) {
+    return { kind: 'tembo', until: s.paid_until, daysLeft: Math.max(0, Math.ceil((s.paid_until - at) / DAY)) }
   }
-  const until = s.trial_ends ?? s.created_at + (setupDone ? SETUP_TRIAL_DAYS : TRIAL_DAYS) * DAY
-  if (until > at) return { kind: 'trial', until, daysLeft: days(until), setupBonus: !s.trial_ends && !setupDone }
-  return { kind: 'ended', plan: null, until, paused: BILLING_LIVE }
+  return { kind: 'free' }
+}
+
+/** What Tembo adds. Bulk import, colour and cover are free (the founder, 17 Nov). */
+export type Feature = 'domain' | 'fonts' | 'hideBadge' | 'fullAnalytics' | 'unlimitedProducts'
+
+/**
+ * The one entitlement check, for the server functions and the UI. Demo shops show everything. `using`: the shop already
+ * used this feature before Tembo existed (fonts, its own domain), so it keeps it until GRACE_UNTIL.
+ */
+export function can(plan: PlanState | null | undefined, feature: Feature, opts: { using?: boolean; at?: number } = {}) {
+  if (!plan) return false
+  if (plan.kind === 'demo' || plan.kind === 'tembo') return true
+  return !!opts.using && (feature === 'fonts' || feature === 'domain') && (opts.at ?? Date.now()) < GRACE_UNTIL
 }

@@ -60,7 +60,6 @@ export function CheckoutHeader({ shop }: { shop: Pick<PublicShop, 'slug' | 'name
 export function CheckoutView({
   shop,
   areas,
-  paused,
   lines,
   title,
   intro,
@@ -74,7 +73,6 @@ export function CheckoutView({
 }: {
   shop: PublicShop
   areas: Area[]
-  paused: boolean
   lines: CheckoutLine[]
   title: string
   intro?: ReactNode
@@ -156,7 +154,6 @@ export function CheckoutView({
     empty: t('Your bag is empty'),
     shop: t('This shop is not taking orders right now'),
     demo: t('This is a demo shop. Orders are switched off.'),
-    paused: t('This shop is taking a break. Message the seller on WhatsApp.'),
     bag: t('This bag link can no longer be used. Ask {shop} for a new one.', { shop: shop.name }),
     discount: t('That discount code no longer works, so it was taken off. Check the new total and place your order.'),
     bot: t('We couldn’t check that you’re not a robot. Try again in a minute, or order from {shop} on WhatsApp.', { shop: shop.name }),
@@ -241,8 +238,8 @@ export function CheckoutView({
       </div>
       <div ref={check.slot} />
       <ErrorText>{error || blocked}</ErrorText>
-      <button form={FORM_ID} className="btn btn-shop btn-lg w-full" disabled={busy || demo || paused || !!blocked || (!canLipa && !canCod)}>
-        {demo ? t('Orders are off in this demo shop') : paused ? t('This shop is taking a break') : busy ? t('Placing your order') : t('Place order')}
+      <button form={FORM_ID} className="btn btn-shop btn-lg w-full" disabled={busy || demo || !!blocked || (!canLipa && !canCod)}>
+        {demo ? t('Orders are off in this demo shop') : busy ? t('Placing your order') : t('Place order')}
       </button>
       {foot && <p className="text-center text-[13px] leading-5 text-muted">{foot}</p>}
       <p className="flex items-start justify-center gap-2 text-center text-[13px] leading-5 text-muted">

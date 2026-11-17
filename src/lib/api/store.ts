@@ -1,5 +1,3 @@
-import { BILLING_LIVE } from '#/lib/plans'
-import { shopPlan } from '#/server/plan'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequestUrl } from '@tanstack/react-start/server'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
@@ -103,8 +101,6 @@ export const getStorefront = createServerFn({ method: 'GET' })
       collections: collections.map(
         (c): PublicCollection => ({ ...c, productIds: members.filter((m) => m.collection_id === c.id && visible.has(m.product_id)).map((m) => m.product_id) }),
       ),
-      /** The plan ended: the shop "takes a break". Its page stays up with WhatsApp; orders are refused. */
-      paused: BILLING_LIVE && (await shopPlan(shop.id))?.kind === 'ended',
       /** The seller's top picks that buyers can see, as product ids in the seller's order (the shop shows those in stock). */
       picks: products
         .filter((p) => p.pick_rank != null)
@@ -149,7 +145,6 @@ export const placeOrder = createServerFn({ method: 'POST' })
     if (!phone) return { error: 'phone' as const }
     if (!(await isHuman(data.human, 'order', { key: `order:${shop.id}`, limit: LIMITS.uncheckedOrder }))) return { error: 'bot' as const }
     if (shop.status === 'demo') return { error: 'demo' as const }
-    if (BILLING_LIVE && (await shopPlan(shop.id))?.kind === 'ended') return { error: 'paused' as const }
     const payment = data.payment === 'cod' ? 'cod' : 'lipa'
     if (payment === 'cod' && !shop.cod_enabled) return { error: 'payment' as const }
     if (payment === 'lipa' && !shop.lipa_number) return { error: 'payment' as const }

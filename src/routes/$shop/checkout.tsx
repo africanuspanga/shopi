@@ -16,7 +16,7 @@ const parent = getRouteApi('/$shop')
 function Checkout() {
   const t = useT()
   const navigate = useNavigate()
-  const { shop, products, areas, paused, hasDiscounts } = parent.useLoaderData()
+  const { shop, products, areas, hasDiscounts } = parent.useLoaderData()
   const cart = useCart(shop.id)
   const lines: CheckoutLine[] = cart.lines.flatMap((l) => {
     const p = products.find((x) => x.id === l.productId)
@@ -73,7 +73,6 @@ function Checkout() {
     <CheckoutView
       shop={shop}
       areas={areas}
-      paused={paused}
       lines={lines}
       title={t('Checkout')}
       onQty={(key, qty) => cart.set(key, qty)}

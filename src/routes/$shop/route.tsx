@@ -1,6 +1,6 @@
 import { Outlet, createFileRoute, notFound } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { BreakBanner, DemoBanner } from '#/components/shop'
+import { DemoBanner } from '#/components/shop'
 import { ignoreShop } from '#/lib/analytics'
 import { getStorefront } from '#/lib/api/store'
 import { cleanCode, codeKey } from '#/lib/discounts'
@@ -49,7 +49,7 @@ export const Route = createFileRoute('/$shop')({
 
 function ShopLayout() {
   const { session } = Route.useRouteContext()
-  const { shop, paused } = Route.useLoaderData()
+  const { shop } = Route.useLoaderData()
   // Set during render, before the pages below send their first event. Idempotent.
   if (session.shop?.id === shop.id) ignoreShop(shop.id)
   useEffect(() => {
@@ -68,7 +68,6 @@ function ShopLayout() {
     <LangProvider value={asLang(shop.lang)}>
       <div className="contents" style={themeStyle(shop.theme_color)}>
         {shop.status === 'demo' && <DemoBanner shopSlug={shop.slug} />}
-        {paused && <BreakBanner whatsapp={shop.whatsapp} name={shop.name} />}
         <Outlet />
       </div>
     </LangProvider>
