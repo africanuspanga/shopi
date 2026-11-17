@@ -7,7 +7,7 @@ export const SETUP_TRIAL_DAYS = 30
 
 /**
  * Off until sellers can pay inside Shopi. While off, a shop whose trial has ended keeps selling and is
- * told that payment opens soon; nothing pauses. Turn on in the same release as Settlo billing.
+ * told that payment opens soon; nothing pauses. Turn on in the same release as billing.
  */
 export const BILLING_LIVE = false
 
