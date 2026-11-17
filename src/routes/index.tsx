@@ -295,7 +295,7 @@ function Orders() {
         <div className="order-1 lg:order-2">
           <H2>{t('Orders arrive complete. No ten questions')}</H2>
           <Lead className="mt-6">
-            {t('Every order comes with the buyer’s name, number, area, a landmark the rider can find, and the size they picked. The buyer gets a page to follow it, and your stock goes down by itself.')}
+            {t('Every order comes with the buyer’s name, number, area, their location on the map if they share it, and the size they picked. The buyer gets a page to follow it, and your stock goes down by itself.')}
           </Lead>
           <ul className="mt-8 space-y-3 text-[15px]">
             {[t('One tap to call or WhatsApp the buyer'), t('Statuses the buyer can see: confirmed, on the way, delivered'), t('Sold out shows by itself when stock runs out')].map((x) => (
@@ -354,7 +354,7 @@ function Features() {
     [Ruler, t('Sizes and stock'), t('Buyers pick a size, sold out shows by itself')],
     [Smartphone, 'Lipa Namba', t('With a check of the payment SMS')],
     [Banknote, t('Cash on delivery'), t('Turn it on or off')],
-    [MapPin, t('Delivery areas'), t('Your areas, fees agreed on WhatsApp')],
+    [MapPin, t('Delivery'), t('The buyer’s pin for your rider, fees agreed on WhatsApp')],
     [WhatsAppIcon, 'WhatsApp', t('Every buyer one tap away')],
     [ChartColumn, t('Your numbers'), t('Sales, visits, shares, best sellers')],
     [ImageDown, t('Light photos'), t('Shrunk on upload to save buyers data')],
@@ -423,7 +423,7 @@ function Faq() {
     [t('How do I get paid?'), t('The buyer pays your Lipa Namba or pays cash on delivery, the way they already pay sellers today. The money never passes through Shopi.')],
     [t('How do I know a buyer really paid?'), t('The buyer pastes the payment SMS. We check the amount, the name and the transaction ID, and refuse one already used. Still check your phone before you confirm.')],
     [t('Do I need a website or a developer?'), t('No. You open the shop on your phone in a few minutes and get a link to share.')],
-    [t('Who does the delivery?'), t('You do, with your own rider. You list the areas you deliver to, the buyer picks one when ordering, and you agree the delivery fee on WhatsApp.')],
+    [t('Who does the delivery?'), t('You do, with your own rider. Your shop shows the areas you deliver to and whether you send to other regions. The buyer types their area and can share their location, which you send to your rider in one tap. You agree the delivery fee on WhatsApp.')],
     [t('What can I sell?'), t('Clothes, shoes, cosmetics, perfumes, electronics, food and more. Illegal goods are not allowed.')],
   ]
   return (

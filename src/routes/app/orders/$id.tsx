@@ -1,11 +1,12 @@
 import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
-import { ChevronRight, CircleCheck, CircleHelp, MapPin, Phone, ShoppingBag, TriangleAlert } from 'lucide-react'
+import { ArrowUpRight, Bike, ChevronRight, CircleCheck, CircleHelp, MapPin, Phone, ShoppingBag, TriangleAlert } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { Img, Page, StatusPill, TopBar } from '#/components/ui'
 import { getOrder, setOrderStatus } from '#/lib/api/merchant'
-import { optionText, timeAgo, tzs, waLink, type OrderStatus, PAYMENT_LABEL } from '#/lib/format'
+import { localPhone, optionText, timeAgo, tzs, waLink, type OrderStatus, PAYMENT_LABEL } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
+import { ROUGH_M, distance, pinLink } from '#/lib/location'
 import type { PaymentCheck } from '#/lib/payment-sms'
 import { useOrigin } from '#/lib/share'
 
@@ -41,6 +42,19 @@ function OrderDetail() {
 
   const trackUrl = `${useOrigin()}/o/${o.code}`
   const waText = t('Hi {name}, this is {shop}. Your order #{code}: {url}', { name: o.customer_name, shop: shop.name, code: o.code, url: trackUrl })
+  const pin = o.lat != null && o.lng != null ? { lat: o.lat, lng: o.lng } : null
+  const paid = !cod && ['confirmed', 'dispatched', 'delivered'].includes(o.status)
+  // Everything the rider needs in one message; the seller picks the rider's chat in WhatsApp.
+  const riderText = [
+    t('Delivery for {shop}, order #{code}', { shop: shop.name, code: o.code }),
+    `${o.customer_name} · ${localPhone(o.customer_phone)}`,
+    [o.area, o.landmark].filter(Boolean).join(' · '),
+    pin ? t('Map: {url}', { url: pinLink(pin) }) : '',
+    o.lines.map((l) => `${l.qty} × ${l.name}${l.variant ? ` (${optionText(t, l.option, l.variant)})` : ''}`).join('\n'),
+    cod ? t('Collect {total} in cash', { total: tzs(o.total) }) : paid ? t('Paid already: collect nothing') : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
   const cancel: Action = { status: 'cancelled', label: t('Cancel order'), kind: 'danger', ask: t('Cancel this order? The buyer will see it as cancelled.') }
 
   const next: Record<OrderStatus, { title: string; body: string; actions: Action[] }> = {
@@ -146,9 +160,21 @@ function OrderDetail() {
             <p className="code mt-0.5 text-[14px] text-ink-2">{o.customer_phone}</p>
             <div className="mt-4 flex items-start gap-2.5 text-[14px] leading-5">
               <MapPin size={16} strokeWidth={1.6} className="mt-0.5 shrink-0 text-muted" />
-              <span>
+              <span className="min-w-0">
                 <span className="font-medium">{o.area || (manual ? t('Recorded by you') : t('No area'))}</span>
                 {o.landmark && <span className="block text-ink-2">{o.landmark}</span>}
+                {pin && (
+                  <span className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <a href={pinLink(pin)} target="_blank" rel="noopener noreferrer" className="btn btn-quiet btn-sm h-9 px-3.5">
+                      {t('Open in Google Maps')} <ArrowUpRight size={14} strokeWidth={1.75} />
+                    </a>
+                    {o.pin_m != null && (
+                      <span className={`text-[13px] ${o.pin_m > ROUGH_M ? 'text-moto-ink' : 'text-muted'}`}>
+                        {o.pin_m > ROUGH_M ? t('Rough pin, about {d}', { d: distance(o.pin_m) }) : t('Accurate to about {d}', { d: distance(o.pin_m) })}
+                      </span>
+                    )}
+                  </span>
+                )}
               </span>
             </div>
             {o.note && <p className="mt-4 rounded-[14px] bg-page px-4 py-3 text-[14px] leading-relaxed text-ink-2">“{o.note}”</p>}
@@ -169,6 +195,11 @@ function OrderDetail() {
               <a href={waLink(o.customer_phone, waText)} target="_blank" rel="noreferrer" className="btn btn-sm h-11">
                 <WhatsAppMark size={18} /> WhatsApp
               </a>
+              {o.status !== 'delivered' && o.status !== 'cancelled' && (
+                <a href={`https://wa.me/?text=${encodeURIComponent(riderText)}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm col-span-2 h-11">
+                  <Bike size={16} strokeWidth={1.6} /> {t('Send to rider on WhatsApp')}
+                </a>
+              )}
             </div>
           </section>
           )}

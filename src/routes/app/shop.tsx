@@ -7,7 +7,7 @@ import { useCan } from '#/components/tembo'
 import { ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoice, Switch, Toast, TopBar } from '#/components/ui'
 import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
-import { CATEGORIES, NETWORKS, mapsLink, tinDigits } from '#/lib/format'
+import { CATEGORIES, DAR_AREAS, NETWORKS, mapsLink, tinDigits } from '#/lib/format'
 import { asLang, useT } from '#/lib/i18n'
 import { FONTS, MOTO, asFont, cleanHex } from '#/lib/theme'
 import { uploadImage } from '#/lib/upload'
@@ -16,12 +16,6 @@ export const Route = createFileRoute('/app/shop')({
   loader: () => getMyShop(),
   component: ShopSettings,
 })
-
-/** Neighbourhoods sellers in Dar deliver to most. Names only: each seller sets their own fee. */
-const DAR_AREAS = [
-  'Kariakoo', 'Posta', 'Upanga', 'Kinondoni', 'Mikocheni', 'Msasani', 'Masaki', 'Oysterbay', 'Sinza', 'Mwenge',
-  'Kijitonyama', 'Ubungo', 'Kimara', 'Mbezi', 'Tegeta', 'Kigamboni', 'Temeke', 'Tabata', 'Ilala', 'Buguruni', 'Ukonga',
-]
 
 function ShopSettings() {
   const t = useT()
@@ -227,7 +221,10 @@ function ShopSettings() {
           </div>
         </Group>
 
-        <Group title={t('Delivery')} sub={t('The areas you deliver to. Buyers pick one at checkout, and you agree the delivery fee with them on WhatsApp.')}>
+        <Group
+          title={t('Delivery')}
+          sub={t('The areas you deliver to, shown on your shop. Buyers type their area and can share their location when they order. You agree the delivery fee on WhatsApp.')}
+        >
           <div className="space-y-2">
             {areas.map((a, i) => (
               <div key={i} className="grid grid-cols-[minmax(0,1fr)_40px] items-center gap-x-2 sm:gap-x-3">
@@ -259,6 +256,21 @@ function ShopSettings() {
               </div>
             </div>
           )}
+          <div className="mt-6 border-t border-line pt-5">
+            <Switch
+              label={t('We send to other regions')}
+              sub={t('Buyers often ask “mikoani mnatuma?” Your shop answers it.')}
+              checked={!!s.ships_regions}
+              onChange={(v) => setS({ ...s, ships_regions: v ? 1 : 0 })}
+            />
+            {!!s.ships_regions && (
+              <div className="fade mt-4">
+                <Field label={t('How you send')} aside={t('Optional')}>
+                  <input className="input" maxLength={80} value={s.regions_note ?? ''} onChange={set('regions_note')} placeholder={t('e.g. By bus, paid before sending')} />
+                </Field>
+              </div>
+            )}
+          </div>
         </Group>
 
         <Group title={t('Contact and social')} sub={t('Shown on your shop so buyers can follow and message you.')}>

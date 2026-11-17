@@ -7,7 +7,8 @@ import { moveStock } from '#/server/stock'
 import { openBag } from '#/server/bags'
 import { liveDiscount } from '#/server/discounts'
 import { discountOff } from '#/lib/discounts'
-import { LIMITS } from '#/server/limits'
+import { LIMITS, clientIp, count, overLimit } from '#/server/limits'
+import { MAPS_HOSTS, MAPS_SHORT, asPin, pinFromUrl, readMapLink } from '#/lib/location'
 import { isHuman } from '#/server/turnstile'
 import { notifySeller, orderLine } from '#/server/push'
 import { namesMatch, parsePaymentSms, type PaymentCheck } from '#/lib/payment-sms'
@@ -43,6 +44,9 @@ export type PublicShop = {
   cover_key: string | null
   /** Show "Shop made with Shopi": false only for a Tembo shop that hid it. */
   badge: boolean
+  /** Sends to other regions ("mikoani"), with an optional line on how. */
+  ships_regions: number
+  regions_note: string
 }
 export type PublicProduct = {
   id: string
@@ -64,7 +68,8 @@ export type PublicProduct = {
 export type PublicCollection = { id: string; slug: string; name: string; description: string; productIds: string[] }
 
 const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram, tiktok, facebook, location, maps_url, tin, hours,
-  lipa_number, lipa_name, lipa_network, cod_enabled, status, lang, theme_color, theme_font, cover_key, hide_badge, plan, paid_until`
+  lipa_number, lipa_name, lipa_network, cod_enabled, status, lang, theme_color, theme_font, cover_key, hide_badge, plan, paid_until,
+  ships_regions, regions_note`
 
 export const getStorefront = createServerFn({ method: 'GET' })
   .validator((d: { slug: string }) => ({ slug: String(d.slug).toLowerCase() }))
@@ -128,10 +133,16 @@ export const placeOrder = createServerFn({ method: 'POST' })
       discount?: string
       name: string
       phone: string
-      areaId: string
+      /** The buyer's area, typed ("Sinza"). */
+      area?: string
+      /** Pages loaded before checkout v2 (17 Nov 2026) send a listed area's id or `areaOther` instead. */
+      areaId?: string
       areaOther?: string
+      /** The note for the rider (was "Nearby landmark"); optional. */
       landmark: string
       note: string
+      /** A map pin the buyer shared (GPS or a pasted link); `m` is the GPS accuracy in metres. */
+      pin?: { lat: number; lng: number; m?: number | null } | null
       payment: 'lipa' | 'cod'
       visit?: { vid?: string; sid?: string; source?: string; tag?: string }
       /** The Turnstile token (src/lib/turnstile.tsx). */
@@ -194,14 +205,17 @@ export const placeOrder = createServerFn({ method: 'POST' })
         image: imageOf(product, size?.label),
       })
     }
-    // Delivery fees stay out of Shopi: buyer and seller agree them on WhatsApp.
-    // The buyer picks one of the shop's areas, or writes their own.
-    const typed = String(data.areaOther ?? '').trim().slice(0, 60)
+    // Delivery fees stay out of Shopi: buyer and seller agree them on WhatsApp. The buyer types their area and may share
+    // a pin; the shop's own areas are information on its page.
+    const typed = String(data.area ?? data.areaOther ?? '').trim().replace(/\s+/g, ' ').slice(0, 60)
     const listed =
-      data.areaId && data.areaId !== 'other'
+      !typed && data.areaId && data.areaId !== 'other'
         ? await first<{ name: string }>('SELECT name FROM delivery_areas WHERE id = ? AND shop_id = ?', data.areaId, shop.id)
         : null
     const area = listed ?? (typed ? { name: typed } : null)
+    if (!area) return { error: 'area' as const }
+    const pin = data.pin ? asPin(data.pin.lat, data.pin.lng) : null
+    const pinM = pin && data.pin?.m != null && Number.isFinite(Number(data.pin.m)) ? Math.min(100_000, Math.max(1, Math.round(Number(data.pin.m)))) : null
     const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0)
     // A discount code counts only if it still works and the items reach its minimum; the buyer sees why if not.
     let off = 0
@@ -240,14 +254,14 @@ export const placeOrder = createServerFn({ method: 'POST' })
           .prepare(
             `INSERT INTO orders (id, shop_id, code, customer_name, customer_phone, area, landmark, note, subtotal,
                delivery_fee, total, payment_method, status, created_at, updated_at, source, link_tag, visitor_id, session_id,
-               discount_code, discount)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+               discount_code, discount, lat, lng, pin_m)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           )
           .bind(
             id, shop.id, code, name, phone, area?.name ?? '', String(data.landmark ?? '').slice(0, 200),
             String(data.note ?? '').slice(0, 500), subtotal, fee, subtotal - off + fee, payment,
             payment === 'cod' ? 'confirmed' : 'awaiting_payment', t, t, visit.source, visit.tag, visit.vid, visit.sid,
-            discountCode, off,
+            discountCode, off, pin?.lat ?? null, pin?.lng ?? null, pinM,
           ),
         ...lines.map((l) =>
           db()
@@ -279,7 +293,10 @@ export type TrackedOrder = {
   status: OrderStatus
   customer_name: string
   area: string
+  /** The note for the rider. */
   landmark: string
+  /** The buyer shared a map pin (the pin itself stays with the seller). */
+  pinned: number
   subtotal: number
   /** A discount code the buyer used, and the shillings it took off. */
   discount_code: string | null
@@ -298,8 +315,8 @@ export const getTrackedOrder = createServerFn({ method: 'GET' })
   .validator((d: { code: string }) => ({ code: String(d.code).toUpperCase().slice(0, 10) }))
   .handler(async ({ data }) => {
     const order = await first<Omit<TrackedOrder, 'shop' | 'lines'> & { id: string; shop_id: string }>(
-      `SELECT id, shop_id, code, status, customer_name, area, landmark, subtotal, discount_code, discount, delivery_fee, total,
-         payment_method, payment_check, created_at FROM orders WHERE code = ?`,
+      `SELECT id, shop_id, code, status, customer_name, area, landmark, lat IS NOT NULL pinned, subtotal, discount_code, discount,
+         delivery_fee, total, payment_method, payment_check, created_at FROM orders WHERE code = ?`,
       data.code,
     )
     if (!order) return null
@@ -359,4 +376,41 @@ export const submitPaymentSms = createServerFn({ method: 'POST' })
       tag: `order-${order.id}`,
     }))
     return { ok: true as const, check }
+  })
+
+/**
+ * A Google Maps short link (maps.app.goo.gl) the buyer pasted at checkout: opened here to read the place it leads to.
+ * Only Google's map hosts are ever requested, only the redirects are read (never a page), and each phone's network may
+ * ask `LIMITS.mapLink` times an hour, so this is no open proxy.
+ */
+export const expandMapLink = createServerFn({ method: 'POST' })
+  .validator((d: { url: string }) => ({ url: String(d.url ?? '').slice(0, 500) }))
+  .handler(async ({ data }) => {
+    const read = readMapLink(data.url)
+    if (!read) return { pin: null }
+    if (read.kind === 'pin') return { pin: { lat: read.lat, lng: read.lng } }
+    const key = `maplink:${clientIp()}`
+    if (await overLimit(key, LIMITS.mapLink)) return { pin: null, error: 'limit' as const }
+    await count(key)
+    let url = read.url
+    for (let hop = 0; hop < 5; hop++) {
+      let u: URL
+      try {
+        u = new URL(url)
+      } catch {
+        return { pin: null }
+      }
+      if (u.protocol !== 'https:' || !MAPS_HOSTS.test(u.hostname)) return { pin: null }
+      const pin = MAPS_SHORT.test(u.hostname) ? null : pinFromUrl(u)
+      if (pin) return { pin }
+      try {
+        const res = await fetch(u.href, { redirect: 'manual', headers: { 'user-agent': 'Mozilla/5.0 (Linux; Android 14) Shopi' }, signal: AbortSignal.timeout(4000) })
+        const next = res.headers.get('location')
+        if (!next) return { pin: null }
+        url = new URL(next, u).href
+      } catch {
+        return { pin: null }
+      }
+    }
+    return { pin: null }
   })

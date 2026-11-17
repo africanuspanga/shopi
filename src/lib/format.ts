@@ -26,6 +26,12 @@ export function localPhone(phone: string) {
   return m ? `0${m[1]} ${m[2]} ${m[3]}` : phone
 }
 
+/** Neighbourhoods in Dar sellers deliver to most: quick add in Shop settings, and spellings offered at checkout. */
+export const DAR_AREAS = [
+  'Kariakoo', 'Posta', 'Upanga', 'Kinondoni', 'Mikocheni', 'Msasani', 'Masaki', 'Oysterbay', 'Sinza', 'Mwenge',
+  'Kijitonyama', 'Ubungo', 'Kimara', 'Mbezi', 'Tegeta', 'Kigamboni', 'Temeke', 'Tabata', 'Ilala', 'Buguruni', 'Ukonga',
+]
+
 export function waLink(phone: string, text?: string) {
   const digits = phone.replace(/[^\d]/g, '')
   return `https://wa.me/${digits}${text ? `?text=${encodeURIComponent(text)}` : ''}`

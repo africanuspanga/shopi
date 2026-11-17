@@ -10,6 +10,7 @@ import { Img, Toast, useEntrance } from '#/components/ui'
 import { takeOpenedFrom, track } from '#/lib/analytics'
 import { lineKey, useCart } from '#/lib/cart'
 import { OPTION_KINDS, imgUrl, optionKind, optionText, priceOf, tzs, waLink } from '#/lib/format'
+import { WhatsAppHelp, useWhatsApp } from '#/components/whatsapp'
 import { fontAttr, fontPreload } from '#/lib/theme'
 import { shopAddress } from '#/lib/host'
 import { useT } from '#/lib/i18n'
@@ -115,6 +116,12 @@ function ProductPage() {
   const { asked, remember } = useAsked(p.id, canNotify ? (chosen?.label ?? null) : null)
   const pay = [shop.lipa_number && t('Mobile money'), shop.cod_enabled && t('Cash on delivery')].filter(Boolean).join(', ')
   const lowStock = left != null && left > 0 && left <= 3
+  const ask = t('Hi {shop}, I am asking about {product} ({price})', {
+    shop: shop.name,
+    product: chosen ? `${p.name}, ${optionText(t, p.option_name, chosen.label)}` : p.name,
+    price: tzs(unit),
+  })
+  const chat = useWhatsApp(() => track('whatsapp_click', { shopId: shop.id, productId: p.id, detail: 'product' }))
 
   function add() {
     if (p.sizes && !chosen) {
@@ -303,6 +310,7 @@ function ProductPage() {
               <Detail label={t('Delivery')}>
                 {t('Fee agreed on WhatsApp')}
                 {areas.length > 0 && <span className="text-muted"> · {t(areas.length === 1 ? '{n} area' : '{n} areas', { n: areas.length })}</span>}
+                {!!shop.ships_regions && <span className="text-muted"> · {t('other regions too')}</span>}
               </Detail>
               {pay && <Detail label={t('Payment')}>{pay}</Detail>}
               {p.sizes && <Detail label={t(kind.label)}>{p.sizes.map((s) => s.label).join(', ')}</Detail>}
@@ -312,22 +320,18 @@ function ProductPage() {
             </dl>
 
             {shop.whatsapp && (
-              <a
-                className="mt-6 inline-flex items-center gap-2 text-[14px] font-medium underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink"
-                href={waLink(
-                  shop.whatsapp,
-                  t('Hi {shop}, I am asking about {product} ({price})', {
-                    shop: shop.name,
-                    product: chosen ? `${p.name}, ${optionText(t, p.option_name, chosen.label)}` : p.name,
-                    price: tzs(unit),
-                  }),
-                )}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => track('whatsapp_click', { shopId: shop.id, productId: p.id, detail: 'product' })}
-              >
-                <WhatsAppMark size={18} /> {t('Ask about this on WhatsApp')}
-              </a>
+              <div className="mt-6">
+                <a
+                  className="inline-flex items-center gap-2 text-[14px] font-medium underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink"
+                  href={waLink(shop.whatsapp, ask)}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={chat.onClick}
+                >
+                  <WhatsAppMark size={18} /> {t('Ask about this on WhatsApp')}
+                </a>
+                <WhatsAppHelp show={chat.tapped} phone={shop.whatsapp} text={ask} />
+              </div>
             )}
 
             <div className="mt-8 rounded-[20px] p-5 shadow-[inset_0_0_0_1px_var(--color-line)]">

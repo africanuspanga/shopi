@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { currentUser } from '#/server/auth'
 import { all, first, now } from '#/server/db'
 import { PAYMENT_LABEL, type PaymentMethod } from '#/lib/format'
+import { pinLink } from '#/lib/location'
 import { can } from '#/lib/plans'
 import { shopPlan } from '#/server/plan'
 
@@ -36,7 +37,7 @@ export const Route = createFileRoute('/api/export')({
         let body: string
         if (what === 'orders') {
           const rows = await all<Record<string, string | number | null>>(
-            `SELECT o.code, o.created_at, o.customer_name, o.customer_phone, o.area, o.landmark, o.subtotal, o.discount_code, o.discount,
+            `SELECT o.code, o.created_at, o.customer_name, o.customer_phone, o.area, o.landmark, o.lat, o.lng, o.subtotal, o.discount_code, o.discount,
                o.delivery_fee, o.total,
                o.payment_method, o.status, o.source, o.link_tag,
                (SELECT group_concat(oi.qty || ' x ' || oi.name || COALESCE(' (' || oi.variant || ')', ''), '; ')
@@ -46,7 +47,7 @@ export const Route = createFileRoute('/api/export')({
             from,
           )
           body = csv([
-            ['Order', 'Date', 'Buyer', 'Phone', 'Area', 'Landmark', 'Items', 'Items total', 'Discount code', 'Discount', 'Delivery', 'Total', 'Payment', 'Status', 'Came from', 'Link tag'],
+            ['Order', 'Date', 'Buyer', 'Phone', 'Area', 'Note for the rider', 'Map', 'Items', 'Items total', 'Discount code', 'Discount', 'Delivery', 'Total', 'Payment', 'Status', 'Came from', 'Link tag'],
             ...rows.map((r) => [
               r.code,
               dateTime(Number(r.created_at)),
@@ -54,6 +55,7 @@ export const Route = createFileRoute('/api/export')({
               r.customer_phone,
               String(r.area ?? '').replace(' (fee to agree)', ''),
               r.landmark,
+              r.lat != null && r.lng != null ? pinLink({ lat: Number(r.lat), lng: Number(r.lng) }) : '',
               r.items,
               r.subtotal,
               r.discount_code,

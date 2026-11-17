@@ -26,7 +26,7 @@ function DataDeletion() {
 
       <Section title={t('Buyers')}>
         <ul>
-          <li>{t('Details remembered on your phone (bag, name, number, landmark): clear your browser’s data for shopi.tz.')}</li>
+          <li>{t('Details remembered on your phone (bag, name, number, area, location): clear your browser’s data for shopi.tz.')}</li>
           <li>
             {t(
               'A back-in-stock request: it is deleted once the seller has messaged you, or after 90 days. To remove it sooner, write to hello@shopi.tz with your number and the shop.',

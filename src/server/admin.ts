@@ -377,6 +377,8 @@ export async function useData(days: AdminDays) {
          ${shop('orders', 'discount_code IS NOT NULL')} discount_used,
          ${shop('bag_links')} bags,
          ${shop('orders', `source = 'manual'`)} manual,
+         ${shop('orders', 'lat IS NOT NULL')} pinned,
+         ${own('ships_regions = 1')} regions,
          ${shop('stock_alerts')} alerts,
          ${shop('links')} links,
          ${shop('push_subscriptions')} push,

@@ -47,6 +47,9 @@ export type ShopRow = {
   cover_key: string | null
   /** 1 when the seller hid the "Shop made with Shopi" line; it only counts while the shop has Tembo. */
   hide_badge: number
+  /** Sends to other regions ("mikoani"), with an optional line on how. */
+  ships_regions: number
+  regions_note: string
 }
 export type AreaRow = { id: string; name: string; fee: number }
 
@@ -171,7 +174,8 @@ export const updateShop = createServerFn({ method: 'POST' })
     await run(
       `UPDATE shops SET name = ?, bio = ?, category = ?, logo_key = ?, whatsapp = ?, instagram = ?, tiktok = ?,
          facebook = ?, location = ?, maps_url = ?, tin = ?, hours = ?, lipa_number = ?, lipa_name = ?, lipa_network = ?,
-         lipa_is_personal = ?, cod_enabled = ?, lang = COALESCE(?, lang), hide_badge = ? WHERE id = ?`,
+         lipa_is_personal = ?, cod_enabled = ?, lang = COALESCE(?, lang), hide_badge = ?, ships_regions = ?, regions_note = ?
+       WHERE id = ?`,
       str(data.name, 60) || shop.name,
       str(data.bio, 300),
       CATEGORIES.some((c) => c.id === data.category) ? data.category : 'other',
@@ -192,6 +196,8 @@ export const updateShop = createServerFn({ method: 'POST' })
       data.lang === 'sw' || data.lang === 'en' ? data.lang : null,
       // Hiding the Shopi line is Tembo; a free shop's switch saves as off.
       data.hide_badge && can(await shopPlan(shop.id), 'hideBadge') ? 1 : 0,
+      data.ships_regions ? 1 : 0,
+      data.ships_regions ? str(data.regions_note, 80) : '',
       shop.id,
     )
     // A replaced logo leaves storage.
@@ -490,7 +496,12 @@ export const listOrders = createServerFn({ method: 'GET' }).handler(async () => 
 })
 
 export type OrderDetail = OrderListRow & {
+  /** The note for the rider (was "Nearby landmark"). */
   landmark: string
+  /** The buyer's map pin, cleared 90 days after the order; `pin_m` is the GPS accuracy in metres. */
+  lat: number | null
+  lng: number | null
+  pin_m: number | null
   note: string
   subtotal: number
   /** A discount code the buyer used, and the shillings it took off. */

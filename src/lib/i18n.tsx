@@ -43,5 +43,8 @@ export function useT() {
   return (en: string, vars?: Vars) => translate(lang, en, vars)
 }
 
+/** A translate function, as `useT()` returns it, for helpers outside components. */
+export type T = (en: string, vars?: Vars) => string
+
 /** Marks English text kept in data (categories, statuses) so the extractor finds it. Translate with t(value) when shown. */
 export const msg = (en: string) => en

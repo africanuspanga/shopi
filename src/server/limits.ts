@@ -18,6 +18,8 @@ export const LIMITS = {
   uncheckedAlert: { max: 5, window: 60 * MINUTE },
   // Photos a shop's bulk import fetches from links (src/routes/api/photo.ts): a big sheet, not an open proxy.
   photoFetch: { max: 1500, window: 60 * MINUTE },
+  // Google Maps short links a buyer pastes at checkout, opened by the server (expandMapLink), per IP.
+  mapLink: { max: 30, window: 60 * MINUTE },
   // Domains a shop connects (each one is a Cloudflare custom hostname, billed past the first 100).
   domainAdd: { max: 5, window: 24 * 60 * MINUTE },
 } as const

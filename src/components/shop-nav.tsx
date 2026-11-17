@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { WhatsAppIcon } from '#/components/brand-icons'
 import { FloatingNav, NavCenter, NavCount, NavTab } from '#/components/floating-nav'
 import { Price, ShopFacts, SocialLinks, onSale, Tag, discount, matchesSearch, shownPrice } from '#/components/shop'
+import { openWhatsApp } from '#/components/whatsapp'
 import { Img, Sheet, ShopAvatar } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
@@ -48,7 +49,10 @@ export function ShopNav({
             icon={WhatsAppIcon}
             label="WhatsApp"
             href={waLink(shop.whatsapp, t('Hi {shop}, I found your shop on Shopi.', { shop: shop.name }))}
-            onClick={() => track('whatsapp_click', { shopId: shop.id, detail: 'shop' })}
+            onClick={(e) => {
+              track('whatsapp_click', { shopId: shop.id, detail: 'shop' })
+              openWhatsApp(e)
+            }}
           />
         ) : (
           <NavTab icon={Share2} label={t('Share')} onClick={onShare} />
@@ -120,19 +124,23 @@ function InfoSheet({ open, onClose, shop, areas, onShare }: { open: boolean; onC
       </div>
       {shop.bio && <p className="mt-4 text-[14px] leading-relaxed text-ink-2">{shop.bio}</p>}
       <div className="mt-5 rounded-[16px] bg-page p-4">
-        <ShopFacts shop={shop} areas={areas} />
+        <ShopFacts shop={shop} areas={areas} short />
       </div>
       {areas.length > 0 && (
         <div className="mt-6">
           <p className="text-[14px] font-medium">{t('Delivery areas')}</p>
-          <ul className="mt-2 divide-y divide-line">
+          <ul className="mt-3 flex flex-wrap gap-2">
             {areas.map((a) => (
-              <li key={a.name} className="py-2.5 text-[14px] text-ink-2">
+              <li key={a.name} className="flex h-8 items-center rounded-full bg-page px-3 text-[13px] text-ink-2">
                 {a.name}
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-[12px] text-muted">{t('Not on the list? Write your area at checkout. You agree the delivery fee with the seller on WhatsApp.')}</p>
+          <p className="mt-3 text-[13px] leading-5 text-muted">
+            {shop.ships_regions
+              ? t('Somewhere else? This shop also sends to other regions. Agree the fee with the seller on WhatsApp.')
+              : t('Not on the list? Ask the seller on WhatsApp before you order. You agree the delivery fee there too.')}
+          </p>
         </div>
       )}
       <div className="mt-6 flex items-center justify-between gap-3">

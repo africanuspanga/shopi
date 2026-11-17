@@ -3,6 +3,7 @@ import { Check, Copy, ImageDown, MapPin, Printer, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { MadeWithShopi, ShopTopBar } from '#/components/shop'
+import { WhatsAppHelp, useWhatsApp } from '#/components/whatsapp'
 import { ErrorText, Img, useEntrance } from '#/components/ui'
 import { getTrackedOrder, submitPaymentSms } from '#/lib/api/store'
 import { optionText, timeAgo, tzs, waLink, type OrderStatus, formatTin } from '#/lib/format'
@@ -65,6 +66,7 @@ function Track() {
     `${t('Total')}: ${tzs(o.total)}`,
     `${origin}/o/${o.code}`,
   ].join('\n')
+  const chat = useWhatsApp(() => track('whatsapp_click', { shopId: o.shop.id, detail: 'order' }))
 
   const copy = async (label: string, text: string) => {
     try {
@@ -108,7 +110,7 @@ function Track() {
       total: o.total,
       totalLabel: t('Total'),
       meta: [
-        ...(o.area ? [`${o.area.replace(' (fee to agree)', '')}${o.landmark ? ` · ${o.landmark}` : ''}`] : []),
+        ...(o.area ? [`${o.area.replace(' (fee to agree)', '')}${o.landmark ? ` · ${o.landmark}` : ''}${o.pinned ? ` · ${t('Location shared')}` : ''}`] : []),
         paid ? `${t('Paid')} · ${payLine}` : payLine,
         ...(o.shop.tin ? [t('Seller TIN {tin}', { tin: formatTin(o.shop.tin) })] : []),
       ],
@@ -260,15 +262,18 @@ function Track() {
           )}
 
           {o.shop.whatsapp && (
-            <a
-              href={waLink(o.shop.whatsapp, orderText)}
-              target="_blank"
-              rel="noreferrer"
-              className={`btn w-full ${needsPayment ? 'btn-ghost' : 'btn-lg'}`}
-              onClick={() => track('whatsapp_click', { shopId: o.shop.id, detail: 'order' })}
-            >
-              <WhatsAppMark size={20} /> {t('Message {shop} on WhatsApp', { shop: o.shop.name })}
-            </a>
+            <div>
+              <a
+                href={waLink(o.shop.whatsapp, orderText)}
+                target="_blank"
+                rel="noreferrer"
+                className={`btn w-full ${needsPayment ? 'btn-ghost' : 'btn-lg'}`}
+                onClick={chat.onClick}
+              >
+                <WhatsAppMark size={20} /> {t('Message {shop} on WhatsApp', { shop: o.shop.name })}
+              </a>
+              <WhatsAppHelp show={chat.tapped} phone={o.shop.whatsapp} text={orderText} onSand />
+            </div>
           )}
         </div>
 
@@ -310,6 +315,7 @@ function Track() {
                   <span>
                     {o.area.replace(' (fee to agree)', '')}
                     {o.landmark ? ` · ${o.landmark}` : ''}
+                    {o.pinned ? <span className="block">{t('Location shared with {shop}', { shop: o.shop.name })}</span> : null}
                   </span>
                 </p>
               )}

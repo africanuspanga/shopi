@@ -527,6 +527,8 @@ function Use({ d }: { d: OwnerSection<'use'> }) {
     ['discount_used', t('A discount code used on an order')],
     ['bags', t('Bag links')],
     ['manual', t('Sales recorded by hand')],
+    ['pinned', t('An order with the buyer’s map pin')],
+    ['regions', t('Sends to other regions')],
     ['links', t('Tagged links')],
     ['alerts', t('Buyers waiting for stock')],
     ['installed', t('App on the Home Screen')],

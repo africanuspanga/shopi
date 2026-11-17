@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, type MouseEvent, type ReactNode } from 'react'
 
 /**
  * The floating black capsule at the bottom of phone screens: the seller app, a shop, the landing page.
@@ -53,7 +53,7 @@ export function useHideFloatingNav(hide: boolean) {
 type Icon = (props: { size?: number; strokeWidth?: number; className?: string }) => ReactNode
 
 /** Where a slot goes: a route (to), a page anchor or another site (href), or an action (onClick). */
-type Target = { to?: string; params?: Record<string, string>; href?: string; onClick?: () => void }
+type Target = { to?: string; params?: Record<string, string>; href?: string; onClick?: (e: MouseEvent<HTMLElement>) => void }
 
 function Go({ target, className, label, current, children }: { target: Target; className: string; label?: string; current?: boolean; children: ReactNode }) {
   const aria = { 'aria-label': label, 'aria-current': current ? ('page' as const) : undefined }

@@ -51,6 +51,7 @@ SCREENS = [
     ('routes/$shop/c.$slug.tsx', 'Buyer: collection page'),
     ('routes/$shop/checkout.tsx', 'Buyer: checkout'),
     ('components/checkout.tsx', 'Buyer: checkout'),
+    ('components/whatsapp.tsx', 'Buyer: when WhatsApp doesn’t open'),
     ('routes/$shop/b.$code.tsx', 'Buyer: bag link from the seller'),
     ('routes/$shop/', 'Buyer: shop page'),
     ('routes/o/', 'Buyer: order tracking page'),

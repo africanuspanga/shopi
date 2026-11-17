@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { BagButton, FactPills, MIN_PICKS, ProductGrid, ShopFacts, ShopFooter, ShopSearch, ShopTopBar, SocialLinks, TopPicks, matchesSearch, onSale, pickedProducts } from '#/components/shop'
 import { ShopNav } from '#/components/shop-nav'
+import { WhatsAppHelp, useWhatsApp } from '#/components/whatsapp'
 import { Chips, Empty, Img, ShopAvatar, Toast, useEntrance } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import { useCart } from '#/lib/cart'
@@ -48,6 +49,8 @@ function Storefront() {
   const [copied, setCopied] = useState(false)
   const url = shopAddress(useOrigin(), shop.slug)
   const cover = !!shop.cover_key
+  const hello = t('Hi {shop}, I found your shop on Shopi.', { shop: shop.name })
+  const chat = useWhatsApp(() => track('whatsapp_click', { shopId: shop.id, detail: 'shop' }))
 
   useEffect(() => {
     track('view_shop', { shopId: shop.id })
@@ -138,10 +141,10 @@ function Storefront() {
               {shop.whatsapp && (
                 <a
                   className="btn btn-sm h-10 px-4"
-                  href={waLink(shop.whatsapp, t('Hi {shop}, I found your shop on Shopi.', { shop: shop.name }))}
+                  href={waLink(shop.whatsapp, hello)}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={() => track('whatsapp_click', { shopId: shop.id, detail: 'shop' })}
+                  onClick={chat.onClick}
                 >
                   <WhatsAppMark size={18} /> <span className="sm:hidden">WhatsApp</span>
                   <span className="hidden sm:inline">{t('Message on WhatsApp')}</span>
@@ -152,6 +155,7 @@ function Storefront() {
               </button>
               <SocialLinks shop={shop} whatsapp={false} />
             </div>
+            {shop.whatsapp && <WhatsAppHelp show={chat.tapped} phone={shop.whatsapp} text={hello} />}
             <div className="mt-6 md:hidden">
               <FactPills shop={shop} areas={areas} />
             </div>

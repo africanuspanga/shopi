@@ -55,7 +55,9 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/routes/o/$code.tsx` | Buyer's order page: pay, paste SMS, progress |
 | `src/routes/app/` | Seller app: `route.tsx` (sidebar and floating bottom nav), dashboard, `analytics`, orders, products, shop settings |
 | `src/routes/app/bags/` | Bag links: the list, `new` (build a bag for one buyer), `$id` (send it, cancel it) |
-| `src/components/checkout.tsx` | `CheckoutView` (bag, details, delivery, payment, receipt and Place order), shared by checkout and bag links; `CheckoutHeader` |
+| `src/components/checkout.tsx` | `CheckoutView` (bag, details, delivery, payment, receipt and Place order), shared by checkout and bag links; `CheckoutHeader`; `LocationField` (Share my location, paste a location link) |
+| `src/lib/location.ts` | Delivery pins: `readMapLink` (Google Maps, WhatsApp, Apple Maps, OpenStreetMap links, `geo:`, plain coordinates), `pinLink` (opens Google Maps, no key), `distance`, `ROUGH_M` |
+| `src/components/whatsapp.tsx` | `openWhatsApp` (same tab on phones, an Android `intent:` inside Instagram/TikTok), `useWhatsApp`, `WhatsAppHelp` (number with Copy and Call, Copy message, the in-app browser way out) |
 | `src/components/product-picker.tsx` | `ProductPicker`: search the seller's products and pick one (Record a sale, bag links) |
 | `src/routes/app/collections/` | Collections: the list (order, share), `new` and `$id` (`CollectionForm` in `components/collections.tsx`) |
 | `src/components/picks.tsx`, `src/lib/api/picks.ts`, `src/server/picks.ts` | Top picks: the four slots on Products (`TopPicksCard`), `getMyPicks`/`savePicks`, `readPicks`/`writePicks`/`setPick` |
@@ -264,7 +266,30 @@ domain are lowercase.
   `BILLING_LIVE` stays false until Tembo can be paid (Selcom through CV Chap Chap's proxy, roadmap `billing`).
 - Optional shop fields: `maps_url` (Google Maps links only, `mapsLink()`) gives buyers Directions; `tin` (9 digits, `tinDigits()`,
   shown as `formatTin()` 123-456-789) appears in `ShopFacts`, the Info sheet and on receipts, not in the phone pills.
-- Delivery fees are not in Shopi: buyer and seller agree them on WhatsApp. Shops list delivery areas by name only.
+- Delivery fees are not in Shopi: buyer and seller agree them on WhatsApp. Shops list delivery areas by name only, as
+  information on the shop page (the facts name up to three, "and 4 more"; the Info sheet lists them as chips), and say
+  whether they send to other regions (`shops.ships_regions`, `regions_note`, migration `0023`; Shop settings > Delivery):
+  buyers ask "mikoani mnatuma?" before anything else.
+- Checkout v2 (17 Nov 2026, the founder's answers; migration `0023_checkout_v2.sql`): no area picker and no "Nearby
+  landmark". The buyer types their area (required; a `<datalist>` offers the shop's areas, then `DAR_AREAS`, so spellings
+  stay close for Analytics), may tap **Share my location** (GPS, `enableHighAccuracy`) or **paste a location link**
+  (`readMapLink`; Google's maps.app.goo.gl short links are opened by `expandMapLink` on the server, Google hosts only,
+  redirects only, `LIMITS.mapLink` per IP), and adds an optional **Note for the rider** (stored in `orders.landmark`).
+  "Note for the seller" sits behind "Add a note for the seller". Orders store `lat`, `lng` and `pin_m` (GPS accuracy;
+  over `ROUGH_M` = 300 m the buyer is asked for a note and the seller sees "Rough pin"). The seller's order page has
+  "Open in Google Maps" and **Send to rider on WhatsApp** (`wa.me/?text=`: buyer, number, area and note, the map link,
+  the lines, and "Collect TSh … in cash" for cash on delivery); the orders CSV has a Map column. The buyer's order page
+  says "Location shared with {shop}", never the point itself. **Pins are cleared 90 days after the order** by the
+  nightly job (`purgePins`, Privacy page). **Returning buyers:** the phone remembers name, number, area, note, pin and
+  way to pay (`shopi_buyer` in localStorage), so checkout shows one "Deliver to" card with Change; a bag link made for
+  another number starts clean. No Google key is needed for any of this; the Google map (draggable pin, place search,
+  reverse geocoding filling the area) is the next step once billing is Active and `GOOGLE_MAPS_KEY` is set (`map-pin`).
+- WhatsApp buttons on buyer pages (shop header, capsule, product page, order page, bag link) go through
+  `openWhatsApp`: on a phone the `wa.me` link opens in the same tab (some in-app browsers ignore new tabs), on Android
+  inside Instagram/TikTok/Facebook an `intent://send…;scheme=whatsapp` link with `wa.me` as the fallback; desktop keeps
+  a new tab. After a tap, `WhatsAppHelp` shows under the main buttons (shop header, product page, order page): "WhatsApp
+  didn't open?", the number with Copy and Call, Copy message, and in an in-app browser "tap ⋯, then Open in browser".
+  Not yet tried in the real Instagram and TikTok apps.
 - Bag links (`bag_links`, helpers in `src/server/bags.ts`): the seller builds a bag for one buyer (products, hidden ones too,
   sizes, quantities, their own price per line, and optionally the buyer's name, WhatsApp and a note the buyer sees) and sends
   `shopi.tz/<shop>/b/<code>` (8 characters; `b` is reserved). The buyer only adds delivery and payment. `placeOrder({ bag })`
@@ -460,7 +485,7 @@ server function, and `/api/admin-export` answers 404). Set the flag by hand in D
 ## Nightly job and backups
 `src/server/jobs.ts`, run by Cloudflare cron triggers (`triggers` in `wrangler.jsonc`, the same strings as `NIGHTLY` and `WEEKLY`).
 Logs start with `[jobs]` (Workers Logs); a failed task fails the run, so it shows in the dashboard's cron events.
-- **Nightly, 03:00 in Dar:** keeps the Privacy page's promises. Back-in-stock alerts past 90 days, visit data (`events`) past
+- **Nightly, 03:00 in Dar:** keeps the Privacy page's promises. Delivery pins on orders past 90 days (`purgePins`), back-in-stock alerts past 90 days, visit data (`events`) past
   13 months, and the visitor and visit IDs on orders that old (the order and its channel stay); expired seller logins.
   Each purge also takes what would pass its limit before the next run.
 - **Weekly, Sunday 03:30:** the whole database as gzipped SQL in the private bucket `shopi-backups`

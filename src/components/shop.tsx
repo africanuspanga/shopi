@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, ArrowUpRight, Banknote, Clock, FileText, MapPin, Search, Smartphone, Truck, X } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, Banknote, Bus, Clock, FileText, MapPin, Search, Smartphone, Truck, X } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppMark } from '#/components/brand-icons'
 import { Img, Sheet, ShopAvatar, Wordmark } from '#/components/ui'
@@ -8,7 +8,7 @@ import { openedFrom, track } from '#/lib/analytics'
 import { lineKey, type Cart } from '#/lib/cart'
 import { OPTION_KINDS, imageOf, optionKind, optionText, priceOf, priceSpan, tzs, waLink, formatTin, type Size } from '#/lib/format'
 import { refLink } from '#/lib/host'
-import { useT } from '#/lib/i18n'
+import { useT, type T } from '#/lib/i18n'
 
 type Priced = Pick<PublicProduct, 'price' | 'compare_price'> & { sizes?: Size[] | null }
 
@@ -338,16 +338,37 @@ export function BagButton({ shopSlug, count }: { shopSlug: string; count: number
 
 type Fact = { icon: ReactNode; text: string; sub?: string; href?: string }
 
+/**
+ * "Sinza, Mwenge and Kariakoo", or "Sinza, Mwenge, Kariakoo and 4 more". `short` (the phone's pills) names two at most,
+ * else counts them.
+ */
+export function placesText(t: T, names: string[], short = false) {
+  if (short && (names.length > 2 || names.join(', ').length > 24))
+    return t(names.length === 1 ? 'Delivers to {n} area' : 'Delivers to {n} areas', { n: names.length })
+  const shown = names.length > 4 ? names.slice(0, 3) : names
+  const rest = names.length - shown.length
+  const places =
+    shown.length === 1
+      ? shown[0]
+      : rest
+        ? t('{list} and {n} more', { list: shown.join(', '), n: rest })
+        : t('{list} and {last}', { list: shown.slice(0, -1).join(', '), last: shown[shown.length - 1] })
+  return t('Delivers to {places}', { places })
+}
+
 /** What a buyer wants to know before ordering: delivery, how to pay, where, when. */
-function useShopFacts(shop: PublicShop, areas: { name: string; fee: number }[]): Fact[] {
+function useShopFacts(shop: PublicShop, areas: { name: string; fee: number }[], short = false): Fact[] {
   const t = useT()
   const facts: Fact[] = []
   if (areas.length)
     facts.push({
       icon: <Truck size={18} strokeWidth={1.5} />,
-      text: t(areas.length === 1 ? 'Delivers to {n} area' : 'Delivers to {n} areas', { n: areas.length }),
+      text: placesText(t, areas.map((a) => a.name), short),
       sub: t('Fee agreed on WhatsApp'),
     })
+  // Buyers ask "mikoani mnatuma?" before anything else.
+  if (shop.ships_regions)
+    facts.push({ icon: <Bus size={18} strokeWidth={1.5} />, text: t('Sends to other regions'), sub: shop.regions_note || t('Ask the seller how on WhatsApp') })
   if (shop.lipa_number)
     facts.push({
       icon: <Smartphone size={18} strokeWidth={1.5} />,
@@ -362,9 +383,10 @@ function useShopFacts(shop: PublicShop, areas: { name: string; fee: number }[]):
   return facts
 }
 
-export function ShopFacts({ shop, areas }: { shop: PublicShop; areas: { name: string; fee: number }[] }) {
+/** `short`: where the areas are listed right below (the Info sheet), the delivery line counts them instead of naming them. */
+export function ShopFacts({ shop, areas, short = false }: { shop: PublicShop; areas: { name: string; fee: number }[]; short?: boolean }) {
   const t = useT()
-  const facts = useShopFacts(shop, areas)
+  const facts = useShopFacts(shop, areas, short)
   if (!facts.length) return null
   const directions = (href: string) => (
     <a
@@ -401,7 +423,7 @@ export function ShopFacts({ shop, areas }: { shop: PublicShop; areas: { name: st
 /** The same facts as a row of quiet pills, for the top of a shop on a phone. The written location is in the header already, so its pill only shows as a directions link. */
 export function FactPills({ shop, areas }: { shop: PublicShop; areas: { name: string; fee: number }[] }) {
   const t = useT()
-  const facts = useShopFacts(shop, areas).filter((f) => (f.href || f.text !== shop.location) && !f.text.startsWith('TIN '))
+  const facts = useShopFacts(shop, areas, true).filter((f) => (f.href || f.text !== shop.location) && !f.text.startsWith('TIN '))
   if (!facts.length) return null
   const pill = 'flex h-9 shrink-0 items-center gap-2 rounded-full bg-page px-3.5 text-[13px] whitespace-nowrap text-ink-2 [&_svg]:size-4'
   return (

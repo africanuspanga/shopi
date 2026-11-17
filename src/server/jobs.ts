@@ -20,6 +20,7 @@ export async function runJob(cron: string) {
     cron === NIGHTLY
       ? [
           ['alerts', purgeAlerts],
+          ['pins', purgePins],
           ['visits', purgeVisits],
           ['sessions', purgeSessions],
           ['limits', purgeLimits],
@@ -49,6 +50,17 @@ export async function runJob(cron: string) {
 async function purgeAlerts() {
   const res = await run('DELETE FROM stock_alerts WHERE created_at < ?', now() - (ALERT_DAYS - 1) * DAY)
   return { deleted: res.meta.changes }
+}
+
+/** Buyers' delivery pins on orders: 90 days (Privacy page). The area and the rider's note stay. */
+export const PIN_DAYS = 90
+
+async function purgePins() {
+  const res = await run(
+    'UPDATE orders SET lat = NULL, lng = NULL, pin_m = NULL WHERE created_at < ? AND lat IS NOT NULL',
+    now() - (PIN_DAYS - 1) * DAY,
+  )
+  return { cleared: res.meta.changes }
 }
 
 /**

@@ -9,6 +9,7 @@ import { getBagLink, type PublicBag } from '#/lib/api/bags'
 import type { PublicShop } from '#/lib/api/store'
 import { track } from '#/lib/analytics'
 import { imgUrl, localPhone, tzs, waLink } from '#/lib/format'
+import { openWhatsApp } from '#/components/whatsapp'
 import { useLang, useT } from '#/lib/i18n'
 import { useEntrance } from '#/components/ui'
 
@@ -118,7 +119,16 @@ function Ended({ shop, bag }: { shop: PublicShop; bag: PublicBag }) {
   const t = useT()
   const chat = (text: string) =>
     shop.whatsapp ? (
-      <a href={waLink(shop.whatsapp, text)} target="_blank" rel="noreferrer" className="btn" onClick={() => track('whatsapp_click', { shopId: shop.id, detail: 'order' })}>
+      <a
+        href={waLink(shop.whatsapp, text)}
+        target="_blank"
+        rel="noreferrer"
+        className="btn"
+        onClick={(e) => {
+          track('whatsapp_click', { shopId: shop.id, detail: 'order' })
+          openWhatsApp(e)
+        }}
+      >
         <WhatsAppMark size={20} /> {t('Message {shop} on WhatsApp', { shop: shop.name })}
       </a>
     ) : null
