@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { CardHead, Img, Money, scrubIndex, shortNumber } from '#/components/ui'
+import { Card, Img, Money, Nothing, scrubIndex, shortNumber, Stat } from '#/components/ui'
 import type { DayPoint } from '#/lib/admin'
 import { shortDay, tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
@@ -33,16 +33,7 @@ export function Change({ now, before, flip = false }: { now: number; before: num
 }
 
 export function Kpi({ label, value, now, before, vs, flip, note }: { label: string; value: ReactNode; now?: number; before?: number; vs?: string; flip?: boolean; note?: ReactNode }) {
-  return (
-    <div className="card min-w-0 p-4 md:p-5">
-      <span className="block text-13 text-muted">{label}</span>
-      <span className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-        <span className="tnum text-20 font-semibold tracking-[-0.02em] whitespace-nowrap md:text-24">{value}</span>
-        {now !== undefined && before !== undefined && <Change now={now} before={before} flip={flip} />}
-      </span>
-      <span className="mt-1.5 block text-13 leading-[18px] text-muted">{note ?? vs}</span>
-    </div>
-  )
+  return <Stat card label={label} value={value} badge={now !== undefined && before !== undefined ? <Change now={now} before={before} flip={flip} /> : undefined} foot={note ?? vs} />
 }
 
 /** Money for a number card: short from a million up where the card is narrow. */
@@ -55,14 +46,6 @@ export function KpiMoney({ value }: { value: number }) {
   )
 }
 
-export function Card({ title, sub, right, children, className = '' }: { title: string; sub?: string; right?: ReactNode; children: ReactNode; className?: string }) {
-  return (
-    <section className={`card min-w-0 p-5 md:p-6 ${className}`}>
-      <CardHead title={title} sub={sub} right={right} className="mb-4" />
-      {children}
-    </section>
-  )
-}
 
 export function Row({ label, value, strong = false }: { label: ReactNode; value: ReactNode; strong?: boolean }) {
   return (
@@ -73,9 +56,7 @@ export function Row({ label, value, strong = false }: { label: ReactNode; value:
   )
 }
 
-export function Nothing({ children }: { children: ReactNode }) {
-  return <p className="rounded-14 bg-page px-4 py-6 text-center text-14 text-muted">{children}</p>
-}
+export { Card, Nothing }
 
 /** Rows with a quiet bar behind the figures: sources, cities, features. */
 export function BarList({ rows, total, empty }: { rows: { label: string; value: number; text?: ReactNode }[]; total?: number; empty: string }) {

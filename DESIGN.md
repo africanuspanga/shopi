@@ -47,19 +47,25 @@ surfaces and overlays.
 (`p-5`), 24 on desktop (`md:p-6`).
 
 ## The shared parts (use them, don't rebuild them)
-In `src/components/ui.tsx`. When a screen needs one of these roles, it uses the part; if it needs a variant, the part
-grows a prop. The check can't see roles, so this list is the rule.
+In `src/components/ui.tsx` (admin's `Kpi` in `components/admin.tsx`). When a screen needs one of these roles, it uses
+the part; if it needs a variant, the part grows a prop. `npm run check:design` catches the usual signs of a part rebuilt
+by hand (a hand-styled card heading, a bare `label` class, a `fixed inset-0` overlay, a hand-made `role="switch"`, a
+local function named like a part); a genuine exception says why on its line or the line before:
+`{/* design-check: allow <reason> */}`.
 
 | Role | Part | Looks like |
 | --- | --- | --- |
 | A seller page's header | `TopBar` (phone bar + desktop header), or `PhoneBar` + `PageHead` when the phone bar is special (Home) | Desktop: title at 28 (`.title`), a 14 muted line under it, actions at the right |
+| A titled card | `Card` (`title`, `sub`, `right`) | White card padded 20 (24 from md), its `CardHead`, then the content |
 | A card's heading | `CardHead` (`title`, `sub`, `icon`, `right`) | Title 15 semibold; a short description under it at 13 muted; a dot or step number before the title; a link, count or button at the right on the title's baseline |
 | A quiet row on Home | `Notice` (`icon`, `title`, `sub`, `to`/`onClick`, `actions`, `onDismiss`, `signal`) | A card: icon (or a short figure) in a soft circle, title 15 medium, a 13 muted line; the whole row opens something (arrow) or carries buttons; "Not now" as an X. Rows stack with `space-y-3` |
+| A number with its label | `Stat` (`size` sm/md/lg, `card`, `onClick`+`on`, `badge`, `foot`); `/admin` wraps it as `Kpi` with the change chip | Label 13 muted, figure in lining figures (lg 20 → 24 from md, md 20, sm 15), a change or note at 13 |
+| Nothing to show yet | `Nothing` (one line in a soft box); `Empty` (icon, title, text, action) for a whole empty page | |
 | A sheet | `Sheet` | Title at 20 (`.title`), close at the right |
-| A field | `Field` | Label 14 medium, hint 13 muted |
+| One input | `Field` | Label 14 medium, hint 13 muted |
+| A group of choices (chips, colours, photos) | `FieldGroup` (`radio` for one-of-several) | The same label and hint as `Field`, named for screen readers |
+| A label for an input that sits beside a button | `Label` (`htmlFor`) | |
 | A yes/no setting | `Switch` | |
-| A number card (admin, analytics) | `Kpi` in `components/admin.tsx` | |
-| A titled card in /admin | `Card` in `components/admin.tsx` (uses `CardHead`) | |
 
 A paragraph that *is* a card's content (the instructions on an order's status card) stays body text, 14 muted with
 `leading-relaxed`, under the `CardHead`; only a short description goes in `sub`.

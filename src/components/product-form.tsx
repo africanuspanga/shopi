@@ -4,7 +4,7 @@ import { useRef, useState, type ReactNode } from 'react'
 import { WriteItForMe } from '#/components/ai-write'
 import { ShareActions, prettyUrl } from '#/components/share'
 import { Tag } from '#/components/shop'
-import { CardHead, ErrorText, Field, Img, Sheet, Switch, Toast, TopBar } from '#/components/ui'
+import { Card, CardHead, ErrorText, Field, FieldGroup, Img, Sheet, Switch, Toast, TopBar } from '#/components/ui'
 import { deleteProduct, saveProduct, type ProductRow } from '#/lib/api/merchant'
 import { track } from '#/lib/analytics'
 import { OPTION_KINDS, SIZE_PRESETS, optionKind, tzs, type OptionKind } from '#/lib/format'
@@ -254,25 +254,26 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
             />
             {sizes ? (
               <div className="fade mt-5">
-                <p className="label">{t('What buyers choose')}</p>
-                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t('What buyers choose')}>
-                  {KINDS.map((k) => (
-                    <button
-                      key={k}
-                      type="button"
-                      role="radio"
-                      aria-checked={option === k}
-                      aria-pressed={option === k}
-                      className="chip"
-                      onClick={() => {
-                        setOption(k)
-                        if (k !== 'size' && sizes.length === 0) setSizes([blankRow()])
-                      }}
-                    >
-                      {t(OPTION_KINDS[k].label)}
-                    </button>
-                  ))}
-                </div>
+                <FieldGroup label={t('What buyers choose')} radio>
+                  <div className="flex flex-wrap gap-2">
+                    {KINDS.map((k) => (
+                      <button
+                        key={k}
+                        type="button"
+                        role="radio"
+                        aria-checked={option === k}
+                        aria-pressed={option === k}
+                        className="chip"
+                        onClick={() => {
+                          setOption(k)
+                          if (k !== 'size' && sizes.length === 0) setSizes([blankRow()])
+                        }}
+                      >
+                        {t(OPTION_KINDS[k].label)}
+                      </button>
+                    ))}
+                  </div>
+                </FieldGroup>
                 {sizes.length === 0 && option !== 'size' ? (
                   <button type="button" className="btn btn-quiet btn-sm mt-5" onClick={() => setSizes([blankRow()])}>
                     <Plus size={16} strokeWidth={2.25} /> {t('Add an option')}
@@ -536,14 +537,6 @@ function SaveButtons({ product, busy, uploading, onAgain }: { product?: ProductR
   )
 }
 
-function Card({ title, sub, children }: { title?: string; sub?: string; children: ReactNode }) {
-  return (
-    <section className="card p-6">
-      {title && <CardHead title={title} sub={sub} />}
-      <div className={title ? 'mt-4' : ''}>{children}</div>
-    </section>
-  )
-}
 
 /** Shillings with thousands separators as you type; the form keeps digits only. */
 export function PriceInput({ value, onValue, placeholder }: { value: string; onValue: (digits: string) => void; placeholder: string }) {

@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowUpRight, Banknote, Check, LocateFixed, MapPin, Minus, Plus, ShieldCheck, Smartphone, TicketPercent, Trash2 } from 'lucide-react'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { MadeWithShopi, ShopTopBar } from '#/components/shop'
-import { CardHead, ErrorText, Field, Img } from '#/components/ui'
+import { CardHead, ErrorText, Field, Img, Label } from '#/components/ui'
 import { checkDiscount } from '#/lib/api/discounts'
 import { expandMapLink, placeOrder, type PublicShop } from '#/lib/api/store'
 import { track, visit } from '#/lib/analytics'
@@ -566,9 +566,7 @@ function LocationField({ pin, onPin }: { pin: Pin | null; onPin: (pin: Pin | nul
       {state === 'failed' && <p className="fade mt-2 text-13 leading-5 text-ink-2">{t('We couldn’t find you. Try again, or type your area below.')}</p>}
       {pasting ? (
         <div className="fade mt-4">
-          <label className="label" htmlFor="checkout-map-link">
-            {t('Location link')}
-          </label>
+          <Label htmlFor="checkout-map-link">{t('Location link')}</Label>
           <div className="flex gap-2">
             <input
               id="checkout-map-link"
@@ -685,9 +683,7 @@ function DiscountField({
   }
   return (
     <form onSubmit={apply} className="fade">
-      <label className="label" htmlFor={`discount-${shopId}`}>
-        {t('Discount code')}
-      </label>
+      <Label htmlFor={`discount-${shopId}`}>{t('Discount code')}</Label>
       <div className="flex gap-2">
         <input
           id={`discount-${shopId}`}

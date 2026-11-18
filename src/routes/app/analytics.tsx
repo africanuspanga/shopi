@@ -3,7 +3,7 @@ import { ArrowDownToLine, Check, Copy, Globe, Link2, Mail, PenLine, Plus, Search
 import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from '#/components/brand-icons'
 import { prettyUrl } from '#/components/share'
-import { CardHead, Delta, Img, Money, Page, scrubIndex, Toast, TopBar } from '#/components/ui'
+import { Card, CardHead, Delta, Img, Money, Nothing, Page, scrubIndex, Stat, Toast, TopBar } from '#/components/ui'
 import { TemboLock, TemboPill, useCan } from '#/components/tembo'
 import { RANGES, createLink, deleteLink, getAnalytics, type Analytics, type RangeDays } from '#/lib/api/analytics'
 import { tzs } from '#/lib/format'
@@ -78,12 +78,12 @@ function AnalyticsPage() {
       )}
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-6">
-        <Kpi label={t('Visitors')} value={n(a.now.visitors)} delta={<Delta now={a.now.visitors} before={a.before.visitors} label={vs} />} on={metric === 'visitors'} onClick={() => setMetric('visitors')} />
-        <Kpi label={t('Visits')} value={n(a.now.visits)} delta={<Delta now={a.now.visits} before={a.before.visits} label={vs} />} />
-        <Kpi label={t('Orders')} value={n(a.now.orders)} delta={<Delta now={a.now.orders} before={a.before.orders} label={vs} />} on={metric === 'orders'} onClick={() => setMetric('orders')} />
-        <Kpi label={t('Sales')} value={<Money value={a.now.sales} cur="text-[0.62em] text-muted" />} delta={<Delta now={a.now.sales} before={a.before.sales} label={vs} />} on={metric === 'sales'} onClick={() => setMetric('sales')} />
-        <Kpi label={t('Visits that ordered')} value={pct(a.now.conversion)} delta={<Delta now={a.now.conversion} before={a.before.conversion} label={vs} />} />
-        <Kpi label={t('Average order')} value={<Money value={a.now.aov} cur="text-[0.62em] text-muted" />} delta={<Delta now={a.now.aov} before={a.before.aov} label={vs} />} />
+        <Stat card label={t('Visitors')} value={n(a.now.visitors)} foot={<Delta now={a.now.visitors} before={a.before.visitors} label={vs} />} on={metric === 'visitors'} onClick={() => setMetric('visitors')} />
+        <Stat card label={t('Visits')} value={n(a.now.visits)} foot={<Delta now={a.now.visits} before={a.before.visits} label={vs} />} />
+        <Stat card label={t('Orders')} value={n(a.now.orders)} foot={<Delta now={a.now.orders} before={a.before.orders} label={vs} />} on={metric === 'orders'} onClick={() => setMetric('orders')} />
+        <Stat card label={t('Sales')} value={<Money value={a.now.sales} cur="text-[0.62em] text-muted" />} foot={<Delta now={a.now.sales} before={a.before.sales} label={vs} />} on={metric === 'sales'} onClick={() => setMetric('sales')} />
+        <Stat card label={t('Visits that ordered')} value={pct(a.now.conversion)} foot={<Delta now={a.now.conversion} before={a.before.conversion} label={vs} />} />
+        <Stat card label={t('Average order')} value={<Money value={a.now.aov} cur="text-[0.62em] text-muted" />} foot={<Delta now={a.now.aov} before={a.before.aov} label={vs} />} />
       </div>
 
       {full ? (
@@ -141,39 +141,8 @@ function RangePicker({ days, className = '' }: { days: number; className?: strin
   )
 }
 
-function Card({ title, sub, action, children, className = '' }: { title: string; sub?: string; action?: ReactNode; children: ReactNode; className?: string }) {
-  return (
-    <section className={`card min-w-0 p-5 md:p-6 ${className}`}>
-      <CardHead title={title} sub={sub} right={action} className="mb-5" />
-      {children}
-    </section>
-  )
-}
 
-function Nothing({ children }: { children: ReactNode }) {
-  return <p className="rounded-14 bg-page px-4 py-6 text-center text-14 text-muted">{children}</p>
-}
 
-function Kpi({ label, value, delta, on, onClick }: { label: string; value: ReactNode; delta: ReactNode; on?: boolean; onClick?: () => void }) {
-  const body = (
-    <>
-      <span className="block text-13 text-muted">{label}</span>
-      <span className="tnum mt-1.5 block truncate text-20 font-semibold tracking-[-0.02em] md:text-24">{value}</span>
-      <span className="mt-1.5 block">{delta}</span>
-    </>
-  )
-  if (!onClick) return <div className="card p-4 md:p-5">{body}</div>
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={on}
-      className={`card p-4 text-left transition-shadow md:p-5 ${on ? 'shadow-[inset_0_0_0_1.5px_var(--color-ink)]' : 'hover:shadow-[inset_0_0_0_1px_var(--color-line-strong)]'}`}
-    >
-      {body}
-    </button>
-  )
-}
 
 function TrendChart({ a, metric, className }: { a: Analytics; metric: Metric; className: string }) {
   const t = useT()
@@ -356,7 +325,7 @@ function Products({ a, className }: { a: Analytics; className: string }) {
       title={t('Products')}
       sub={t('Views, bag adds and sales for each product in these {n} days', { n: a.days })}
       className={className}
-      action={
+      right={
         a.products.length > 8 ? (
           <button type="button" className="shrink-0 text-13 text-muted transition-colors hover:text-ink" onClick={() => setAll(!all)}>
             {all ? t('Show fewer') : t('Show all {n}', { n: a.products.length })}
@@ -603,7 +572,7 @@ function Buyers({ a, className }: { a: Analytics; className: string }) {
       title={t('Buyers')}
       sub={t('People who ordered in these {n} days', { n: a.days })}
       className={className}
-      action={
+      right={
         <div className="flex shrink-0 gap-2">
           <a href={`/api/export?what=orders&days=${a.days}`} className="btn btn-ghost btn-sm" download>
             <ArrowDownToLine size={16} strokeWidth={1.75} /> {t('Orders')}

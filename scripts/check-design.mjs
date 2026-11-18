@@ -4,7 +4,9 @@
  * matter which session built a screen. Run `npm run check:design`; it must pass before anything is called done.
  *
  * It fails on: a typed font size (text-[15px]) or one off the scale (text-16); a typed radius (rounded-[18px]) or one
- * off the scale; a raw hex colour in a class (bg-[#0b0b0b]); an icon size or line weight off the icon scale.
+ * off the scale; a raw hex colour in a class (bg-[#0b0b0b]); an icon size or line weight off the icon scale. And on the
+ * signs of a shared part rebuilt by hand (DESIGN.md, "The shared parts"): a hand-styled card heading, a bare label, an
+ * overlay, a hand-made switch, a local function named like a shared part.
  * A file whose first lines say `design-check: off` is skipped (the coded pictures in showcase.tsx, drawn at their own
  * small scale). Change a scale in styles.css and here together, and say why in DESIGN.md.
  */
@@ -27,6 +29,18 @@ const RULES = [
   [/\bstrokeWidth=\{([0-9.]+)\}/g, (m) => (STROKE.includes(m[1]) ? null : `icon line weight ${m[1]}: use 1.75, or 2.25 for small bold marks`)],
 ]
 
+// The shared parts (DESIGN.md) live in these files; elsewhere, the signs of one being rebuilt are flagged. A real
+// exception says why on its line or the line before: {/* design-check: allow <reason> */}.
+const PART_FILES = ['src/components/ui.tsx', 'src/components/admin.tsx']
+const PARTS = ['Card', 'CardHead', 'Stat', 'Kpi', 'Nothing', 'Notice', 'PageHead', 'TopBar', 'PhoneBar', 'Field', 'FieldGroup', 'Label', 'Sheet', 'Switch', 'Empty']
+const ROLE_RULES = [
+  [/<h[23]\b[^>]*className=[{`"'][^"'`]*\b(?:text-1[57]\b[^"'`]*font-semibold|font-semibold[^"'`]*\btext-1[57]\b)/g, 'a card heading built by hand: use CardHead'],
+  [/className=[{`"'](?:[^"'`]*\s)?label(?:\s[^"'`]*)?["'`]/g, 'a label built by hand: use Field, FieldGroup or Label'],
+  [/\bfixed inset-0\b/g, 'an overlay built by hand: use Sheet'],
+  [/role="switch"/g, 'a switch built by hand: use Switch'],
+  [new RegExp(`^\\s*(?:export\\s+)?function\\s+(${PARTS.join('|')})\\b`, 'g'), 'a shared part declared again: import it from components/ui.tsx'],
+]
+
 function* files(dir) {
   for (const name of readdirSync(dir)) {
     const path = join(dir, name)
@@ -41,12 +55,19 @@ for (const path of files(join(ROOT, 'src'))) {
   const text = readFileSync(path, 'utf8')
   if (text.slice(0, 400).includes('design-check: off')) continue
   checked++
-  text.split('\n').forEach((line, i) => {
+  const rel = relative(ROOT, path)
+  const lines = text.split('\n')
+  lines.forEach((line, i) => {
     for (const [re, why] of RULES) {
       for (const m of line.matchAll(re)) {
         const msg = why(m)
-        if (msg) problems.push(`${relative(ROOT, path)}:${i + 1}  ${m[0]}  ${msg}`)
+        if (msg) problems.push(`${rel}:${i + 1}  ${m[0]}  ${msg}`)
       }
+    }
+    if (PART_FILES.includes(rel)) return
+    if (/design-check: allow/.test(line) || /design-check: allow/.test(lines[i - 1] ?? '')) return
+    for (const [re, msg] of ROLE_RULES) {
+      for (const m of line.matchAll(re)) problems.push(`${rel}:${i + 1}  ${m[0].trim().slice(0, 60)}  ${msg}`)
     }
   })
 }

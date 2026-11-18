@@ -3,7 +3,7 @@ import { Check, Link2, Loader2, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { AuthLayout, StepBar } from '#/components/auth'
 import { LivePhone, OrderNotice, PaymentStep, PhoneStep, PreviewAside, ProductStep, ShopCard, LiveStep, StepHead, previewShop, useStepClock, type PreviewProduct } from '#/components/setup'
-import { ErrorText, Field, ShopAvatar, ShopLangChoice } from '#/components/ui'
+import { ErrorText, Field, FieldGroup, ShopAvatar, ShopLangChoice } from '#/components/ui'
 import { checkSlug, createShop, expandSocialLink } from '#/lib/api/merchant'
 import { getSetup } from '#/lib/api/setup'
 import { CATEGORIES, localPhone, normalizePhone, slugify } from '#/lib/format'
@@ -313,8 +313,7 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
             />
           </span>
         </Field>
-        <div>
-          <p className="label">{t('What do you sell?')}</p>
+        <FieldGroup label={t('What do you sell?')}>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((c) => (
               <button key={c.id} type="button" className="chip" aria-pressed={category === c.id} onClick={() => setCategory(c.id)}>
@@ -322,7 +321,7 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
               </button>
             ))}
           </div>
-        </div>
+        </FieldGroup>
 
         {details ? (
           <div className="fade space-y-5 rounded-16 bg-card p-4 shadow-[inset_0_0_0_1px_var(--color-line)]">

@@ -2,7 +2,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { PenLine, Plus, Share2, TicketPercent, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { ShareActions, prettyUrl } from '#/components/share'
-import { Empty, ErrorText, Field, Page, Sheet, Switch, TopBar } from '#/components/ui'
+import { Empty, ErrorText, Field, FieldGroup, Page, Sheet, Stat, Switch, TopBar } from '#/components/ui'
 import { deleteDiscount, listDiscounts, saveDiscount, setDiscountActive, type DiscountRow } from '#/lib/api/discounts'
 import { track } from '#/lib/analytics'
 import { cleanCode, dayOf, discountLabel, type DiscountKind } from '#/lib/discounts'
@@ -116,11 +116,11 @@ function CodeCard({ c, onEdit, onShare }: { c: DiscountRow; onEdit: () => void; 
         />
       </div>
       <p className="mt-2 text-13 leading-5 text-muted">{conditions(c)}</p>
-      <dl className="mt-4 grid grid-cols-3 gap-3 border-t border-line pt-4">
-        <Stat label={t('Orders')} value={c.max_uses ? `${c.uses}/${c.max_uses}` : String(c.uses)} />
-        <Stat label={t('Taken off')} value={tzs(c.off)} />
-        <Stat label={t('Paid sales')} value={tzs(c.sales)} />
-      </dl>
+      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-line pt-4">
+        <Stat size="sm" label={t('Orders')} value={c.max_uses ? `${c.uses}/${c.max_uses}` : String(c.uses)} />
+        <Stat size="sm" label={t('Taken off')} value={tzs(c.off)} />
+        <Stat size="sm" label={t('Paid sales')} value={tzs(c.sales)} />
+      </div>
       <div className="mt-4 flex gap-2">
         <button type="button" className="btn btn-quiet btn-sm flex-1" onClick={onShare} disabled={state !== 'on'}>
           <Share2 size={16} strokeWidth={1.75} /> {t('Share')}
@@ -133,14 +133,6 @@ function CodeCard({ c, onEdit, onShare }: { c: DiscountRow; onEdit: () => void; 
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0">
-      <dt className="truncate text-12 text-muted">{label}</dt>
-      <dd className="tnum mt-0.5 truncate text-15 font-semibold">{value}</dd>
-    </div>
-  )
-}
 
 /** A compact on/off switch for a card corner; the full-row Switch is for forms. */
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
@@ -218,8 +210,7 @@ function EditSheet({ code, onClose }: { code: DiscountRow | null; onClose: () =>
             onChange={(e) => setForm({ ...form, code: cleanCode(e.target.value) })}
           />
         </Field>
-        <div>
-          <p className="label">{t('Discount')}</p>
+        <FieldGroup label={t('Discount')}>
           <div className="flex gap-2" role="radiogroup" aria-label={t('Discount')}>
             {(
               [
@@ -244,7 +235,7 @@ function EditSheet({ code, onClose }: { code: DiscountRow | null; onClose: () =>
             />
             {form.kind === 'percent' && <span className="text-14 text-muted">%</span>}
           </label>
-        </div>
+        </FieldGroup>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t('Minimum order')} aside={t('Optional')}>
             <label className="input flex items-center gap-2 px-4">

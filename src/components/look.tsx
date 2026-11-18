@@ -1,7 +1,7 @@
 import { Check, ImagePlus, Loader2, Pipette, Search, ShoppingBag, Store, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Tag } from '#/components/shop'
-import { CardHead, Img, ShopAvatar } from '#/components/ui'
+import { CardHead, FieldGroup, Img, ShopAvatar } from '#/components/ui'
 import type { ProductRow, ShopRow } from '#/lib/api/merchant'
 import { imgUrl, tzs } from '#/lib/format'
 import { useT } from '#/lib/i18n'
@@ -132,26 +132,23 @@ export function ColorPicker({ value, logo, onChange }: { value: string; logo: st
   return (
     <div className="space-y-5">
       {fromLogo.length > 0 && (
-        <div>
-          <p className="label">{t('From your logo')}</p>
-          <div className="mt-2 flex flex-wrap gap-3">
+        <FieldGroup label={t('From your logo')}>
+          <div className="flex flex-wrap gap-3">
             {fromLogo.map((hex) => (
               <Swatch key={hex} hex={hex} name={`${t('From your logo')} ${hex}`} on={value === hex} onPick={() => onChange(hex)} />
             ))}
           </div>
-        </div>
+        </FieldGroup>
       )}
-      <div>
-        <p className="label">{t('Tested colours')}</p>
-        <div className="mt-2 flex flex-wrap gap-3">
+      <FieldGroup label={t('Tested colours')}>
+        <div className="flex flex-wrap gap-3">
           {COLORS.map((x) => (
             <Swatch key={x.hex} hex={x.hex} name={t(x.name)} on={value === x.hex} onPick={() => onChange(x.hex)} />
           ))}
         </div>
-      </div>
-      <div>
-        <p className="label">{t('Your own colour')}</p>
-        <div className="mt-2 flex items-center gap-3">
+      </FieldGroup>
+      <FieldGroup label={t('Your own colour')}>
+        <div className="flex items-center gap-3">
           <label
             className={`relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full ${!preset ? 'ring-2 ring-ink ring-offset-2 ring-offset-card' : 'shadow-[inset_0_0_0_1px_rgb(10_10_10/0.1)]'}`}
             style={{ background: !preset ? value : 'var(--color-well)', color: !preset ? c.onFill : 'var(--color-ink)' }}
@@ -175,7 +172,7 @@ export function ColorPicker({ value, logo, onChange }: { value: string; logo: st
             />
           </span>
         </div>
-      </div>
+      </FieldGroup>
       {notes.length > 0 && (
         <ul className="space-y-1.5 rounded-14 bg-page px-4 py-3 text-13 leading-5 text-ink-2">
           {notes.map((n) => (

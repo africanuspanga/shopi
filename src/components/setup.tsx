@@ -7,7 +7,7 @@ import { PriceInput } from '#/components/product-form'
 import { QrSheet } from '#/components/qr-sheet'
 import { ShareActions } from '#/components/share'
 import { Phone } from '#/components/showcase'
-import { ErrorText, Field, Img, Sheet, ShopAvatar, Toast } from '#/components/ui'
+import { ErrorText, Field, FieldGroup, Img, Sheet, ShopAvatar, Toast } from '#/components/ui'
 import { saveProduct } from '#/lib/api/merchant'
 import { passSetupStep, saveSetupPayment, saveShopBio, type SetupProduct, type SetupShop } from '#/lib/api/setup'
 import { track } from '#/lib/analytics'
@@ -232,8 +232,7 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
         <ShopCard shop={previewShop(shop)} products={[{ name, price: Number(price) || 0, image: images[0] ?? null, uploading: uploading > 0 && !images.length }]} />
       </PreviewToggle>
       <form className="mt-6 space-y-5" onSubmit={save}>
-        <div className="field">
-          <span className="label">{t('Photos')}</span>
+        <FieldGroup label={t('Photos')}>
           <div className="hide-scroll -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
             {images.map((k, i) => (
               <div key={k} className="relative shrink-0">
@@ -277,7 +276,7 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
               }}
             />
           </div>
-        </div>
+        </FieldGroup>
         <Field label={t('Name')}>
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('e.g. Kitenge maxi dress')} />
         </Field>
@@ -394,8 +393,7 @@ export function PaymentStep({ shop, bar, onDraft }: { shop: SetupShop; bar: Reac
         <ShopCard shop={previewShop(shop)} products={[]} payment={paymentLine(t, { network, number, cod })} />
       </PreviewToggle>
       <form className="mt-6 space-y-5" onSubmit={save}>
-        <div className="field" role="group" aria-label={t('Network')}>
-          <span className="label">{t('Network')}</span>
+        <FieldGroup label={t('Network')}>
           <div className="flex flex-wrap gap-2">
             {NETWORKS.map((n) => (
               <button key={n} type="button" className="chip" aria-pressed={network === n} onClick={() => setNetwork(n)}>
@@ -403,7 +401,7 @@ export function PaymentStep({ shop, bar, onDraft }: { shop: SetupShop; bar: Reac
               </button>
             ))}
           </div>
-        </div>
+        </FieldGroup>
         <Field label={t('Lipa Namba or number')}>
           <input className="input code" inputMode="numeric" value={number} onChange={(e) => setNumber(e.target.value)} placeholder="5512345" />
         </Field>

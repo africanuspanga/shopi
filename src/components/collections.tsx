@@ -3,7 +3,7 @@ import { ArrowDown, ArrowUp, Loader2, Plus, Trash2, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { ProductPicker } from '#/components/product-picker'
 import { ShareActions, prettyUrl } from '#/components/share'
-import { CardHead, ErrorText, Field, Img, TopBar } from '#/components/ui'
+import { Card, CardHead, ErrorText, Field, Img, TopBar } from '#/components/ui'
 import { deleteCollection, saveCollection, type CollectionRow } from '#/lib/api/collections'
 import type { ProductRow } from '#/lib/api/merchant'
 import { track } from '#/lib/analytics'
@@ -236,12 +236,4 @@ function IconButton({ label, disabled, onClick, children }: { label: string; dis
   )
 }
 
-function Card({ title, sub, children }: { title?: string; sub?: string; children: ReactNode }) {
-  return (
-    <section className="card p-6">
-      {title && <CardHead title={title} sub={sub} />}
-      <div className={title ? 'mt-4' : ''}>{children}</div>
-    </section>
-  )
-}
 

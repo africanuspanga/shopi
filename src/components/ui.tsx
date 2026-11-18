@@ -395,8 +395,7 @@ export function ShopLangChoice({ value, onChange, hint }: { value: Lang; onChang
   const t = useT()
   if (!SWAHILI_ENABLED) return null
   return (
-    <div className="field" role="group" aria-label={t('Shop language')}>
-      <span className="label">{t('Shop language')}</span>
+    <FieldGroup label={t('Shop language')} hint={hint}>
       <div className="grid grid-cols-2 gap-2">
         {LANGUAGES.map(([id, name]) => (
           <button key={id} type="button" lang={id} className="chip h-12 justify-center text-15" aria-pressed={value === id} onClick={() => onChange(id)}>
@@ -404,8 +403,7 @@ export function ShopLangChoice({ value, onChange, hint }: { value: Lang; onChang
           </button>
         ))}
       </div>
-      <small className="hint">{hint}</small>
-    </div>
+    </FieldGroup>
   )
 }
 
@@ -418,13 +416,133 @@ export function ErrorText({ children }: { children: ReactNode }) {
   )
 }
 
+/** A field's label (DESIGN.md: the shared parts): 14 medium, an optional quiet note at the right. Field and FieldGroup
+ *  use it; on its own it labels an input that sits in a row with a button (`htmlFor`). */
+export function Label({ children, aside, htmlFor }: { children: ReactNode; aside?: ReactNode; htmlFor?: string }) {
+  const body = (
+    <>
+      {children}
+      {aside && <span className="text-13 font-normal text-muted">{aside}</span>}
+    </>
+  )
+  return htmlFor ? (
+    <label htmlFor={htmlFor} className="label flex items-baseline justify-between gap-3">
+      {body}
+    </label>
+  ) : (
+    <span className="label flex items-baseline justify-between gap-3">{body}</span>
+  )
+}
+
+/**
+ * A labelled group (DESIGN.md: the shared parts): the same label, hint and spacing as Field, for what isn't a single
+ * input: a row of chips, colours or photos (a role="group" named by the label), or an input with a button beside it
+ * (`htmlFor` makes the label point at the input). Field stays for one input, since its label wraps the input.
+ */
+export function FieldGroup({
+  label,
+  children,
+  hint,
+  aside,
+  htmlFor,
+  radio = false,
+  className = '',
+}: {
+  label: string
+  children: ReactNode
+  hint?: ReactNode
+  aside?: ReactNode
+  htmlFor?: string
+  /** One choice among several (role="radiogroup"); the buttons inside then carry role="radio" and aria-checked. */
+  radio?: boolean
+  className?: string
+}) {
+  return (
+    <div className={`field ${className}`} {...(htmlFor ? {} : { role: radio ? 'radiogroup' : 'group', 'aria-label': label })}>
+      <Label htmlFor={htmlFor} aside={aside}>
+        {label}
+      </Label>
+      {children}
+      {hint && <small className="hint">{hint}</small>}
+    </div>
+  )
+}
+
+/**
+ * A number with its label (DESIGN.md: the shared parts): the label at 13 muted, the figure in lining figures, then a
+ * change or a note at 13. `size`: "lg" (20, 24 from md: number cards), "md" (20: small stats inside a card), "sm" (15:
+ * a row of facts). `card` makes it its own card; `onClick` makes that card a choice (`on` when chosen, Analytics);
+ * `badge` sits beside the figure (a change chip on /admin).
+ */
+export function Stat({
+  label,
+  value,
+  foot,
+  badge,
+  size = 'lg',
+  card = false,
+  on,
+  onClick,
+  className = '',
+}: {
+  label: ReactNode
+  value: ReactNode
+  foot?: ReactNode
+  badge?: ReactNode
+  size?: 'sm' | 'md' | 'lg'
+  card?: boolean
+  on?: boolean
+  onClick?: () => void
+  className?: string
+}) {
+  const figure = { sm: 'text-15', md: 'text-20 tracking-[-0.02em]', lg: 'text-20 tracking-[-0.02em] md:text-24' }[size]
+  const body = (
+    <>
+      <span className={`block truncate text-muted ${size === 'sm' ? 'text-12' : 'text-13'}`}>{label}</span>
+      <span className={`flex flex-wrap items-center gap-x-2.5 gap-y-1.5 ${size === 'sm' ? 'mt-0.5' : 'mt-1.5'}`}>
+        <span className={`tnum min-w-0 truncate font-semibold whitespace-nowrap ${figure}`}>{value}</span>
+        {badge}
+      </span>
+      {foot && <span className="mt-1.5 block text-13 leading-[18px] text-muted">{foot}</span>}
+    </>
+  )
+  const frame = card ? 'card p-4 md:p-5' : ''
+  if (onClick)
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-pressed={on}
+        className={`${frame} min-w-0 text-left transition-shadow ${on ? 'shadow-[inset_0_0_0_1.5px_var(--color-ink)]' : 'hover:shadow-[inset_0_0_0_1px_var(--color-line-strong)]'} ${className}`}
+      >
+        {body}
+      </button>
+    )
+  return <div className={`${frame} min-w-0 ${className}`}>{body}</div>
+}
+
+/**
+ * A titled card (DESIGN.md: the shared parts): a white card padded 20 (24 from md), its CardHead, then the content.
+ * Without a title it is just the padded card. Admin, Analytics, the product form and collections all use this one.
+ */
+export function Card({ title, sub, right, children, className = '' }: { title?: ReactNode; sub?: ReactNode; right?: ReactNode; children: ReactNode; className?: string }) {
+  return (
+    <section className={`card min-w-0 p-5 md:p-6 ${className}`}>
+      {title && <CardHead title={title} sub={sub} right={right} className="mb-4" />}
+      {children}
+    </section>
+  )
+}
+
+/** Nothing to show yet, quietly (DESIGN.md: the shared parts): a soft box with one line. Empty is the larger version. */
+export function Nothing({ children }: { children: ReactNode }) {
+  return <p className="rounded-14 bg-page px-4 py-6 text-center text-14 text-muted">{children}</p>
+}
+
 export function Field({ label, children, hint, aside }: { label: string; children: ReactNode; hint?: ReactNode; aside?: ReactNode }) {
   return (
     <label className="field">
-      <span className="label flex items-baseline justify-between gap-3">
-        {label}
-        {aside && <span className="text-13 font-normal text-muted">{aside}</span>}
-      </span>
+      <Label aside={aside}>{label}</Label>
       {children}
       {hint && <small className="hint">{hint}</small>}
     </label>

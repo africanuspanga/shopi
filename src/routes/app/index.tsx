@@ -1,7 +1,7 @@
 import { Link, createFileRoute, redirect } from '@tanstack/react-router'
 import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, FileSpreadsheet, Gem, Plus, QrCode as QrCodeIcon, ReceiptText, Share2 } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
-import { CardHead, Delta, Empty, Img, LangSwitch, Money, Notice, Page, PageHead, PhoneBar, scrubIndex, Sheet, ShopAvatar, StatusPill, Toast, useEntrance } from '#/components/ui'
+import { useState } from 'react'
+import { CardHead, Delta, Empty, Img, LangSwitch, Money, Notice, Page, PageHead, PhoneBar, scrubIndex, Sheet, ShopAvatar, Stat, StatusPill, Toast, useEntrance } from '#/components/ui'
 import { BioSteps } from '#/components/setup'
 import { PhoneAlertsCard } from '#/components/phone-app'
 import { EmailRow } from '#/components/email'
@@ -216,16 +216,10 @@ function Dashboard() {
           <section className={`${rise3} card flex flex-col p-6 lg:col-span-3`}>
             <CardHead title={t('Your shop link')} />
             <p className="code mt-3 truncate text-17">shopi.tz/{shop.slug}</p>
-            <dl className="mt-auto grid grid-cols-2 gap-3 pt-6">
-              <div>
-                <dt className="text-13 text-muted">{t('Visits')}</dt>
-                <dd className="tnum mt-0.5 text-20 font-semibold tracking-[-0.02em]">{n(d.visits.shop)}</dd>
-              </div>
-              <div>
-                <dt className="text-13 text-muted">{t('Shares')}</dt>
-                <dd className="tnum mt-0.5 text-20 font-semibold tracking-[-0.02em]">{n(d.visits.share)}</dd>
-              </div>
-            </dl>
+            <div className="mt-auto grid grid-cols-2 gap-3 pt-6">
+              <Stat size="md" label={t('Visits')} value={n(d.visits.shop)} />
+              <Stat size="md" label={t('Shares')} value={n(d.visits.share)} />
+            </div>
             <p className="meta mt-1">{t('Last 7 days')}</p>
             <div className="mt-4 flex gap-2">
               <button type="button" className="btn btn-quiet btn-sm flex-1" onClick={copyLink}>
@@ -245,10 +239,10 @@ function Dashboard() {
             </Link>
           </div>
           <section className="card grid grid-cols-2 lg:col-span-12 lg:grid-cols-4">
-            <Stat label={t('Sales')} value={<Money value={d.sales.total} cur="text-[0.62em] text-muted" />} foot={<Delta now={d.sales.total} before={d.prev.total} label={vs7} />} className="border-r border-b border-line lg:border-b-0" />
-            <Stat label={t('Orders')} value={n(d.counts.all)} foot={<Delta now={d.counts.all} before={d.prev.orders} label={vs7} />} className="border-b border-line lg:border-r lg:border-b-0" />
-            <Stat label={t('Shop visits')} value={n(d.visits.shop)} foot={<Delta now={d.visits.shop} before={d.prev.visits} label={vs7} />} className="border-r border-line" />
-            <Stat label={t('Visits that ordered')} value={`${conversion}%`} foot={<Delta now={conversion} before={prevConversion} label={vs7} />} />
+            <Stat label={t('Sales')} value={<Money value={d.sales.total} cur="text-[0.62em] text-muted" />} foot={<Delta now={d.sales.total} before={d.prev.total} label={vs7} />} className="border-r border-b border-line p-5 md:p-6 lg:border-b-0" />
+            <Stat label={t('Orders')} value={n(d.counts.all)} foot={<Delta now={d.counts.all} before={d.prev.orders} label={vs7} />} className="border-b border-line p-5 md:p-6 lg:border-r lg:border-b-0" />
+            <Stat label={t('Shop visits')} value={n(d.visits.shop)} foot={<Delta now={d.visits.shop} before={d.prev.visits} label={vs7} />} className="border-r border-line p-5 md:p-6" />
+            <Stat label={t('Visits that ordered')} value={`${conversion}%`} foot={<Delta now={conversion} before={prevConversion} label={vs7} />} className="p-5 md:p-6" />
           </section>
 
           <SalesChart days={d.days} total={d.sales.total} className="lg:col-span-8" />
@@ -375,15 +369,6 @@ function TodoRow({ f, count, label, sub, signal = false }: { f: 'check' | 'send'
   )
 }
 
-function Stat({ label, value, foot, className = '' }: { label: string; value: ReactNode; foot?: ReactNode; className?: string }) {
-  return (
-    <div className={`p-5 md:p-6 ${className}`}>
-      <p className="text-13 text-muted md:text-14">{label}</p>
-      <p className="tnum mt-2 truncate text-20 font-semibold tracking-[-0.02em] md:text-28">{value}</p>
-      {foot && <div className="mt-2 hidden sm:block">{foot}</div>}
-    </div>
-  )
-}
 
 /** Seven small bars in the dark card: today is orange. */
 function WeekBars({ days }: { days: { day: number; total: number }[] }) {
