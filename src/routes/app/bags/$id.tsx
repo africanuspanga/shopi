@@ -3,7 +3,7 @@ import { ArrowRight, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { BagPill, useEndsIn } from '#/components/bag-links'
 import { ShareActions, prettyUrl } from '#/components/share'
-import { Img, Page, TopBar } from '#/components/ui'
+import { CardHead, Img, Page, TopBar } from '#/components/ui'
 import { cancelBagLink, getMyBagLink } from '#/lib/api/bags'
 import { track } from '#/lib/analytics'
 import { optionText, timeAgo, tzs } from '#/lib/format'
@@ -80,8 +80,8 @@ function BagDetail() {
         <div className="space-y-4 lg:sticky lg:top-8 lg:order-2">
           {b.state === 'open' && (
             <section className={`card p-6 ${made ? 'rise' : ''}`}>
-              <h2 className="text-17 font-semibold">{made ? t('Your bag link is ready') : t('Send the link')}</h2>
-              <p className="mt-1.5 text-14 leading-relaxed text-muted">
+              <CardHead title={made ? t('Your bag link is ready') : t('Send the link')} />
+              <p className="mt-2 text-14 leading-relaxed text-muted">
                 {b.phone
                   ? t('WhatsApp opens your chat with {who}. The link works once, until {date}.', { who: b.name || b.phone, date: date(b.expires_at) })
                   : t('Send it in your chat with the buyer. The link works once, until {date}.', { date: date(b.expires_at) })}
@@ -95,8 +95,8 @@ function BagDetail() {
           )}
           {b.state === 'used' && b.order_id && (
             <section className="card p-6">
-              <h2 className="text-17 font-semibold">{t('The buyer ordered this bag')}</h2>
-              <p className="mt-1.5 text-14 leading-relaxed text-muted">{t('It is order #{code}. Check the payment and send it from there.', { code: b.order_code ?? '' })}</p>
+              <CardHead title={t('The buyer ordered this bag')} />
+              <p className="mt-2 text-14 leading-relaxed text-muted">{t('It is order #{code}. Check the payment and send it from there.', { code: b.order_code ?? '' })}</p>
               <Link to="/app/orders/$id" params={{ id: b.order_id }} className="btn mt-5 w-full">
                 {t('Open the order')} <ArrowRight size={16} strokeWidth={1.75} />
               </Link>
@@ -104,8 +104,8 @@ function BagDetail() {
           )}
           {(b.state === 'expired' || b.state === 'cancelled') && (
             <section className="card p-6">
-              <h2 className="text-17 font-semibold">{b.state === 'expired' ? t('This link has ended') : t('You cancelled this link')}</h2>
-              <p className="mt-1.5 text-14 leading-relaxed text-muted">{t('The buyer can no longer order from it. Make a new bag link if they still want it.')}</p>
+              <CardHead title={b.state === 'expired' ? t('This link has ended') : t('You cancelled this link')} />
+              <p className="mt-2 text-14 leading-relaxed text-muted">{t('The buyer can no longer order from it. Make a new bag link if they still want it.')}</p>
               <Link to="/app/bags/new" className="btn btn-ghost mt-5 w-full">
                 <Plus size={16} strokeWidth={2.25} /> {t('New bag link')}
               </Link>
@@ -124,10 +124,7 @@ function BagDetail() {
 
         <div className="min-w-0 space-y-4 lg:order-1">
           <div className="receipt px-6 pt-6 pb-7">
-            <div className="flex items-baseline justify-between">
-              <h2 className="text-15 font-semibold">{t('In the bag')}</h2>
-              <p className="meta">{t('Made {date}', { date: date(b.created_at) })}</p>
-            </div>
+            <CardHead title={t('In the bag')} right={<span className="meta">{t('Made {date}', { date: date(b.created_at) })}</span>} />
             <div className="mt-4 space-y-4">
               {b.lines.map((l, i) => (
                 <div key={i} className="flex items-center gap-4">

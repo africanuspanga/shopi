@@ -2,7 +2,7 @@ import { Link, useRouteContext } from '@tanstack/react-router'
 import { Bell, Check } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
-import { ErrorText, Field, Img, Sheet } from '#/components/ui'
+import { CardHead, ErrorText, Field, Img, Sheet } from '#/components/ui'
 import { askStockAlert, doneStockAlert, type StockAlert } from '#/lib/api/alerts'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
 import { imageOf, localPhone, optionText, timeAgo, waLink } from '#/lib/format'
@@ -167,11 +167,8 @@ export function WaitingCard({ product, alerts: initial }: { product: { id: strin
 
   return (
     <section id="waiting" className={`card scroll-mt-6 p-6 ${back ? 'shadow-[inset_0_3px_0_var(--color-moto)]' : ''}`}>
-      <h2 className="flex items-center gap-2.5 text-17 font-semibold">
-        {back > 0 && <span className="signal" />}
-        {t(alerts.length === 1 ? '{n} person waiting' : '{n} people waiting', { n: alerts.length })}
-      </h2>
-      <p className="mt-1.5 text-14 leading-relaxed text-muted">
+      <CardHead icon={back > 0 && <span className="signal" />} title={t(alerts.length === 1 ? '{n} person waiting' : '{n} people waiting', { n: alerts.length })} />
+      <p className="mt-2 text-14 leading-relaxed text-muted">
         {back
           ? t('What they asked for is back. Message each one on WhatsApp, then tap the check: their number is deleted.')
           : t('They asked for a WhatsApp message when it is back. Restock it, then message each one here.')}

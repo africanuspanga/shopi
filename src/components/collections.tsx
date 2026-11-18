@@ -3,7 +3,7 @@ import { ArrowDown, ArrowUp, Loader2, Plus, Trash2, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { ProductPicker } from '#/components/product-picker'
 import { ShareActions, prettyUrl } from '#/components/share'
-import { ErrorText, Field, Img, TopBar } from '#/components/ui'
+import { CardHead, ErrorText, Field, Img, TopBar } from '#/components/ui'
 import { deleteCollection, saveCollection, type CollectionRow } from '#/lib/api/collections'
 import type { ProductRow } from '#/lib/api/merchant'
 import { track } from '#/lib/analytics'
@@ -207,7 +207,7 @@ export function ShareCard({ collection }: { collection: Pick<CollectionRow, 'slu
   const url = `${useOrigin()}/${shop.slug}/c/${collection.slug}`
   return (
     <section className="card p-5">
-      <h2 className="text-15 font-semibold">{t('Share this collection')}</h2>
+      <CardHead title={t('Share this collection')} />
       <p className="code mt-1 truncate text-12 text-muted">{prettyUrl(url)}</p>
       <div className="mt-4">
         <ShareActions
@@ -239,8 +239,7 @@ function IconButton({ label, disabled, onClick, children }: { label: string; dis
 function Card({ title, sub, children }: { title?: string; sub?: string; children: ReactNode }) {
   return (
     <section className="card p-6">
-      {title && <h2 className="text-15 font-semibold">{title}</h2>}
-      {sub && <p className="mt-1 text-13 leading-5 text-muted">{sub}</p>}
+      {title && <CardHead title={title} sub={sub} />}
       <div className={title ? 'mt-4' : ''}>{children}</div>
     </section>
   )

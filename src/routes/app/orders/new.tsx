@@ -3,7 +3,7 @@ import { Minus, PackagePlus, PenLine, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
 import { ProductPicker } from '#/components/product-picker'
-import { ErrorText, Field, Img, Page, Switch, TopBar } from '#/components/ui'
+import { CardHead, ErrorText, Field, Img, Page, Switch, TopBar } from '#/components/ui'
 import { listMyProducts, recordSale, type ProductRow } from '#/lib/api/merchant'
 import { PAYMENT_LABEL, priceOf, tzs, type PaymentMethod } from '#/lib/format'
 import { useT } from '#/lib/i18n'
@@ -78,7 +78,7 @@ function RecordSale() {
       <div className="md:grid md:grid-cols-[minmax(0,1fr)_360px] md:items-start md:gap-10">
         <div className="space-y-8">
           <section>
-            <h2 className="text-17 font-semibold">{t('What was sold')}</h2>
+            <CardHead title={t('What was sold')} />
             {lines.length > 0 && (
               <div className="card mt-3 divide-y divide-line overflow-hidden">
                 {lines.map((l) => (
@@ -163,7 +163,7 @@ function RecordSale() {
           </section>
 
           <section>
-            <h2 className="text-17 font-semibold">{t('How they paid')}</h2>
+            <CardHead title={t('How they paid')} />
             <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label={t('How they paid')}>
               {PAYMENTS.map((m) => (
                 <button key={m} type="button" role="radio" aria-checked={payment === m} className="chip" aria-pressed={payment === m} onClick={() => setPayment(m)}>
@@ -174,7 +174,7 @@ function RecordSale() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-17 font-semibold">{t('Details')}</h2>
+            <CardHead title={t('Details')} />
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('Buyer’s name')} aside={t('Optional')}>
                 <input className="input" value={buyer.name} onChange={(e) => setBuyer({ ...buyer, name: e.target.value })} />

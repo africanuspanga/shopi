@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowUpRight, Banknote, Check, LocateFixed, MapPin, Minus, Plus, ShieldCheck, Smartphone, TicketPercent, Trash2 } from 'lucide-react'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { MadeWithShopi, ShopTopBar } from '#/components/shop'
-import { ErrorText, Field, Img } from '#/components/ui'
+import { CardHead, ErrorText, Field, Img } from '#/components/ui'
 import { checkDiscount } from '#/lib/api/discounts'
 import { expandMapLink, placeOrder, type PublicShop } from '#/lib/api/store'
 import { track, visit } from '#/lib/analytics'
@@ -177,10 +177,7 @@ export function CheckoutView({
 
   const bag = (
     <section className="card overflow-hidden">
-      <div className="flex items-center justify-between px-5 pt-4 pb-1">
-        <h2 className="text-15 font-semibold">{t('Your bag')}</h2>
-        <p className="meta">{t(count === 1 ? '{n} item' : '{n} items', { n: count })}</p>
-      </div>
+      <CardHead title={t('Your bag')} right={<span className="meta">{t(count === 1 ? '{n} item' : '{n} items', { n: count })}</span>} className="px-5 pt-4 pb-1" />
       <div className="divide-y divide-line">
         {lines.map((l) => (
           <div key={l.key} className="flex items-center gap-3 px-5 py-3.5">

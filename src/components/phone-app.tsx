@@ -1,6 +1,6 @@
-import { Bell, Check, Download, EllipsisVertical, Share, Smartphone, SquarePlus, X } from 'lucide-react'
+import { Bell, Check, Download, EllipsisVertical, Share, Smartphone, SquarePlus } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
-import { ErrorText, Sheet, Toast } from '#/components/ui'
+import { ErrorText, Notice, Sheet, Toast } from '#/components/ui'
 import { useT } from '#/lib/i18n'
 import { inAppBrowser, usePhoneApp } from '#/lib/push'
 
@@ -51,49 +51,43 @@ export function PhoneAlertsCard() {
   }
 
   return (
-    <section className="card relative mt-6 flex flex-col gap-4 p-5 md:mt-8 md:flex-row md:items-center md:gap-6 md:p-6">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-white">
-        <Bell size={20} strokeWidth={1.75} />
-      </span>
-      <div className="min-w-0 flex-1 pr-8 md:pr-0">
-        <h2 className="text-15 font-semibold">{t('Get new orders as notifications')}</h2>
-        <p className="mt-1 text-14 leading-5 text-muted">
-          {app.ios
-            ? t('On iPhone, put Shopi on your Home Screen first. Then open it from there and turn on notifications.')
-            : t('A notification the moment a buyer orders, even when Shopi is closed.')}
-        </p>
-        {error && (
-          <div className="mt-3">
-            <ErrorText>{error}</ErrorText>
-          </div>
-        )}
-      </div>
-      {!app.ios && (
-        <div className="flex flex-wrap gap-2 md:shrink-0">
-          {app.state === 'off' && (
-            <button type="button" className="btn btn-sm" disabled={app.busy} onClick={on}>
-              <Bell size={16} strokeWidth={1.75} /> {t('Turn on notifications')}
+    <>
+      <Notice
+        icon={<Bell size={18} strokeWidth={1.75} />}
+        title={t('Get new orders as notifications')}
+        sub={
+          error ? (
+            <span className="text-bad">{error}</span>
+          ) : app.ios ? (
+            t('On iPhone, put Shopi on your Home Screen first. Then open it from there and turn on notifications.')
+          ) : (
+            t('A notification the moment a buyer orders, even when Shopi is closed.')
+          )
+        }
+        actions={
+          app.ios ? (
+            <button type="button" className="btn btn-sm" onClick={() => setGuide(true)}>
+              {t('Show me how')}
             </button>
-          )}
-          {app.canInstall && (
-            <button type="button" className="btn btn-ghost btn-sm" onClick={app.install}>
-              <Download size={16} strokeWidth={1.75} /> {t('Install the app')}
-            </button>
-          )}
-        </div>
-      )}
-      {app.ios && (
-        <div className="md:shrink-0">
-          <button type="button" className="btn btn-sm" onClick={() => setGuide(true)}>
-            {t('Show me how')}
-          </button>
-        </div>
-      )}
+          ) : (
+            <>
+              {app.state === 'off' && (
+                <button type="button" className="btn btn-sm" disabled={app.busy} onClick={on}>
+                  <Bell size={16} strokeWidth={1.75} /> {t('Turn on notifications')}
+                </button>
+              )}
+              {app.canInstall && (
+                <button type="button" className="btn btn-ghost btn-sm" onClick={app.install}>
+                  <Download size={16} strokeWidth={1.75} /> {t('Install the app')}
+                </button>
+              )}
+            </>
+          )
+        }
+        onDismiss={notNow}
+      />
       <InstallSheet open={guide} onClose={() => setGuide(false)} app={app} />
-      <button type="button" className="icon-btn absolute top-3 right-3 h-9 w-9 md:static md:shrink-0" aria-label={t('Not now')} onClick={notNow}>
-        <X size={18} strokeWidth={1.75} />
-      </button>
-    </section>
+    </>
   )
 }
 

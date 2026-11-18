@@ -4,7 +4,7 @@ import { useRef, useState, type ReactNode } from 'react'
 import { WriteItForMe } from '#/components/ai-write'
 import { ShareActions, prettyUrl } from '#/components/share'
 import { Tag } from '#/components/shop'
-import { ErrorText, Field, Img, Sheet, Switch, Toast, TopBar } from '#/components/ui'
+import { CardHead, ErrorText, Field, Img, Sheet, Switch, Toast, TopBar } from '#/components/ui'
 import { deleteProduct, saveProduct, type ProductRow } from '#/lib/api/merchant'
 import { track } from '#/lib/analytics'
 import { OPTION_KINDS, SIZE_PRESETS, optionKind, tzs, type OptionKind } from '#/lib/format'
@@ -505,7 +505,7 @@ function SendCard({ product }: { product: ProductRow }) {
   const url = `${useOrigin()}/${shop.slug}/${product.slug ?? product.id}`
   return (
     <section className="card p-5">
-      <h2 className="text-15 font-semibold">{t('Send this product')}</h2>
+      <CardHead title={t('Send this product')} />
       <p className="code mt-1 truncate text-12 text-muted">{prettyUrl(url)}</p>
       <div className="mt-4">
         <ShareActions
@@ -539,8 +539,7 @@ function SaveButtons({ product, busy, uploading, onAgain }: { product?: ProductR
 function Card({ title, sub, children }: { title?: string; sub?: string; children: ReactNode }) {
   return (
     <section className="card p-6">
-      {title && <h2 className="text-15 font-semibold">{title}</h2>}
-      {sub && <p className="mt-1 text-13 leading-5 text-muted">{sub}</p>}
+      {title && <CardHead title={title} sub={sub} />}
       <div className={title ? 'mt-4' : ''}>{children}</div>
     </section>
   )

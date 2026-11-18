@@ -3,7 +3,7 @@ import { ArrowDownToLine, Check, Copy, Globe, Link2, Mail, PenLine, Plus, Search
 import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from '#/components/brand-icons'
 import { prettyUrl } from '#/components/share'
-import { Delta, Img, Money, Page, Toast, TopBar, scrubIndex } from '#/components/ui'
+import { CardHead, Delta, Img, Money, Page, scrubIndex, Toast, TopBar } from '#/components/ui'
 import { TemboLock, TemboPill, useCan } from '#/components/tembo'
 import { RANGES, createLink, deleteLink, getAnalytics, type Analytics, type RangeDays } from '#/lib/api/analytics'
 import { tzs } from '#/lib/format'
@@ -144,13 +144,7 @@ function RangePicker({ days, className = '' }: { days: number; className?: strin
 function Card({ title, sub, action, children, className = '' }: { title: string; sub?: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <section className={`card min-w-0 p-5 md:p-6 ${className}`}>
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h2 className="text-15 font-semibold">{title}</h2>
-          {sub && <p className="mt-0.5 text-13 leading-5 text-muted">{sub}</p>}
-        </div>
-        {action}
-      </div>
+      <CardHead title={title} sub={sub} right={action} className="mb-5" />
       {children}
     </section>
   )
@@ -196,10 +190,7 @@ function TrendChart({ a, metric, className }: { a: Analytics; metric: Metric; cl
   return (
     <section className={`card min-w-0 p-5 md:p-6 ${className}`}>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
-        <div>
-          <h2 className="text-15 font-semibold">{t('{metric} by day', { metric: label })}</h2>
-          <p className="mt-0.5 text-13 text-muted">{t('Tap a number above to switch. Slide along the bars to read each day.')}</p>
-        </div>
+        <CardHead title={t('{metric} by day', { metric: label })} sub={t('Tap a number above to switch. Slide along the bars to read each day.')} />
         <p className="text-right">
           <span className="block text-13 text-muted">{sel == null ? t('Total in {n} days', { n: a.days }) : date(a.series[i].day, true)}</span>
           <span className="tnum text-20 font-semibold tracking-[-0.02em]">{fmt(sel == null ? total : values[i])}</span>

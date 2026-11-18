@@ -3,7 +3,7 @@ import { Minus, PackagePlus, Plus, ShoppingBag, X } from 'lucide-react'
 import { useState } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
 import { ProductPicker } from '#/components/product-picker'
-import { Empty, ErrorText, Field, Img, Page, TopBar } from '#/components/ui'
+import { CardHead, Empty, ErrorText, Field, Img, Page, TopBar } from '#/components/ui'
 import { createBagLink } from '#/lib/api/bags'
 import { listMyProducts, type ProductRow } from '#/lib/api/merchant'
 import { priceOf, tzs } from '#/lib/format'
@@ -73,8 +73,7 @@ function NewBag() {
       <div className="md:grid md:grid-cols-[minmax(0,1fr)_360px] md:items-start md:gap-10">
         <div className="space-y-8">
           <section>
-            <h2 className="text-17 font-semibold">{t('What goes in the bag')}</h2>
-            <p className="mt-1 text-14 text-muted">{t('Change a price if you agreed a different one. Products hidden from your shop can go in too.')}</p>
+            <CardHead title={t('What goes in the bag')} sub={t('Change a price if you agreed a different one. Products hidden from your shop can go in too.')} />
             {lines.length === 0 ? (
               <div className="mt-3">
                 <Empty
@@ -171,10 +170,7 @@ function NewBag() {
           </section>
 
           <section className="space-y-4">
-            <div>
-              <h2 className="text-17 font-semibold">{t('For whom')}</h2>
-              <p className="mt-1 text-14 text-muted">{t('Optional. Their name and number fill in the checkout for them.')}</p>
-            </div>
+            <CardHead title={t('For whom')} sub={t('Optional. Their name and number fill in the checkout for them.')} />
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('Buyer’s name')} aside={t('Optional')}>
                 <input className="input" value={buyer.name} onChange={(e) => setBuyer({ ...buyer, name: e.target.value })} />

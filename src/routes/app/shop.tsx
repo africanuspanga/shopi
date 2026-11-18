@@ -8,7 +8,7 @@ import { EmailSettings } from '#/components/email'
 import { EMAIL_LIVE } from '#/lib/email'
 import { QrSheet } from '#/components/qr-sheet'
 import { useCan } from '#/components/tembo'
-import { ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoice, Switch, Toast, TopBar } from '#/components/ui'
+import { CardHead, ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoice, Switch, Toast, TopBar } from '#/components/ui'
 import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
 import { CATEGORIES, DAR_AREAS, NETWORKS, mapsLink, tinDigits } from '#/lib/format'
@@ -392,8 +392,7 @@ function Group({ title, sub, children }: { title: string; sub: string; children:
   return (
     <section className="grid gap-5 py-8 first:pt-0 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-12 lg:py-10">
       <div>
-        <h2 className="text-15 font-semibold">{title}</h2>
-        <p className="mt-1 text-14 leading-5 text-muted">{sub}</p>
+        <CardHead title={title} sub={sub} />
       </div>
       <div className="card max-w-[720px] p-5 md:p-6">{children}</div>
     </section>

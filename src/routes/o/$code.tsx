@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { MadeWithShopi, ShopTopBar } from '#/components/shop'
 import { WhatsAppHelp, useWhatsApp } from '#/components/whatsapp'
-import { ErrorText, Img, useEntrance } from '#/components/ui'
+import { CardHead, ErrorText, Img, useEntrance } from '#/components/ui'
 import { getTrackedOrder, submitPaymentSms } from '#/lib/api/store'
 import { optionText, timeAgo, tzs, waLink, type OrderStatus, formatTin } from '#/lib/format'
 import { LangProvider, asLang, useLang, useT } from '#/lib/i18n'
@@ -348,10 +348,7 @@ function Track() {
 
 function Step({ n, title }: { n: number; title: string }) {
   return (
-    <h2 className="flex items-center gap-3 text-17 font-semibold">
-      <span className="tnum flex h-7 w-7 items-center justify-center rounded-full bg-ink text-13 text-white">{n}</span>
-      {title}
-    </h2>
+    <CardHead icon={<span className="tnum flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink text-13 text-white">{n}</span>} title={title} />
   )
 }
 

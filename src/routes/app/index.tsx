@@ -1,7 +1,7 @@
 import { Link, createFileRoute, redirect } from '@tanstack/react-router'
-import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, FileSpreadsheet, Plus, QrCode as QrCodeIcon, ReceiptText, Share2 } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, FileSpreadsheet, Gem, Plus, QrCode as QrCodeIcon, ReceiptText, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { Delta, Empty, Img, LangSwitch, Money, Page, PhoneBar, Sheet, ShopAvatar, StatusPill, Toast, scrubIndex, useEntrance } from '#/components/ui'
+import { CardHead, Delta, Empty, Img, LangSwitch, Money, Notice, Page, PageHead, PhoneBar, scrubIndex, Sheet, ShopAvatar, StatusPill, Toast, useEntrance } from '#/components/ui'
 import { BioSteps } from '#/components/setup'
 import { PhoneAlertsCard } from '#/components/phone-app'
 import { EmailRow } from '#/components/email'
@@ -97,42 +97,43 @@ function Dashboard() {
         <p className="truncate text-14 text-muted">{date}</p>
         <LangSwitch />
       </div>
-      <header className="hidden items-end gap-3 md:flex">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-14 text-muted">{date}</p>
-          <h1 className="title mt-1 truncate text-32">{t('Today at {shop}', { shop: shop.name })}</h1>
-        </div>
-        <LangSwitch />
-        <a href={`/${shop.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
-          {t('View shop')} <ArrowUpRight size={16} strokeWidth={1.75} />
-        </a>
-        <button type="button" className="btn btn-sm" onClick={share}>
-          <Share2 size={16} strokeWidth={1.75} /> {t('Share link')}
-        </button>
-      </header>
+      <PageHead
+        title={t('Today at {shop}', { shop: shop.name })}
+        sub={date}
+        right={
+          <>
+            <LangSwitch />
+            <a href={`/${shop.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
+              {t('View shop')} <ArrowUpRight size={16} strokeWidth={1.75} />
+            </a>
+            <button type="button" className="btn btn-sm" onClick={share}>
+              <Share2 size={16} strokeWidth={1.75} /> {t('Share link')}
+            </button>
+          </>
+        }
+      />
 
-      {hasProducts ? (
-        <>
-          <ScoreCard facts={sharedNow ? { ...d.score, shared: true } : d.score} ai={d.ai} compact={hasOrders} onShare={share} onCopy={copyLink} copied={copied} className={`${rise} md:mt-8`} />
-          <PlanRow plan={d.plan} />
-          <PhoneAlertsCard />
-          <EmailRow state={d.email} className={`${rise} mt-6 md:mt-8`} />
-        </>
-      ) : (
-        <>
-          <FirstProductCard className={`${rise} md:mt-8`} score={shopScore(d.score).score} />
-          <PlanRow plan={d.plan} />
-        </>
-      )}
+      {/* What to do next, as one stack: the shop score (or the first product), then the quiet rows (Notice). */}
+      <div className={`${rise} space-y-3`}>
+        {hasProducts ? (
+          <>
+            <ScoreCard facts={sharedNow ? { ...d.score, shared: true } : d.score} ai={d.ai} compact={hasOrders} onShare={share} onCopy={copyLink} copied={copied} />
+            <PlanRow plan={d.plan} />
+            <PhoneAlertsCard />
+            <EmailRow state={d.email} />
+          </>
+        ) : (
+          <>
+            <FirstProductCard score={shopScore(d.score).score} />
+            <PlanRow plan={d.plan} />
+          </>
+        )}
+      </div>
 
       {d.backInStock.length > 0 && (
         <section className={`${rise} card mt-6 overflow-hidden md:mt-8`}>
           <div className="px-5 pt-5 md:px-6">
-            <h2 className="flex items-center gap-2.5 text-15 font-semibold">
-              <span className="signal shrink-0" />
-              {t('Back in stock, and buyers are waiting')}
-            </h2>
-            <p className="mt-1 text-14 text-muted">{t('They asked for a WhatsApp message when it came back. Open the product to send it.')}</p>
+            <CardHead icon={<span className="signal shrink-0" />} title={t('Back in stock, and buyers are waiting')} sub={t('They asked for a WhatsApp message when it came back. Open the product to send it.')} />
           </div>
           <ul className="mt-4 divide-y divide-line border-t border-line">
             {d.backInStock.map((p) => (
@@ -152,8 +153,8 @@ function Dashboard() {
       {hasProducts && !hasOrders && (
         <section className={`${rise2} card mt-6 p-6 md:mt-8 md:flex md:items-end md:justify-between md:gap-10 md:p-7`}>
           <div className="min-w-0">
-            <h2 className="text-15 font-semibold">{t('Your shop is ready for its first order')}</h2>
-            <p className="mt-1 max-w-[52ch] text-14 leading-relaxed text-muted">
+            <CardHead title={t('Your shop is ready for its first order')} />
+            <p className="mt-2 max-w-[52ch] text-14 leading-relaxed text-muted">
               {t('Put your link in your Instagram bio and on your WhatsApp status. Your first order shows up here.')}
             </p>
             <p className="code mt-4 truncate text-17">shopi.tz/{shop.slug}</p>
@@ -205,7 +206,7 @@ function Dashboard() {
 
           {/* What needs the seller now */}
           <section className={`${rise2} card flex flex-col p-2 lg:col-span-4`}>
-            <h2 className="px-4 pt-3 pb-2 text-15 font-semibold">{t('Needs you')}</h2>
+            <CardHead title={t('Needs you')} className="px-4 pt-3 pb-2" />
             <TodoRow f="check" signal={d.queue.toConfirm > 0} count={d.queue.toConfirm} label={t('Payments to check')} sub={t('Buyers sent proof')} />
             <TodoRow f="send" count={d.queue.toSend} label={t('Orders to send')} sub={t('Paid and confirmed')} />
             <TodoRow f="way" count={d.queue.onTheWay} label={t('On the way')} sub={t('With your rider')} />
@@ -213,7 +214,7 @@ function Dashboard() {
 
           {/* Shop link */}
           <section className={`${rise3} card flex flex-col p-6 lg:col-span-3`}>
-            <h2 className="text-15 font-semibold">{t('Your shop link')}</h2>
+            <CardHead title={t('Your shop link')} />
             <p className="code mt-3 truncate text-17">shopi.tz/{shop.slug}</p>
             <dl className="mt-auto grid grid-cols-2 gap-3 pt-6">
               <div>
@@ -238,7 +239,7 @@ function Dashboard() {
 
           {/* Last 7 days */}
           <div className="-mb-1 flex items-baseline justify-between px-1 pt-2 lg:col-span-12">
-            <h2 className="text-15 font-semibold">{t('Last 7 days')}</h2>
+            <CardHead title={t('Last 7 days')} />
             <Link to="/app/analytics" className="-my-2 flex items-center gap-1 py-2 text-13 text-muted transition-colors hover:text-ink">
               {t('All numbers')} <ArrowRight size={14} strokeWidth={1.75} />
             </Link>
@@ -253,12 +254,14 @@ function Dashboard() {
           <SalesChart days={d.days} total={d.sales.total} className="lg:col-span-8" />
 
           <section className="card p-6 lg:col-span-4">
-            <div className="flex items-baseline justify-between">
-              <h2 className="text-15 font-semibold">{t('Best sellers')}</h2>
-              <Link to="/app/products" className="-my-2 flex items-center gap-1 py-2 text-13 text-muted transition-colors hover:text-ink">
-                {t('All products')}
-              </Link>
-            </div>
+            <CardHead
+              title={t('Best sellers')}
+              right={
+                <Link to="/app/products" className="-my-2 flex items-center gap-1 py-2 text-13 text-muted transition-colors hover:text-ink">
+                  {t('All products')}
+                </Link>
+              }
+            />
             {d.top.length === 0 ? (
               <p className="mt-4 text-14 text-muted">{t('Your products will rank here once they get views and orders.')}</p>
             ) : (
@@ -291,12 +294,15 @@ function Dashboard() {
           </section>
 
           <section className="card overflow-hidden lg:col-span-12">
-            <div className="flex items-baseline justify-between px-6 pt-5 pb-3">
-              <h2 className="text-15 font-semibold">{t('Latest orders')}</h2>
-              <Link to="/app/orders" className="-my-2 flex items-center gap-1 py-2 text-13 text-muted transition-colors hover:text-ink">
-                {t('All orders')} <ArrowRight size={14} strokeWidth={1.75} />
-              </Link>
-            </div>
+            <CardHead
+              title={t('Latest orders')}
+              right={
+                <Link to="/app/orders" className="-my-2 flex items-center gap-1 py-2 text-13 text-muted transition-colors hover:text-ink">
+                  {t('All orders')} <ArrowRight size={14} strokeWidth={1.75} />
+                </Link>
+              }
+              className="px-6 pt-5 pb-3"
+            />
             {d.recent.length === 0 ? (
               <div className="px-6 pb-6">
                 <Empty
@@ -413,10 +419,7 @@ function SalesChart({ days, total, className = '' }: { days: { day: number; tota
   return (
     <section className={`card p-6 ${className}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <div>
-          <h2 className="text-15 font-semibold">{t('Sales, last 7 days')}</h2>
-          <p className="mt-0.5 text-13 text-muted">{t('Paid and cash orders, by day')}</p>
-        </div>
+        <CardHead title={t('Sales, last 7 days')} sub={t('Paid and cash orders, by day')} />
         <p className="text-right">
           <span className="block text-13 text-muted">{sel === days.length - 1 ? t('Today') : longDay(chosen.day)}</span>
           <span className="tnum text-20 font-semibold tracking-[-0.02em]">{tzs(chosen.total)}</span>
@@ -511,22 +514,20 @@ function FirstProductCard({ className = '', score }: { className?: string; score
 
 /** The plan line on Home: a quiet way to Tembo for free shops, and Tembo's renewal in its last 30 days. */
 function PlanRow({ plan }: { plan: PlanState | null }) {
-  const rise = useEntrance()
   const t = useT()
   if (!plan || plan.kind === 'demo' || (plan.kind === 'tembo' && plan.daysLeft > 30)) return null
-  const soon = plan.kind === 'tembo' && plan.daysLeft <= 3
-  const text =
+  const title =
     plan.kind === 'tembo'
       ? t(plan.daysLeft === 1 ? 'Tembo ends in {n} day' : 'Tembo ends in {n} days', { n: plan.daysLeft })
       : t('You are on Free')
   return (
-    <Link to="/app/plan" className={`${rise} card mt-6 flex items-center gap-3 px-5 py-4 transition-colors hover:bg-page md:mt-8`}>
-      {soon && <span className="signal shrink-0" aria-hidden />}
-      <span className="min-w-0 flex-1 truncate text-15 font-medium">{text}</span>
-      <span className="flex shrink-0 items-center gap-1 text-14 text-ink-2">
-        {plan.kind === 'tembo' ? t('Renew') : t('See what Tembo adds')} <ChevronRight size={16} strokeWidth={1.75} />
-      </span>
-    </Link>
+    <Notice
+      icon={<Gem size={18} strokeWidth={1.75} />}
+      title={title}
+      sub={plan.kind === 'tembo' ? t('Renew') : t('See what Tembo adds')}
+      signal={plan.kind === 'tembo' && plan.daysLeft <= 3}
+      to="/app/plan"
+    />
   )
 }
 
@@ -574,25 +575,18 @@ function ScoreCard({
   const step = nextStep(next, facts, ai, t, { onShare, onBio: () => setBioHelp(true) })
 
   if (!open)
-    return (
-      <button type="button" onClick={() => setOpen(true)} className={`${className} card flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-page`}>
-        <span className="tnum shrink-0 text-15 font-semibold">{score}%</span>
-        <span className="min-w-0 flex-1 truncate text-15">
-          <span className="text-muted">{t('Next')}: </span>
-          {step.title}
-        </span>
-        <ChevronRight size={16} strokeWidth={1.75} className="shrink-0 text-muted" />
-      </button>
-    )
+    return <Notice className={className} icon={<span className="tnum">{score}%</span>} title={step.title} sub={t('Your shop is {n}% ready', { n: score })} onClick={() => setOpen(true)} />
 
   return (
     <section className={`${className} card p-5 md:p-6`}>
-      <div className="flex items-baseline justify-between gap-4">
-        <h2 className="text-15 font-semibold">{t('Your shop is {n}% ready', { n: score })}</h2>
-        <button type="button" className="-my-2 shrink-0 py-2 text-13 text-muted transition-colors hover:text-ink" aria-expanded={all} onClick={() => setAll(!all)}>
-          {all ? t('Hide') : t('See all')}
-        </button>
-      </div>
+      <CardHead
+        title={t('Your shop is {n}% ready', { n: score })}
+        right={
+          <button type="button" className="-my-2 shrink-0 py-2 text-13 text-muted transition-colors hover:text-ink" aria-expanded={all} onClick={() => setAll(!all)}>
+            {all ? t('Hide') : t('See all')}
+          </button>
+        }
+      />
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-well" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}>
         <div className="h-full rounded-full bg-ink transition-[width] duration-500" style={{ width: `${score}%` }} />
       </div>

@@ -1,7 +1,7 @@
 import { Check, ImagePlus, Loader2, Pipette, Search, ShoppingBag, Store, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Tag } from '#/components/shop'
-import { Img, ShopAvatar } from '#/components/ui'
+import { CardHead, Img, ShopAvatar } from '#/components/ui'
 import type { ProductRow, ShopRow } from '#/lib/api/merchant'
 import { imgUrl, tzs } from '#/lib/format'
 import { useT } from '#/lib/i18n'
@@ -14,8 +14,7 @@ export type Look = { color: string; font: FontId; cover: string | null }
 export function LookSection({ title, sub, children }: { title: string; sub: string; children: ReactNode }) {
   return (
     <section className="card p-5 md:p-6">
-      <h2 className="text-15 font-semibold">{title}</h2>
-      <p className="mt-1 text-14 leading-5 text-muted">{sub}</p>
+      <CardHead title={title} sub={sub} />
       <div className="mt-5">{children}</div>
     </section>
   )

@@ -2,7 +2,7 @@ import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-rout
 import { ArrowUpRight, Bike, ChevronRight, CircleCheck, CircleHelp, MapPin, Phone, ShoppingBag, TriangleAlert } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
-import { Img, Page, StatusPill, TopBar } from '#/components/ui'
+import { CardHead, Img, Page, StatusPill, TopBar } from '#/components/ui'
 import { getOrder, setOrderStatus } from '#/lib/api/merchant'
 import { localPhone, optionText, timeAgo, tzs, waLink, type OrderStatus, PAYMENT_LABEL } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
@@ -104,11 +104,8 @@ function OrderDetail() {
         {/* Next step and the buyer: first on a phone, on the right on desktop */}
         <div className="space-y-4 lg:sticky lg:top-8 lg:order-2">
           <section className={`card p-6 ${o.status === 'payment_claimed' ? 'shadow-[inset_0_3px_0_var(--color-moto)]' : ''}`}>
-            <h2 className="flex items-center gap-2.5 text-17 font-semibold">
-              {o.status === 'payment_claimed' && <span className="signal" />}
-              {step.title}
-            </h2>
-            <p className="mt-1.5 text-14 leading-relaxed text-muted">{step.body}</p>
+            <CardHead icon={o.status === 'payment_claimed' && <span className="signal" />} title={step.title} />
+            <p className="mt-2 text-14 leading-relaxed text-muted">{step.body}</p>
             {o.status === 'payment_claimed' && check && (
               <ul className="mt-4 space-y-2.5 rounded-14 bg-page p-4 text-14">
                 <CheckRow state={check.amount === 'ok' ? 'ok' : check.amount === 'low' ? 'bad' : 'unknown'}>
@@ -207,10 +204,10 @@ function OrderDetail() {
 
         <div className="min-w-0 space-y-4 lg:order-1">
           <div className="receipt px-6 pt-6 pb-7">
-            <div className="flex items-baseline justify-between">
-              <h2 className="text-15 font-semibold">{t('Items')}</h2>
-              <p className="meta">{new Date(o.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Dar_es_Salaam' })}</p>
-            </div>
+            <CardHead
+              title={t('Items')}
+              right={<span className="meta">{new Date(o.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Dar_es_Salaam' })}</span>}
+            />
             <div className="mt-4 space-y-4">
               {o.lines.map((l, i) => (
                 <div key={i} className="flex items-center gap-4">
@@ -245,7 +242,7 @@ function OrderDetail() {
 
           {o.payment_method === 'lipa' && !manual && (
             <section className="card p-6">
-              <h2 className="text-15 font-semibold">{t('Payment SMS from the buyer')}</h2>
+              <CardHead title={t('Payment SMS from the buyer')} />
               {!o.payment_sms ? (
                 <p className="mt-2 text-14 leading-relaxed text-muted">{t('Nothing yet. The buyer pastes their confirmation SMS on their order page after paying.')}</p>
               ) : (

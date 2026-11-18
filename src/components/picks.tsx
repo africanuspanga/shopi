@@ -2,7 +2,7 @@ import { Link, useRouter } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, Check, EyeOff, PackageX, Plus, RefreshCw, X } from 'lucide-react'
 import { useState } from 'react'
 import { ProductPicker } from '#/components/product-picker'
-import { Img, Sheet, Toast } from '#/components/ui'
+import { CardHead, Img, Sheet, Toast } from '#/components/ui'
 import type { ProductRow } from '#/lib/api/merchant'
 import { savePicks } from '#/lib/api/picks'
 import { tzs } from '#/lib/format'
@@ -81,10 +81,7 @@ export function TopPicksCard({ products }: { products: ProductRow[] }) {
   return (
     <section className="card mt-4 mb-4 p-4 md:mt-6 md:mb-6 md:flex md:items-center md:gap-8 md:p-5" aria-labelledby="top-picks-title">
       <div className="min-w-0 md:flex-1">
-        <h2 id="top-picks-title" className="text-15 font-semibold">
-          {t('Top picks')}
-        </h2>
-        <p className="mt-0.5 text-13 leading-5 text-muted">{note}</p>
+        <CardHead title={<span id="top-picks-title">{t('Top picks')}</span>} sub={note} />
       </div>
       <ol className="mt-3 grid grid-cols-4 gap-2 md:mt-0 md:w-[392px] md:shrink-0 md:gap-3">
         {Array.from({ length: SLOTS }, (_, i) => {

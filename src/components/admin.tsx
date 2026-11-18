@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Img, Money, scrubIndex, shortNumber } from '#/components/ui'
+import { CardHead, Img, Money, scrubIndex, shortNumber } from '#/components/ui'
 import type { DayPoint } from '#/lib/admin'
 import { shortDay, tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
@@ -58,13 +58,7 @@ export function KpiMoney({ value }: { value: number }) {
 export function Card({ title, sub, right, children, className = '' }: { title: string; sub?: string; right?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <section className={`card min-w-0 p-5 md:p-6 ${className}`}>
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h2 className="text-15 font-semibold">{title}</h2>
-          {sub && <p className="mt-0.5 text-13 leading-5 text-pretty text-muted">{sub}</p>}
-        </div>
-        {right && <div className="shrink-0">{right}</div>}
-      </div>
+      <CardHead title={title} sub={sub} right={right} className="mb-4" />
       {children}
     </section>
   )

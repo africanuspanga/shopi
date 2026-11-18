@@ -1,5 +1,5 @@
 import { Link, useRouter } from '@tanstack/react-router'
-import { ArrowLeft, ImageIcon, X } from 'lucide-react'
+import { ArrowLeft, ChevronRight, ImageIcon, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { STATUS_LABEL, imgUrl, type OrderStatus } from '#/lib/format'
 import { LANGUAGES, SWAHILI_ENABLED, useLang, useT, type Lang } from '#/lib/i18n'
@@ -81,15 +81,119 @@ export function TopBar({ title, sub, back, right }: { title: ReactNode; sub?: Re
     <>
       <PhoneBar lead={back && <BackButton to={back} />} title={title} right={right} />
       {sub && <p className="mb-5 text-14 text-pretty text-muted md:hidden">{sub}</p>}
-      <header className="mb-8 hidden min-h-12 items-center gap-3 md:flex">
-        {back && <BackButton to={back} />}
-        <div className="min-w-0 flex-1">
-          <h1 className="title truncate text-28">{title}</h1>
-          {sub && <p className="mt-1 line-clamp-2 text-14 text-pretty text-muted">{sub}</p>}
-        </div>
-        {right && <div className="flex shrink-0 items-center gap-2">{right}</div>}
-      </header>
+      <PageHead title={title} sub={sub} back={back} right={right} />
     </>
+  )
+}
+
+/**
+ * A seller page's header from md up (DESIGN.md: one page header): the title at 28, a line under it, actions at the
+ * right. Phones get PhoneBar instead. TopBar uses it; a page with its own phone bar (Home) uses it directly.
+ */
+export function PageHead({ title, sub, back, right }: { title: ReactNode; sub?: ReactNode; back?: string; right?: ReactNode }) {
+  return (
+    <header className="mb-8 hidden min-h-12 items-center gap-3 md:flex">
+      {back && <BackButton to={back} />}
+      <div className="min-w-0 flex-1">
+        <h1 className="title truncate text-28">{title}</h1>
+        {sub && <p className="mt-1 line-clamp-2 text-14 text-pretty text-muted">{sub}</p>}
+      </div>
+      {right && <div className="flex shrink-0 items-center gap-2">{right}</div>}
+    </header>
+  )
+}
+
+/**
+ * A card's heading (DESIGN.md: one card title): the title at 15 semibold, an optional line under it at 13 muted, an
+ * optional icon before the title and something at the right (a link, a count). Every card titles itself with this.
+ */
+export function CardHead({ title, sub, icon, right, className = '' }: { title: ReactNode; sub?: ReactNode; icon?: ReactNode; right?: ReactNode; className?: string }) {
+  return (
+    <div className={`flex items-baseline justify-between gap-4 ${className}`}>
+      <div className="min-w-0">
+        <h2 className="flex items-center gap-2.5 text-15 font-semibold">
+          {icon}
+          {title}
+        </h2>
+        {sub && <p className="mt-1 text-13 leading-5 text-pretty text-muted">{sub}</p>}
+      </div>
+      {right && <div className="shrink-0">{right}</div>}
+    </div>
+  )
+}
+
+/**
+ * A quiet row on Home (DESIGN.md: one notice): something worth doing, never urgent (the plan, notifications, email,
+ * the shop score's next step). An icon (or a short figure) in a soft circle, a title and a line under it, then either
+ * the whole row opens something (`to` or `onClick`, with a chevron) or it carries buttons (`actions`). `onDismiss`
+ * adds "Not now". Rows stack with space-y-3; the row sets no outer margin.
+ */
+export function Notice({
+  icon,
+  title,
+  sub,
+  to,
+  onClick,
+  actions,
+  onDismiss,
+  signal = false,
+  className = '',
+}: {
+  icon: ReactNode
+  title: ReactNode
+  sub?: ReactNode
+  to?: string
+  onClick?: () => void
+  actions?: ReactNode
+  onDismiss?: () => void
+  signal?: boolean
+  className?: string
+}) {
+  const t = useT()
+  const opens = !actions && (!!to || !!onClick)
+  const main = (
+    <>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-page text-13 font-semibold text-ink">{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-2 text-15 font-medium">
+          {signal && <span className="signal shrink-0" aria-hidden />}
+          <span className="min-w-0 truncate">{title}</span>
+        </span>
+        {sub && <span className="mt-0.5 block text-13 leading-5 text-pretty text-muted">{sub}</span>}
+      </span>
+      {/* With "Not now" at the right, the arrow would crowd it: the whole row still opens. */}
+      {opens && !onDismiss && <ChevronRight size={16} strokeWidth={1.75} className="shrink-0 text-muted" />}
+    </>
+  )
+  // The whole card opens it (a stretched link), while "Not now" stays its own button above it.
+  const stretch = "flex min-w-0 flex-1 items-center gap-4 text-left after:absolute after:inset-0 after:rounded-20 after:content-['']"
+  return (
+    <section className={`card relative transition-colors ${opens ? 'hover:bg-page' : ''} ${className}`}>
+      <div className={`flex flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:gap-6 ${onDismiss ? 'pr-14' : ''}`}>
+        {to && opens ? (
+          <Link to={to} className={stretch}>
+            {main}
+          </Link>
+        ) : onClick && opens ? (
+          <button type="button" onClick={onClick} className={stretch}>
+            {main}
+          </button>
+        ) : (
+          <div className="flex min-w-0 flex-1 items-center gap-4">{main}</div>
+        )}
+        {actions && <div className="flex flex-wrap gap-2 pl-14 md:shrink-0 md:pl-0">{actions}</div>}
+      </div>
+      {onDismiss && (
+        <button
+          type="button"
+          className={`icon-btn absolute right-3 z-10 h-9 w-9 md:right-4 ${actions ? 'top-3 md:top-1/2 md:-translate-y-1/2' : 'top-1/2 -translate-y-1/2'}`}
+          aria-label={t('Not now')}
+          onClick={onDismiss}
+        >
+          <X size={16} strokeWidth={1.75} />
+        </button>
+      )}
+    </section>
   )
 }
 

@@ -3,7 +3,7 @@ import { ArrowUpRight, Check, Copy, Globe, Loader2, RefreshCw } from 'lucide-rea
 import { useEffect, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
 import { TemboLock, useCan } from '#/components/tembo'
-import { ErrorText, Field, Page, TopBar } from '#/components/ui'
+import { CardHead, ErrorText, Field, Page, TopBar } from '#/components/ui'
 import { addDomain, checkDomain, getMyDomain, removeDomain } from '#/lib/api/domains'
 import { splitDomain } from '#/lib/host'
 import { useT } from '#/lib/i18n'
@@ -89,8 +89,8 @@ function DomainPage() {
         {!ready && !domain && (
           <section className="card p-5 md:p-6">
             <Icon />
-            <h2 className="mt-4 text-15 font-semibold">{t('Own domains aren’t switched on yet')}</h2>
-            <p className="mt-1 text-14 leading-relaxed text-muted">{t('Your shop works as always at shopi.tz/{slug}. This page will let you connect your domain once they are.', { slug: shop.slug })}</p>
+            <CardHead title={t('Own domains aren’t switched on yet')} className="mt-4" />
+            <p className="mt-2 text-14 leading-relaxed text-muted">{t('Your shop works as always at shopi.tz/{slug}. This page will let you connect your domain once they are.', { slug: shop.slug })}</p>
           </section>
         )}
 
@@ -179,10 +179,7 @@ function Icon() {
 function Step({ n, title, children }: { n: number; title: string; children: ReactNode }) {
   return (
     <section className="card p-5 md:p-6">
-      <h2 className="flex items-center gap-3 text-15 font-semibold">
-        <span className="tnum flex h-7 w-7 items-center justify-center rounded-full bg-ink text-13 text-white">{n}</span>
-        {title}
-      </h2>
+      <CardHead icon={<span className="tnum flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink text-13 text-white">{n}</span>} title={title} />
       <div className="mt-4">{children}</div>
     </section>
   )

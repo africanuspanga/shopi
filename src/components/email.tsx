@@ -1,7 +1,7 @@
 import { Link, useRouter } from '@tanstack/react-router'
-import { Check, Mail, X } from 'lucide-react'
+import { Check, Mail } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
-import { ErrorText, Field, Sheet, Switch, Toast, Wordmark } from '#/components/ui'
+import { ErrorText, Field, Notice, Sheet, Switch, Toast, Wordmark } from '#/components/ui'
 import { getMyEmail, removeMyEmail, setEmailPrefs, setMyEmail } from '#/lib/api/email'
 import { suggestEmail } from '#/lib/email'
 import { useT } from '#/lib/i18n'
@@ -183,30 +183,21 @@ export function EmailRow({ state, className = '' }: { state: { open: boolean; em
 
   return (
     <>
-      <section className={`${className} card relative flex items-center gap-4 py-4 pr-12 pl-5 md:pr-14`}>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-page">
-          <Mail size={18} strokeWidth={1.75} />
-        </span>
-        <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setOpen(true)}>
-          <span className="block text-15 font-medium">{t('Get your receipts by email')}</span>
-          <span className="block truncate text-13 text-muted">{t('Tembo receipts, reminders, and a summary each Monday if you like.')}</span>
-        </button>
-        <button
-          type="button"
-          className="icon-btn absolute top-1/2 right-2 h-9 w-9 -translate-y-1/2"
-          aria-label={t('Not now')}
-          onClick={() => {
-            try {
-              localStorage.setItem(HIDE_KEY, String(Date.now()))
-            } catch {
-              /* storage blocked */
-            }
-            setHidden(true)
-          }}
-        >
-          <X size={16} strokeWidth={1.75} />
-        </button>
-      </section>
+      <Notice
+        className={className}
+        icon={<Mail size={18} strokeWidth={1.75} />}
+        title={t('Get your receipts by email')}
+        sub={t('Tembo receipts, reminders, and a summary each Monday if you like.')}
+        onClick={() => setOpen(true)}
+        onDismiss={() => {
+          try {
+            localStorage.setItem(HIDE_KEY, String(Date.now()))
+          } catch {
+            /* storage blocked */
+          }
+          setHidden(true)
+        }}
+      />
       <Sheet open={open} onClose={() => setOpen(false)} title={t('Get your receipts by email')}>
         <p className="-mt-1 mb-5 text-14 leading-5 text-muted">{t('Tembo receipts, renewal reminders, and a summary each Monday if you like.')}</p>
         <EmailForm

@@ -46,6 +46,24 @@ surfaces and overlays.
 **Space:** the 4 px grid (Tailwind's spacing). Page gutters 16 on phones, 40 on desktop. Cards pad 20 on phones
 (`p-5`), 24 on desktop (`md:p-6`).
 
+## The shared parts (use them, don't rebuild them)
+In `src/components/ui.tsx`. When a screen needs one of these roles, it uses the part; if it needs a variant, the part
+grows a prop. The check can't see roles, so this list is the rule.
+
+| Role | Part | Looks like |
+| --- | --- | --- |
+| A seller page's header | `TopBar` (phone bar + desktop header), or `PhoneBar` + `PageHead` when the phone bar is special (Home) | Desktop: title at 28 (`.title`), a 14 muted line under it, actions at the right |
+| A card's heading | `CardHead` (`title`, `sub`, `icon`, `right`) | Title 15 semibold; a short description under it at 13 muted; a dot or step number before the title; a link, count or button at the right on the title's baseline |
+| A quiet row on Home | `Notice` (`icon`, `title`, `sub`, `to`/`onClick`, `actions`, `onDismiss`, `signal`) | A card: icon (or a short figure) in a soft circle, title 15 medium, a 13 muted line; the whole row opens something (arrow) or carries buttons; "Not now" as an X. Rows stack with `space-y-3` |
+| A sheet | `Sheet` | Title at 20 (`.title`), close at the right |
+| A field | `Field` | Label 14 medium, hint 13 muted |
+| A yes/no setting | `Switch` | |
+| A number card (admin, analytics) | `Kpi` in `components/admin.tsx` | |
+| A titled card in /admin | `Card` in `components/admin.tsx` (uses `CardHead`) | |
+
+A paragraph that *is* a card's content (the instructions on an order's status card) stays body text, 14 muted with
+`leading-relaxed`, under the `CardHead`; only a short description goes in `sub`.
+
 **Exempt:** a file whose first lines say `design-check: off` (only `components/showcase.tsx`: the coded pictures of
 phones and cards on the landing, drawn at their own small scale). Emails (`src/server/email-templates.ts`) are inline
 HTML with their own fixed sizes.
