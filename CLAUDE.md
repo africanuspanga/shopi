@@ -497,8 +497,9 @@ domain are lowercase.
     wordmark (the page's own `Wordmark` SVG drawn as an image). Download as PNG, or Share where the phone can share
     files, else the link (`navigator.share`), else Copy link. `seller_share` events `qr-download`, `qr-native`,
     `qr-link`, `qr-copy`.
-  - **Buyers** (`ShopQr`, the founder: "sharable, downloadable and Shopi branded"): a code with Shopi's bag icon in the
-    middle (level H, `/favicon.svg`) beside "Open this shop on another phone", in the Info sheet on phones and under the
+  - **Buyers** (`ShopQr`, the founder: "sharable, downloadable and Shopi branded"): a code with the shopi wordmark in the
+    middle (level H; a wide space of about 40% by 5 to 7 modules; `Wordmark` takes a `box` to sit inside the SVG; the
+    founder, 18 Nov: "we are a new company, no one knows the bag icon") beside "Open this shop on another phone", in the Info sheet on phones and under the
     facts card on desktop. Tapping it or "Save or share" opens the same branded card (`QrCardSheet`, `who="buyer"`),
     loaded only then (`React.lazy`) and portalled to the body (inside the Info sheet its animated frame would hold it).
     Buyer events are `share` with `qr-…`. `components/qr.tsx` stays light: the encoder and the code only.

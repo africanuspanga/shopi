@@ -398,9 +398,20 @@ export function TextLink({ to, children, className = '' }: { to: string; childre
 /** Shopi wordmark with its orange dot on the i. Geometry: design/brand/glyphs.py (Mona Sans ExtraBold, 120% width).
  *  Regenerate with `python3 glyphs.py --tsx`, do not hand-edit. The box runs from the top of the dot to the bottom
  *  of the p, so the ascenders are 78% of the height: a 22px wordmark has 17px ascenders and a 13px x-height. */
-export function Wordmark({ className = 'h-[26px] w-auto', title = 'Shopi', dot = '#FF4F17' }: { className?: string; title?: string; dot?: string }) {
+/** `box`: x, y, width and height when the wordmark sits inside another SVG (the middle of a shop's QR code). */
+export function Wordmark({
+  className = 'h-[26px] w-auto',
+  title = 'Shopi',
+  dot = '#FF4F17',
+  box,
+}: {
+  className?: string
+  title?: string
+  dot?: string
+  box?: { x: number; y: number; width: number; height: number }
+}) {
   return (
-    <svg viewBox="0 -4.88 405.76 127.78" className={className} fill="currentColor" role="img" aria-label={title}>
+    <svg viewBox="0 -4.88 405.76 127.78" className={className} fill="currentColor" role="img" aria-label={title} {...box}>
       <path transform="translate(0 0)" d="M40.88 101.37Q31.28 101.37 23.8 99.66Q16.32 97.94 11.25 94.72Q6.17 91.5 3.36 86.83Q0.55 82.17 0 76.41H26.2Q26.47 79.42 28.26 81.48Q30.04 83.54 33.47 84.57Q36.9 85.6 41.7 85.6Q48.29 85.6 51.78 83.88Q55.28 82.17 55.28 78.88Q55.28 76.13 53.84 74.83Q52.4 73.53 49.04 72.91Q45.68 72.29 39.51 71.74Q25.93 70.37 17.9 67.97Q9.88 65.57 6.17 61.11Q2.47 56.65 2.47 49.11Q2.47 41.7 7.06 36.21Q11.66 30.73 20.3 27.64Q28.94 24.55 41.29 24.55Q52.13 24.55 60.29 27.3Q68.45 30.04 73.39 35.39Q78.33 40.74 79.15 48.42H53.91Q53.5 45.68 51.85 43.9Q50.21 42.11 47.53 41.22Q44.86 40.33 41.15 40.33Q35.39 40.33 31.89 41.91Q28.4 43.48 28.4 46.91Q28.4 49.25 30.04 50.55Q31.69 51.85 35.39 52.47Q39.09 53.09 45.13 53.64Q58.71 54.73 66.67 57.2Q74.62 59.67 78.05 64.33Q81.48 69 81.48 77.09Q81.48 84.5 77.09 89.92Q72.7 95.34 63.79 98.35Q54.87 101.37 40.88 101.37Z" />
       <path transform="translate(89.48 0)" d="M0 100V0H26.75V37.86H27.98Q31.41 31.69 38.55 28.12Q45.68 24.55 54.05 24.55Q61.32 24.55 67.15 26.34Q72.98 28.12 77.23 32.17Q81.48 36.21 83.81 42.87Q86.15 49.52 86.15 59.26V100H59.4V64.06Q59.4 58.02 58.09 53.7Q56.79 49.38 53.57 47.05Q50.34 44.72 44.58 44.72Q39.09 44.72 35.05 47.12Q31 49.52 28.88 53.64Q26.75 57.75 26.75 63.1V100Z" />
       <path transform="translate(182.13 0)" d="M45.27 101.37Q35.12 101.37 26.82 98.83Q18.52 96.3 12.48 91.36Q6.45 86.42 3.22 79.29Q0 72.15 0 62.96Q0 50.75 5.69 42.18Q11.39 33.61 21.54 29.08Q31.69 24.55 45.27 24.55Q55.42 24.55 63.79 27.09Q72.15 29.63 78.12 34.57Q84.09 39.51 87.31 46.64Q90.53 53.77 90.53 62.96Q90.53 75.03 84.91 83.68Q79.29 92.32 69.2 96.84Q59.12 101.37 45.27 101.37ZM45.27 81.07Q51.3 81.07 55.49 78.88Q59.67 76.68 61.8 72.57Q63.92 68.45 63.92 62.96Q63.92 58.71 62.69 55.35Q61.45 51.99 59.12 49.66Q56.79 47.33 53.29 46.02Q49.79 44.72 45.27 44.72Q39.37 44.72 35.19 46.98Q31 49.25 28.88 53.29Q26.75 57.34 26.75 62.96Q26.75 67.22 27.98 70.51Q29.22 73.8 31.55 76.13Q33.88 78.46 37.31 79.77Q40.74 81.07 45.27 81.07Z" />

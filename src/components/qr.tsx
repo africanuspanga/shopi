@@ -5,6 +5,7 @@ import type { QrShop } from '#/components/qr-sheet'
 import { SHOPI_ORIGIN } from '#/lib/host'
 import { useT } from '#/lib/i18n'
 import { encodeQr } from '#/lib/qr'
+import { Wordmark } from '#/components/ui'
 
 /**
  * A shop's QR code (18 Nov 2026, the founder): for sellers a printable card (`QrSheet` in `qr-sheet.tsx`, from Home
@@ -17,27 +18,32 @@ export const qrUrl = (slug: string) => `${SHOPI_ORIGIN}/${slug}?s=qr`
 const QrCardSheet = lazy(() => import('#/components/qr-sheet').then((m) => ({ default: m.QrCardSheet })))
 
 /**
- * The code alone, as SVG: rounded dots and finder squares, ink on white. `brand` puts Shopi's bag icon in the middle
- * (level H, which reads with a fifth of the code covered); without it, level M keeps it small and quick to read.
+ * The code alone, as SVG: rounded dots and finder squares, ink on white. `brand` puts the shopi wordmark in the middle
+ * (the founder, 18 Nov: "we are a new company, no one knows the bag icon"; level H reads with part of the code
+ * covered); without it, level M keeps it small and quick to read.
  */
 export function QrCode({ text, className = '', label, brand = false }: { text: string; className?: string; label: string; brand?: boolean }) {
   const qr = useMemo(() => encodeQr(text, brand ? 'H' : 'M'), [text, brand])
   const quiet = 3
   const n = qr.size + quiet * 2
-  let hole: { at: number; w: number } | null = null
+  // The wordmark is wide (about 3.2 to 1), so its space is too: about 40% of the side by 5 to 7 modules, near 6% of the
+  // code, well inside what level H restores.
+  let hole: { x: number; y: number; w: number; h: number } | null = null
   if (brand && qr.size <= 41) {
-    let w = Math.round(qr.size * 0.22)
+    let w = Math.round(qr.size * 0.42)
     if (w % 2 === 0) w += 1
-    hole = { at: Math.floor((qr.size - w) / 2), w }
+    let h = Math.round(w / 3.2) + 2
+    if (h % 2 === 0) h += 1
+    hole = { x: (qr.size - w) / 2, y: (qr.size - h) / 2, w, h }
   }
-  const inHole = (x: number, y: number) => !!hole && x >= hole.at && x < hole.at + hole.w && y >= hole.at && y < hole.at + hole.w
+  const inHole = (x: number, y: number) => !!hole && x >= hole.x && x < hole.x + hole.w && y >= hole.y && y < hole.y + hole.h
   const finders = [
     [0, 0],
     [qr.size - 7, 0],
     [0, qr.size - 7],
   ]
   return (
-    <svg viewBox={`0 0 ${n} ${n}`} className={className} role="img" aria-label={label}>
+    <svg viewBox={`0 0 ${n} ${n}`} className={className} role="img" aria-label={label} style={{ color: '#0a0a0a' }}>
       <rect width={n} height={n} rx={2} fill="#ffffff" />
       <g fill="#0a0a0a" transform={`translate(${quiet} ${quiet})`}>
         {qr.modules.flatMap((row, y) =>
@@ -50,7 +56,7 @@ export function QrCode({ text, className = '', label, brand = false }: { text: s
             <rect x={x + 2} y={y + 2} width={3} height={3} rx={0.9} />
           </g>
         ))}
-        {hole && <image href="/favicon.svg" x={hole.at + 0.5} y={hole.at + 0.5} width={hole.w - 1} height={hole.w - 1} />}
+        {hole && <Wordmark title="Shopi" box={{ x: hole.x + 0.6, y: hole.y + 0.6, width: hole.w - 1.2, height: hole.h - 1.2 }} className="" />}
       </g>
     </svg>
   )
