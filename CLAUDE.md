@@ -66,6 +66,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/components/phone-app.tsx` | The seller's phone: `PhoneAlertsCard` (Home) and `PhoneAppSettings` (Shop settings) for notifications and installing |
 | `src/lib/push.ts`, `src/server/push.ts`, `public/sw.js` | Web push: `usePhoneApp` and the install offer (browser), `notifySeller` (server), the service worker that shows them |
 | `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
+| `src/server/selcom.ts`, `src/server/billing.ts`, `src/lib/api/billing.ts`, `src/components/pay-tembo.tsx`, `src/routes/api/selcom.ts` | Tembo billing through Selcom: the proxy client, payments (start, Lipa Namba, complete once, re-check, reminders), the seller's server functions, the payment sheet, Selcom's callback |
 | `src/server.ts` | The Worker entry: TanStack Start answers requests; `scheduled` runs the cron jobs in `src/server/jobs.ts` |
 | `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `push.ts` (notification subscriptions), `imports.ts` (bulk import), `picks.ts` (top picks), `session.ts` |
 | `src/lib/seo.ts` | Search: `SITE`, `canonical()`, titles and descriptions per page, JSON-LD (`ld`, `storeSchema`, `productSchema`, `breadcrumbSchema`); `src/routes/sitemap[.]xml.ts` |
@@ -263,7 +264,52 @@ domain are lowercase.
   `importProducts` stop a free shop at 300 and say why). Demo shops get everything. The plan rides with the session
   (`session.shop.plan`), so screens use `useCan()` and show `TemboLock` / `TemboPill` (`components/tembo.tsx`); the plan
   cards and prices come from `PlanPrice` / `PlanItems` (`components/plans.tsx`), items not built yet carry "Soon".
-  `BILLING_LIVE` stays false until Tembo can be paid (Selcom through CV Chap Chap's proxy, roadmap `billing`).
+  `BILLING_LIVE` stays false until the founder's own real payment of the full amount has gone through end to end;
+  until then only admins can pay (`canPay()`), so the founder can make that payment (see Tembo billing below).
+- **Tembo billing** (roadmap `billing` + `o-tembo`, built 18 Nov 2026; migration `0024_billing.sql`): CV Chap Chap's Selcom
+  flow, copied on the founder's word. Notes on CV's side: `../design/notes/selcom-from-cv-chap-chap.md`.
+  - **The path:** the Worker calls Driftmark's signing proxy (`SELCOM_PROXY_URL` = `http://selcom-proxy.shopi.tz`, an A
+    record to the whitelisted droplet, DNS only; `SELCOM_PROXY_TOKEN`; both Worker secrets), which signs and forwards to
+    Selcom. Workers can't fetch a bare IP, hence the name. Plain HTTP like CV's today; https needs certbot on the shared
+    droplet (the founder's SSH OK). Calls time out after 25 s (`callProxy`). Locally `.dev.vars` points at a fake proxy
+    (never the real one: it moves real money): `node scripts/fake-selcom.mjs` on port 8799, where numbers ending 000
+    are refused (empty wallet), 111 pay after 6 s, 222 cancel, 333 get no prompt (pay by hand with
+    `POST /test/pay?order_id=…`, add `&quiet=1` to skip the callback and test the cron).
+  - **Rows first:** `payments` (id = Selcom's order id `SHOPI-<ms>-<10 hex>`: the prefix is the only way to tell Shopi's
+    money from CV's in the shared Driftmark account; remarks "Shopi Tembo <slug>"; `buyer_email` falls back to
+    `<phone>@shopi.tz`), `payment_events` (created, completed, failed, amount_mismatch, rechecked, pushed_again),
+    `webhook_events` (callbacks handled), `admin_log` (the owner's manual actions). Kept as business records (Privacy).
+  - **Nothing is trusted but Selcom's order-status.** The screen polls `temboPayment` every 3 s (pending rows are asked of
+    Selcom live); Selcom's callback (`/api/selcom`, rate limited, only `SHOPI-` ids) is a hint that triggers the same
+    question, answers 503 when Selcom can't be asked, and records pending answers nowhere so the retry still counts.
+    Shopi has no Selcom API secret, so callback signatures are not checked (CV never verified one either).
+  - **Completing once:** `completePayment` is one D1 batch: the shop's `paid_until` becomes the later of now and its
+    current end, plus 365 days, and `plan = 'tembo'`, only while the row isn't completed; then the row flips. A late
+    payment on a row closed as abandoned still completes. The seller gets a push ("Tembo is on").
+  - **The seller's screen** (`PayTembo`, a sheet from the plan page; Renew shows in Tembo's last 30 days): the number
+    (any Tanzanian mobile money number) and Pay; "Check your phone" with the order's own Lipa Namba printed at once;
+    after 15 s "Send the prompt again" (20 s cooldown) and "Pay with Lipa Namba"; after 60 s the Lipa Namba card opens
+    by itself (dial *150*50*1#, the number, the amount, "check the name reads DRIFTMARK TECHNOLOGI"); a declined prompt
+    or a closed Lipa Namba hands over a new number up to twice; "Use another number" keeps checking the old payment.
+    Closing the sheet is safe: the cron finishes the payment. Refusals become plain words (`describeSelcomFailure`:
+    balance, number, unreachable; an empty wallet is not worth retrying). **No answer is not a refusal:** a start that
+    times out or can't reach the proxy keeps its row pending (event `start_unanswered`), since the prompt may have gone
+    out; only a refusal from Selcom marks it failed.
+  - **No second year by mistake:** before a new payment starts, `paidMeanwhile` asks Selcom about the shop's payments
+    still pending from the last 35 minutes (a number the seller moved away from, a sheet closed while waiting); one
+    that turned out paid is shown as paid instead. The sheet keeps the payments it left while the plan page is open.
+  - **Lipa Namba** (`lipaNamba`): the open order's own `payment_token` while 25 of Selcom's 30 minutes remain, else an
+    open Lipa order already made for it (`manual_for`), else a new order with no prompt.
+  - **Re-checks:** the cron `*/5 * * * *` (`FREQUENT` in `jobs.ts`) asks Selcom about pending rows older than 2 minutes
+    and closes rows Selcom still calls unpaid after 2 hours as `abandoned_unpaid`. `/admin` Money lists the newest 20
+    payments with Re-check (written to `admin_log`) and whether the proxy answers (`proxyHealth`).
+  - **Reminders:** the nightly job notifies sellers 7 days before Tembo ends, the day before and on the day
+    (`remindRenewals`), only once `BILLING_LIVE` is on. Email joins with `o-email`.
+  - Limits per shop: 8 starts an hour, 6 prompts again in 10 minutes, 10 new Lipa Namba orders an hour (`LIMITS.pay*`;
+    showing a number that exists isn't counted).
+  - Reviewed 18 Nov by a second agent against CV's code. Known and left as in CV: the cron takes the 50 oldest pending
+    rows, so 50 rows whose status call keeps failing would starve newer ones (add a `checked_at` order if it happens).
+  - **Never rebuild "paste the SMS receipt" for Shopi's own billing**: CV retired it as insecure.
 - Optional shop fields: `maps_url` (Google Maps links only, `mapsLink()`) gives buyers Directions; `tin` (9 digits, `tinDigits()`,
   shown as `formatTin()` 123-456-789) appears in `ShopFacts`, the Info sheet and on receipts, not in the phone pills.
 - Delivery fees are not in Shopi: buyer and seller agree them on WhatsApp. Shops list delivery areas by name only, as
@@ -488,6 +534,9 @@ Logs start with `[jobs]` (Workers Logs); a failed task fails the run, so it show
 - **Nightly, 03:00 in Dar:** keeps the Privacy page's promises. Delivery pins on orders past 90 days (`purgePins`), back-in-stock alerts past 90 days, visit data (`events`) past
   13 months, and the visitor and visit IDs on orders that old (the order and its channel stay); expired seller logins.
   Each purge also takes what would pass its limit before the next run.
+- **Every 5 minutes (`FREQUENT`):** Tembo payments still pending, asked of Selcom again (`reconcilePayments`, see Tembo
+  billing). Per-payment errors are logged (`[billing]`), not thrown, so a Selcom blip doesn't fail the run.
+- **Nightly also:** Tembo renewal reminders (`remindRenewals`, only once `BILLING_LIVE` is on).
 - **Weekly, Sunday 03:30:** the whole database as gzipped SQL in the private bucket `shopi-backups`
   (`d1/shopi-YYYY-MM-DD.sql.gz`; no public URL, never bind it to `/img`). The newest 5 are kept (Privacy: "up to 5 weeks").
   D1 Time Travel covers the last 30 days on its own; this copy survives the database being deleted.

@@ -1,7 +1,7 @@
 import { env, waitUntil } from 'cloudflare:workers'
 import { buildPushPayload } from '@block65/webcrypto-web-push'
 import { all, now, run } from '#/server/db'
-import { asLang, translate } from '#/lib/i18n'
+import { asLang, translate, type Lang } from '#/lib/i18n'
 
 /**
  * Notifications on the seller's phone (Web Push). The browser gives an address at its push service (Google, Apple,
@@ -16,7 +16,7 @@ type T = (en: string, vars?: Record<string, string | number>) => string
 export const pushKey = () => (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY ? env.VAPID_PUBLIC_KEY : null)
 
 /** Sends to every phone where the shop's seller turned notifications on, after the response has gone. */
-export function notifySeller(shopId: string, note: (t: T) => PushNote) {
+export function notifySeller(shopId: string, note: (t: T, lang: Lang) => PushNote) {
   if (!pushKey()) return
   waitUntil(
     (async () => {
@@ -27,7 +27,7 @@ export function notifySeller(shopId: string, note: (t: T) => PushNote) {
       await Promise.all(
         subs.map((s) => {
           const lang = asLang(s.lang)
-          return send(s, note((en, vars) => translate(lang, en, vars)))
+          return send(s, note((en, vars) => translate(lang, en, vars), lang))
         }),
       )
     })().catch((e) => console.error('[push]', e)),

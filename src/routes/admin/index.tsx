@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
 import { Bell, Download, Globe, Palette, Search, Smartphone } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { BarList, Card, Change, DayChart, Gauge, Kpi, KpiMoney, Nothing, ProductTable, Row, WeekdayBars, num, pct, useDates } from '#/components/admin'
@@ -6,6 +6,7 @@ import { WhatsAppIcon } from '#/components/brand-icons'
 import { Money, ShopAvatar, StatusPill } from '#/components/ui'
 import { SHOP_FILTERS, asAdminDays, asAdminTab, shopMatches, type AdminDays, type AdminShop, type AdminTab, type ShopFilter } from '#/lib/admin'
 import { getOwnerDashboard, type OwnerSection } from '#/lib/api/admin'
+import { recheckTemboPayment } from '#/lib/api/billing'
 import { CATEGORIES, localPhone, timeAgo, waLink, type OrderStatus } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import { Ranges, useAdminTabs } from './route'
@@ -360,7 +361,7 @@ function MoneyTab({ d }: { d: OwnerSection<'money'> }) {
         <section className="card min-w-0 p-5 md:p-6 lg:col-span-8">
           <DayChart points={d.sales} money total={d.now.sales} chip={<Change now={d.now.sales} before={d.before.sales} />} caption={t('Sales, last {n} days', { n: d.days })} />
         </section>
-        <Card title={t('Plans')} sub={t('Right now. Sellers can’t pay in Shopi yet, so no shop pauses.')} className="lg:col-span-4">
+        <Card title={t('Plans')} sub={t('Right now. A Tembo shop that doesn’t renew goes back to Free.')} className="lg:col-span-4">
           <Row label={t('Free')} value={num(d.plans.free)} />
           <Row label="Tembo" value={num(d.plans.tembo)} />
           <Row label={t('Tembo ending in 30 days')} value={num(d.plans.renewing)} />
@@ -393,10 +394,120 @@ function MoneyTab({ d }: { d: OwnerSection<'money'> }) {
             <Nothing>{t('No orders yet')}</Nothing>
           )}
         </Card>
+        <TemboPayments d={d} />
       </Grid>
     </>
   )
 }
+
+/**
+ * Tembo payments through Selcom (src/server/billing.ts): the newest 20, whether Selcom's proxy answers, and Re-check,
+ * which asks Selcom about one payment again (written to admin_log). The cron does the same every 5 minutes.
+ */
+function TemboPayments({ d }: { d: OwnerSection<'money'> }) {
+  const t = useT()
+  const lang = useLang()
+  const router = useRouter()
+  const [checking, setChecking] = useState('')
+  const [answer, setAnswer] = useState<Record<string, string>>({})
+  const proxy = { ok: t('Selcom answers'), down: t('Selcom’s proxy is not answering'), off: t('Selcom is not set up') }[d.selcom]
+  const recheck = async (id: string) => {
+    setChecking(id)
+    try {
+      const r = await recheckTemboPayment({ data: { id } })
+      setAnswer((a) => ({ ...a, [id]: ('answer' in r && r.answer) || ('error' in r && r.error) || '' }))
+      await router.invalidate()
+    } catch {
+      setAnswer((a) => ({ ...a, [id]: t('Could not ask Selcom') }))
+    } finally {
+      setChecking('')
+    }
+  }
+  return (
+    <Card
+      title={t('Tembo payments')}
+      sub={t('{n} paid in the last {days} days, {amount} in all. Newest first.', { n: num(d.received.n), days: d.days, amount: `TSh ${num(d.received.total)}` })}
+      right={
+        <span className={`inline-flex items-center gap-1.5 text-[13px] ${d.selcom === 'ok' ? 'text-ink-2' : 'text-moto-ink'}`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${d.selcom === 'ok' ? 'bg-ok' : 'bg-moto'}`} />
+          {proxy}
+        </span>
+      }
+      className="lg:col-span-12"
+    >
+      {d.payments.length ? (
+        <ul className="divide-y divide-line">
+          {d.payments.map((p) => {
+            const detail = [
+              p.manual_for ? 'Lipa Namba' : '',
+              localPhone(`+${p.phone}`),
+              p.status === 'failed' ? (p.reason ?? '') : '',
+              p.status === 'completed' && p.paid_until ? t('Tembo until {date}', { date: dayMonthYear(p.paid_until, lang) }) : '',
+              answer[p.id] ? t('Selcom says: {answer}', { answer: answer[p.id] }) : '',
+            ].filter(Boolean)
+            const button =
+              p.status !== 'completed' ? (
+                <button type="button" className="btn btn-sm btn-ghost shrink-0" disabled={checking === p.id} onClick={() => recheck(p.id)}>
+                  {checking === p.id ? t('Asking Selcom') : t('Re-check')}
+                </button>
+              ) : null
+            // Phones: the list rule (name and money, then status, detail and time); the id and Re-check under it.
+            return (
+              <li key={p.id} className="flex items-center gap-4 py-3 text-[14px]">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <Link to="/admin/shops/$id" params={{ id: p.shop_id }} className="truncate font-medium">
+                      {p.shop}
+                    </Link>
+                    <Money value={p.amount} className="shrink-0 md:hidden" cur="text-[0.8em] text-muted" />
+                  </div>
+                  <div className="mt-1 flex items-center gap-3">
+                    <PayPill status={p.status} />
+                    <span className="min-w-0 flex-1 truncate text-[13px] text-muted">{detail.join(' · ')}</span>
+                    <span className="meta shrink-0 md:hidden" suppressHydrationWarning>
+                      {timeAgo(p.created_at, lang)}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between gap-3">
+                    <span className="meta truncate">{p.id}</span>
+                    {button && <span className="md:hidden">{button}</span>}
+                  </div>
+                </div>
+                <Money value={p.amount} className="hidden w-28 shrink-0 text-right md:block" cur="text-[0.8em] text-muted" />
+                <span className="meta hidden w-20 shrink-0 text-right md:block" suppressHydrationWarning>
+                  {timeAgo(p.created_at, lang)}
+                </span>
+                <span className="hidden w-[104px] shrink-0 justify-end md:flex">{button}</span>
+              </li>
+            )
+          })}
+        </ul>
+      ) : (
+        <Nothing>{t('No Tembo payments yet')}</Nothing>
+      )}
+    </Card>
+  )
+}
+
+function PayPill({ status }: { status: 'pending' | 'completed' | 'failed' }) {
+  const t = useT()
+  if (status === 'pending')
+    return (
+      <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-moto-soft px-2.5 text-[12px] font-medium whitespace-nowrap text-moto-ink">
+        <span className="h-1.5 w-1.5 rounded-full bg-moto" />
+        {t('Waiting for payment')}
+      </span>
+    )
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-[13px] whitespace-nowrap ${status === 'failed' ? 'text-muted' : 'text-ink-2'}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${status === 'failed' ? 'bg-faint' : 'bg-ok'}`} />
+      {status === 'failed' ? t('Not paid') : t('Paid')}
+    </span>
+  )
+}
+
+const dayMonthYear = (ms: number, lang: 'sw' | 'en') =>
+  new Date(ms).toLocaleDateString(lang === 'sw' ? 'sw-TZ' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Dar_es_Salaam' })
 
 /* ------------------------------------------------------------------ Growth */
 
@@ -587,6 +698,10 @@ function Health({ d }: { d: OwnerSection<'health'> }) {
     'signup-ip': t('Sign-up tries'),
     photo: t('Photos fetched from links by imports'),
     domain: t('Domains added'),
+    pay: t('Tembo payments started'),
+    'pay-push': t('Payment prompts sent again'),
+    'pay-lipa': t('Lipa Namba numbers asked for'),
+    'selcom-hook': t('Callbacks from Selcom'),
   }
   const backupOld = d.backup ? d.at - d.backup.at > 8 * 86_400_000 : true
   const status: Record<string, string> = { active: t('Active'), pending: t('Waiting for DNS'), failed: t('Failed') }

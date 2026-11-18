@@ -3,10 +3,12 @@ import { db, now, run } from '#/server/db'
 import { ALERT_DAYS } from '#/server/alerts'
 import { purgeLimits } from '#/server/limits'
 import { refreshDomains } from '#/server/domains'
+import { reconcilePayments, remindRenewals } from '#/server/billing'
 
 // Cron schedules, in UTC (Tanzania is UTC+3). They must match "triggers" in wrangler.jsonc.
 export const NIGHTLY = '0 0 * * *' // 03:00 in Dar
 export const WEEKLY = '30 0 * * SUN' // Sunday 03:30 in Dar, after the nightly clean-up
+export const FREQUENT = '*/5 * * * *' // Tembo payments still pending, asked of Selcom again (src/server/billing.ts)
 
 /** Visit data (`events`) lives 13 months at most (Privacy page). */
 export const VISIT_MONTHS = 13
@@ -26,10 +28,14 @@ export async function runJob(cron: string) {
           ['limits', purgeLimits],
           // Shops' own domains: one whose CNAME was removed stops being served (src/server/domains.ts).
           ['domains', refreshDomains],
+          // Tembo ends in 7 days, tomorrow or today: a notification (only once billing is live).
+          ['renewals', remindRenewals],
         ]
       : cron === WEEKLY
         ? [['backup', backupDatabase]]
-        : []
+        : cron === FREQUENT
+          ? [['payments', reconcilePayments]]
+          : []
   if (!tasks.length) throw new Error(`[jobs] no job for cron "${cron}"`)
   const failed: string[] = []
   // One task failing doesn't stop the others; the run still ends as failed, so Cloudflare's cron log shows it.

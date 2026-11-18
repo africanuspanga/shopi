@@ -9,5 +9,12 @@ declare namespace Cloudflare {
     CF_API_TOKEN?: string
     /** The Cloudflare account that owns shopi.tz and the Turnstile widget (a var in wrangler.jsonc). */
     CF_ACCOUNT_ID?: string
+    /**
+     * Tembo billing (src/server/selcom.ts): Driftmark's signing proxy for Selcom, the same one CV Chap Chap uses
+     * (`http://selcom-proxy.shopi.tz`, an A record to the whitelisted droplet, DNS only) and its bearer token. Worker
+     * secrets; locally `.dev.vars` points at a fake proxy, because the real one moves real money.
+     */
+    SELCOM_PROXY_URL?: string
+    SELCOM_PROXY_TOKEN?: string
   }
 }

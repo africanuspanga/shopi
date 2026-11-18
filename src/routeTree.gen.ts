@@ -29,6 +29,7 @@ import { Route as ApiAdminExportRouteImport } from './routes/api/admin-export'
 import { Route as ApiERouteImport } from './routes/api/e'
 import { Route as ApiExportRouteImport } from './routes/api/export'
 import { Route as ApiPhotoRouteImport } from './routes/api/photo'
+import { Route as ApiSelcomRouteImport } from './routes/api/selcom'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppAnalyticsRouteImport } from './routes/app/analytics'
@@ -155,6 +156,11 @@ const ApiExportRoute = ApiExportRouteImport.update({
 const ApiPhotoRoute = ApiPhotoRouteImport.update({
   id: '/api/photo',
   path: '/api/photo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSelcomRoute = ApiSelcomRouteImport.update({
+  id: '/api/selcom',
+  path: '/api/selcom',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUploadRoute = ApiUploadRouteImport.update({
@@ -312,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/api/e': typeof ApiERoute
   '/api/export': typeof ApiExportRoute
   '/api/photo': typeof ApiPhotoRoute
+  '/api/selcom': typeof ApiSelcomRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/discounts': typeof AppDiscountsRoute
@@ -358,6 +365,7 @@ export interface FileRoutesByTo {
   '/api/e': typeof ApiERoute
   '/api/export': typeof ApiExportRoute
   '/api/photo': typeof ApiPhotoRoute
+  '/api/selcom': typeof ApiSelcomRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/discounts': typeof AppDiscountsRoute
@@ -408,6 +416,7 @@ export interface FileRoutesById {
   '/api/e': typeof ApiERoute
   '/api/export': typeof ApiExportRoute
   '/api/photo': typeof ApiPhotoRoute
+  '/api/selcom': typeof ApiSelcomRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/discounts': typeof AppDiscountsRoute
@@ -459,6 +468,7 @@ export interface FileRouteTypes {
     | '/api/e'
     | '/api/export'
     | '/api/photo'
+    | '/api/selcom'
     | '/api/upload'
     | '/app/analytics'
     | '/app/discounts'
@@ -505,6 +515,7 @@ export interface FileRouteTypes {
     | '/api/e'
     | '/api/export'
     | '/api/photo'
+    | '/api/selcom'
     | '/api/upload'
     | '/app/analytics'
     | '/app/discounts'
@@ -554,6 +565,7 @@ export interface FileRouteTypes {
     | '/api/e'
     | '/api/export'
     | '/api/photo'
+    | '/api/selcom'
     | '/api/upload'
     | '/app/analytics'
     | '/app/discounts'
@@ -602,6 +614,7 @@ export interface RootRouteChildren {
   ApiERoute: typeof ApiERoute
   ApiExportRoute: typeof ApiExportRoute
   ApiPhotoRoute: typeof ApiPhotoRoute
+  ApiSelcomRoute: typeof ApiSelcomRoute
   ApiUploadRoute: typeof ApiUploadRoute
   ImgSplatRoute: typeof ImgSplatRoute
   OCodeRoute: typeof OCodeRoute
@@ -747,6 +760,13 @@ declare module '@tanstack/react-router' {
       path: '/api/photo'
       fullPath: '/api/photo'
       preLoaderRoute: typeof ApiPhotoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/selcom': {
+      id: '/api/selcom'
+      path: '/api/selcom'
+      fullPath: '/api/selcom'
+      preLoaderRoute: typeof ApiSelcomRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/upload': {
@@ -1044,6 +1064,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiERoute: ApiERoute,
   ApiExportRoute: ApiExportRoute,
   ApiPhotoRoute: ApiPhotoRoute,
+  ApiSelcomRoute: ApiSelcomRoute,
   ApiUploadRoute: ApiUploadRoute,
   ImgSplatRoute: ImgSplatRoute,
   OCodeRoute: OCodeRoute,

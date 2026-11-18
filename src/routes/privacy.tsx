@@ -32,7 +32,7 @@ function Privacy() {
           <li>{t('Your shop: its name, link, logo, bio, location, Google Maps link, opening hours, social accounts and WhatsApp number.')}</li>
           <li>{t('How you are paid: your Lipa Namba, its name and network. Shopi never holds your money.')}</li>
           <li>{t('Your products, photos, prices and stock, and the orders your shop receives.')}</li>
-          <li>{t('Your plan and its payments.')}</li>
+          <li>{t('Your plan and its payments: the mobile money number you paid from, the amount and the payment’s reference.')}</li>
           <li>{t('If you turn on notifications: the address your phone’s browser gives for sending them. It is deleted when you turn them off or it stops working.')}</li>
         </ul>
       </Section>
@@ -70,7 +70,7 @@ function Privacy() {
           <li>{t('The seller you order from sees your order details. Other sellers do not.')}</li>
           <li>
             {t(
-              'Companies that run parts of Shopi for us, only for that purpose: Cloudflare (hosting, database, photo storage, and the check that keeps bots out of sign-up, checkout and back-in-stock requests), and, when you use them, Google (maps), Meta (WhatsApp and Instagram), and your phone’s notification service (Google, Apple or Mozilla), which carries notifications it cannot read.',
+              'Companies that run parts of Shopi for us, only for that purpose: Cloudflare (hosting, database, photo storage, and the check that keeps bots out of sign-up, checkout and back-in-stock requests), Selcom (sellers’ Tembo payments by mobile money), and, when you use them, Google (maps), Meta (WhatsApp and Instagram), and your phone’s notification service (Google, Apple or Mozilla), which carries notifications it cannot read.',
             )}
           </li>
           <li>{t('Authorities, when Tanzanian law requires it.')}</li>
@@ -101,6 +101,7 @@ function Privacy() {
           <li>{t('Visit data: up to 13 months, then it is deleted or kept only as totals.')}</li>
           <li>{t('Back-in-stock requests: deleted once the seller has messaged you, and after 90 days at most.')}</li>
           <li>{t('A delivery location (map point) on an order: 90 days, then it is deleted. The area and the note stay with the order.')}</li>
+          <li>{t('Tembo payments: as long as the law requires for business records.')}</li>
           <li>{t('Backup copies of the database: up to 5 weeks, then they are deleted.')}</li>
         </ul>
       </Section>

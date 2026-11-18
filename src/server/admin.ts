@@ -3,6 +3,7 @@ import type { AdminDays, AdminShop, DayPoint } from '#/lib/admin'
 import { TEMBO_PRICE, planState } from '#/lib/plans'
 import { SESSION_DAYS } from '#/server/auth'
 import { db, now } from '#/server/db'
+import { proxyHealth } from '#/server/selcom'
 
 /**
  * Queries behind the owner dashboard (/admin). One D1 batch per section, so opening a section never pays for the others.
@@ -16,6 +17,20 @@ const LIVE = `shop_id IN (SELECT id FROM shops WHERE status != 'demo')`
 const DAYNO = `CAST((created_at + ${TZ}) / ${DAY} AS INTEGER)`
 
 const q = (sql: string, ...params: unknown[]) => db().prepare(sql).bind(...params)
+
+export type AdminPayment = {
+  id: string
+  amount: number
+  status: 'pending' | 'completed' | 'failed'
+  phone: string
+  reason: string | null
+  manual_for: string | null
+  created_at: number
+  completed_at: number | null
+  paid_until: number | null
+  shop_id: string
+  shop: string
+}
 const rows = <T>(r: D1Result<unknown>) => r.results as T[]
 const one = <T>(r: D1Result<unknown>) => r.results[0] as T
 
@@ -247,7 +262,9 @@ export async function shopsData(days: AdminDays) {
 
 export async function moneyData(days: AdminDays) {
   const { t, from, prevFrom } = windowOf(days)
-  const [cur, prev, sales, methods, categories, list] = await db().batch([
+  // Selcom's proxy is asked at the same time as the database (its health check; 5 s at most).
+  const selcom = proxyHealth()
+  const [cur, prev, sales, methods, categories, list, payments, received] = await db().batch([
     pulse(from, t + 1),
     pulse(prevFrom, from),
     salesByDay(from),
@@ -263,6 +280,12 @@ export async function moneyData(days: AdminDays) {
       from,
     ),
     shopRows(from),
+    // Tembo payments (src/server/billing.ts): the newest 20, and what arrived in the period.
+    q(
+      `SELECT p.id, p.amount, p.status, p.phone, p.reason, p.manual_for, p.created_at, p.completed_at, p.paid_until, p.shop_id, s.name shop
+       FROM payments p JOIN shops s ON s.id = p.shop_id ORDER BY p.created_at DESC LIMIT 20`,
+    ),
+    q(`SELECT COUNT(*) n, COALESCE(SUM(amount), 0) total FROM payments WHERE status = 'completed' AND completed_at >= ?`, from),
   ])
   const shops = toShops(list, t)
   return {
@@ -273,6 +296,9 @@ export async function moneyData(days: AdminDays) {
     categories: rows<{ category: string; orders: number; sales: number }>(categories),
     plans: plansOf(shops),
     top: shops.filter((s) => s.status !== 'demo' && s.sales > 0).slice(0, 5),
+    payments: rows<AdminPayment>(payments),
+    received: one<{ n: number; total: number }>(received),
+    selcom: await selcom,
   }
 }
 

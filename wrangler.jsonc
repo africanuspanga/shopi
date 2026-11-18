@@ -28,6 +28,7 @@
 	],
 	// Web push (src/server/push.ts): the public half of the key pair. The private half is the secret VAPID_PRIVATE_KEY.
 	"vars": { "CF_ACCOUNT_ID": "d57911be7528f1a72fd254ba0531bc32", "VAPID_PUBLIC_KEY": "BOs5C8-7GroE_fa6Z_9CKv5P54wQhM72EEybJGVoYIsk3VGsJpELSF8PHB45ykXn1qPzDx16gz3svC1_4XHesyU" },
-	// NIGHTLY and WEEKLY in src/server/jobs.ts: the clean-up the Privacy page promises, and the database backup.
-	"triggers": { "crons": ["0 0 * * *", "30 0 * * SUN"] }
+	// NIGHTLY, WEEKLY and FREQUENT in src/server/jobs.ts: the clean-up the Privacy page promises, the database backup, and
+	// the re-check of Tembo payments still pending.
+	"triggers": { "crons": ["0 0 * * *", "30 0 * * SUN", "*/5 * * * *"] }
 }

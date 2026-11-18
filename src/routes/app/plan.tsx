@@ -1,4 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useState } from 'react'
+import { PayTembo } from '#/components/pay-tembo'
 import { PlanItems, PlanPrice } from '#/components/plans'
 import { Page, TopBar, useEntrance } from '#/components/ui'
 import { getMyPlan } from '#/lib/api/merchant'
@@ -11,11 +13,17 @@ export const Route = createFileRoute('/app/plan')({
   component: PlanPage,
 })
 
-/** Free or Tembo (17 Nov 2026): what the shop is on, and what Tembo adds. Paying opens with billing (Selcom). */
+/**
+ * Free or Tembo (17 Nov 2026): what the shop is on, and what Tembo adds. Paying is a PIN prompt through Selcom
+ * (`PayTembo`, 18 Nov); a Tembo shop renews from here too, and the new year starts when the current one ends.
+ */
 function PlanPage() {
   const t = useT()
-  const { plan } = Route.useLoaderData()
+  const { plan, canPay, phone } = Route.useLoaderData()
+  const [paying, setPaying] = useState(false)
   const current = plan?.kind === 'tembo' ? 'tembo' : plan?.kind === 'free' ? 'free' : null
+  const until = plan?.kind === 'tembo' ? plan.until : null
+  const price = `TSh ${TEMBO_PRICE.toLocaleString('en-US')}`
   return (
     <Page nav wide>
       <TopBar back="/app" title={t('Your plan')} sub={t('Shopi is free for as long as you sell. Tembo adds more, once a year. No commission on your sales.')} />
@@ -37,10 +45,18 @@ function PlanPage() {
               </div>
               <PlanPrice plan={p} dark={dark} className="mt-5" />
               <PlanItems plan={p} dark={dark} className="mt-6 flex-1" />
-              {p.id === 'tembo' && current !== 'tembo' && plan?.kind !== 'demo' && (
-                <button type="button" className="btn btn-lg mt-8 w-full bg-white text-ink" disabled={!BILLING_LIVE}>
-                  {BILLING_LIVE ? t('Pay {amount} by mobile money', { amount: `TSh ${TEMBO_PRICE.toLocaleString('en-US')}` }) : t('Paying for Tembo opens soon')}
+              {/* A Tembo shop sees Renew in its last 30 days; the new year starts when the current one ends. */}
+              {p.id === 'tembo' && plan?.kind !== 'demo' && (current !== 'tembo' || (canPay && plan?.kind === 'tembo' && plan.daysLeft <= 30)) && (
+                <button type="button" className="btn btn-lg mt-8 w-full bg-white text-ink" disabled={!canPay} onClick={() => setPaying(true)}>
+                  {!canPay
+                    ? t('Paying for Tembo opens soon')
+                    : current === 'tembo'
+                      ? t('Renew for {amount}', { amount: price })
+                      : t('Pay {amount} by mobile money', { amount: price })}
                 </button>
+              )}
+              {p.id === 'tembo' && canPay && !BILLING_LIVE && plan?.kind === 'free' && (
+                <p className="mt-3 text-center text-[13px] text-white/70">{t('Only you can pay until billing opens to every seller.')}</p>
               )}
             </div>
           )
@@ -50,6 +66,8 @@ function PlanPage() {
       <p className="mt-6 max-w-[60ch] text-[14px] leading-relaxed text-muted">
         {t('If Tembo ends unpaid, your shop goes back to Free and keeps selling. Nothing is deleted.')}
       </p>
+
+      <PayTembo open={paying} onClose={() => setPaying(false)} phone={phone} currentUntil={until} />
     </Page>
   )
 }

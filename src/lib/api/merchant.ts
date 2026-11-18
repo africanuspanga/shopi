@@ -6,6 +6,7 @@ import { cleanProduct, uniqueProductSlug, type ProductInput } from '#/server/pro
 import { moveStock } from '#/server/stock'
 import { CATEGORIES, RESERVED_SLUGS, imageOf, normalizePhone, optionKind, parseSizes, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink, tinDigits } from '#/lib/format'
 import { shopPlan } from '#/server/plan'
+import { canPay } from '#/server/billing'
 import { FREE_PRODUCTS, can } from '#/lib/plans'
 import { TIKTOK_SHORT, readSocialLink } from '#/lib/social'
 import { withReadiness, type AlertRow } from '#/server/alerts'
@@ -154,8 +155,9 @@ export const saveShopBasics = createServerFn({ method: 'POST' })
   })
 
 export const getMyPlan = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop } = await requireShop()
-  return { plan: await shopPlan(shop.id) }
+  const { user, shop } = await requireShop()
+  // canPay: billing is open (BILLING_LIVE), or the owner testing it first. phone: the number the prompt goes to first.
+  return { plan: await shopPlan(shop.id), canPay: canPay(user), phone: user.phone }
 })
 
 export const getMyShop = createServerFn({ method: 'GET' }).handler(async () => {

@@ -22,6 +22,13 @@ export const LIMITS = {
   mapLink: { max: 30, window: 60 * MINUTE },
   // Domains a shop connects (each one is a Cloudflare custom hostname, billed past the first 100).
   domainAdd: { max: 5, window: 24 * 60 * MINUTE },
+  // Tembo payments (src/server/billing.ts), per shop: each start or Lipa Namba is a Selcom order, each push a PIN
+  // prompt on someone's phone.
+  payStart: { max: 8, window: 60 * MINUTE },
+  payPush: { max: 6, window: 10 * MINUTE },
+  payLipa: { max: 10, window: 60 * MINUTE },
+  // Selcom's callbacks, per IP. None is trusted (the outcome is asked from Selcom), so this only stops floods.
+  selcomHook: { max: 120, window: 10 * MINUTE },
 } as const
 
 /** The visitor's IP as Cloudflare saw it. */
