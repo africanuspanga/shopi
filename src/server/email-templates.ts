@@ -142,14 +142,17 @@ export function renderEmail<K extends EmailKind>(kind: K, data: EmailData[K], la
         [t('Paid on'), emailDate(d.paidAt, lang)],
         [t('Paid from'), maskPhone(d.phone)],
         ...(d.transid ? ([[t('Reference'), d.transid]] as [string, string][]) : []),
-        [t('Order'), d.order],
       ]
       return shell({
         lang,
         subject: t('Receipt: Tembo for {shop}', { shop: d.shop }),
         preheader: t('{amount} received. Tembo runs until {date}.', { amount: tzs(d.amount), date: emailDate(d.until, lang) }),
         title: t('Tembo is on'),
-        body: p(esc(t('We received your payment. Tembo runs until {date}.', { date: emailDate(d.until, lang) }))) + slip(rows, [t('Total'), tzs(d.amount)]),
+        // The order id is too long for the slip's value column on a phone: it goes under the slip, small.
+        body:
+          p(esc(t('We received your payment. Tembo runs until {date}.', { date: emailDate(d.until, lang) }))) +
+          slip(rows, [t('Total'), tzs(d.amount)]) +
+          `<p style="margin:8px 0 0;font-family:${MONO};font-size:11px;line-height:1.5;color:${C.muted};word-break:break-all">${esc(t('Order'))} ${esc(d.order)}</p>`,
         button: { label: t('Open your plan'), url: `${SITE}/app/plan` },
         after: esc(t('Paid to Driftmark Technologies Limited, which runs Shopi. Keep this email as your receipt. It is not a TRA fiscal receipt.')),
         reason: t('You get this email because you paid for Tembo on Shopi.'),
@@ -158,6 +161,7 @@ export function renderEmail<K extends EmailKind>(kind: K, data: EmailData[K], la
           '',
           ...rows.map(([k, v]) => `${k}: ${v}`),
           `${t('Total')}: ${tzs(d.amount)}`,
+          `${t('Order')}: ${d.order}`,
           '',
           t('Paid to Driftmark Technologies Limited, which runs Shopi. Keep this email as your receipt. It is not a TRA fiscal receipt.'),
         ],
