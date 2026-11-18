@@ -11,6 +11,9 @@
  *   node scripts/seed-zee-history.mjs                 # local database, six months
  *   node scripts/seed-zee-history.mjs --days 90       # a shorter history
  *   node scripts/seed-zee-history.mjs --remote        # the live database (Zee's Store is a public sample there)
+ *   node scripts/seed-zee-history.mjs --rising        # for the landing page's pictures: the last 7 days about 30% above
+ *                                                     # the 7 before, a quiet yesterday and two more orders today, so
+ *                                                     # Home's changes point up (it is example data either way)
  */
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -19,6 +22,7 @@ import { join } from 'node:path'
 const SLUG = 'zee-store'
 const remote = process.argv.includes('--remote')
 const where = remote ? '--remote' : '--local'
+const RISING = process.argv.includes('--rising')
 const daysAt = process.argv.indexOf('--days')
 const OUT = join(process.cwd(), '.demo')
 mkdirSync(OUT, { recursive: true })
@@ -192,8 +196,11 @@ for (let d = DAYS; d >= 1; d--) {
   const weekend = weekday === 5 || weekday === 6 ? 1.4 : weekday === 0 ? 0.8 : 1
   const growth = 0.5 + 4.2 * ((DAYS - d) / DAYS) ** 1.3 // about 0.5 orders a day at launch, about 4.5 now
   const payday = new Date(dayStart + TZ).getUTCDate() >= 25 || new Date(dayStart + TZ).getUTCDate() <= 2 ? 1.3 : 1
-  const target = Math.max(0, Math.round(growth * weekend * payday * (0.6 + rand() * 0.8)))
-  const visits = Math.round(target * between(16, 26) + between(8, 30) * (1 + growth / 3))
+  let target = Math.max(0, Math.round(growth * weekend * payday * (0.6 + rand() * 0.8)))
+  // --rising: last week clearly above the one before (orders more than visits, so more visits order), a quiet yesterday.
+  const lastWeek = RISING && d <= 7
+  if (RISING) target = d === 1 ? 3 : d <= 7 ? Math.round(target * 1.3) : d <= 14 ? Math.round(target * 0.85) : target
+  const visits = Math.round(target * between(16, 26) * (lastWeek ? 0.85 : 1) + between(8, 30) * (1 + growth / 3))
   const latest = dayStart + DAY - 1
   for (let v = 0; v < visits - target; v++) session(dayStart, d, latest)
   for (let o = 0; o < target; o++) order(session(dayStart, d, latest, { orders: true }), d)
@@ -213,6 +220,12 @@ for (let d = DAYS; d >= 1; d--) {
     { name: 'Rehema Mushi', phone: '+255700112233', area: A('Masaki & Oysterbay'), landmark: 'ghorofa ya tatu, mlango 12', product: P('Kaftani ya Bahari'), size: 'Free size', method: 'lipa', status: 'confirmed', t: at(11, 20) },
     { name: 'Neema Kileo', phone: '+255700321987', area: A('Sinza & Mwenge'), landmark: 'karibu na kituo cha daladala', product: P('Gauni la Zumaridi'), size: 'L', method: 'cod', status: 'confirmed', t: at(13, 5) },
     { name: 'Lulu Mbwambo', phone: '+255700456789', area: A('Kinondoni & Mikocheni'), landmark: 'Mikocheni B, karibu na Shoppers Plaza, geti la bluu', product: P('Gauni la Jua'), size: 'M', method: 'lipa', status: 'payment_claimed', t: at(16, 47) },
+    ...(RISING
+      ? [
+          { name: 'Zawadi Said', phone: '+255700778899', area: A('Mbezi & Kimara'), landmark: 'Mbezi Mwisho, karibu na stendi', product: P('Gauni la Pwani (Off-shoulder)'), size: 'M', method: 'lipa', status: 'dispatched', t: at(8, 15) },
+          { name: 'Halima Juma', phone: '+255700665544', area: A('Tegeta & Kigamboni'), landmark: 'Tegeta Nyuki, nyumba ya pili', product: P('Gauni la Sherehe (Ruffles)'), size: 'L', method: 'cod', status: 'confirmed', t: at(10, 5) },
+        ]
+      : []),
   ]
   for (const o of today) {
     if (!o.product) continue

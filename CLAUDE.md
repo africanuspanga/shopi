@@ -160,6 +160,15 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
   - Reviewed 18 Nov by a second agent against CV's code. Known and left as in CV: the cron takes the 50 oldest pending
     rows, so 50 rows whose status call keeps failing would starve newer ones (add a `checked_at` order if it happens).
   - **Never rebuild "paste the SMS receipt" for Shopi's own billing**: CV retired it as insecure.
+- **The landing page** (`src/routes/index.tsx`, the coded pictures in `src/components/showcase.tsx`; reviewed and
+  brought in line on 18 Nov 2026): say only what is live, and "Soon" or "Coming next" for the rest. Tembo's wording
+  follows `BILLING_LIVE` (the Tembo button, the line under the plans and the cost answer say paying opens soon until
+  billing is open to every seller). The hero phone (`MiniStore`) is drawn after the real shop on a phone (top bar with
+  the bag, facts, Buy pills, the capsule); change it when the shop changes. The coded pictures' labels go through
+  `t()`; what a seller or buyer typed stays as written. The dashboard pictures are Zee's Store's Home (local demo,
+  `node scripts/seed-zee-history.mjs --rising` first, so its changes point up) at 1440x900 x4/3 and 390x844 x2, in English and Swahili
+  (`public/images/shopi-seller-dashboard-{desktop,phone}[-sw].webp`); phones get the phone picture. Retake them
+  when Home changes. The top bar has the language switch. Long Swahili labels on the plan buttons wrap.
 - Optional shop fields: `maps_url` (Google Maps links only, `mapsLink()`) gives buyers Directions; `tin` (9 digits, `tinDigits()`,
   shown as `formatTin()` 123-456-789) appears in `ShopFacts`, the Info sheet and on receipts, not in the phone pills.
 - Delivery fees are not in Shopi: buyer and seller agree them on WhatsApp. Shops list delivery areas by name only, as

@@ -1,13 +1,13 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { ArrowRight, Banknote, ChartColumn, Check, ChevronDown, CircleCheck, CircleHelp, Footprints, ImageDown, Link2, MapPin, Plus, Ruler, ShieldCheck, Smartphone, Tag, Wallet } from 'lucide-react'
+import { ArrowRight, Banknote, BellRing, ChartColumn, Check, ChevronDown, CircleCheck, CircleHelp, Footprints, Languages, Link2, MapPin, Palette, Plus, QrCode, Ruler, ShieldCheck, Smartphone, Star, Tag, Wallet } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { WhatsAppIcon } from '#/components/brand-icons'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { BioPreview, LinkPreview, MiniStore, NewOrderCard, OrderPreview, PaymentSlip, Phone, ProductPreview, SmsBubble } from '#/components/showcase'
-import { Wordmark, useEntrance } from '#/components/ui'
+import { LangSwitch, Wordmark, useEntrance } from '#/components/ui'
 import { REF_COOKIE } from '#/lib/host'
-import { useT } from '#/lib/i18n'
-import { PLANS } from '#/lib/plans'
+import { useLang, useT } from '#/lib/i18n'
+import { BILLING_LIVE, PLANS } from '#/lib/plans'
 import { PlanItems, PlanPrice } from '#/components/plans'
 import { SITE, canonical, ld } from '#/lib/seo'
 
@@ -99,6 +99,7 @@ function Nav({ start, signedIn, hasShop }: { start: string; signedIn: boolean; h
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-1 md:ml-0">
+          <LangSwitch />
           {signedIn ? (
             <Link to={start} className="rounded-full px-4 py-2 text-14 font-medium text-ink-2 transition-colors hover:text-ink md:hidden">
               {hasShop ? t('My shop') : t('Finish my shop')}
@@ -169,7 +170,7 @@ function Hero({ start, startLabel }: { start: string; startLabel: string }) {
             </a>
           </div>
           <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-14 text-ink-2">
-            {[t('Free to start'), t('No commission on sales'), t('Ready in 5 minutes')].map((x) => (
+            {[t('Free, no time limit'), t('No commission on sales'), t('Ready in 5 minutes')].map((x) => (
               <li key={x} className="flex items-center gap-2">
                 <Check size={16} strokeWidth={2.25} className="text-ink" /> {x}
               </li>
@@ -200,9 +201,9 @@ function HeroVisual() {
 function Steps() {
   const t = useT()
   const steps = [
-    { title: t('Open your shop'), body: t('Pick a name and a link. Add your WhatsApp, your Lipa Namba and the areas you deliver to.'), visual: <LinkPreview /> },
-    { title: t('Add your products'), body: t('Snap a photo, set the price, sizes and stock. Photos shrink on upload, so buyers spend less data.'), visual: <ProductPreview /> },
-    { title: t('Share your link'), body: t('Put it in your Instagram and TikTok bio and your WhatsApp status. Orders reach you complete.'), visual: <BioPreview /> },
+    { title: t('Open your shop'), body: t('Paste your Instagram, TikTok or WhatsApp link, or type a name. Shopi fills in your link and your WhatsApp.'), visual: <LinkPreview /> },
+    { title: t('Add your products'), body: t('Snap a photo, set the price and sizes, then add your Lipa Namba. Cash on delivery is on from the start.'), visual: <ProductPreview /> },
+    { title: t('Share your link'), body: t('Put it in your Instagram and TikTok bio and on your WhatsApp status, or print your QR code. Orders reach your phone complete.'), visual: <BioPreview /> },
   ]
   return (
     <section id="how" className="scroll-mt-24 py-20 md:py-32">
@@ -298,7 +299,7 @@ function Orders() {
             {t('Every order comes with the buyer’s name, number, area, their location on the map if they share it, and the size they picked. The buyer gets a page to follow it, and your stock goes down by itself.')}
           </Lead>
           <ul className="mt-8 space-y-3 text-15">
-            {[t('One tap to call or WhatsApp the buyer'), t('Statuses the buyer can see: confirmed, on the way, delivered'), t('Sold out shows by itself when stock runs out')].map((x) => (
+            {[t('One tap to call or WhatsApp the buyer'), t('Statuses the buyer can see: confirmed, on the way, delivered'), t('Send the order and the buyer’s location to your rider on WhatsApp')].map((x) => (
               <li key={x} className="flex items-start gap-3">
                 <Check size={18} strokeWidth={2.25} className="mt-0.5 shrink-0" /> {x}
               </li>
@@ -314,6 +315,8 @@ function Orders() {
 
 function Dashboard() {
   const t = useT()
+  // The pictures are taken in both languages (Zee's demo shop): `-sw` for Swahili.
+  const sw = useLang() === 'sw' ? '-sw' : ''
   return (
     <section className="pb-20 md:pb-32">
       <Container>
@@ -323,15 +326,23 @@ function Dashboard() {
         </div>
         <div className="relative mx-auto mt-12 max-w-[1120px] md:mt-16">
           <img
-            src="/images/shopi-seller-dashboard-desktop.webp"
+            src={`/images/shopi-seller-dashboard-desktop${sw}.webp`}
             width={1920}
             height={1200}
             loading="lazy"
             alt={t('Shopi seller dashboard on a laptop: sales today, orders that need you, the last 7 days and best sellers')}
-            className="w-full rounded-20 shadow-[0_1px_2px_rgb(10_10_10/0.06),0_40px_80px_-40px_rgb(10_10_10/0.35)] ring-1 ring-line md:rounded-28"
+            className="hidden w-full rounded-20 shadow-[0_1px_2px_rgb(10_10_10/0.06),0_40px_80px_-40px_rgb(10_10_10/0.35)] ring-1 ring-line sm:block md:rounded-28"
           />
           <img
-            src="/images/shopi-seller-dashboard-phone.webp"
+            src={`/images/shopi-seller-dashboard-phone${sw}.webp`}
+            width={780}
+            height={1688}
+            loading="lazy"
+            alt={t('Shopi seller dashboard on a phone: sales today and the orders that need you')}
+            className="mx-auto block w-[260px] rounded-32 border-[8px] border-ink shadow-[0_40px_80px_-30px_rgb(10_10_10/0.5)] sm:hidden"
+          />
+          <img
+            src={`/images/shopi-seller-dashboard-phone${sw}.webp`}
             width={780}
             height={1688}
             loading="lazy"
@@ -354,10 +365,14 @@ function Features() {
     [Ruler, t('Sizes and stock'), t('Buyers pick a size, sold out shows by itself')],
     [Smartphone, 'Lipa Namba', t('With a check of the payment SMS')],
     [Banknote, t('Cash on delivery'), t('Turn it on or off')],
-    [MapPin, t('Delivery'), t('The buyer’s pin for your rider, fees agreed on WhatsApp')],
+    [MapPin, t('Delivery'), t('The buyer’s location for your rider, fees agreed on WhatsApp')],
     [WhatsAppIcon, 'WhatsApp', t('Every buyer one tap away')],
+    [QrCode, t('QR code'), t('A card to print or post. Buyers scan it and your shop opens')],
+    [BellRing, t('New orders on your phone'), t('A notification the moment a buyer orders')],
+    [Star, t('Top picks'), t('Four products you put first')],
+    [Palette, t('Your colour and cover'), t('Your shop looks like your brand')],
+    [Languages, t('Kiswahili or English'), t('Buyers see your shop in the language you choose')],
     [ChartColumn, t('Your numbers'), t('Sales, visits, shares, best sellers')],
-    [ImageDown, t('Light photos'), t('Shrunk on upload to save buyers data')],
   ] as const
   return (
     <section className="py-20 md:py-28">
@@ -374,7 +389,7 @@ function Features() {
             </div>
           ))}
         </div>
-        <p className="mt-8 text-14 text-muted">{t('Coming next: the Shopi assistant, which answers buyers’ questions, and weekly best-product votes.')}</p>
+        <p className="mt-8 text-14 text-muted">{t('Coming next: Shopi AI, which answers your buyers’ questions like “bei gani?” and “size gani?”, and an assistant that helps you run your shop.')}</p>
       </Container>
     </section>
   )
@@ -389,11 +404,11 @@ function Pricing({ start }: { start: string }) {
       <Container>
         <div className="max-w-[40rem]">
           <H2>{t('Free to sell. Tembo when you grow.')}</H2>
-          <Lead className="mt-6">{t('Your shop is free for as long as you like. Tembo adds more, once a year. No commission on your sales, ever.')}</Lead>
+          <Lead className="mt-6">{t('Your shop is free for as long as you like. Tembo adds more, once a year. No commission on your sales.')}</Lead>
         </div>
         <div className="mt-10 grid gap-4 md:mt-14 lg:grid-cols-2 lg:gap-6">
           {PLANS.map((p, i) => (
-            <div key={p.name} className={`flex flex-col rounded-32 p-3 ${i === 1 ? 'bg-ink text-white' : 'bg-card'}`}>
+            <div key={p.name} className={`flex min-w-0 flex-col rounded-32 p-3 ${i === 1 ? 'bg-ink text-white' : 'bg-card'}`}>
               <div className={`rounded-20 p-6 md:p-8 ${i === 1 ? 'bg-white/[0.08]' : 'bg-page'}`}>
                 <p className="title text-20">{t(p.name)}</p>
                 <p className={`mt-1 text-15 ${i === 1 ? 'text-white/70' : 'text-ink-2'}`}>{t(p.lead)}</p>
@@ -401,14 +416,19 @@ function Pricing({ start }: { start: string }) {
               </div>
               <PlanItems plan={p} dark={i === 1} className="flex-1 px-6 pt-6 md:px-8" />
               <div className="p-6 md:p-8">
-                <Link to={start} className={`btn btn-lg w-full ${i === 1 ? 'bg-white text-ink' : ''}`}>
-                  {i === 1 ? t('Start free, add Tembo any time') : t('Open your free shop')}
+                {/* Long Swahili labels wrap instead of pushing the card past a phone's edge. */}
+                <Link to={start} className={`btn btn-lg h-auto min-h-14 w-full py-3 text-center whitespace-normal ${i === 1 ? 'bg-white text-ink' : ''}`}>
+                  {i === 1 ? (BILLING_LIVE ? t('Start free, add Tembo any time') : t('Start free. Tembo opens soon')) : t('Open your free shop')}
                 </Link>
               </div>
             </div>
           ))}
         </div>
-        <p className="mt-6 text-14 text-muted">{t('Tembo is paid by mobile money. If it ends unpaid, your shop goes back to Free and keeps selling. Nothing is deleted.')}</p>
+        <p className="mt-6 text-14 text-muted">
+          {BILLING_LIVE
+            ? t('Tembo is paid by mobile money. If it ends unpaid, your shop goes back to Free and keeps selling. Nothing is deleted.')
+            : t('Paying for Tembo by mobile money opens soon. If Tembo ends unpaid, your shop goes back to Free and keeps selling. Nothing is deleted.')}
+        </p>
       </Container>
     </section>
   )
@@ -419,7 +439,15 @@ function Pricing({ start }: { start: string }) {
 function Faq() {
   const t = useT()
   const qs = [
-    [t('What does Shopi cost?'), t('Your shop is free: products, orders and payments, for as long as you like. Tembo, TSh 99,000 a year (about TSh 8,250 a month), adds your own domain, shop fonts, full analytics, unlimited products and SMS to your buyers. We take no commission on your sales.')],
+    [
+      t('What does Shopi cost?'),
+      [
+        t('Your shop is free: products, orders and payments, for as long as you like. Tembo, TSh 99,000 a year (about TSh 8,250 a month), adds your own domain, shop fonts, full analytics, unlimited products and up to 2 shop assistants. SMS to your buyers and unlimited AI descriptions are coming. We take no commission on your sales.'),
+        BILLING_LIVE ? '' : t('Paying for Tembo opens soon.'),
+      ]
+        .filter(Boolean)
+        .join(' '),
+    ],
     [t('How do I get paid?'), t('The buyer pays your Lipa Namba or pays cash on delivery, the way they already pay sellers today. The money never passes through Shopi.')],
     [t('How do I know a buyer really paid?'), t('The buyer pastes the payment SMS. We check the amount, the name and the transaction ID, and refuse one already used. Still check your phone before you confirm.')],
     [t('Do I need a website or a developer?'), t('No. You open the shop on your phone in a few minutes and get a link to share.')],
