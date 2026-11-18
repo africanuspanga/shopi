@@ -40,5 +40,19 @@
   "Show my QR code",
   "Your shop’s code to print or post. Buyers scan it with their camera and your shop opens.",
   "Open this shop on another phone",
-  "Point the phone’s camera at the code."
+  "Point the phone’s camera at the code.",
+  "Add the product’s name first.",
+  "That is a lot for one day. Try again tomorrow.",
+  "It could not be written just now. Try again.",
+  "This month’s {n} AI descriptions are used",
+  "More come on the 1st. Tembo writes as many as you need.",
+  "Writing",
+  "Write it from my notes",
+  "Write it for me",
+  "Undo",
+  "1 left this month",
+  "{n} left this month",
+  "Uses the name, the options and what you typed. Check it before you save: it only knows what you told it.",
+  "AI descriptions written",
+  "QR code downloaded or shared"
 ]

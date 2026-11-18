@@ -66,6 +66,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/components/phone-app.tsx` | The seller's phone: `PhoneAlertsCard` (Home) and `PhoneAppSettings` (Shop settings) for notifications and installing |
 | `src/lib/push.ts`, `src/server/push.ts`, `public/sw.js` | Web push: `usePhoneApp` and the install offer (browser), `notifySeller` (server), the service worker that shows them |
 | `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
+| `src/server/ai.ts`, `src/lib/api/ai.ts`, `src/components/ai-write.tsx` | AI for sellers: the OpenAI-compatible client, the allowance (`ai_uses`), "Write it for me" under a product's description |
 | `src/lib/qr.ts`, `src/lib/qr-card.ts`, `src/components/qr.tsx`, `src/components/qr-sheet.tsx` | The shop's QR code: the encoder (no library), the printable card drawn on a canvas, `QrCode`/`ShopQr` for buyers, `QrSheet` for sellers |
 | `src/server/selcom.ts`, `src/server/billing.ts`, `src/lib/api/billing.ts`, `src/components/pay-tembo.tsx`, `src/routes/api/selcom.ts` | Tembo billing through Selcom: the proxy client, payments (start, Lipa Namba, complete once, re-check, reminders), the seller's server functions, the payment sheet, Selcom's callback |
 | `src/server.ts` | The Worker entry: TanStack Start answers requests; `scheduled` runs the cron jobs in `src/server/jobs.ts` |
@@ -466,6 +467,23 @@ domain are lowercase.
   dashboard shows per shop and under Product use. There is no dark `theme_color`: the seller app has no dark theme.
   Testing in Playwright needs a persistent profile (`launchPersistentContext`; push is off in incognito) and a few
   seconds after launch before the first push arrives.
+- **"Write it for me"** (roadmap `ai-desc`, 18 Nov 2026; migration `0025_ai_uses.sql`): under a product's description,
+  the AI writes one in the shop's language from the name, the options and what the seller typed (taken as facts).
+  - **Provider** (`src/server/ai.ts`): any OpenAI-compatible chat API. Live: OpenAI with the founder's key as a secret
+    (`OPENAI_API_KEY` or `AI_API_KEY`; model `gpt-6-luna` unless `AI_MODEL`). Locally: a Groq test key in `.dev.vars`
+    (`AI_BASE_URL`), model `qwen/qwen3.8-27b`: side by side it kept to the facts, while `gpt-oss-120b` added
+    "elegant"/"kifahari" whatever the rules said. Without a key `aiReady()` is false and the button never shows.
+    **Before switching AI on live, run the same comparison on OpenAI** (an English and a Swahili dress).
+  - **Prompt:** the rules (only the seller's facts, no invented qualities, no hype words, no price or name at the start,
+    no markdown) plus one worked example per language, deliberately a body cream: with a clothing example the model
+    copied its "knee-length" into a maxi dress. `cleanText` also strips markdown, "!" and a few hype words.
+  - **Allowance** (the founder, 18 Nov): Free `FREE_AI_MONTH` = 10 a calendar month in Dar; Tembo and demo unlimited
+    with a quiet `TEMBO_AI_DAY` = 50 a day. `ai_uses` keeps a row per use (no text), deleted after about 13 months.
+    A free shop that used its 10 sees a Tembo note instead of the button. Plan cards still say "Soon" for AI until
+    the live key exists.
+  - **The form:** "Write it for me" (or "Write it from my notes" when the field has text) replaces the description;
+    Undo puts the seller's words back while the AI text is untouched; "{n} left this month" for free shops.
+  - `/admin` Product use counts shops that used it, and shops that downloaded or shared their QR code.
 - **QR code** (18 Nov 2026, the founder): every shop has one; it opens `shopi.tz/<shop>?s=qr` (`qrUrl`), the address
   that never changes (not an own domain, which can lapse on a printed sticker), tagged so Analytics counts scans as `qr`.
   - **The encoder** (`src/lib/qr.ts`): byte mode, versions 1 to 40, levels L/M/Q/H, after Nayuki's reference design; no

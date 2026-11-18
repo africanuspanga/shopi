@@ -648,6 +648,8 @@ function Use({ d }: { d: OwnerSection<'use'> }) {
     ['font', t('Own style of name')],
     ['cover', t('Cover photo')],
     ['domain', t('Own domain')],
+    ['ai', t('AI descriptions written')],
+    ['qr', t('QR code downloaded or shared')],
     ['swahili', t('Shop in Kiswahili')],
     ['maps', t('Google Maps link')],
     ['tin', 'TIN'],

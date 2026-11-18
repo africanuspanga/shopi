@@ -410,6 +410,8 @@ export async function useData(days: AdminDays) {
          ${shop('push_subscriptions')} push,
          (SELECT COUNT(*) FROM shops s JOIN users u ON u.id = s.owner_id WHERE s.status != 'demo' AND u.app_seen_at IS NOT NULL) installed,
          ${shop('domains', `status = 'active'`)} domain,
+         ${shop('ai_uses')} ai,
+         ${shop('events', `type = 'seller_share' AND detail LIKE 'qr-%'`)} qr,
          ${own('theme_color IS NOT NULL')} colour,
          ${own('theme_font IS NOT NULL')} font,
          ${own('cover_key IS NOT NULL')} cover,

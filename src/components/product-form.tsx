@@ -1,6 +1,7 @@
 import { useBlocker, useRouteContext, useRouter } from '@tanstack/react-router'
 import { Check, ImagePlus, Loader2, Plus, Trash2, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
+import { WriteItForMe } from '#/components/ai-write'
 import { ShareActions, prettyUrl } from '#/components/share'
 import { Tag } from '#/components/shop'
 import { ErrorText, Field, Img, Sheet, Switch, Toast, TopBar } from '#/components/ui'
@@ -229,9 +230,18 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                   <PriceInput value={form.compare_price} onValue={(v) => setForm({ ...form, compare_price: v })} placeholder={t('Optional')} />
                 </Field>
               </div>
-              <Field label={t('Description')} aside={t('Optional')}>
-                <textarea className="input" value={form.description} onChange={set('description')} placeholder={t('Fabric, fit, colours, how to care for it')} />
-              </Field>
+              <div>
+                <Field label={t('Description')} aside={t('Optional')}>
+                  <textarea className="input" value={form.description} onChange={set('description')} placeholder={t('Fabric, fit, colours, how to care for it')} />
+                </Field>
+                <WriteItForMe
+                  name={form.name}
+                  notes={form.description}
+                  option={option}
+                  options={(sizes ?? []).map((r) => r.label).filter(Boolean)}
+                  onText={(text) => setForm((f) => ({ ...f, description: text }))}
+                />
+              </div>
             </div>
           </Card>
 

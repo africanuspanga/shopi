@@ -21,6 +21,10 @@ export const TEMBO_PRICE = 99_000
 export const TEMBO_MONTH = Math.round(TEMBO_PRICE / 12)
 /** A free shop holds up to this many products; Tembo has no limit. */
 export const FREE_PRODUCTS = 300
+/** "Write it for me" (src/server/ai.ts): a free shop gets this many AI descriptions a month (the founder, 18 Nov). */
+export const FREE_AI_MONTH = 10
+/** Tembo's AI is unlimited, with this quiet daily cap so a runaway script can't run up the bill. */
+export const TEMBO_AI_DAY = 50
 /** Shops that used fonts or their own domain before Tembo existed keep them until the end of 31 Dec 2026 in Dar. */
 export const GRACE_UNTIL = Date.parse('2026-12-31T21:00:00Z')
 

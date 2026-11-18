@@ -1644,5 +1644,19 @@
   "Show my QR code": "Onyesha QR code yangu",
   "Your shop’s code to print or post. Buyers scan it with their camera and your shop opens.": "Code ya duka lako ya kuchapisha au kuweka mtandaoni. Wateja wanaiscan kwa kamera na duka lako linafunguka.",
   "Open this shop on another phone": "Fungua duka hili kwenye simu nyingine",
-  "Point the phone’s camera at the code.": "Elekeza kamera ya simu kwenye code."
+  "Point the phone’s camera at the code.": "Elekeza kamera ya simu kwenye code.",
+  "Add the product’s name first.": "Weka jina la bidhaa kwanza.",
+  "That is a lot for one day. Try again tomorrow.": "Umetumia sana leo. Jaribu tena kesho.",
+  "It could not be written just now. Try again.": "Haikuweza kuandikwa sasa hivi. Jaribu tena.",
+  "This month’s {n} AI descriptions are used": "Maelezo {n} ya AI ya mwezi huu yametumika",
+  "More come on the 1st. Tembo writes as many as you need.": "Mengine yanakuja tarehe 1. Tembo inaandika mengi kadiri unavyohitaji.",
+  "Writing": "Inaandika",
+  "Write it from my notes": "Andika kutoka kwenye maelezo yangu",
+  "Write it for me": "Niandikie",
+  "Undo": "Rudisha",
+  "1 left this month": "1 imebaki mwezi huu",
+  "{n} left this month": "{n} zimebaki mwezi huu",
+  "Uses the name, the options and what you typed. Check it before you save: it only knows what you told it.": "Inatumia jina, machaguo na ulichoandika. Angalia kabla ya kuhifadhi: inajua tu ulichoiambia.",
+  "AI descriptions written": "Maelezo ya AI yaliyoandikwa",
+  "QR code downloaded or shared": "QR code iliyopakuliwa au kutumwa"
 }

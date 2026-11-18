@@ -4,6 +4,7 @@ import { ALERT_DAYS } from '#/server/alerts'
 import { purgeLimits } from '#/server/limits'
 import { refreshDomains } from '#/server/domains'
 import { reconcilePayments, remindRenewals } from '#/server/billing'
+import { purgeAiUses } from '#/server/ai'
 
 // Cron schedules, in UTC (Tanzania is UTC+3). They must match "triggers" in wrangler.jsonc.
 export const NIGHTLY = '0 0 * * *' // 03:00 in Dar
@@ -30,6 +31,8 @@ export async function runJob(cron: string) {
           ['domains', refreshDomains],
           // Tembo ends in 7 days, tomorrow or today: a notification (only once billing is live).
           ['renewals', remindRenewals],
+          // AI use counts (no text is kept): about 13 months.
+          ['ai', purgeAiUses],
         ]
       : cron === WEEKLY
         ? [['backup', backupDatabase]]
