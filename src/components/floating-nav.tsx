@@ -3,14 +3,15 @@ import { useEffect, type MouseEvent, type ReactNode } from 'react'
 
 /**
  * The floating black capsule at the bottom of phone screens: the seller app, a shop, the landing page.
- * Five slots: two tabs, a white centre circle for the main action, two tabs. The current tab sits on a raised pill
+ * Five slots: two tabs, a white centre circle for the main action, two tabs (three for a shop assistant). The current tab sits on a raised pill
  * with its icon in Moto. Phones only; desktop has its own navigation.
  */
-export function FloatingNav({ label, children }: { label: string; children: ReactNode }) {
+export function FloatingNav({ label, slots = 5, children }: { label: string; slots?: 3 | 5; children: ReactNode }) {
   useTypingFlag()
   return (
     <nav data-floating-nav aria-label={label} className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(12px,env(safe-area-inset-bottom))] md:hidden">
-      <div className="pointer-events-auto mx-auto grid h-[68px] max-w-[440px] grid-cols-5 items-center gap-1 rounded-full bg-ink p-1.5 text-white shadow-[0_0_0_5px_rgb(10_10_10/0.06),0_20px_44px_-14px_rgb(10_10_10/0.6)] ring-1 ring-white/[0.14]">
+      {/* Three slots (a tab, the centre action, a tab) for a shop assistant with one part of the shop. */}
+      <div className={`pointer-events-auto mx-auto grid h-[68px] ${slots === 3 ? 'max-w-[280px] grid-cols-3' : 'max-w-[440px] grid-cols-5'} items-center gap-1 rounded-full bg-ink p-1.5 text-white shadow-[0_0_0_5px_rgb(10_10_10/0.06),0_20px_44px_-14px_rgb(10_10_10/0.6)] ring-1 ring-white/[0.14]`}>
         {children}
       </div>
     </nav>

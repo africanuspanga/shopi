@@ -65,7 +65,7 @@ async function totals(shopId: string, from: number, to: number) {
 export const getAnalytics = createServerFn({ method: 'GET' })
   .validator((d: { days?: number }) => ({ days: (RANGES as readonly number[]).includes(Number(d?.days)) ? (Number(d.days) as RangeDays) : 30 }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('manage')
     // 90 days is Tembo (17 Nov); a free shop asking for it gets 30.
     if (data.days === 90 && !can(await shopPlan(shop.id), 'fullAnalytics')) data.days = 30
     const S = shop.id
@@ -308,7 +308,7 @@ export type Analytics = Awaited<ReturnType<typeof getAnalytics>>
 export const createLink = createServerFn({ method: 'POST' })
   .validator((d: { label: string }) => ({ label: String(d?.label ?? '').trim().slice(0, 40) }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('manage')
     if (!data.label) return { error: 'label' as const }
     const base = linkTag(data.label) || 'link'
     const taken = new Set((await all<{ tag: string }>('SELECT tag FROM links WHERE shop_id = ?', shop.id)).map((r) => r.tag))
@@ -322,7 +322,7 @@ export const createLink = createServerFn({ method: 'POST' })
 export const deleteLink = createServerFn({ method: 'POST' })
   .validator((d: { tag: string }) => ({ tag: linkTag(String(d?.tag ?? '')) }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('manage')
     await run('DELETE FROM links WHERE shop_id = ? AND tag = ?', shop.id, data.tag)
     return { ok: true as const }
   })

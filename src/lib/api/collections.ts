@@ -17,7 +17,7 @@ export type CollectionRow = {
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
 
 export const listCollections = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop } = await requireShop()
+  const { shop } = await requireShop('products')
   const [rows, members] = await Promise.all([
     all<Omit<CollectionRow, 'productIds' | 'images'>>(
       'SELECT id, slug, name, description FROM collections WHERE shop_id = ? ORDER BY sort, created_at',
@@ -50,7 +50,7 @@ async function uniqueSlug(shopId: string, name: string) {
 export const saveCollection = createServerFn({ method: 'POST' })
   .validator((d: { id?: string; name: string; description?: string; productIds: string[] }) => d)
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('products')
     const name = str(data.name, 40)
     if (!name) return { error: 'name' as const }
     const wanted = [...new Set((data.productIds ?? []).map(String))].slice(0, 200)
@@ -90,7 +90,7 @@ export const saveCollection = createServerFn({ method: 'POST' })
 export const orderCollections = createServerFn({ method: 'POST' })
   .validator((d: { ids: string[] }) => ({ ids: (d.ids ?? []).map(String).slice(0, 100) }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('products')
     if (data.ids.length) {
       await db().batch(data.ids.map((id, i) => db().prepare('UPDATE collections SET sort = ? WHERE id = ? AND shop_id = ?').bind(i, id, shop.id)))
     }
@@ -101,7 +101,7 @@ export const orderCollections = createServerFn({ method: 'POST' })
 export const deleteCollection = createServerFn({ method: 'POST' })
   .validator((d: { id: string }) => ({ id: String(d.id) }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('products')
     const mine = await first('SELECT 1 FROM collections WHERE id = ? AND shop_id = ?', data.id, shop.id)
     if (!mine) return { ok: true as const }
     await db().batch([

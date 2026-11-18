@@ -17,7 +17,7 @@ export type DiscountRow = Omit<DiscountDbRow, 'shop_id'> & {
 const PAID = `('confirmed','dispatched','delivered')`
 
 export const listDiscounts = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop } = await requireShop()
+  const { shop } = await requireShop('manage')
   return all<DiscountRow>(
     `SELECT d.id, d.code, d.kind, d.value, d.min_order, d.ends_at, d.max_uses, d.active, d.created_at,
        COUNT(o.id) uses, COALESCE(SUM(o.discount), 0) off,
@@ -44,7 +44,7 @@ export const saveDiscount = createServerFn({ method: 'POST' })
     }) => d,
   )
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('manage')
     const num = (v: unknown) => {
       const n = Math.round(Number(String(v ?? '').replace(/[^\d]/g, '')))
       return String(v ?? '').trim() && Number.isFinite(n) ? n : null
@@ -80,7 +80,7 @@ export const saveDiscount = createServerFn({ method: 'POST' })
 export const setDiscountActive = createServerFn({ method: 'POST' })
   .validator((d: { id: string; active: boolean }) => ({ id: String(d.id), active: !!d.active }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('manage')
     await run('UPDATE discounts SET active = ? WHERE id = ? AND shop_id = ?', data.active ? 1 : 0, data.id, shop.id)
     return { ok: true as const }
   })
@@ -89,7 +89,7 @@ export const setDiscountActive = createServerFn({ method: 'POST' })
 export const deleteDiscount = createServerFn({ method: 'POST' })
   .validator((d: { id: string }) => ({ id: String(d.id) }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('manage')
     await run('DELETE FROM discounts WHERE id = ? AND shop_id = ?', data.id, shop.id)
     return { ok: true as const }
   })

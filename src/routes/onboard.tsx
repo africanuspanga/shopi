@@ -22,7 +22,8 @@ export const Route = createFileRoute('/onboard')({
   beforeLoad: ({ context }) => {
     if (!context.session.user) throw redirect({ to: '/signup' })
     const shop = context.session.shop
-    if (shop && !inSetup(shop.setup)) throw redirect({ to: '/app' })
+    // An assistant never sees the owner's setup (src/lib/staff.ts).
+    if (shop && (shop.role !== 'owner' || !inSetup(shop.setup))) throw redirect({ to: '/app' })
   },
   loader: () => getSetup(),
   head: () => ({ meta: [{ title: 'Set up your shop · Shopi' }] }),
@@ -248,6 +249,7 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
             const res = await createShop({ data: { name, slug, category, whatsapp, lang: shopLang, ...socials, seconds: clock() } })
             if ('error' in res) {
               setBusy(false)
+              if (res.error === 'staff') return setError(t('This number helps run another shop on Shopi. To open your own shop, sign up with another number.'))
               return setError(res.error === 'name' ? t('Enter a shop name.') : t('That link is taken. Try another.'))
             }
             await router.invalidate()

@@ -15,14 +15,23 @@ type T = (en: string, vars?: Record<string, string | number>) => string
 /** The public key browsers subscribe with, or null when the key pair isn't set (then nothing is sent). */
 export const pushKey = () => (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY ? env.VAPID_PUBLIC_KEY : null)
 
-/** Sends to every phone where the shop's seller turned notifications on, after the response has gone. */
-export function notifySeller(shopId: string, note: (t: T, lang: Lang) => PushNote) {
+/**
+ * Sends to every phone where the shop's people turned notifications on, after the response has gone. `to`: `orders`
+ * (a new order, a payment to check) reaches the owner and the assistants who handle orders (Orders, Manager) while the
+ * shop is on Tembo; `owner` (Tembo itself) reaches the owner only (src/lib/staff.ts).
+ */
+export function notifySeller(shopId: string, note: (t: T, lang: Lang) => PushNote, to: 'orders' | 'owner' = 'orders') {
   if (!pushKey()) return
   waitUntil(
     (async () => {
       const subs = await all<{ id: string; endpoint: string; p256dh: string; auth: string; lang: string }>(
-        'SELECT id, endpoint, p256dh, auth, lang FROM push_subscriptions WHERE shop_id = ?',
+        `SELECT p.id, p.endpoint, p.p256dh, p.auth, p.lang FROM push_subscriptions p JOIN shops s ON s.id = p.shop_id
+         WHERE p.shop_id = ?1 AND (p.user_id = s.owner_id OR (?2 = 'orders'
+           AND (s.status = 'demo' OR (s.plan = 'tembo' AND s.paid_until > ?3))
+           AND EXISTS (SELECT 1 FROM shop_staff st WHERE st.shop_id = s.id AND st.user_id = p.user_id AND st.role IN ('orders', 'manager'))))`,
         shopId,
+        to,
+        now(),
       )
       await Promise.all(
         subs.map((s) => {

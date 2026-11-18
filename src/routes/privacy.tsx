@@ -33,6 +33,7 @@ function Privacy() {
           <li>{t('How you are paid: your Lipa Namba, its name and network. Shopi never holds your money.')}</li>
           <li>{t('Your products, photos, prices and stock, and the orders your shop receives.')}</li>
           <li>{t('Your plan and its payments: the mobile money number you paid from, the amount and the payment’s reference.')}</li>
+          <li>{t('If a shop’s owner adds you as a shop assistant: your name, phone number and role, and when you joined. The owner can change your role or remove you at any time; your login stays yours.')}</li>
           <li>{t('If you turn on notifications: the address your phone’s browser gives for sending them. It is deleted when you turn them off or it stops working.')}</li>
           <li>{t('If you add your email: the address, the language to write to you in, and whether you chose the weekly summary and news from Shopi. Our first email to it says it was added, with a link to remove it if it isn’t yours.')}</li>
         </ul>
@@ -70,6 +71,7 @@ function Privacy() {
       <Section title={t('Who sees it')}>
         <ul>
           <li>{t('The seller you order from sees your order details. Other sellers do not.')}</li>
+          <li>{t('A seller’s shop assistants see what their role needs: those who handle orders see buyers’ order details; only a Manager sees the shop’s sales figures.')}</li>
           <li>
             {t(
               'Companies that run parts of Shopi for us, only for that purpose: Cloudflare (hosting, database, photo storage, and the check that keeps bots out of sign-up, checkout and back-in-stock requests), Selcom (sellers’ Tembo payments by mobile money), and, when you use them, Google (maps), Meta (WhatsApp and Instagram), OpenAI (writing a product description or a shop’s line when a seller asks; it gets the shop’s and product’s details, never buyers’), Resend (email to sellers who added an address), and your phone’s notification service (Google, Apple or Mozilla), which carries notifications it cannot read.',

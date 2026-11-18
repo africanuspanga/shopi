@@ -14,7 +14,7 @@ import { shopPlan } from '#/server/plan'
 export const saveShopLook = createServerFn({ method: 'POST' })
   .validator((d: { color: string | null; font: string; cover: string | null }) => d)
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('manage')
     const color = cleanHex(data.color)
     const font = asFont(data.font)
     const cover = typeof data.cover === 'string' && data.cover.startsWith(`s/${shop.id}/`) ? data.cover.slice(0, 100) : null

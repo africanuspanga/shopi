@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { requireShop, requireUser } from '#/server/auth'
+import { allows } from '#/lib/staff'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
 import { removePhotos } from '#/server/media'
 import { cleanProduct, uniqueProductSlug, type ProductInput } from '#/server/products'
@@ -85,6 +86,8 @@ export const createShop = createServerFn({ method: 'POST' })
     const user = await requireUser()
     const existing = await first<{ slug: string }>('SELECT slug FROM shops WHERE owner_id = ?', user.id)
     if (existing) return { ok: true as const, slug: existing.slug }
+    // One login, one shop: an assistant opens their own shop with another number (src/lib/staff.ts).
+    if (await first('SELECT 1 FROM shop_staff WHERE user_id = ?', user.id)) return { error: 'staff' as const }
     if (!data.name) return { error: 'name' as const }
     if (data.slug.length < 3 || RESERVED_SLUGS.has(data.slug)) return { error: 'slug' as const }
     if (await first('SELECT 1 FROM shops WHERE slug = ?', data.slug)) return { error: 'slug_taken' as const }
@@ -92,14 +95,18 @@ export const createShop = createServerFn({ method: 'POST' })
     const id = newId()
     const t = now()
     await db().batch([
+      // One login, one shop: the shop isn't made if this login joined a shop as an assistant meanwhile.
       db()
         .prepare(
           `INSERT INTO shops (id, owner_id, slug, name, category, whatsapp, lang, instagram, tiktok, facebook, created_at, setup_step)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+           SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 1 WHERE NOT EXISTS (SELECT 1 FROM shop_staff WHERE user_id = ?2)`,
         )
         .bind(id, user.id, data.slug, data.name, data.category, data.whatsapp || user.phone, data.lang, data.instagram, data.tiktok, data.facebook, t),
-      db().prepare('INSERT INTO setup_steps (shop_id, step, outcome, seconds, created_at) VALUES (?, 1, ?, ?, ?)').bind(id, 'done', data.seconds, t),
+      db()
+        .prepare('INSERT INTO setup_steps (shop_id, step, outcome, seconds, created_at) SELECT ?1, 1, ?2, ?3, ?4 WHERE EXISTS (SELECT 1 FROM shops WHERE id = ?1)')
+        .bind(id, 'done', data.seconds, t),
     ])
+    if (!(await first('SELECT 1 FROM shops WHERE id = ?', id))) return { error: 'staff' as const }
     return { ok: true as const, slug: data.slug }
   })
 
@@ -142,7 +149,7 @@ export const getMyPlan = createServerFn({ method: 'GET' }).handler(async () => {
 
 /** What the shop's QR card shows (`src/lib/qr-card.ts`): the shop as buyers see it. */
 export const getMyQrCard = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop } = await requireShop()
+  const { shop } = await requireShop('manage')
   const row = await first<{ id: string; name: string; slug: string; logo_key: string | null; theme_color: string | null; theme_font: string | null; location: string; lang: string }>(
     'SELECT id, name, slug, logo_key, theme_color, theme_font, location, lang FROM shops WHERE id = ?',
     shop.id,
@@ -151,7 +158,7 @@ export const getMyQrCard = createServerFn({ method: 'GET' }).handler(async () =>
 })
 
 export const getMyShop = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop } = await requireShop()
+  const { shop } = await requireShop('manage')
   const full = await first<ShopRow>('SELECT * FROM shops WHERE id = ?', shop.id)
   const areas = await all<AreaRow>('SELECT id, name, fee FROM delivery_areas WHERE shop_id = ? ORDER BY sort', shop.id)
   return { shop: full!, areas }
@@ -160,8 +167,25 @@ export const getMyShop = createServerFn({ method: 'GET' }).handler(async () => {
 export const updateShop = createServerFn({ method: 'POST' })
   .validator((d: Partial<ShopRow> & { areas?: { name: string; fee: number }[] }) => d)
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
-    const before = await first<{ logo_key: string | null }>('SELECT logo_key FROM shops WHERE id = ?', shop.id)
+    const { shop, role } = await requireShop('manage')
+    const before = await first<Pick<ShopRow, 'logo_key' | 'whatsapp' | 'lipa_number' | 'lipa_name' | 'lipa_network' | 'lipa_is_personal' | 'cod_enabled' | 'hide_badge'>>(
+      'SELECT logo_key, whatsapp, lipa_number, lipa_name, lipa_network, lipa_is_personal, cod_enabled, hide_badge FROM shops WHERE id = ?',
+      shop.id,
+    )
+    // How buyers pay and reach the shop, and the plan's switch, stay the owner's (src/lib/staff.ts): a Manager's save
+    // keeps what is there.
+    if (role !== 'owner' && before) {
+      data = {
+        ...data,
+        whatsapp: before.whatsapp,
+        lipa_number: before.lipa_number,
+        lipa_name: before.lipa_name,
+        lipa_network: before.lipa_network,
+        lipa_is_personal: before.lipa_is_personal,
+        cod_enabled: before.cod_enabled,
+        hide_badge: before.hide_badge,
+      }
+    }
     const logo = data.logo_key ? str(data.logo_key, 100) : null
     await run(
       `UPDATE shops SET name = ?, bio = ?, category = ?, logo_key = ?, whatsapp = ?, instagram = ?, tiktok = ?,
@@ -212,7 +236,9 @@ export const updateShop = createServerFn({ method: 'POST' })
 
 /** What the menu shows on every screen: payments to check and orders to send. */
 export const getNavCounts = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop } = await requireShop()
+  const { shop, role } = await requireShop('any')
+  // A Products assistant doesn't handle orders, so their menu counts none (src/lib/staff.ts).
+  if (!allows(role, 'orders')) return { toCheck: 0, toSend: 0, openBags: 0 }
   const row = await first<{ to_check: number | null; to_send: number | null; open_bags: number | null }>(
     `SELECT SUM(status = 'payment_claimed') to_check, SUM(status = 'confirmed') to_send,
        (SELECT COUNT(*) FROM bag_links WHERE shop_id = ?1 AND status = 'open' AND expires_at > ?2) open_bags
@@ -224,7 +250,7 @@ export const getNavCounts = createServerFn({ method: 'GET' }).handler(async () =
 })
 
 export const getDashboard = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop, user } = await requireShop()
+  const { shop, user, role } = await requireShop('manage')
   const since = now() - 7 * 86400_000
   const before = since - 7 * 86400_000
   // Days are counted in Tanzania time (UTC+3).
@@ -356,7 +382,8 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
     /** The seller's email (o-email): Home asks for one while there is none, once email is open to them. */
     email: await (async () => {
       const u = await first<{ email: string | null }>('SELECT email FROM users WHERE id = ?', user.id)
-      return { open: EMAIL_LIVE || !!user.is_admin, email: u?.email ?? null }
+      // Email is the owner's (receipts, reminders, the Monday summary): a Manager's Home doesn't ask for one.
+      return { open: role === 'owner' && (EMAIL_LIVE || !!user.is_admin), email: u?.email ?? null }
     })(),
   }
 })
@@ -387,7 +414,7 @@ type ProductDbRow = Omit<ProductRow, 'images' | 'sizes'> & { images: string; siz
 const toProduct = (r: ProductDbRow): ProductRow => ({ ...r, images: JSON.parse(r.images), sizes: parseSizes(r.sizes) })
 
 export const listMyProducts = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop } = await requireShop()
+  const { shop } = await requireShop(['products', 'orders'])
   const rows = await all<ProductDbRow>(
     `SELECT p.*, (SELECT COUNT(*) FROM stock_alerts a WHERE a.product_id = p.id) waiting
      FROM products p WHERE p.shop_id = ? ORDER BY p.created_at DESC`,
@@ -399,7 +426,7 @@ export const listMyProducts = createServerFn({ method: 'GET' }).handler(async ()
 export const getMyProduct = createServerFn({ method: 'GET' })
   .validator((d: { id: string }) => d)
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('products')
     const row = await first<ProductDbRow>(
       `SELECT p.*, (SELECT COUNT(*) FROM stock_alerts a WHERE a.product_id = p.id) waiting FROM products p WHERE p.id = ? AND p.shop_id = ?`,
       data.id,
@@ -412,7 +439,7 @@ export const saveProduct = createServerFn({ method: 'POST' })
   /** pick: put it in the top picks (if there is room) or take it out; left out, the picks stay as they are. */
   .validator((d: ProductInput & { id?: string; active: boolean; pick?: boolean }) => d)
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('products')
     const p = cleanProduct(data)
     if ('error' in p) return p
     const images = JSON.stringify(p.photos)
@@ -454,7 +481,7 @@ export const saveProduct = createServerFn({ method: 'POST' })
 export const deleteProduct = createServerFn({ method: 'POST' })
   .validator((d: { id: string }) => d)
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('products')
     const gone = await first<{ images: string }>('SELECT images FROM products WHERE id = ? AND shop_id = ?', data.id, shop.id)
     await run('DELETE FROM products WHERE id = ? AND shop_id = ?', data.id, shop.id)
     if (gone) await removePhotos(shop.id, JSON.parse(gone.images) as string[])
@@ -478,7 +505,7 @@ export type OrderListRow = {
 }
 
 export const listOrders = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop } = await requireShop()
+  const { shop } = await requireShop('orders')
   return all<OrderListRow>(
     `SELECT o.id, o.code, o.customer_name, o.customer_phone, o.area, o.total, o.payment_method, o.status, o.created_at, o.source,
        (SELECT SUM(qty) FROM order_items WHERE order_id = o.id) items
@@ -513,7 +540,7 @@ export type OrderDetail = OrderListRow & {
 export const getOrder = createServerFn({ method: 'GET' })
   .validator((d: { id: string }) => d)
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('orders')
     const order = await first<Omit<OrderDetail, 'lines' | 'items' | 'bag'>>(
       'SELECT * FROM orders WHERE id = ? AND shop_id = ?',
       data.id,
@@ -547,7 +574,7 @@ export const recordSale = createServerFn({ method: 'POST' })
     }) => d,
   )
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('orders')
     const payment: PaymentMethod = (['cash', 'lipa', 'mobile', 'bank'] as const).find((m) => m === data.payment) ?? 'cash'
     const status = data.status === 'delivered' ? 'delivered' : 'confirmed'
     const lines: { productId: string | null; name: string; price: number; qty: number; image: string | null; variant: string | null; option: string | null }[] = []
@@ -621,7 +648,7 @@ const NEXT: Record<OrderStatus, OrderStatus[]> = {
 export const setOrderStatus = createServerFn({ method: 'POST' })
   .validator((d: { id: string; status: OrderStatus }) => d)
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('orders')
     const order = await first<{ status: OrderStatus; stock_taken: number }>(
       'SELECT status, stock_taken FROM orders WHERE id = ? AND shop_id = ?',
       data.id,

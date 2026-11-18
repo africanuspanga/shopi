@@ -17,6 +17,7 @@ const TZ = 3 * 3600_000
 const DAY = 86_400_000
 const HOUR = 3600_000
 const SOLD = `status IN ('confirmed', 'dispatched', 'delivered')`
+// Sign-ups count sellers: admins and shop assistants (who join through an owner's invite, src/lib/staff.ts) are left out.
 const LIVE = `shop_id IN (SELECT id FROM shops WHERE status != 'demo')`
 const DAYNO = `CAST((created_at + ${TZ}) / ${DAY} AS INTEGER)`
 
@@ -62,7 +63,7 @@ const pulse = (a: number, b: number) =>
        (SELECT COALESCE(SUM(total), 0) FROM orders WHERE ${LIVE} AND ${SOLD} AND created_at >= ?1 AND created_at < ?2) sales,
        (SELECT COUNT(*) FROM orders WHERE ${LIVE} AND ${SOLD} AND created_at >= ?1 AND created_at < ?2) sold,
        (SELECT COUNT(*) FROM orders WHERE ${LIVE} AND status = 'cancelled' AND created_at >= ?1 AND created_at < ?2) cancelled,
-       (SELECT COUNT(*) FROM users WHERE is_admin = 0 AND created_at >= ?1 AND created_at < ?2) signups,
+       (SELECT COUNT(*) FROM users WHERE is_admin = 0 AND id NOT IN (SELECT user_id FROM shop_staff WHERE user_id IS NOT NULL) AND created_at >= ?1 AND created_at < ?2) signups,
        (SELECT COUNT(*) FROM shops WHERE status != 'demo' AND created_at >= ?1 AND created_at < ?2) shops,
        (SELECT COUNT(DISTINCT shop_id) FROM (
           SELECT shop_id FROM orders WHERE ${LIVE} AND created_at >= ?1 AND created_at < ?2
@@ -219,7 +220,7 @@ export async function todayData(days: AdminDays) {
          (SELECT COUNT(*) FROM orders WHERE ${LIVE} AND source != 'manual' AND created_at >= ?2 AND created_at < ?3) orders_before,
          (SELECT COALESCE(SUM(total), 0) FROM orders WHERE ${LIVE} AND ${SOLD} AND created_at >= ?2 AND created_at < ?3) sales_before,
          (SELECT COUNT(*) FROM shops WHERE status != 'demo' AND created_at >= ?1) shops,
-         (SELECT COUNT(*) FROM users WHERE is_admin = 0 AND created_at >= ?1) signups,
+         (SELECT COUNT(*) FROM users WHERE is_admin = 0 AND id NOT IN (SELECT user_id FROM shop_staff WHERE user_id IS NOT NULL) AND created_at >= ?1) signups,
          (SELECT COUNT(DISTINCT visitor_id) FROM events WHERE ${LIVE} AND created_at >= ?4) live`,
       todayStart,
       todayStart - 7 * DAY,
@@ -263,7 +264,7 @@ export async function shopsData(days: AdminDays) {
     shopRows(from),
     q(
       `SELECT u.name, u.phone, u.created_at FROM users u LEFT JOIN shops s ON s.owner_id = u.id
-       WHERE s.id IS NULL AND u.is_admin = 0 ORDER BY u.created_at DESC LIMIT 50`,
+       WHERE s.id IS NULL AND u.is_admin = 0 AND u.id NOT IN (SELECT user_id FROM shop_staff WHERE user_id IS NOT NULL) ORDER BY u.created_at DESC LIMIT 50`,
     ),
     // The five-step setup (o-flow): every step passed, how, and the seconds it took. Small: one row per shop and step.
     q(`SELECT ss.step, ss.outcome, ss.seconds FROM setup_steps ss JOIN shops s ON s.id = ss.shop_id WHERE s.status != 'demo'`),
@@ -323,12 +324,12 @@ export async function growthData(days: AdminDays) {
   const [cur, prev, signups, shops, funnel, cohorts, sources, traffic, cities, areas, devices, brought] = await db().batch([
     pulse(from, t + 1),
     pulse(prevFrom, from),
-    q(`SELECT ${DAYNO} d, COUNT(*) v FROM users WHERE is_admin = 0 AND created_at >= ? GROUP BY 1`, from),
+    q(`SELECT ${DAYNO} d, COUNT(*) v FROM users WHERE is_admin = 0 AND id NOT IN (SELECT user_id FROM shop_staff WHERE user_id IS NOT NULL) AND created_at >= ? GROUP BY 1`, from),
     q(`SELECT ${DAYNO} d, COUNT(*) v FROM shops WHERE status != 'demo' AND created_at >= ? GROUP BY 1`, from),
     // Every seller who signed up, how far they got. All time, demo shops left out.
     q(
       `SELECT
-         (SELECT COUNT(*) FROM users WHERE is_admin = 0) signups,
+         (SELECT COUNT(*) FROM users WHERE is_admin = 0 AND id NOT IN (SELECT user_id FROM shop_staff WHERE user_id IS NOT NULL)) signups,
          (SELECT COUNT(*) FROM shops WHERE status != 'demo') shops,
          (SELECT COUNT(*) FROM shops s WHERE status != 'demo' AND EXISTS (SELECT 1 FROM products p WHERE p.shop_id = s.id)) product,
          (SELECT COUNT(*) FROM shops s WHERE status != 'demo' AND EXISTS (SELECT 1 FROM events e WHERE e.shop_id = s.id AND e.type = 'view_shop')) visit,
@@ -345,7 +346,7 @@ export async function growthData(days: AdminDays) {
            (SELECT COUNT(*) FROM orders o WHERE o.shop_id = s.id AND o.source != 'manual') n,
            (s.paid_until IS NOT NULL) paid
          FROM users u LEFT JOIN shops s ON s.owner_id = u.id AND s.status != 'demo'
-         WHERE u.is_admin = 0 AND u.created_at >= ?)
+         WHERE u.is_admin = 0 AND u.id NOT IN (SELECT user_id FROM shop_staff WHERE user_id IS NOT NULL) AND u.created_at >= ?)
        GROUP BY wk ORDER BY wk DESC`,
       t - 8 * 7 * DAY,
     ),
@@ -379,7 +380,7 @@ export async function growthData(days: AdminDays) {
     q(
       `SELECT s.name || CASE WHEN s.status = 'demo' THEN ' (demo)' ELSE '' END k, COUNT(*) n
        FROM users u JOIN shops s ON s.id = u.ref_shop
-       WHERE u.is_admin = 0 AND u.created_at >= ? GROUP BY u.ref_shop ORDER BY n DESC LIMIT 8`,
+       WHERE u.is_admin = 0 AND u.id NOT IN (SELECT user_id FROM shop_staff WHERE user_id IS NOT NULL) AND u.created_at >= ? GROUP BY u.ref_shop ORDER BY n DESC LIMIT 8`,
       from,
     ),
   ])
@@ -427,6 +428,7 @@ export async function useData(days: AdminDays) {
          (SELECT COUNT(*) FROM shops s JOIN users u ON u.id = s.owner_id WHERE s.status != 'demo' AND u.app_seen_at IS NOT NULL) installed,
          ${shop('domains', `status = 'active'`)} domain,
          ${shop('ai_uses')} ai,
+         ${shop('shop_staff', 'user_id IS NOT NULL')} staff,
          ${shop('events', `type = 'seller_share' AND detail LIKE 'qr-%'`)} qr,
          ${own('theme_color IS NOT NULL')} colour,
          ${own('theme_font IS NOT NULL')} font,
@@ -543,7 +545,7 @@ export async function shopData(id: string, days: AdminDays) {
          (SELECT COUNT(*) FROM products WHERE shop_id = ?1 AND stock <= 0) sold_out,
          (SELECT COUNT(*) FROM collections WHERE shop_id = ?1) collections,
          (SELECT COUNT(*) FROM products WHERE shop_id = ?1 AND pick_rank IS NOT NULL) picks,
-         (SELECT COUNT(*) FROM users WHERE ref_shop = ?1 AND is_admin = 0) brought,
+         (SELECT COUNT(*) FROM users WHERE ref_shop = ?1 AND is_admin = 0 AND id NOT IN (SELECT user_id FROM shop_staff WHERE user_id IS NOT NULL)) brought,
          (SELECT COUNT(*) FROM discounts WHERE shop_id = ?1) discounts,
          (SELECT COUNT(*) FROM bag_links WHERE shop_id = ?1) bags,
          (SELECT COUNT(*) FROM stock_alerts WHERE shop_id = ?1) alerts,

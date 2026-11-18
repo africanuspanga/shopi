@@ -654,6 +654,7 @@ function Use({ d }: { d: OwnerSection<'use'> }) {
     ['cover', t('Cover photo')],
     ['domain', t('Own domain')],
     ['ai', t('AI descriptions written')],
+    ['staff', t('A shop assistant who joined')],
     ['qr', t('QR code downloaded or shared')],
     ['swahili', t('Shop in Kiswahili')],
     ['maps', t('Google Maps link')],

@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute, redirect, useLocation, useRouter } from '@tanstack/react-router'
-import { ArrowUpRight, ChartColumn, FileSpreadsheet, House, Layers, Package, PenLine, Plus, ReceiptText, ShoppingBag, Store, TicketPercent } from 'lucide-react'
+import { ArrowUpRight, ChartColumn, FileSpreadsheet, House, Layers, Package, PenLine, Plus, ReceiptText, ShoppingBag, Store, TicketPercent, UserRound, type LucideIcon } from 'lucide-react'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import { getNavCounts } from '#/lib/api/merchant'
@@ -7,12 +7,18 @@ import { useT } from '#/lib/i18n'
 import { InstallRow } from '#/components/phone-app'
 import { catchInstallPrompt } from '#/lib/push'
 import { useEffect, useState } from 'react'
+import { allows, areaOfPath, landing } from '#/lib/staff'
 
 export const Route = createFileRoute('/app')({
-  beforeLoad: ({ context }) => {
+  beforeLoad: ({ context, location }) => {
     if (!context.session.user) throw redirect({ to: '/login' })
-    if (!context.session.shop) throw redirect({ to: '/onboard' })
-    return { shop: context.session.shop, user: context.session.user }
+    const shop = context.session.shop
+    if (!shop) throw redirect({ to: '/onboard' })
+    // An assistant whose shop left Tembo waits on the paused page; one who opens a page their role doesn't cover
+    // starts at their own (src/lib/staff.ts). The server checks the same on every request.
+    if (shop.paused) throw redirect({ to: '/paused' })
+    if (!allows(shop.role, areaOfPath(location.pathname))) throw redirect({ to: landing(shop.role) })
+    return { shop, user: context.session.user }
   },
   loader: () => getNavCounts(),
   component: AppLayout,
@@ -20,15 +26,28 @@ export const Route = createFileRoute('/app')({
 
 function useTabs() {
   const t = useT()
+  const { shop } = Route.useRouteContext()
+  const manages = allows(shop.role, 'manage')
   return [
     { to: '/app', icon: House, label: t('Home'), match: (p: string) => p === '/app' || p === '/app/' },
     // Bag links live under Orders.
     { to: '/app/orders', icon: ReceiptText, label: t('Orders'), match: (p: string) => p.startsWith('/app/orders') || p.startsWith('/app/bags') },
     // On phones, collections are reached from Products.
     { to: '/app/products', icon: Package, label: t('Products'), match: (p: string) => p.startsWith('/app/products') || p.startsWith('/app/collections') },
-    // On phones, discount codes are reached from Shop settings.
-    { to: '/app/shop', icon: Store, label: t('Shop'), match: (p: string) => p.startsWith('/app/shop') || p.startsWith('/app/discounts') },
-  ]
+    // On phones, discount codes are reached from Shop settings. An Orders or Products assistant gets their own
+    // settings there instead (notifications, language, log out).
+    manages
+      ? { to: '/app/shop', icon: Store, label: t('Shop'), match: (p: string) => p.startsWith('/app/shop') || p.startsWith('/app/discounts') }
+      : { to: '/app/shop', icon: UserRound, label: t('Settings'), match: (p: string) => p.startsWith('/app/shop') },
+  ] satisfies Tab[] as Tab[]
+}
+
+type Tab = { to: string; icon: LucideIcon; label: string; match: (p: string) => boolean }
+
+/** What this login may open (src/lib/staff.ts): the owner and a Manager everything, an assistant their part. */
+function useCanOpen() {
+  const { shop } = Route.useRouteContext()
+  return (to: string) => allows(shop.role, areaOfPath(to))
 }
 
 function AppLayout() {
@@ -66,6 +85,7 @@ function OrdersBadge({ dot = false }: { dot?: boolean }) {
 function Sidebar() {
   const t = useT()
   const [home, orders, products, shopTab] = useTabs()
+  const canOpen = useCanOpen()
   const tabs = [
     home,
     orders,
@@ -74,7 +94,7 @@ function Sidebar() {
     { to: '/app/collections', icon: Layers, label: t('Collections'), match: (p: string) => p.startsWith('/app/collections') },
     { to: '/app/discounts', icon: TicketPercent, label: t('Discount codes'), match: (p: string) => p.startsWith('/app/discounts') },
     { ...shopTab, match: (p: string) => p.startsWith('/app/shop') },
-  ]
+  ].filter((x) => canOpen(x.to))
   const { shop } = Route.useRouteContext()
   const path = useLocation({ select: (l) => l.pathname })
   return (
@@ -115,15 +135,23 @@ function Sidebar() {
         })}
       </nav>
 
-      <Link to="/app/products/new" className="btn btn-sm mt-6 h-10 w-full">
-        <Plus size={16} strokeWidth={2.25} /> {t('Add product')}
-      </Link>
-      <Link to="/app/bags/new" className="btn btn-ghost btn-sm mt-2 h-10 w-full">
-        <ShoppingBag size={16} strokeWidth={1.75} /> {t('Send a bag link')}
-      </Link>
-      <Link to="/app/orders/new" className="btn btn-ghost btn-sm mt-2 h-10 w-full">
-        <PenLine size={16} strokeWidth={1.75} /> {t('Record a sale')}
-      </Link>
+      <div className="mt-6 space-y-2">
+        {canOpen('/app/products/new') && (
+          <Link to="/app/products/new" className="btn btn-sm h-10 w-full">
+            <Plus size={16} strokeWidth={2.25} /> {t('Add product')}
+          </Link>
+        )}
+        {canOpen('/app/bags/new') && (
+          <Link to="/app/bags/new" className={`btn btn-sm h-10 w-full ${canOpen('/app/products/new') ? 'btn-ghost' : ''}`}>
+            <ShoppingBag size={16} strokeWidth={1.75} /> {t('Send a bag link')}
+          </Link>
+        )}
+        {canOpen('/app/orders/new') && (
+          <Link to="/app/orders/new" className="btn btn-ghost btn-sm h-10 w-full">
+            <PenLine size={16} strokeWidth={1.75} /> {t('Record a sale')}
+          </Link>
+        )}
+      </div>
 
       <div className="mt-auto rounded-14 px-3 py-3 text-13 leading-5 text-muted">
         {t('Share your link in your Instagram bio and WhatsApp status. That is where buyers come from.')}
@@ -137,18 +165,30 @@ function BottomNav() {
   const t = useT()
   const [adding, setAdding] = useState(false)
   const [home, orders, products, shopTab] = useTabs()
+  const canOpen = useCanOpen()
   const path = useLocation({ select: (l) => l.pathname })
-  const tab = (x: typeof home) => (
+  // An assistant's capsule holds only their part: Orders or Products, +, Settings.
+  const left = [home, orders].filter((x) => canOpen(x.to))
+  const right = [products, shopTab].filter((x) => canOpen(x.to))
+  const tab = (x: Tab) => (
     <NavTab key={x.to} to={x.to} icon={x.icon} label={x.label} active={x.match(path)} badge={x.to === '/app/orders' && !x.match(path) ? <OrdersBadge dot /> : undefined} />
   )
   return (
     <>
-    <FloatingNav label={t('Main')}>
-      {tab(home)}
-      {tab(orders)}
-      <NavCenter onClick={() => setAdding(true)} icon={Plus} label={t('Add')} />
-      {tab(products)}
-      {tab(shopTab)}
+    <FloatingNav label={t('Main')} slots={left.length + right.length === 4 ? 5 : 3}>
+      {left.length + right.length === 4 ? (
+        <>
+          {left.map(tab)}
+          <NavCenter onClick={() => setAdding(true)} icon={Plus} label={t('Add')} />
+          {right.map(tab)}
+        </>
+      ) : (
+        <>
+          {[...left, ...right].slice(0, -1).map(tab)}
+          <NavCenter onClick={() => setAdding(true)} icon={Plus} label={t('Add')} />
+          {tab(shopTab)}
+        </>
+      )}
     </FloatingNav>
       <Sheet open={adding} onClose={() => setAdding(false)} title={t('Add')}>
         <div className="grid gap-2">
@@ -157,7 +197,7 @@ function BottomNav() {
             { to: '/app/bags/new', icon: ShoppingBag, title: t('Send a bag link'), sub: t('Build a bag for a buyer; they add delivery and pay') },
             { to: '/app/orders/new', icon: PenLine, title: t('Record a sale'), sub: t('A sale in person, on a call or in a chat') },
             { to: '/app/products/import', icon: FileSpreadsheet, title: t('Import products'), sub: t('Many at once, from Excel or Google Sheets') },
-          ].map((x) => (
+          ].filter((x) => canOpen(x.to)).map((x) => (
             <Link key={x.to} to={x.to} onClick={() => setAdding(false)} className="flex items-center gap-4 rounded-16 bg-page px-4 py-4 transition-colors hover:bg-well">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-white">
                 <x.icon size={20} strokeWidth={1.75} />

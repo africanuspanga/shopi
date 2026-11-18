@@ -10,7 +10,7 @@ import { asLang } from '#/lib/i18n'
 
 /** Whether "Write it for me" shows, and how many a free shop has left this month. */
 export const getAiAllowance = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop } = await requireShop()
+  const { shop } = await requireShop('products')
   return aiAllowance(shop.id, await shopPlan(shop.id))
 })
 
@@ -25,7 +25,7 @@ export const writeProductDescription = createServerFn({ method: 'POST' })
     options: Array.isArray(d?.options) ? d.options.map((o) => str(o, 30)).filter(Boolean).slice(0, 30) : [],
   }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('products')
     if (!data.name) return { error: 'name' as const }
     const allowance = await aiAllowance(shop.id, await shopPlan(shop.id))
     if (!allowance.ready) return { error: 'off' as const }
@@ -58,7 +58,7 @@ export const writeProductDescription = createServerFn({ method: 'POST' })
 export const writeShopBio = createServerFn({ method: 'POST' })
   .validator((d: { notes?: string }) => ({ notes: str(d?.notes, 300) }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('manage')
     if (!aiReady()) return { error: 'off' as const }
     if ((await bioLeft(shop.id)) === 0) return { error: 'limit' as const }
     const s = await first<{ name: string; category: string; location: string; lang: string }>('SELECT name, category, location, lang FROM shops WHERE id = ?', shop.id)

@@ -35,6 +35,9 @@ export const LIMITS = {
   emailTo: { max: 3, window: 60 * MINUTE },
   emailAll: { max: 200, window: 60 * MINUTE },
   emailTest: { max: 20, window: 60 * MINUTE },
+  // Shop assistants (src/server/staff.ts): invite links a shop makes, and invite pages opened or accepted per IP.
+  staffInvite: { max: 10, window: 60 * MINUTE },
+  joinIp: { max: 60, window: 60 * MINUTE },
 } as const
 
 /** The visitor's IP as Cloudflare saw it. */

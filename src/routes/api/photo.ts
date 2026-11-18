@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { currentUser } from '#/server/auth'
-import { first } from '#/server/db'
+import { currentUser, shopFor } from '#/server/auth'
 import { LIMITS, count, overLimit } from '#/server/limits'
 import { directPhotoLink } from '#/lib/import'
 
@@ -75,7 +74,7 @@ export const Route = createFileRoute('/api/photo')({
       GET: async ({ request }) => {
         const user = await currentUser()
         if (!user) return fail('link', 401)
-        const shop = await first<{ id: string }>('SELECT id FROM shops WHERE owner_id = ?', user.id)
+        const { shop } = await shopFor('products')
         if (!shop) return fail('link', 403)
         const url = publicUrl(new URL(request.url).searchParams.get('url') ?? '')
         if (!url) return fail('link')

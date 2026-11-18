@@ -16,6 +16,7 @@ import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as DataDeletionRouteImport } from './routes/data-deletion'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardRouteImport } from './routes/onboard'
+import { Route as PausedRouteImport } from './routes/paused'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SignupRouteImport } from './routes/signup'
@@ -40,8 +41,10 @@ import { Route as AppDomainRouteImport } from './routes/app/domain'
 import { Route as AppLookRouteImport } from './routes/app/look'
 import { Route as AppPlanRouteImport } from './routes/app/plan'
 import { Route as AppShopRouteImport } from './routes/app/shop'
+import { Route as AppStaffRouteImport } from './routes/app/staff'
 import { Route as EmailOffRouteImport } from './routes/email/off'
 import { Route as ImgSplatRouteImport } from './routes/img/$'
+import { Route as JoinCodeRouteImport } from './routes/join/$code'
 import { Route as OCodeRouteImport } from './routes/o/$code'
 import { Route as ShopBCodeRouteImport } from './routes/$shop/b.$code'
 import { Route as ShopCSlugRouteImport } from './routes/$shop/c.$slug'
@@ -94,6 +97,11 @@ const LoginRoute = LoginRouteImport.update({
 const OnboardRoute = OnboardRouteImport.update({
   id: '/onboard',
   path: '/onboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PausedRoute = PausedRouteImport.update({
+  id: '/paused',
+  path: '/paused',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -216,6 +224,11 @@ const AppShopRoute = AppShopRouteImport.update({
   path: '/shop',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppStaffRoute = AppStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const EmailOffRoute = EmailOffRouteImport.update({
   id: '/email/off',
   path: '/email/off',
@@ -224,6 +237,11 @@ const EmailOffRoute = EmailOffRouteImport.update({
 const ImgSplatRoute = ImgSplatRouteImport.update({
   id: '/img/$',
   path: '/img/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinCodeRoute = JoinCodeRouteImport.update({
+  id: '/join/$code',
+  path: '/join/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OCodeRoute = OCodeRouteImport.update({
@@ -325,6 +343,7 @@ export interface FileRoutesByFullPath {
   '/data-deletion': typeof DataDeletionRoute
   '/login': typeof LoginRoute
   '/onboard': typeof OnboardRoute
+  '/paused': typeof PausedRoute
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/signup': typeof SignupRoute
@@ -346,8 +365,10 @@ export interface FileRoutesByFullPath {
   '/app/look': typeof AppLookRoute
   '/app/plan': typeof AppPlanRoute
   '/app/shop': typeof AppShopRoute
+  '/app/staff': typeof AppStaffRoute
   '/email/off': typeof EmailOffRoute
   '/img/$': typeof ImgSplatRoute
+  '/join/$code': typeof JoinCodeRoute
   '/o/$code': typeof OCodeRoute
   '/$shop/': typeof ShopIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -375,6 +396,7 @@ export interface FileRoutesByTo {
   '/data-deletion': typeof DataDeletionRoute
   '/login': typeof LoginRoute
   '/onboard': typeof OnboardRoute
+  '/paused': typeof PausedRoute
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/signup': typeof SignupRoute
@@ -396,8 +418,10 @@ export interface FileRoutesByTo {
   '/app/look': typeof AppLookRoute
   '/app/plan': typeof AppPlanRoute
   '/app/shop': typeof AppShopRoute
+  '/app/staff': typeof AppStaffRoute
   '/email/off': typeof EmailOffRoute
   '/img/$': typeof ImgSplatRoute
+  '/join/$code': typeof JoinCodeRoute
   '/o/$code': typeof OCodeRoute
   '/$shop': typeof ShopIndexRoute
   '/admin': typeof AdminIndexRoute
@@ -429,6 +453,7 @@ export interface FileRoutesById {
   '/data-deletion': typeof DataDeletionRoute
   '/login': typeof LoginRoute
   '/onboard': typeof OnboardRoute
+  '/paused': typeof PausedRoute
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/signup': typeof SignupRoute
@@ -450,8 +475,10 @@ export interface FileRoutesById {
   '/app/look': typeof AppLookRoute
   '/app/plan': typeof AppPlanRoute
   '/app/shop': typeof AppShopRoute
+  '/app/staff': typeof AppStaffRoute
   '/email/off': typeof EmailOffRoute
   '/img/$': typeof ImgSplatRoute
+  '/join/$code': typeof JoinCodeRoute
   '/o/$code': typeof OCodeRoute
   '/$shop/': typeof ShopIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -484,6 +511,7 @@ export interface FileRouteTypes {
     | '/data-deletion'
     | '/login'
     | '/onboard'
+    | '/paused'
     | '/privacy'
     | '/robots.txt'
     | '/signup'
@@ -505,8 +533,10 @@ export interface FileRouteTypes {
     | '/app/look'
     | '/app/plan'
     | '/app/shop'
+    | '/app/staff'
     | '/email/off'
     | '/img/$'
+    | '/join/$code'
     | '/o/$code'
     | '/$shop/'
     | '/admin/'
@@ -534,6 +564,7 @@ export interface FileRouteTypes {
     | '/data-deletion'
     | '/login'
     | '/onboard'
+    | '/paused'
     | '/privacy'
     | '/robots.txt'
     | '/signup'
@@ -555,8 +586,10 @@ export interface FileRouteTypes {
     | '/app/look'
     | '/app/plan'
     | '/app/shop'
+    | '/app/staff'
     | '/email/off'
     | '/img/$'
+    | '/join/$code'
     | '/o/$code'
     | '/$shop'
     | '/admin'
@@ -587,6 +620,7 @@ export interface FileRouteTypes {
     | '/data-deletion'
     | '/login'
     | '/onboard'
+    | '/paused'
     | '/privacy'
     | '/robots.txt'
     | '/signup'
@@ -608,8 +642,10 @@ export interface FileRouteTypes {
     | '/app/look'
     | '/app/plan'
     | '/app/shop'
+    | '/app/staff'
     | '/email/off'
     | '/img/$'
+    | '/join/$code'
     | '/o/$code'
     | '/$shop/'
     | '/admin/'
@@ -641,6 +677,7 @@ export interface RootRouteChildren {
   DataDeletionRoute: typeof DataDeletionRoute
   LoginRoute: typeof LoginRoute
   OnboardRoute: typeof OnboardRoute
+  PausedRoute: typeof PausedRoute
   PrivacyRoute: typeof PrivacyRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SignupRoute: typeof SignupRoute
@@ -656,6 +693,7 @@ export interface RootRouteChildren {
   ApiUploadRoute: typeof ApiUploadRoute
   EmailOffRoute: typeof EmailOffRoute
   ImgSplatRoute: typeof ImgSplatRoute
+  JoinCodeRoute: typeof JoinCodeRoute
   OCodeRoute: typeof OCodeRoute
 }
 
@@ -708,6 +746,13 @@ declare module '@tanstack/react-router' {
       path: '/onboard'
       fullPath: '/onboard'
       preLoaderRoute: typeof OnboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/paused': {
+      id: '/paused'
+      path: '/paused'
+      fullPath: '/paused'
+      preLoaderRoute: typeof PausedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -878,6 +923,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppShopRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/staff': {
+      id: '/app/staff'
+      path: '/staff'
+      fullPath: '/app/staff'
+      preLoaderRoute: typeof AppStaffRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/email/off': {
       id: '/email/off'
       path: '/email/off'
@@ -890,6 +942,13 @@ declare module '@tanstack/react-router' {
       path: '/img/$'
       fullPath: '/img/$'
       preLoaderRoute: typeof ImgSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$code': {
+      id: '/join/$code'
+      path: '/join/$code'
+      fullPath: '/join/$code'
+      preLoaderRoute: typeof JoinCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/o/$code': {
@@ -1064,6 +1123,7 @@ interface AppRouteRouteChildren {
   AppLookRoute: typeof AppLookRoute
   AppPlanRoute: typeof AppPlanRoute
   AppShopRoute: typeof AppShopRoute
+  AppStaffRoute: typeof AppStaffRoute
   AppIndexRoute: typeof AppIndexRoute
   AppBagsIdRoute: typeof AppBagsIdRoute
   AppBagsNewRoute: typeof AppBagsNewRoute
@@ -1087,6 +1147,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppLookRoute: AppLookRoute,
   AppPlanRoute: AppPlanRoute,
   AppShopRoute: AppShopRoute,
+  AppStaffRoute: AppStaffRoute,
   AppIndexRoute: AppIndexRoute,
   AppBagsIdRoute: AppBagsIdRoute,
   AppBagsNewRoute: AppBagsNewRoute,
@@ -1115,6 +1176,7 @@ const rootRouteChildren: RootRouteChildren = {
   DataDeletionRoute: DataDeletionRoute,
   LoginRoute: LoginRoute,
   OnboardRoute: OnboardRoute,
+  PausedRoute: PausedRoute,
   PrivacyRoute: PrivacyRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SignupRoute: SignupRoute,
@@ -1130,6 +1192,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUploadRoute: ApiUploadRoute,
   EmailOffRoute: EmailOffRoute,
   ImgSplatRoute: ImgSplatRoute,
+  JoinCodeRoute: JoinCodeRoute,
   OCodeRoute: OCodeRoute,
 }
 export const routeTree = rootRouteImport

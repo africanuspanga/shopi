@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { currentUser } from '#/server/auth'
-import { all, first, now } from '#/server/db'
+import { currentUser, shopFor } from '#/server/auth'
+import { all, now } from '#/server/db'
 import { PAYMENT_LABEL, type PaymentMethod } from '#/lib/format'
 import { pinLink } from '#/lib/location'
 import { can } from '#/lib/plans'
@@ -24,7 +24,7 @@ export const Route = createFileRoute('/api/export')({
       GET: async ({ request }) => {
         const user = await currentUser()
         if (!user) return new Response('Log in first', { status: 401 })
-        const shop = await first<{ id: string; slug: string }>('SELECT id, slug FROM shops WHERE owner_id = ?', user.id)
+        const { shop } = await shopFor('manage')
         if (!shop) return new Response('No shop', { status: 403 })
         // Downloads are part of Tembo's full analytics (17 Nov).
         if (!can(await shopPlan(shop.id), 'fullAnalytics')) return new Response('Downloads are part of Tembo', { status: 403 })

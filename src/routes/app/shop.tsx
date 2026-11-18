@@ -1,5 +1,5 @@
 import { Link, createFileRoute, useBlocker, useRouter } from '@tanstack/react-router'
-import { Camera, Check, ChevronRight, Copy, Globe, LogOut, Palette, Plus, QrCode as QrCodeIcon, TicketPercent, X } from 'lucide-react'
+import { Camera, Check, ChevronRight, Copy, Globe, LogOut, Palette, Plus, QrCode as QrCodeIcon, TicketPercent, UsersRound, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
 import { WriteBio } from '#/components/ai-write'
@@ -7,7 +7,7 @@ import { PhoneAppSettings } from '#/components/phone-app'
 import { EmailSettings } from '#/components/email'
 import { EMAIL_LIVE } from '#/lib/email'
 import { QrSheet } from '#/components/qr-sheet'
-import { useCan } from '#/components/tembo'
+import { TemboPill, useCan } from '#/components/tembo'
 import { CardHead, ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoice, Switch, Toast, TopBar } from '#/components/ui'
 import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
@@ -15,16 +15,25 @@ import { CATEGORIES, DAR_AREAS, NETWORKS, mapsLink, tinDigits } from '#/lib/form
 import { asLang, useT } from '#/lib/i18n'
 import { FONTS, MOTO, asFont, cleanHex } from '#/lib/theme'
 import { uploadImage } from '#/lib/upload'
+import { ROLE_FOR_YOU, ROLE_NAMES, allows } from '#/lib/staff'
 
 export const Route = createFileRoute('/app/shop')({
-  loader: () => getMyShop(),
-  component: ShopSettings,
+  // An Orders or Products assistant gets their own settings, not the shop's (src/lib/staff.ts).
+  loader: ({ context }) => (allows(context.shop.role, 'manage') ? getMyShop() : null),
+  component: Settings,
 })
 
-function ShopSettings() {
+function Settings() {
+  const data = Route.useLoaderData()
+  return data ? <ShopSettings data={data} /> : <MySettings />
+}
+
+function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> }) {
   const t = useT()
   const router = useRouter()
-  const data = Route.useLoaderData()
+  // How buyers pay and reach the shop, the plan, the domain, email and assistants stay the owner's (src/lib/staff.ts).
+  const owner = Route.useRouteContext().shop.role === 'owner'
+  const staffOk = useCan('staff')
   const initial = useRef({ shop: data.shop, areas: data.areas.map((a) => ({ name: a.name, fee: String(a.fee) })) })
   const [s, setS] = useState(initial.current.shop)
   const tembo = useCan('hideBadge')
@@ -190,11 +199,13 @@ function ShopSettings() {
           </div>
         </Group>
 
-        <Group title={t('Your own domain')} sub={t('Your shop at your own address, like www.yourshop.co.tz.')}>
-          <Link to="/app/domain" className="btn btn-ghost">
-            <Globe size={16} strokeWidth={1.75} /> {t('Your own domain')} <ChevronRight size={16} strokeWidth={1.75} />
-          </Link>
-        </Group>
+        {owner && (
+          <Group title={t('Your own domain')} sub={t('Your shop at your own address, like www.yourshop.co.tz.')}>
+            <Link to="/app/domain" className="btn btn-ghost">
+              <Globe size={16} strokeWidth={1.75} /> {t('Your own domain')} <ChevronRight size={16} strokeWidth={1.75} />
+            </Link>
+          </Group>
+        )}
 
         <Group title={t('QR code')} sub={t('Your shop’s code to print or post. Buyers scan it with their camera and your shop opens.')}>
           <button type="button" className="btn btn-ghost" onClick={() => setQrOpen(true)}>
@@ -203,6 +214,7 @@ function ShopSettings() {
           <QrSheet open={qrOpen} onClose={() => setQrOpen(false)} />
         </Group>
 
+        {owner && (
         <Group title={t('Payments')} sub={t('Buyers pay you directly. Shopi never holds your money.')}>
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -238,6 +250,7 @@ function ShopSettings() {
             </div>
           </div>
         </Group>
+        )}
 
         <Group
           title={t('Delivery')}
@@ -293,8 +306,8 @@ function ShopSettings() {
 
         <Group title={t('Contact and social')} sub={t('Shown on your shop so buyers can follow and message you.')}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="WhatsApp">
-              <input className="input" type="tel" value={s.whatsapp} onChange={set('whatsapp')} />
+            <Field label="WhatsApp" hint={owner ? undefined : t('Only the shop’s owner changes this number.')}>
+              <input className="input" type="tel" value={s.whatsapp} onChange={set('whatsapp')} disabled={!owner} />
             </Field>
             <Field label="Instagram">
               <Handle value={s.instagram} onChange={set('instagram')} />
@@ -314,6 +327,17 @@ function ShopSettings() {
           </Link>
         </Group>
 
+        {owner && (
+          <Group title={t('Shop assistants')} sub={t('Up to 2 people who help run your shop, each with their own login.')}>
+            <Link to="/app/staff" className="btn btn-ghost">
+              <UsersRound size={16} strokeWidth={1.75} /> {t('Shop assistants')}
+              {!staffOk && <TemboPill />}
+              <ChevronRight size={16} strokeWidth={1.75} />
+            </Link>
+          </Group>
+        )}
+
+        {owner && (
         <Group title={t('Plan')} sub={t('Free, or Tembo once a year. See what Tembo adds.')}>
           <div className="mb-3 rounded-16 bg-page p-4">
             <Switch
@@ -328,30 +352,19 @@ function ShopSettings() {
             {t('See your plan')} <ChevronRight size={16} strokeWidth={1.75} />
           </Link>
         </Group>
+        )}
 
         <Group title={t('Notifications')} sub={t('New orders and payments to check, on this phone, even when Shopi is closed.')}>
           <PhoneAppSettings />
         </Group>
 
-        {emailOpen && (
+        {owner && emailOpen && (
           <Group title={t('Email')} sub={t('Optional. Your Tembo receipts and reminders, and a summary each Monday if you like.')}>
             <EmailSettings />
           </Group>
         )}
 
-        <Group title={t('Account')} sub={t('You are logged in on this phone.')}>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={async () => {
-              await logout()
-              await router.invalidate()
-              router.navigate({ to: '/' })
-            }}
-          >
-            <LogOut size={16} strokeWidth={1.75} /> {t('Log out')}
-          </button>
-        </Group>
+        <AccountGroup />
       </div>
 
       {(dirty || error) && (
@@ -385,6 +398,56 @@ function ShopSettings() {
         <ErrorText>{error}</ErrorText>
       </div>
     </Page>
+  )
+}
+
+/** An Orders or Products assistant's settings: their role, notifications (Orders), language and log out. */
+function MySettings() {
+  const t = useT()
+  const { shop } = Route.useRouteContext()
+  const role = shop.role === 'owner' ? null : shop.role
+  return (
+    <Page nav wide>
+      <TopBar title={t('Settings')} sub={t('You help run {shop}.', { shop: shop.name })} right={<LangSwitch />} />
+      <div className="divide-y divide-line">
+        {role && (
+          <Group title={t('Your role')} sub={t('The shop’s owner chose it, and can change it.')}>
+            <p className="text-15 font-semibold">{t(ROLE_NAMES[role])}</p>
+            <p className="mt-1 text-14 leading-relaxed text-ink-2">{t(ROLE_FOR_YOU[role])}</p>
+          </Group>
+        )}
+        {role === 'orders' && (
+          <Group title={t('Notifications')} sub={t('New orders and payments to check, on this phone, even when Shopi is closed.')}>
+            <PhoneAppSettings />
+          </Group>
+        )}
+        <AccountGroup />
+      </div>
+    </Page>
+  )
+}
+
+function AccountGroup() {
+  const t = useT()
+  const router = useRouter()
+  const { shop } = Route.useRouteContext()
+  return (
+    <Group
+      title={t('Account')}
+      sub={shop.role === 'owner' ? t('You are logged in on this phone.') : t('You are logged in on this phone as a shop assistant of {shop}.', { shop: shop.name })}
+    >
+      <button
+        type="button"
+        className="btn btn-ghost"
+        onClick={async () => {
+          await logout()
+          await router.invalidate()
+          router.navigate({ to: '/' })
+        }}
+      >
+        <LogOut size={16} strokeWidth={1.75} /> {t('Log out')}
+      </button>
+    </Group>
   )
 }
 

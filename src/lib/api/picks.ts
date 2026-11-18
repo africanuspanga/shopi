@@ -4,7 +4,7 @@ import { readPicks, writePicks } from '#/server/picks'
 
 /** The seller's top picks, as product ids in their order (the product form needs to know whether there is room). */
 export const getMyPicks = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop } = await requireShop()
+  const { shop } = await requireShop('products')
   return readPicks(shop.id)
 })
 
@@ -12,6 +12,6 @@ export const getMyPicks = createServerFn({ method: 'GET' }).handler(async () => 
 export const savePicks = createServerFn({ method: 'POST' })
   .validator((d: { ids: string[] }) => ({ ids: Array.isArray(d?.ids) ? d.ids.slice(0, 10).map(String) : [] }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('products')
     return { ok: true as const, ids: await writePicks(shop.id, data.ids) }
   })

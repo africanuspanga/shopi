@@ -49,7 +49,7 @@ export type StockAlert = Awaited<ReturnType<typeof withReadiness>>[number]
 export const listStockAlerts = createServerFn({ method: 'GET' })
   .validator((d: { productId: string }) => ({ productId: String(d.productId) }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('products')
     const rows = await all<AlertRow>(
       'SELECT id, product_id, variant, phone, created_at FROM stock_alerts WHERE shop_id = ? AND product_id = ? ORDER BY created_at',
       shop.id,
@@ -62,7 +62,7 @@ export const listStockAlerts = createServerFn({ method: 'GET' })
 export const doneStockAlert = createServerFn({ method: 'POST' })
   .validator((d: { id: string }) => ({ id: String(d.id) }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('products')
     await run('DELETE FROM stock_alerts WHERE id = ? AND shop_id = ?', data.id, shop.id)
     return { ok: true as const }
   })

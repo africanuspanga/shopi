@@ -55,7 +55,7 @@ export const createBagLink = createServerFn({ method: 'POST' })
     (d: { items: { productId: string; size?: string | null; qty: number; price: number | string }[]; name?: string; phone?: string; note?: string }) => d,
   )
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('orders')
     const wanted = (data.items ?? []).slice(0, 30)
     if (!wanted.length) return { error: 'empty' as const }
     const ids = [...new Set(wanted.map((i) => String(i.productId)))]
@@ -102,7 +102,7 @@ export const createBagLink = createServerFn({ method: 'POST' })
   })
 
 export const listBagLinks = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop } = await requireShop()
+  const { shop } = await requireShop('orders')
   const rows = await all<BagRow & { order_code: string | null }>(
     `SELECT b.*, o.code order_code FROM bag_links b LEFT JOIN orders o ON o.id = b.order_id
      WHERE b.shop_id = ? ORDER BY b.created_at DESC LIMIT 200`,
@@ -115,7 +115,7 @@ export const listBagLinks = createServerFn({ method: 'GET' }).handler(async () =
 export const getMyBagLink = createServerFn({ method: 'GET' })
   .validator((d: { id: string }) => ({ id: String(d.id) }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('orders')
     const b = await first<BagRow & { order_code: string | null }>(
       `SELECT b.*, o.code order_code FROM bag_links b LEFT JOIN orders o ON o.id = b.order_id WHERE b.id = ? AND b.shop_id = ?`,
       data.id,
@@ -129,7 +129,7 @@ export const getMyBagLink = createServerFn({ method: 'GET' })
 export const cancelBagLink = createServerFn({ method: 'POST' })
   .validator((d: { id: string }) => ({ id: String(d.id) }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('orders')
     await run(`UPDATE bag_links SET status = 'cancelled' WHERE id = ? AND shop_id = ? AND status = 'open'`, data.id, shop.id)
     return { ok: true as const }
   })

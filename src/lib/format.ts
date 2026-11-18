@@ -121,7 +121,7 @@ export function freeSlug(base: string, taken: Set<string>, reserved: Set<string>
 export const RESERVED_PRODUCT_SLUGS = new Set(['checkout', 'p', 'b', 'c', 'bag', 'cart', 'order', 'orders', 'about'])
 
 export const RESERVED_SLUGS = new Set([
-  'app', 'admin', 'api', 'img', 'login', 'signup', 'logout', 'onboard', 'discover', 'creators', 'email', 'brand',
+  'app', 'admin', 'api', 'img', 'login', 'signup', 'logout', 'onboard', 'discover', 'creators', 'email', 'brand', 'join', 'paused',
   'top-products', 'help', 'about', 'terms', 'privacy', 'data-deletion', 'legal', 'pricing', 'shopi', 'shopitz', 'rizk', 'rizko', 'shop', 'shops',
   'o', 'order', 'orders', 'static', 'assets', 'favicon.ico', 'robots.txt', 'sitemap.xml',
 ])

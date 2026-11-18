@@ -36,7 +36,7 @@ export type ImportResult = {
 export const importProducts = createServerFn({ method: 'POST' })
   .validator((d: { products: ImportItem[]; active: boolean; /** 0 on the first chunk. */ start: number }) => d)
   .handler(async ({ data }): Promise<ImportResult> => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('products')
     const list = (data.products ?? []).slice(0, IMPORT_CHUNK)
     const at = now()
     // The sheet's first row is the newest, so it shows first in the shop.

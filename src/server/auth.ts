@@ -1,5 +1,7 @@
 import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server'
 import { first, newId, now, run } from './db'
+import { can, planState } from '#/lib/plans'
+import { allows, type Area, type Role } from '#/lib/staff'
 
 const COOKIE = 'shopi_sid'
 export const SESSION_DAYS = 60
@@ -82,9 +84,56 @@ export async function requireAdmin() {
   return user
 }
 
-export async function requireShop() {
+export type MyShop = OwnShop & {
+  logo_key: string | null
+  status: string
+  plan: string
+  paid_until: number | null
+  setup_step: number | null
+  owner_id: string
+  role: Role
+  /** An assistant whose shop is no longer on Tembo: kept, but can't help run it until it renews (src/lib/staff.ts). */
+  paused: boolean
+}
+
+/**
+ * The shop this login runs: the one it owns, else the one it helps run as an assistant (one login, one shop). The
+ * session, every seller server function and the upload endpoints read it here.
+ */
+export async function myShop(userId: string): Promise<MyShop | null> {
+  const row = await first<Omit<MyShop, 'paused'> & { rank: number }>(
+    `SELECT id, slug, name, logo_key, status, plan, paid_until, setup_step, owner_id, 'owner' role, 0 rank
+       FROM shops WHERE owner_id = ?1
+     UNION ALL
+     SELECT s.id, s.slug, s.name, s.logo_key, s.status, s.plan, s.paid_until, s.setup_step, s.owner_id, st.role, 1 rank
+       FROM shop_staff st JOIN shops s ON s.id = st.shop_id
+       WHERE st.user_id = ?1 AND s.status IN ('active', 'demo')
+     ORDER BY rank LIMIT 1`,
+    userId,
+  )
+  if (!row) return null
+  const { rank: _, ...shop } = row
+  return { ...shop, paused: shop.role !== 'owner' && !can(planState(shop), 'staff') }
+}
+
+/**
+ * The logged-in seller's shop, for a server function that needs `area` (src/lib/staff.ts). With no area only the owner
+ * passes, so a function nobody has looked at stays the owner's. A paused assistant gets nothing.
+ */
+export async function requireShop(area: Area | Area[] = 'owner') {
   const user = await requireUser()
-  const shop = await first<OwnShop>('SELECT id, slug, name FROM shops WHERE owner_id = ? LIMIT 1', user.id)
-  if (!shop) throw new Error('NO_SHOP')
-  return { user, shop }
+  const mine = await myShop(user.id)
+  if (!mine || mine.paused) throw new Error('NO_SHOP')
+  if (!allows(mine.role, area)) throw new Error('NOT_ALLOWED')
+  const shop: OwnShop = { id: mine.id, slug: mine.slug, name: mine.name }
+  return { user, shop, role: mine.role }
+}
+
+/** For the raw endpoints (uploads, downloads): the shop, or null when this login may not do `area` there. */
+export async function shopFor(area: Area | Area[]) {
+  const user = await currentUser()
+  if (!user) return { user: null, shop: null }
+  const mine = await myShop(user.id)
+  if (!mine || mine.paused || !allows(mine.role, area)) return { user, shop: null }
+  return { user, shop: { id: mine.id, slug: mine.slug, name: mine.name } as OwnShop }
 }

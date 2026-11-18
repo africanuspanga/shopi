@@ -26,7 +26,7 @@ export const savePushSubscription = createServerFn({ method: 'POST' })
   .validator((d: Sub) => ({ endpoint: endpoint(d.endpoint), p256dh: key(d.keys?.p256dh), auth: key(d.keys?.auth) }))
   .handler(async ({ data }) => {
     if (!data.endpoint || !data.p256dh || !data.auth) return { error: 'invalid' as const }
-    const { user, shop } = await requireShop()
+    const { user, shop } = await requireShop('any')
     const lang = asLang(getCookie('shopi_lang'))
     await run(
       `INSERT INTO push_subscriptions (id, user_id, shop_id, endpoint, p256dh, auth, lang, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -41,7 +41,7 @@ export const savePushSubscription = createServerFn({ method: 'POST' })
 export const markAppInstalled = createServerFn({ method: 'POST' })
   .validator((d: { platform?: string }) => ({ platform: d?.platform === 'android' || d?.platform === 'ios' ? d.platform : 'other' }))
   .handler(async ({ data }) => {
-    const { user } = await requireShop()
+    const { user } = await requireShop('any')
     await run('UPDATE users SET app_seen_at = ?, app_platform = ? WHERE id = ?', now(), data.platform, user.id)
     return { ok: true as const }
   })
@@ -49,7 +49,7 @@ export const markAppInstalled = createServerFn({ method: 'POST' })
 export const removePushSubscription = createServerFn({ method: 'POST' })
   .validator((d: { endpoint: string }) => ({ endpoint: endpoint(d.endpoint) }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('any')
     await run('DELETE FROM push_subscriptions WHERE endpoint = ? AND shop_id = ?', data.endpoint, shop.id)
     return { ok: true as const }
   })
@@ -58,7 +58,7 @@ export const removePushSubscription = createServerFn({ method: 'POST' })
 export const testPush = createServerFn({ method: 'POST' })
   .validator((d: { endpoint: string }) => ({ endpoint: endpoint(d.endpoint) }))
   .handler(async ({ data }) => {
-    const { shop } = await requireShop()
+    const { shop } = await requireShop('any')
     const sub = await first<{ id: string; endpoint: string; p256dh: string; auth: string; lang: string }>(
       'SELECT id, endpoint, p256dh, auth, lang FROM push_subscriptions WHERE endpoint = ? AND shop_id = ?',
       data.endpoint,

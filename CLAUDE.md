@@ -47,6 +47,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/components/auth.tsx` | `AuthLayout` (form left, dark product panel right), `StepBar` ("2 of 5"), `PasswordInput` |
 | `src/routes/onboard.tsx`, `src/components/setup.tsx`, `src/lib/setup.ts`, `src/lib/api/setup.ts`, `src/server/setup.ts` | The five-step setup: the route and step 1; steps 2 to 5 and the shop preview; which step to show; its server functions; `passStep` |
 | `src/lib/email.ts`, `src/server/email.ts`, `src/server/email-templates.ts`, `src/lib/api/email.ts`, `src/components/email.tsx`, `src/routes/email/`, `src/routes/api/email-off.ts`, `src/routes/api/admin-email-preview.ts` | Email to sellers through Resend: `EMAIL_LIVE` and the kinds; sending, confirm links, unsubscribe, receipts and the weekly summary; the templates; the seller's server functions; the Home row and Shop settings group; the stop/remove page; one-click unsubscribe; /admin previews |
+| `src/lib/staff.ts`, `src/server/staff.ts`, `src/lib/api/staff.ts`, `src/routes/app/staff.tsx`, `src/routes/join/$code.tsx`, `src/routes/paused.tsx` | Shop assistants: roles and areas (`allows`, `landing`, `areaOfPath`); invite codes and the list; the owner's and the invite page's server functions; the owner's page; the invite page; the paused page |
 | `src/lib/score.ts`, `src/server/score.ts` | The shop score: the eight items, points and the next step (browser-safe); its facts as one SQL fragment for Home and `/admin` |
 | `src/components/showcase.tsx` | Coded product previews for the landing and auth pages (phone, mini store, order card, payment slip) |
 | `src/components/brand-icons.tsx` | One-colour social icons, plus `WhatsAppMark` (WhatsApp's green mark) |
@@ -316,6 +317,55 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
     one person), 200 across Shopi (`emailAll`); 20 tests an hour per admin (`emailTest`). The words
     `email` and `brand` are reserved shop links; `/email/*` is one of Shopi's own pages on shops' domains.
   - Privacy names Resend and says what is kept and for how long.
+- **Shop assistants** (roadmap `t-staff`, the founder's answers of 18 Nov 2026; migration `0028_staff.sql`). Up to
+  `STAFF_MAX` = 2 people besides the owner help run a **Tembo** shop (`can(plan, 'staff')`), each with their own login and
+  a role (`src/lib/staff.ts`):
+  - **Orders:** orders, payment checks, Record a sale, bag links (and the product list, for the picker).
+  - **Products:** products, photos, stock, collections, Top picks, back-in-stock lists, "Write it for me".
+  - **Manager:** all of that plus Home (sales figures), Analytics and its downloads, Shop settings, look, discount codes.
+    **Only a Manager sees sales totals** (the founder); Orders still sees each order's total, to take payment.
+  - **The owner's alone:** Tembo and the plan page, the own domain, how buyers pay and reach the shop (Lipa Namba,
+    its name and network, cash on delivery, the shop's WhatsApp: `updateShop` keeps the stored values when a Manager
+    saves; the form hides Payments and disables WhatsApp), email, the five-step setup, and the assistants.
+  - **One check:** `requireShop(area)` (`src/server/auth.ts`) finds the login's shop with `myShop()`: the one it owns,
+    else the one it helps run (`shop_staff.user_id`; a unique index keeps one login to one shop). Areas are `orders`,
+    `products`, `manage`, `owner`, `any`; **no argument means owner only**, so a new server function is the owner's
+    until it names an area. The raw endpoints use `shopFor(area)`: uploads (`products` or `manage`), photo links
+    (`products`), downloads (`manage`). The session carries `shop.role` and `shop.paused`. The `/app` layout's
+    `beforeLoad` sends a role to its own start (`landing`: Home for owner and Manager, `/app/orders`, `/app/products`)
+    when the page's area (`areaOfPath`) isn't theirs; Home's setup redirect is the owner's only.
+  - **The seller app by role:** the sidebar, the + sheet and the capsule list only what the role opens; an Orders or
+    Products assistant gets a three-slot capsule (their tab, +, Settings; `FloatingNav slots={3}`) and their own
+    Settings on `/app/shop` (role, notifications for Orders, language, Log out). A Manager's Home hides the plan row,
+    the email row, and says "Only the shop's owner can add it" for the Lipa Namba and WhatsApp steps of the score.
+  - **The owner's page** (`/app/staff`, from Shop settings > Shop assistants, with the Tembo pill on Free): each
+    assistant with role, number, "Joined … · Last log-in: …" (from their newest session) or the invite's state; Add
+    an assistant (name, number, role) makes the link; Send the link again (pending only; the old link stops);
+    Change role or remove. Refused: the owner's own number, a number already listed, a number that already runs a
+    shop (owner or assistant), a third assistant, more than `LIMITS.staffInvite` links an hour.
+  - **The invite** (`shopi.tz/join/<code>`; `join` is a reserved shop link and one of Shopi's own pages): 24 random
+    characters, **only its SHA-256 is stored**, works once, for `INVITE_DAYS` = 7. The owner sends it from the sheet
+    (WhatsApp to the assistant's number first). The page shows the shop, who invites, the role in the assistant's
+    words (`ROLE_FOR_YOU`), the number (fixed), then: a name and a new password (no login for that number yet), the
+    password of the number's login (same lock as logging in: `LIMITS.loginFails`), or one tap when that login is the
+    one here. Someone else logged in on the phone is asked to log out first. `acceptInvite` claims the row only while
+    it still waits on that very code (a new user made for it is deleted if the claim fails). `LIMITS.joinIp` per IP.
+    No SMS check exists, so whoever holds the link can join as that number: the sheet says to send it only to them.
+  - **Tembo ends: paused, kept** (the founder). `myShop` marks an assistant `paused` when the shop isn't Tembo (or
+    demo); every server function refuses them, `/app` sends them to `/paused` ("Check again", Log out), and the
+    owner's page shows them paused under a Tembo lock. Renewing brings them back as they were.
+  - **Removing** deletes the row, their notifications for the shop and their sessions (logged out at once); their
+    login stays theirs. Changing a role applies on their next page.
+  - **Notifications:** `notifySeller(shop, note, to)`: `orders` (new order, payment to check) reaches the owner and
+    Orders and Manager assistants while the shop is on Tembo; `owner` (Tembo is on, renewal reminders) the owner only.
+  - **Not built:** who did what on an order (an activity line per assistant); an assistant opening their own shop
+    with the same login (one login, one shop: they sign up with another number); SMS-checked invites.
+  - `/admin` Product use counts "A shop assistant who joined"; sign-ups, the funnel, cohorts and "sign-ups without a
+    shop" leave assistants out (they never open a shop). Privacy names what is kept and who sees what.
+  - **Races closed in SQL:** the limit of 2 is checked in the statement that adds the row; `createShop` makes no shop
+    for a login that joined as an assistant, and the invite's claim none for a login that owns a shop; two accepts of
+    one link at once make one login. Reviewed 18 Nov by a second agent: no access hole; its crash (a hook after an
+    early return in Home's `ScoreCard`) and the rest were fixed and re-tested.
 - **"Write it for me" for the shop's line** (`writeBio` in `src/server/ai.ts`, `writeShopBio`, `WriteBio`): one
   sentence in the shop's language from its name, category, location and product names; what the seller typed is taken
   as facts; no delivery, price or quality claims. `BIO_MONTH` = 10 a month on any plan, counted in `ai_uses` as `bio`

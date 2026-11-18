@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { currentUser } from '#/server/auth'
-import { first, media, newId } from '#/server/db'
+import { currentUser, shopFor } from '#/server/auth'
+import { media, newId } from '#/server/db'
 import { thumbKey } from '#/lib/format'
 
 const TYPES: Record<string, string> = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png' }
@@ -23,7 +23,7 @@ export const Route = createFileRoute('/api/upload')({
       POST: async ({ request }) => {
         const user = await currentUser()
         if (!user) return new Response('Unauthorized', { status: 401 })
-        const shop = await first<{ id: string }>('SELECT id FROM shops WHERE owner_id = ?', user.id)
+        const { shop } = await shopFor(['products', 'manage'])
         if (!shop) return new Response('No shop', { status: 403 })
         const type = request.headers.get('content-type') ?? ''
         const ext = TYPES[type]

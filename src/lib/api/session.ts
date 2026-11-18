@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { getCookie, setCookie } from '@tanstack/react-start/server'
-import { currentUser, endSession, hashPassword, startSession, verifyPassword } from '#/server/auth'
+import { currentUser, endSession, hashPassword, myShop, startSession, verifyPassword } from '#/server/auth'
 import { first, newId, now, run } from '#/server/db'
 import { LIMITS, clientIp, count, forget, overLimit } from '#/server/limits'
 import { isHuman } from '#/server/turnstile'
@@ -12,15 +12,13 @@ import { planState } from '#/lib/plans'
 export const getSession = createServerFn({ method: 'GET' }).handler(async () => {
   const lang: Lang = asLang(getCookie('shopi_lang'))
   const user = await currentUser()
-  const row = user
-    ? await first<{ id: string; slug: string; name: string; logo_key: string | null; status: string; plan: string; paid_until: number | null; setup_step: number | null }>(
-        'SELECT id, slug, name, logo_key, status, plan, paid_until, setup_step FROM shops WHERE owner_id = ? LIMIT 1',
-        user.id,
-      )
-    : null
+  const row = user ? await myShop(user.id) : null
   // The plan (Free, Tembo, demo) rides with the session, so seller screens ask can() without another request.
   // setup: the furthest setup step passed (src/lib/setup.ts); null for shops opened before the five-step setup.
-  const shop = row ? { id: row.id, slug: row.slug, name: row.name, logo_key: row.logo_key, plan: planState(row), setup: row.setup_step } : null
+  // role: owner, or the assistant's role (src/lib/staff.ts); paused: an assistant whose shop is no longer on Tembo.
+  const shop = row
+    ? { id: row.id, slug: row.slug, name: row.name, logo_key: row.logo_key, plan: planState(row), setup: row.setup_step, role: row.role, paused: row.paused }
+    : null
   return { lang, user, shop }
 })
 

@@ -126,7 +126,7 @@ export async function completePayment(id: string, p: { source: Source; amount?: 
     body: t('TSh {amount} received. Tembo runs until {date}.', { amount: row.amount.toLocaleString('en-US'), date: longDate(row.paid_until, lang) }),
     url: '/app/plan',
     tag: 'tembo',
-  }))
+  }), 'owner')
   // The receipt by email, to a confirmed address (src/server/email.ts), after the response.
   later(emailReceipt(id))
   return { outcome: 'completed' as const, until: row.paid_until }
@@ -471,7 +471,7 @@ export async function remindRenewals() {
       body: tr('Renew for TSh {amount} to keep your own domain, fonts and full analytics.', { amount: TEMBO_PRICE.toLocaleString('en-US') }),
       url: '/app/plan',
       tag: 'tembo-renew',
-    }))
+    }), 'owner')
     // And by email, to a confirmed address (once per shop and day, whatever reruns the job). An email error never
     // stops the reminders of the shops after it.
     try {

@@ -1,4 +1,4 @@
-import { Link, createFileRoute, redirect } from '@tanstack/react-router'
+import { Link, createFileRoute, redirect, useRouteContext } from '@tanstack/react-router'
 import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, FileSpreadsheet, Gem, Plus, QrCode as QrCodeIcon, ReceiptText, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import { CardHead, Delta, Empty, Img, LangSwitch, Money, Notice, Page, PageHead, PhoneBar, scrubIndex, Sheet, ShopAvatar, Stat, StatusPill, Toast, useEntrance } from '#/components/ui'
@@ -18,7 +18,7 @@ import { inSetup } from '#/lib/setup'
 export const Route = createFileRoute('/app/')({
   // A shop still in the five-step setup goes back to the step it stopped at (src/lib/setup.ts).
   beforeLoad: ({ context }) => {
-    if (inSetup(context.session.shop?.setup)) throw redirect({ to: '/onboard' })
+    if (context.session.shop?.role === 'owner' && inSetup(context.session.shop.setup)) throw redirect({ to: '/onboard' })
   },
   loader: () => getDashboard(),
   component: Dashboard,
@@ -500,7 +500,9 @@ function FirstProductCard({ className = '', score }: { className?: string; score
 /** The plan line on Home: a quiet way to Tembo for free shops, and Tembo's renewal in its last 30 days. */
 function PlanRow({ plan }: { plan: PlanState | null }) {
   const t = useT()
-  if (!plan || plan.kind === 'demo' || (plan.kind === 'tembo' && plan.daysLeft > 30)) return null
+  // The plan is the owner's: a Manager's Home doesn't offer it.
+  const owner = useRouteContext({ from: '/app' }).shop.role === 'owner'
+  if (!owner || !plan || plan.kind === 'demo' || (plan.kind === 'tembo' && plan.daysLeft > 30)) return null
   const title =
     plan.kind === 'tembo'
       ? t(plan.daysLeft === 1 ? 'Tembo ends in {n} day' : 'Tembo ends in {n} days', { n: plan.daysLeft })
@@ -556,8 +558,10 @@ function ScoreCard({
   const [open, setOpen] = useState(!compact)
   const [all, setAll] = useState(false)
   const [bioHelp, setBioHelp] = useState(false)
+  // Every hook before the early return: a share that completes the last item would change the hook count.
+  const owner = useRouteContext({ from: '/app' }).shop.role === 'owner'
   if (!next) return null
-  const step = nextStep(next, facts, ai, t, { onShare, onBio: () => setBioHelp(true) })
+  const step = nextStep(next, facts, ai, t, { onShare, onBio: () => setBioHelp(true) }, owner)
 
   if (!open)
     return <Notice className={className} icon={<span className="tnum">{score}%</span>} title={step.title} sub={t('Your shop is {n}% ready', { n: score })} onClick={() => setOpen(true)} />
@@ -581,7 +585,7 @@ function ScoreCard({
           <p className="mt-0.5 text-15 font-medium">{step.title}</p>
           <p className="mt-1 max-w-[56ch] text-14 leading-5 text-muted">{step.sub}</p>
         </div>
-        <div className="mt-4 flex flex-wrap gap-2 md:mt-0 md:shrink-0">{step.action}</div>
+        {step.action && <div className="mt-4 flex flex-wrap gap-2 md:mt-0 md:shrink-0">{step.action}</div>}
       </div>
       {all && (
         <ul className="fade mt-3 grid gap-x-6 sm:grid-cols-2">
@@ -604,7 +608,7 @@ function ScoreCard({
 }
 
 /** The next step's words and button, by what is missing. */
-function nextStep(item: ScoreItem, f: ScoreFacts, ai: boolean, t: ReturnType<typeof useT>, on: { onShare: () => void; onBio: () => void }) {
+function nextStep(item: ScoreItem, f: ScoreFacts, ai: boolean, t: ReturnType<typeof useT>, on: { onShare: () => void; onBio: () => void }, owner = true) {
   const go = (to: string, label: string) => (
     <Link to={to} className="btn btn-sm">
       {label} <ArrowRight size={16} strokeWidth={1.75} />
@@ -647,10 +651,15 @@ function nextStep(item: ScoreItem, f: ScoreFacts, ai: boolean, t: ReturnType<typ
         ),
       }
     }
+    // How buyers pay and reach the shop is the owner's to set (src/lib/staff.ts): a Manager sees who to ask.
     case 'payment':
-      return { title: t('Add your Lipa Namba'), sub: t('Buyers have no way to pay you yet. Add your Lipa Namba, or turn on cash on delivery.'), action: go('/app/shop', t('Open Shop settings')) }
+      return owner
+        ? { title: t('Add your Lipa Namba'), sub: t('Buyers have no way to pay you yet. Add your Lipa Namba, or turn on cash on delivery.'), action: go('/app/shop', t('Open Shop settings')) }
+        : { title: t('Add a Lipa Namba'), sub: t('Buyers have no way to pay yet. Only the shop’s owner can add the Lipa Namba.'), action: null }
     case 'whatsapp':
-      return { title: t('Add your WhatsApp number'), sub: t('Buyers message you there about their orders.'), action: go('/app/shop', t('Open Shop settings')) }
+      return owner
+        ? { title: t('Add your WhatsApp number'), sub: t('Buyers message you there about their orders.'), action: go('/app/shop', t('Open Shop settings')) }
+        : { title: t('Add a WhatsApp number'), sub: t('Buyers message the shop there. Only the shop’s owner can add it.'), action: null }
     case 'logo':
       return { title: t('Add your logo'), sub: t('It shows on your shop, on your QR code and when your link is shared.'), action: go('/app/shop', t('Add your logo')) }
     case 'delivery':

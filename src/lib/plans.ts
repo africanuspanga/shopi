@@ -58,6 +58,7 @@ export const PLANS: { id: PlanId; name: string; price: number; lead: string; ite
       { text: msg('Your own domain and shop fonts') },
       { text: msg('No “Shop made with Shopi” line') },
       { text: msg('Full analytics: 90 days, channels, buyers and downloads') },
+      { text: msg('Up to 2 shop assistants, each with their own login') },
       { text: msg('500 SMS a year to your buyers, many sent automatically'), soon: true },
       { text: msg('Unlimited AI product descriptions'), soon: true },
     ],
@@ -79,8 +80,8 @@ export function planState(s: PlanInput, at = Date.now()): PlanState {
   return { kind: 'free' }
 }
 
-/** What Tembo adds. Bulk import, colour and cover are free (the founder, 17 Nov). */
-export type Feature = 'domain' | 'fonts' | 'hideBadge' | 'fullAnalytics' | 'unlimitedProducts'
+/** What Tembo adds. Bulk import, colour and cover are free (the founder, 17 Nov). `staff`: shop assistants (src/lib/staff.ts). */
+export type Feature = 'domain' | 'fonts' | 'hideBadge' | 'fullAnalytics' | 'unlimitedProducts' | 'staff'
 
 /**
  * The one entitlement check, for the server functions and the UI. Demo shops show everything. `using`: the shop already
