@@ -4,6 +4,8 @@ import { TEMBO_PRICE, planState } from '#/lib/plans'
 import { SESSION_DAYS } from '#/server/auth'
 import { db, now } from '#/server/db'
 import { proxyHealth } from '#/server/selcom'
+import { scoreFacts, scoreSelect, type ScoreRow } from '#/server/score'
+import { shopScore } from '#/lib/score'
 
 /**
  * Queries behind the owner dashboard (/admin). One D1 batch per section, so opening a section never pays for the others.
@@ -122,7 +124,8 @@ const shopRows = (from: number, only?: string) =>
        (SELECT MAX(expires_at) FROM sessions x WHERE x.user_id = u.id) session_ends,
        EXISTS (SELECT 1 FROM push_subscriptions ps WHERE ps.shop_id = s.id) push,
        (s.theme_color IS NOT NULL OR s.theme_font IS NOT NULL OR s.cover_key IS NOT NULL) look,
-       (SELECT hostname FROM domains d WHERE d.shop_id = s.id AND d.status = 'active' LIMIT 1) domain
+       (SELECT hostname FROM domains d WHERE d.shop_id = s.id AND d.status = 'active' LIMIT 1) domain,
+       s.setup_step, ${scoreSelect}
      FROM shops s JOIN users u ON u.id = s.owner_id
      WHERE (?2 IS NULL OR s.id = ?2)
      ORDER BY s.status = 'demo', sales DESC, orders DESC, s.created_at DESC`,
@@ -130,7 +133,8 @@ const shopRows = (from: number, only?: string) =>
     only ?? null,
   )
 
-type ShopRow = Omit<AdminShop, 'plan' | 'setup' | 'noPhoto' | 'ordersEver' | 'last_login' | 'notifications' | 'look' | 'app' | 'appSeen'> & {
+type ShopRow = ScoreRow & Omit<AdminShop, 'plan' | 'setup' | 'missing' | 'setupStep' | 'noPhoto' | 'ordersEver' | 'last_login' | 'notifications' | 'look' | 'app' | 'appSeen'> & {
+  setup_step: number | null
   app_seen_at: number | null
   app_platform: string | null
   plan: string
@@ -147,7 +151,8 @@ type ShopRow = Omit<AdminShop, 'plan' | 'setup' | 'noPhoto' | 'ordersEver' | 'la
 
 function toShops(r: D1Result<unknown>, t: number): AdminShop[] {
   return rows<ShopRow>(r).map((s) => {
-    const setup = [s.products > 0, !!s.lipa, s.areas > 0, !!s.logo_key].filter(Boolean).length
+    // The shop score (src/lib/score.ts), the same as the seller's Home shows.
+    const score = shopScore(scoreFacts(s))
     return {
       id: s.id,
       slug: s.slug,
@@ -161,7 +166,9 @@ function toShops(r: D1Result<unknown>, t: number): AdminShop[] {
       lang: s.lang,
       products: s.products,
       noPhoto: s.no_photo,
-      setup,
+      setup: score.score,
+      missing: score.items.filter((i) => !i.done).map((i) => i.key),
+      setupStep: s.setup_step,
       plan: planState({ status: s.status, plan: s.plan, paid_until: s.paid_until }, t),
       orders: s.orders,
       ordersEver: s.orders_ever,
@@ -250,14 +257,21 @@ export async function todayData(days: AdminDays) {
 
 export async function shopsData(days: AdminDays) {
   const { t, from } = windowOf(days)
-  const [list, noShop] = await db().batch([
+  const [list, noShop, steps] = await db().batch([
     shopRows(from),
     q(
       `SELECT u.name, u.phone, u.created_at FROM users u LEFT JOIN shops s ON s.owner_id = u.id
        WHERE s.id IS NULL AND u.is_admin = 0 ORDER BY u.created_at DESC LIMIT 50`,
     ),
+    // The five-step setup (o-flow): every step passed, how, and the seconds it took. Small: one row per shop and step.
+    q(`SELECT ss.step, ss.outcome, ss.seconds FROM setup_steps ss JOIN shops s ON s.id = ss.shop_id WHERE s.status != 'demo'`),
   ])
-  return { at: t, shops: toShops(list, t), noShop: rows<{ name: string; phone: string; created_at: number }>(noShop) }
+  return {
+    at: t,
+    shops: toShops(list, t),
+    noShop: rows<{ name: string; phone: string; created_at: number }>(noShop),
+    setupSteps: rows<{ step: number; outcome: string; seconds: number | null }>(steps),
+  }
 }
 
 export async function moneyData(days: AdminDays) {

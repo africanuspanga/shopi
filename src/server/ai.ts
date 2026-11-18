@@ -160,6 +160,66 @@ function cleanText(s: string) {
     .slice(0, 1200)
 }
 
+/** Shop bios a shop may have written in a calendar month, on any plan: a bio is written once or twice, not daily. */
+export const BIO_MONTH = 10
+
+/** Whether a shop may have another bio written this month. */
+export async function bioLeft(shopId: string) {
+  const row = await first<{ n: number }>(`SELECT COUNT(*) n FROM ai_uses WHERE shop_id = ? AND kind = 'bio' AND created_at >= ?`, shopId, monthStart())
+  return Math.max(0, BIO_MONTH - (row?.n ?? 0))
+}
+
+export type BioInput = { name: string; category: string; location: string; products: string[]; notes: string; lang: 'sw' | 'en' }
+
+// Two per language: one with facts, one with almost none (on 18 Nov, given only "clothes and fashion", the model added
+// "for men and women"; the short answer shows that few facts make a short line).
+const BIO_EXAMPLES: Record<'sw' | 'en', [string, string][]> = {
+  en: [
+    [
+      'Shop: Asili Naturals\nSells: beauty and care\nWhere: Mikocheni, Dar es Salaam\nSome products: Shea butter body cream, Coconut oil soap',
+      'Body creams and soaps made with shea butter and coconut oil, from Mikocheni, Dar es Salaam.',
+    ],
+    ['Shop: Viatu Bora\nSells: shoes', 'Shoes. Choose yours here and order in a few taps.'],
+  ],
+  sw: [
+    [
+      'Shop: Asili Naturals\nSells: beauty and care\nWhere: Mikocheni, Dar es Salaam\nSome products: Krimu ya mwili ya shea, Sabuni ya mafuta ya nazi',
+      'Krimu za mwili na sabuni za shea butter na mafuta ya nazi, kutoka Mikocheni, Dar es Salaam.',
+    ],
+    ['Shop: Viatu Bora\nSells: shoes', 'Viatu. Chagua unavyopenda hapa na uagize moja kwa moja.'],
+  ],
+}
+
+/**
+ * The line under a shop's name (setup step 4 and Shop settings): what it sells and where, from the shop's own facts.
+ * One sentence, two at most; nothing about delivery, prices or quality that the seller didn't say.
+ */
+export async function writeBio(d: BioInput) {
+  const system = [
+    'You write the one-line description under the name of a small online shop in Tanzania that sells on Instagram, TikTok and WhatsApp.',
+    `Write in ${SYSTEM[d.lang]}.`,
+    'Rules:',
+    '- One sentence, two at most, under 160 characters: what the shop sells and, if given, where it is.',
+    '- Use only the facts given: the shop name, what it sells, where, its products and the seller\'s notes. Never invent delivery promises, prices, opening hours, quality claims, years in business or guarantees.',
+    '- Never say who the products are for (men, women, children, brides) or how many kinds or styles there are, unless the facts say it. With few facts, write a short line.',
+    '- Plain and warm. No exclamation marks, no emoji, no hashtags, no hype words (amazing, best, quality, perfect, luxury, affordable).',
+    '- Do not start with the shop name: the page shows it right above.',
+    '- Output only the line, with no quotes or markdown.',
+    '- An earlier exchange shows another shop: it shows the tone only; never carry its details over.',
+  ].join('\n')
+  const user = [
+    `Shop: ${d.name}`,
+    `Sells: ${d.category}`,
+    d.location ? `Where: ${d.location}` : '',
+    d.products.length ? `Some products: ${d.products.join(', ')}` : '',
+    d.notes ? `The seller's notes (facts): ${d.notes}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
+  const out = await complete(system, user, { examples: BIO_EXAMPLES[d.lang], maxTokens: 400 })
+  return { text: cleanText(out.text).replace(/\s*\n+\s*/g, ' ').slice(0, 300), tokens: out.tokens }
+}
+
 /** Uses per shop for /admin: descriptions written in the last `days`. */
 export function aiUseCounts(from: number) {
   return all<{ shop_id: string; n: number }>(`SELECT shop_id, COUNT(*) n FROM ai_uses WHERE created_at >= ? GROUP BY shop_id`, from)

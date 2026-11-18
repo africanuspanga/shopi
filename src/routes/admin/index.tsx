@@ -10,6 +10,8 @@ import { recheckTemboPayment } from '#/lib/api/billing'
 import { CATEGORIES, localPhone, timeAgo, waLink, type OrderStatus } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import { Ranges, useAdminTabs } from './route'
+import { SCORE_LABELS, type ScoreKey } from '#/lib/score'
+import { SETUP_STEPS } from '#/lib/setup'
 
 /** The owner dashboard's sections: /admin?tab=today|shops|money|growth|use|health&days=7|30|90. */
 export const Route = createFileRoute('/admin/')({
@@ -266,7 +268,7 @@ function Shops({ d }: { d: OwnerSection<'shops'> }) {
                 <th className="py-2.5 pr-4 font-normal">{t('Shop')}</th>
                 <th className="py-2.5 pr-4 font-normal">{t('Seller')}</th>
                 <th className="py-2.5 pr-4 font-normal">{t('Plan')}</th>
-                <th className="py-2.5 pr-4 text-right font-normal">{t('Set up')}</th>
+                <th className="py-2.5 pr-4 text-right font-normal">{t('Ready')}</th>
                 <th className="py-2.5 pr-4 text-right font-normal">{t('Products')}</th>
                 <th className="py-2.5 pr-4 text-right font-normal">{t('Visits')}</th>
                 <th className="py-2.5 pr-4 text-right font-normal">{t('Orders')}</th>
@@ -296,7 +298,7 @@ function Shops({ d }: { d: OwnerSection<'shops'> }) {
                     <span className="meta block truncate">{s.last_login ? t('logged in {when}', { when: timeAgo(s.last_login, lang) }) : localPhone(s.phone)}</span>
                   </td>
                   <td className="py-3 pr-4 whitespace-nowrap">{planText(s)}</td>
-                  <td className="tnum py-3 pr-4 text-right">{s.setup}/4</td>
+                  <td className="tnum py-3 pr-4 text-right">{s.setup}%</td>
                   <td className="tnum py-3 pr-4 text-right">{num(s.products)}</td>
                   <td className="tnum py-3 pr-4 text-right">{num(s.visits)}</td>
                   <td className="tnum py-3 pr-4 text-right">{num(s.orders)}</td>
@@ -312,6 +314,7 @@ function Shops({ d }: { d: OwnerSection<'shops'> }) {
       </section>
 
       <Grid>
+        <SetupCards d={d} />
         <Card title={t('Signed up, no shop yet')} sub={t('Message them on WhatsApp to help them finish.')} className="lg:col-span-6">
           {d.noShop.length ? (
             <ul className="divide-y divide-line">
@@ -773,5 +776,88 @@ function Health({ d }: { d: OwnerSection<'health'> }) {
         )}
       </Card>
     </div>
+  )
+}
+
+/**
+ * Where sellers stop (roadmap `o-flow`): shops by their score (src/lib/score.ts) and each item's count, then the
+ * five-step setup: how many shops passed each step, how many skipped it, and the usual time on it.
+ */
+function SetupCards({ d }: { d: OwnerSection<'shops'> }) {
+  const t = useT()
+  const live = d.shops.filter((s) => s.status !== 'demo')
+  const bands = [
+    { label: t('Ready (100%)'), n: live.filter((s) => s.setup === 100).length },
+    { label: '70–90%', n: live.filter((s) => s.setup >= 70 && s.setup < 100).length },
+    { label: '40–60%', n: live.filter((s) => s.setup >= 40 && s.setup < 70).length },
+    { label: t('Under 40%'), n: live.filter((s) => s.setup < 40).length },
+  ]
+  const items = (Object.keys(SCORE_LABELS) as ScoreKey[]).filter((k) => k !== 'name')
+  const inFlow = live.filter((s) => s.setupStep != null)
+  const median = (xs: number[]) => {
+    if (!xs.length) return null
+    const v = [...xs].sort((a, b) => a - b)
+    return v[Math.floor(v.length / 2)]
+  }
+  const time = (sec: number | null) => (sec == null ? '—' : sec < 90 ? t('{n} s', { n: sec }) : t('{n} min', { n: Math.round(sec / 60) }))
+  const names = [t('Your shop'), t('Your first product'), t('How buyers pay'), t('Your shop is live'), t('Orders on your phone')]
+  const steps = names.map((name, i) => {
+    const step = i + 1
+    const rows = d.setupSteps.filter((r) => r.step === step)
+    return {
+      name,
+      passed: inFlow.filter((s) => (s.setupStep ?? 0) >= step).length,
+      skipped: rows.filter((r) => r.outcome === 'skip').length,
+      time: median(rows.map((r) => r.seconds).filter((x): x is number => x != null)),
+    }
+  })
+  const stuck = inFlow.filter((s) => (s.setupStep ?? 0) < SETUP_STEPS).length
+  return (
+    <>
+      <Card title={t('How ready shops are')} sub={t('The score sellers see on Home. Each line: shops that have it.')} className="lg:col-span-6">
+        <div className="grid grid-cols-4 gap-2">
+          {bands.map((b) => (
+            <div key={b.label} className="rounded-[14px] bg-page p-3">
+              <p className="tnum text-[20px] font-semibold tracking-[-0.02em]">{num(b.n)}</p>
+              <p className="mt-0.5 text-[12px] leading-4 text-muted">{b.label}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-5">
+          <BarList
+            empty={t('No shops yet.')}
+            total={Math.max(live.length, 1)}
+            rows={items.map((k) => {
+              const n = live.filter((s) => !s.missing.includes(k)).length
+              return { label: t(SCORE_LABELS[k]), value: n, text: `${num(n)} · ${pct(n, live.length)}%` }
+            })}
+          />
+        </div>
+      </Card>
+      <Card title={t('The five-step setup')} sub={t('Shops opened through the new setup. Time is the usual time spent on the step.')} className="lg:col-span-6">
+        {inFlow.length ? (
+          <>
+            <ul className="divide-y divide-line">
+              {steps.map((x, i) => (
+                <li key={x.name} className="flex items-center gap-3 py-2.5 text-[14px]">
+                  <span className="tnum flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-well text-[12px] font-medium">{i + 1}</span>
+                  <span className="min-w-0 flex-1 truncate">{x.name}</span>
+                  <span className="tnum shrink-0 text-right">
+                    {t('{n} passed', { n: num(x.passed) })}
+                    {x.skipped > 0 && <span className="text-muted"> · {t('{n} skipped', { n: num(x.skipped) })}</span>}
+                  </span>
+                  <span className="meta w-14 shrink-0 text-right">{time(x.time)}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-[13px] text-muted">
+              {stuck ? t(stuck === 1 ? '1 shop is still in the setup.' : '{n} shops are still in the setup.', { n: num(stuck) }) : t('Every shop finished the setup.')}
+            </p>
+          </>
+        ) : (
+          <Nothing>{t('No shop has opened through the new setup yet.')}</Nothing>
+        )}
+      </Card>
+    </>
   )
 }

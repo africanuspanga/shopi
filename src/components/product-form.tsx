@@ -547,7 +547,7 @@ function Card({ title, sub, children }: { title?: string; sub?: string; children
 }
 
 /** Shillings with thousands separators as you type; the form keeps digits only. */
-function PriceInput({ value, onValue, placeholder }: { value: string; onValue: (digits: string) => void; placeholder: string }) {
+export function PriceInput({ value, onValue, placeholder }: { value: string; onValue: (digits: string) => void; placeholder: string }) {
   const digits = value.replace(/\D/g, '')
   return (
     <span className="input flex items-center gap-2 px-4">

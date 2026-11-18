@@ -1,7 +1,8 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, redirect } from '@tanstack/react-router'
 import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, FileSpreadsheet, Plus, QrCode as QrCodeIcon, ReceiptText, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { Delta, Empty, Img, LangSwitch, Money, Page, PhoneBar, ShopAvatar, StatusPill, Toast, scrubIndex, useEntrance } from '#/components/ui'
+import { Delta, Empty, Img, LangSwitch, Money, Page, PhoneBar, Sheet, ShopAvatar, StatusPill, Toast, scrubIndex, useEntrance } from '#/components/ui'
+import { BioSteps } from '#/components/setup'
 import { PhoneAlertsCard } from '#/components/phone-app'
 import { QrSheet } from '#/components/qr-sheet'
 import { getDashboard } from '#/lib/api/merchant'
@@ -9,8 +10,15 @@ import { shortDay, timeAgo, tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import type { PlanState } from '#/lib/plans'
 import { shareLink, useOrigin } from '#/lib/share'
+import { track } from '#/lib/analytics'
+import { productNeed, shopScore, SCORE_PRODUCTS, type ScoreFacts, type ScoreItem } from '#/lib/score'
+import { inSetup } from '#/lib/setup'
 
 export const Route = createFileRoute('/app/')({
+  // A shop still in the five-step setup goes back to the step it stopped at (src/lib/setup.ts).
+  beforeLoad: ({ context }) => {
+    if (inSetup(context.session.shop?.setup)) throw redirect({ to: '/onboard' })
+  },
   loader: () => getDashboard(),
   component: Dashboard,
 })
@@ -28,6 +36,8 @@ function Dashboard() {
   const { shop } = Route.useRouteContext()
   const [copied, setCopied] = useState(false)
   const [qrOpen, setQrOpen] = useState(false)
+  // A share from this page ticks "Your link shared" at once; the event itself reaches the server a moment later.
+  const [sharedNow, setSharedNow] = useState(false)
   const origin = useOrigin()
   const url = `${origin}/${shop.slug}`
   const conversion = d.visits.shop ? Math.round((d.counts.online / d.visits.shop) * 1000) / 10 : 0
@@ -35,21 +45,20 @@ function Dashboard() {
   const yesterday = d.days[d.days.length - 2]?.total ?? 0
   const date = new Date().toLocaleDateString(lang === 'sw' ? 'sw-TZ' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Africa/Dar_es_Salaam' })
 
-  const setupSteps = [
-    { done: d.setup.products, label: t('Add your first product'), to: '/app/products/new' },
-    { done: d.setup.payment, label: t('Add your Lipa Namba'), to: '/app/shop' },
-    { done: d.setup.delivery, label: t('Set delivery areas'), to: '/app/shop' },
-    { done: d.setup.logo, label: t('Add a shop logo'), to: '/app/shop' },
-  ]
-  const setupDone = setupSteps.filter((s) => s.done).length
-  // A new shop sees one thing at a time (17 Nov): its first product, then the rest of setup and its link. The numbers,
-  // charts and the notifications offer wait for what makes them mean something: a product, then a first order.
-  const hasProducts = d.setup.products
+  // A new shop sees one thing at a time (17 Nov): its first product, then the shop score's next step and its link. The
+  // numbers, charts and the notifications offer wait for what makes them mean something: a product, then a first order.
+  const hasProducts = d.hasProducts
   const hasOrders = d.recent.length > 0
   const vs7 = t('vs the 7 days before')
 
+  // Shares from Home count for the shop score's "Your link shared" (a seller_share event).
   async function share() {
-    if ((await shareLink(url, shop.name)) === 'copied') {
+    const how = await shareLink(url, shop.name)
+    if (how !== 'cancelled') {
+      track('seller_share', { shopId: shop.id, detail: how === 'shared' ? 'home-native' : 'home-copy' })
+      setSharedNow(true)
+    }
+    if (how === 'copied') {
       setCopied(true)
       setTimeout(() => setCopied(false), 1800)
     }
@@ -63,6 +72,8 @@ function Dashboard() {
     } catch {
       window.prompt('', url)
     }
+    track('seller_share', { shopId: shop.id, detail: 'home-copy' })
+    setSharedNow(true)
   }
 
   return (
@@ -101,12 +112,13 @@ function Dashboard() {
 
       {hasProducts ? (
         <>
+          <ScoreCard facts={sharedNow ? { ...d.score, shared: true } : d.score} ai={d.ai} compact={hasOrders} onShare={share} onCopy={copyLink} copied={copied} className={`${rise} md:mt-8`} />
           <PlanRow plan={d.plan} />
           <PhoneAlertsCard />
         </>
       ) : (
         <>
-          <FirstProductCard className={rise} />
+          <FirstProductCard className={`${rise} md:mt-8`} score={shopScore(d.score).score} />
           <PlanRow plan={d.plan} />
         </>
       )}
@@ -132,38 +144,6 @@ function Dashboard() {
               </li>
             ))}
           </ul>
-        </section>
-      )}
-
-      {hasProducts && setupDone < setupSteps.length && (
-        <section className={`${rise} card mt-6 p-5 md:mt-8 md:p-6`}>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-[16px] font-semibold">{t('Finish setting up your shop')}</h2>
-              <p className="mt-0.5 text-[14px] text-muted">{t('Buyers trust a shop with a logo, a Lipa Namba and delivery areas.')}</p>
-            </div>
-            <p className="tnum shrink-0 text-[14px] text-muted">
-              {setupDone}/{setupSteps.length}
-            </p>
-          </div>
-          <div className="mt-4 h-1 overflow-hidden rounded-full bg-well">
-            <div className="h-full rounded-full bg-ink transition-[width] duration-500" style={{ width: `${(setupDone / setupSteps.length) * 100}%` }} />
-          </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {setupSteps.map((s) => (
-              <Link
-                key={s.label}
-                to={s.to}
-                className={`flex h-12 items-center gap-3 rounded-[14px] px-3 text-[14px] transition-colors ${s.done ? 'text-muted' : 'bg-page font-medium hover:bg-well'}`}
-              >
-                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${s.done ? 'bg-ink text-white' : 'shadow-[inset_0_0_0_1.5px_var(--color-line-strong)]'}`}>
-                  {s.done && <Check size={12} strokeWidth={3} />}
-                </span>
-                <span className={s.done ? 'line-through decoration-line-strong' : ''}>{s.label}</span>
-                {!s.done && <ChevronRight size={16} strokeWidth={1.6} className="ml-auto text-muted" />}
-              </Link>
-            ))}
-          </div>
         </section>
       )}
 
@@ -493,13 +473,13 @@ function SalesChart({ days, total, className = '' }: { days: { day: number; tota
   )
 }
 
-/** One quiet line about the plan: trial days left, or that the trial or plan has ended. Paid plans stay quiet until the last month. */
 /** A shop with no products yet: the one thing to do, large, before anything else on Home. */
-function FirstProductCard({ className = '' }: { className?: string }) {
+function FirstProductCard({ className = '', score }: { className?: string; score: number }) {
   const t = useT()
   return (
     <section className={`${className} card p-6 md:flex md:items-center md:gap-10 md:p-8`}>
       <div className="min-w-0 flex-1">
+        <ScoreBar score={score} className="mb-5" />
         <h2 className="title text-[26px] md:text-[32px]">{t('Add your first product')}</h2>
         <p className="mt-2 max-w-[44ch] text-[15px] leading-relaxed text-ink-2">{t('A photo, a name and a price. Buyers can order it the moment you save it.')}</p>
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
@@ -546,4 +526,173 @@ function PlanRow({ plan }: { plan: PlanState | null }) {
       </span>
     </Link>
   )
+}
+
+/** "Your shop is 40% ready" with its bar. */
+function ScoreBar({ score, className = '' }: { score: number; className?: string }) {
+  const t = useT()
+  return (
+    <div className={`flex items-center gap-3 ${className}`}>
+      <div className="h-1.5 max-w-[220px] flex-1 overflow-hidden rounded-full bg-well" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100} aria-label={t('Your shop is {n}% ready', { n: score })}>
+        <div className="h-full rounded-full bg-ink transition-[width] duration-500" style={{ width: `${score}%` }} />
+      </div>
+      <span className="meta shrink-0">{t('Your shop is {n}% ready', { n: score })}</span>
+    </div>
+  )
+}
+
+/**
+ * The shop score on Home (src/lib/score.ts): how ready the shop is, the one next step with its button, and every item
+ * behind "See all". Gone at 100%. A shop with orders gets it as one line that opens, so it never pushes the day's
+ * numbers down.
+ */
+function ScoreCard({
+  facts,
+  ai,
+  compact,
+  onShare,
+  onCopy,
+  copied,
+  className = '',
+}: {
+  facts: ScoreFacts
+  ai: boolean
+  compact: boolean
+  onShare: () => void
+  onCopy: () => void
+  copied: boolean
+  className?: string
+}) {
+  const t = useT()
+  const { score, items, next } = shopScore(facts)
+  const [open, setOpen] = useState(!compact)
+  const [all, setAll] = useState(false)
+  const [bioHelp, setBioHelp] = useState(false)
+  if (!next) return null
+  const step = nextStep(next, facts, ai, t, { onShare, onBio: () => setBioHelp(true) })
+
+  if (!open)
+    return (
+      <button type="button" onClick={() => setOpen(true)} className={`${className} card flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-page`}>
+        <span className="tnum shrink-0 text-[15px] font-semibold">{score}%</span>
+        <span className="min-w-0 flex-1 truncate text-[15px]">
+          <span className="text-muted">{t('Next')}: </span>
+          {step.title}
+        </span>
+        <ChevronRight size={16} strokeWidth={1.6} className="shrink-0 text-muted" />
+      </button>
+    )
+
+  return (
+    <section className={`${className} card p-5 md:p-6`}>
+      <div className="flex items-baseline justify-between gap-4">
+        <h2 className="text-[16px] font-semibold">{t('Your shop is {n}% ready', { n: score })}</h2>
+        <button type="button" className="-my-2 shrink-0 py-2 text-[13px] text-muted transition-colors hover:text-ink" aria-expanded={all} onClick={() => setAll(!all)}>
+          {all ? t('Hide') : t('See all')}
+        </button>
+      </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-well" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}>
+        <div className="h-full rounded-full bg-ink transition-[width] duration-500" style={{ width: `${score}%` }} />
+      </div>
+      <div className="mt-4 rounded-[18px] bg-page p-4 md:flex md:items-center md:justify-between md:gap-8 md:p-5">
+        <div className="min-w-0">
+          <p className="meta">{t('Next')}</p>
+          <p className="mt-0.5 text-[15px] font-medium">{step.title}</p>
+          <p className="mt-1 max-w-[56ch] text-[14px] leading-5 text-muted">{step.sub}</p>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2 md:mt-0 md:shrink-0">{step.action}</div>
+      </div>
+      {all && (
+        <ul className="fade mt-3 grid gap-x-6 sm:grid-cols-2">
+          {items.map((i) => (
+            <li key={i.key} className="flex min-h-11 items-center gap-3 border-b border-line py-2 text-[14px] last:border-0 sm:[&:nth-last-child(2)]:border-0">
+              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${i.done ? 'bg-ink text-white' : 'shadow-[inset_0_0_0_1.5px_var(--color-line-strong)]'}`}>
+                {i.done && <Check size={12} strokeWidth={3} />}
+              </span>
+              <span className={`min-w-0 flex-1 ${i.done ? 'text-muted' : ''}`}>{t(i.label)}</span>
+              <span className="meta shrink-0">{i.key === 'products' && !i.done ? `${Math.min(SCORE_PRODUCTS, facts.complete)}/${SCORE_PRODUCTS}` : `${i.points}/${i.max}`}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Sheet open={bioHelp} onClose={() => setBioHelp(false)} title={t('Put it in your Instagram bio')}>
+        <BioSteps onCopy={onCopy} copied={copied} />
+      </Sheet>
+    </section>
+  )
+}
+
+/** The next step's words and button, by what is missing. */
+function nextStep(item: ScoreItem, f: ScoreFacts, ai: boolean, t: ReturnType<typeof useT>, on: { onShare: () => void; onBio: () => void }) {
+  const go = (to: string, label: string) => (
+    <Link to={to} className="btn btn-sm">
+      {label} <ArrowRight size={15} strokeWidth={1.75} />
+    </Link>
+  )
+  switch (item.key) {
+    case 'products': {
+      const need = productNeed(f)
+      if (need === 'description' && f.fixId)
+        return {
+          title: t(f.noDescription === 1 ? '1 product has no description' : '{n} products have no description', { n: f.noDescription }),
+          sub: ai ? t('Buyers ask less when a product says what it is. Shopi can write it from the name and your notes.') : t('Buyers ask less when a product says what it is.'),
+          action: (
+            <Link to="/app/products/$id" params={{ id: f.fixId }} className="btn btn-sm">
+              {ai ? t('Write it for me') : t('Add a description')} <ArrowRight size={15} strokeWidth={1.75} />
+            </Link>
+          ),
+        }
+      if (need === 'photo' && f.fixId)
+        return {
+          title: t(f.noPhoto === 1 ? '1 product has no photo' : '{n} products have no photo', { n: f.noPhoto }),
+          sub: t('Buyers order what they can see.'),
+          action: (
+            <Link to="/app/products/$id" params={{ id: f.fixId }} className="btn btn-sm">
+              {t('Add a photo')} <ArrowRight size={15} strokeWidth={1.75} />
+            </Link>
+          ),
+        }
+      const left = SCORE_PRODUCTS - Math.min(SCORE_PRODUCTS, f.complete)
+      return {
+        title: t(left === 1 ? 'Add 1 more product' : 'Add {n} more products', { n: left }),
+        sub: t('Three products with a photo, a price and a description make a shop worth looking through.'),
+        action: (
+          <>
+            {go('/app/products/new', t('Add product'))}
+            <Link to="/app/products/import" className="btn btn-ghost btn-sm">
+              <FileSpreadsheet size={15} strokeWidth={1.75} /> {t('Import from a sheet')}
+            </Link>
+          </>
+        ),
+      }
+    }
+    case 'payment':
+      return { title: t('Add your Lipa Namba'), sub: t('Buyers have no way to pay you yet. Add your Lipa Namba, or turn on cash on delivery.'), action: go('/app/shop', t('Open Shop settings')) }
+    case 'whatsapp':
+      return { title: t('Add your WhatsApp number'), sub: t('Buyers message you there about their orders.'), action: go('/app/shop', t('Open Shop settings')) }
+    case 'logo':
+      return { title: t('Add your logo'), sub: t('It shows on your shop, on your QR code and when your link is shared.'), action: go('/app/shop', t('Add your logo')) }
+    case 'delivery':
+      return { title: t('Say where you deliver'), sub: t('Buyers ask this before anything else. List your areas, or say you send to other regions.'), action: go('/app/shop', t('Add delivery areas')) }
+    case 'share':
+      return {
+        title: t('Share your link'),
+        sub: t('Send it to your customers on WhatsApp and put it on your status.'),
+        action: (
+          <button type="button" className="btn btn-sm" onClick={on.onShare}>
+            <Share2 size={15} strokeWidth={1.6} /> {t('Share')}
+          </button>
+        ),
+      }
+    default:
+      return {
+        title: t('Put your link in your Instagram bio'),
+        sub: t('This is ticked when a buyer arrives from Instagram or TikTok.'),
+        action: (
+          <button type="button" className="btn btn-sm" onClick={on.onBio}>
+            {t('Show me how')}
+          </button>
+        ),
+      }
+  }
 }

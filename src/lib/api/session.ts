@@ -13,13 +13,14 @@ export const getSession = createServerFn({ method: 'GET' }).handler(async () => 
   const lang: Lang = asLang(getCookie('shopi_lang'))
   const user = await currentUser()
   const row = user
-    ? await first<{ id: string; slug: string; name: string; logo_key: string | null; status: string; plan: string; paid_until: number | null }>(
-        'SELECT id, slug, name, logo_key, status, plan, paid_until FROM shops WHERE owner_id = ? LIMIT 1',
+    ? await first<{ id: string; slug: string; name: string; logo_key: string | null; status: string; plan: string; paid_until: number | null; setup_step: number | null }>(
+        'SELECT id, slug, name, logo_key, status, plan, paid_until, setup_step FROM shops WHERE owner_id = ? LIMIT 1',
         user.id,
       )
     : null
   // The plan (Free, Tembo, demo) rides with the session, so seller screens ask can() without another request.
-  const shop = row ? { id: row.id, slug: row.slug, name: row.name, logo_key: row.logo_key, plan: planState(row) } : null
+  // setup: the furthest setup step passed (src/lib/setup.ts); null for shops opened before the five-step setup.
+  const shop = row ? { id: row.id, slug: row.slug, name: row.name, logo_key: row.logo_key, plan: planState(row), setup: row.setup_step } : null
   return { lang, user, shop }
 })
 

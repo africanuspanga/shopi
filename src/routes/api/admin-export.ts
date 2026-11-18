@@ -28,7 +28,7 @@ export const Route = createFileRoute('/api/admin-export')({
           return ['free', '']
         }
         const body = [
-          ['Shop', 'Link', 'Category', 'Opened', 'Seller', 'Phone', 'Last log-in', 'Language', 'Plan', 'Tembo ends', 'Set up (of 4)', 'Products', 'Products without a photo',
+          ['Shop', 'Link', 'Category', 'Opened', 'Seller', 'Phone', 'Last log-in', 'Language', 'Plan', 'Tembo ends', 'Ready (%)', 'Products', 'Products without a photo',
             `Visits (${days} days)`, `Online orders (${days} days)`, `Sales TSh (${days} days)`, 'Online orders ever', 'Last order', 'App installed', 'Notifications', 'Own look', 'Own domain'],
           ...shops.map((s) => [
             s.name, `https://shopi.tz/${s.slug}`, s.category, day(s.created_at), s.owner, `'${s.phone}`, day(s.last_login), s.lang, ...plan(s), s.setup, s.products, s.noPhoto,

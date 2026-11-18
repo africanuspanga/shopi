@@ -48,12 +48,17 @@ function ProductAside() {
   )
 }
 
+/** Where the seller is in the setup: a bar per step and "2 of 5". */
 export function StepBar({ step, of }: { step: number; of: number }) {
+  const t = useT()
   return (
-    <div className="flex gap-1.5" aria-hidden>
-      {Array.from({ length: of }).map((_, i) => (
-        <span key={i} className={`h-1 w-8 rounded-full ${i < step ? 'bg-ink' : 'bg-raised'}`} />
-      ))}
+    <div className="flex items-center gap-3">
+      <div className="flex gap-1.5" aria-hidden>
+        {Array.from({ length: of }).map((_, i) => (
+          <span key={i} className={`h-1 w-7 rounded-full transition-colors duration-500 ${i < step ? 'bg-ink' : 'bg-raised'}`} />
+        ))}
+      </div>
+      <span className="meta">{t('{n} of {total}', { n: step, total: of })}</span>
     </div>
   )
 }

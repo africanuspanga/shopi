@@ -11,6 +11,8 @@ import { FREE_PRODUCTS, can } from '#/lib/plans'
 import { TIKTOK_SHORT, readSocialLink } from '#/lib/social'
 import { withReadiness, type AlertRow } from '#/server/alerts'
 import { setPick } from '#/server/picks'
+import { scoreFacts, scoreSelect, type ScoreRow } from '#/server/score'
+import { aiReady } from '#/server/ai'
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
 const int = (v: unknown) => {
@@ -64,7 +66,7 @@ export const checkSlug = createServerFn({ method: 'GET' })
 
 export const createShop = createServerFn({ method: 'POST' })
   .validator(
-    (d: { name: string; slug: string; category: string; whatsapp: string; lang: string; instagram?: string; tiktok?: string; facebook?: string }) => ({
+    (d: { name: string; slug: string; category: string; whatsapp: string; lang: string; instagram?: string; tiktok?: string; facebook?: string; seconds?: number }) => ({
       name: str(d.name, 60),
       slug: slugify(d.slug),
       category: CATEGORIES.some((c) => c.id === d.category) ? d.category : 'other',
@@ -74,6 +76,8 @@ export const createShop = createServerFn({ method: 'POST' })
       instagram: str(d.instagram, 60).replace(/^@/, ''),
       tiktok: str(d.tiktok, 60).replace(/^@/, ''),
       facebook: str(d.facebook, 100),
+      // Time on the setup's first screen, for /admin (setup_steps).
+      seconds: Number.isFinite(Number(d.seconds)) ? Math.min(3600, Math.max(0, Math.round(Number(d.seconds)))) : null,
     }),
   )
   .handler(async ({ data }) => {
@@ -83,21 +87,18 @@ export const createShop = createServerFn({ method: 'POST' })
     if (!data.name) return { error: 'name' as const }
     if (data.slug.length < 3 || RESERVED_SLUGS.has(data.slug)) return { error: 'slug' as const }
     if (await first('SELECT 1 FROM shops WHERE slug = ?', data.slug)) return { error: 'slug_taken' as const }
-    await run(
-      `INSERT INTO shops (id, owner_id, slug, name, category, whatsapp, lang, instagram, tiktok, facebook, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      newId(),
-      user.id,
-      data.slug,
-      data.name,
-      data.category,
-      data.whatsapp || user.phone,
-      data.lang,
-      data.instagram,
-      data.tiktok,
-      data.facebook,
-      now(),
-    )
+    // setup_step 1: the five-step setup goes on from here (src/lib/setup.ts). The shop and its first setup row together.
+    const id = newId()
+    const t = now()
+    await db().batch([
+      db()
+        .prepare(
+          `INSERT INTO shops (id, owner_id, slug, name, category, whatsapp, lang, instagram, tiktok, facebook, created_at, setup_step)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+        )
+        .bind(id, user.id, data.slug, data.name, data.category, data.whatsapp || user.phone, data.lang, data.instagram, data.tiktok, data.facebook, t),
+      db().prepare('INSERT INTO setup_steps (shop_id, step, outcome, seconds, created_at) VALUES (?, 1, ?, ?, ?)').bind(id, 'done', data.seconds, t),
+    ])
     return { ok: true as const, slug: data.slug }
   })
 
@@ -130,28 +131,6 @@ export const expandSocialLink = createServerFn({ method: 'POST' })
       }
     }
     return { found: null }
-  })
-
-/** The optional setup step: where the shop is and its socials. Empty fields stay empty; "Skip for now" never calls this. */
-export const saveShopBasics = createServerFn({ method: 'POST' })
-  .validator((d: { location?: string; maps_url?: string; tin?: string; instagram?: string; tiktok?: string; facebook?: string }) => d)
-  .handler(async ({ data }) => {
-    const { shop } = await requireShop()
-    const maps = mapsLink(str(data.maps_url, 500))
-    if (maps === null) return { error: 'maps' as const }
-    const tin = tinDigits(str(data.tin, 20))
-    if (tin === null) return { error: 'tin' as const }
-    await run(
-      'UPDATE shops SET location = ?, maps_url = ?, tin = ?, instagram = ?, tiktok = ?, facebook = ? WHERE id = ?',
-      str(data.location, 200),
-      maps,
-      tin,
-      str(data.instagram, 60).replace(/^@/, ''),
-      str(data.tiktok, 60).replace(/^@/, ''),
-      str(data.facebook, 100),
-      shop.id,
-    )
-    return { ok: true as const }
   })
 
 export const getMyPlan = createServerFn({ method: 'GET' }).handler(async () => {
@@ -250,7 +229,7 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
   // Days are counted in Tanzania time (UTC+3).
   const TZ = 3 * 3600_000
   const todayStart = Math.floor((now() + TZ) / 86400_000) * 86400_000 - TZ
-  const [sales, visits, open, recent, top, productCount, setup, prev, daily, counts, today, queue, shares] = await Promise.all([
+  const [sales, visits, open, recent, top, productCount, score, prev, daily, counts, today, queue, shares] = await Promise.all([
     first<{ n: number; total: number }>(
       `SELECT COUNT(*) n, COALESCE(SUM(total), 0) total FROM orders
        WHERE shop_id = ? AND created_at > ? AND status IN ('confirmed','dispatched','delivered')`,
@@ -284,11 +263,8 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
       shop.id,
     ),
     first<{ n: number }>('SELECT COUNT(*) n FROM products WHERE shop_id = ?', shop.id),
-    first<{ lipa_number: string; logo_key: string | null; areas: number }>(
-      `SELECT lipa_number, logo_key, (SELECT COUNT(*) FROM delivery_areas WHERE shop_id = shops.id) areas
-       FROM shops WHERE id = ?`,
-      shop.id,
-    ),
+    // The shop score's facts (src/lib/score.ts): Home's "Your shop is 60% ready" and its next step.
+    first<ScoreRow>(`SELECT ${scoreSelect} FROM shops s WHERE s.id = ?`, shop.id),
     first<{ total: number; orders: number; online: number; visits: number }>(
       `SELECT
          (SELECT COALESCE(SUM(total), 0) FROM orders WHERE shop_id = ?1 AND created_at BETWEEN ?2 AND ?3
@@ -372,12 +348,10 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
     })),
     plan: await shopPlan(shop.id),
     backInStock,
-    setup: {
-      products: (productCount?.n ?? 0) > 0,
-      payment: !!setup?.lipa_number,
-      logo: !!setup?.logo_key,
-      delivery: (setup?.areas ?? 0) > 0,
-    },
+    hasProducts: (productCount?.n ?? 0) > 0,
+    score: scoreFacts(score!),
+    /** Whether "Write it for me" exists here, for the next step's words. */
+    ai: aiReady(),
   }
 })
 

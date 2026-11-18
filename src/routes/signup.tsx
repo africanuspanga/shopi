@@ -1,6 +1,6 @@
 import { Link, createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
-import { AuthLayout, PasswordInput, StepBar } from '#/components/auth'
+import { AuthLayout, PasswordInput } from '#/components/auth'
 import { ErrorText, Field, TextLink } from '#/components/ui'
 import { signup } from '#/lib/api/session'
 import { useT } from '#/lib/i18n'
@@ -38,8 +38,7 @@ function Signup() {
         </Link>
       }
     >
-      <StepBar step={1} of={3} />
-      <h1 className="title mt-6 text-[32px] md:text-[38px]">{t('Open your shop')}</h1>
+      <h1 className="title text-[32px] md:text-[38px]">{t('Open your shop')}</h1>
       <p className="mt-2 text-[15px] text-muted">{t('First, your account. Your shop comes next.')}</p>
       <form
         className="mt-8 space-y-4"

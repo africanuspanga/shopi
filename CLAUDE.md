@@ -44,7 +44,9 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/lib/host.ts`, `src/server/domains.ts`, `src/server/cloudflare.ts` | Shops' own domains: the address rewrite (`shopRewrite`), domain lookup and status, Cloudflare's API (custom hostnames, the Turnstile widget's hostnames) |
 | `src/routes/app/domain.tsx`, `src/lib/api/domains.ts` | "Your own domain": connect, the CNAME to add, status, disconnect |
 | `src/routes/app/look.tsx`, `src/components/look.tsx`, `src/lib/api/look.ts` | Shop look: cover, colour (logo suggestions, tested, own), style of the name, live preview; `saveShopLook` |
-| `src/components/auth.tsx` | `AuthLayout` (form left, dark product panel right), `StepBar`, `PasswordInput` |
+| `src/components/auth.tsx` | `AuthLayout` (form left, dark product panel right), `StepBar` ("2 of 5"), `PasswordInput` |
+| `src/routes/onboard.tsx`, `src/components/setup.tsx`, `src/lib/setup.ts`, `src/lib/api/setup.ts`, `src/server/setup.ts` | The five-step setup: the route and step 1; steps 2 to 5 and the shop preview; which step to show; its server functions; `passStep` |
+| `src/lib/score.ts`, `src/server/score.ts` | The shop score: the eight items, points and the next step (browser-safe); its facts as one SQL fragment for Home and `/admin` |
 | `src/components/showcase.tsx` | Coded product previews for the landing and auth pages (phone, mini store, order card, payment slip) |
 | `src/components/brand-icons.tsx` | One-colour social icons, plus `WhatsAppMark` (WhatsApp's green mark) |
 | `src/routes/index.tsx` | Landing page |
@@ -388,17 +390,53 @@ domain are lowercase.
   latest wins); `signup` stores the shop's id in `users.ref_shop` and clears the cookie. The Privacy page names both. The
   owner dashboard shows "Sellers brought by shops" (Growth) and "Sellers it brought" (a shop's page). The invite reward
   (`referral`, decision n13) builds on it.
-- Setup and a new shop's Home (17 Nov, the founder's OK on the onboarding review): "Name your shop" opens with a welcome
-  ("Welcome, {first name}. A name and a link, and your shop is open."); the note that the link never changes sits under
-  the link field. One category chip, "Clothes and fashion" (id `fashion`), replaced Fashion and Clothes. Step 3 asks only
-  where the shop is and its socials; the TIN and Google Maps link are in Shop settings only. Home shows one thing at a
-  time: no products yet, a large "Add your first product" card (then the trial row) and nothing else; once there is a
-  product, the notifications offer, the setup checklist and "Your shop is ready for its first order" (the link, Copy,
-  Share); the numbers, charts, best sellers and latest orders appear with the first order (`getDashboard().recent`).
-  The five-step setup (`o-flow`, decision n1) replaces the screens themselves later.
+- **The five-step setup** (roadmap `o-flow`, decision n1; built 18 Nov 2026; migration `0026_setup.sql`). After sign-up
+  (name, phone, password; no step bar), `/onboard` runs five screens, one decision each, with a bar and "2 of 5"
+  (`StepBar`). Rules in `src/lib/setup.ts`, step 1 and the route in `src/routes/onboard.tsx`, steps 2 to 5 and the
+  preview in `src/components/setup.tsx`, server functions in `src/lib/api/setup.ts`.
+  1. **Your shop:** paste an Instagram/TikTok/WhatsApp link (below) or type the name; the link is claimed under it
+     (`checkSlug`); what it sells (one chip). The shop's language (the app's) and WhatsApp (the sign-up number) are one
+     quiet line with Change, which opens `ShopLangChoice` and the number. `createShop` sets `setup_step = 1`.
+  2. **Your first product:** photos (one required to save), name, price, description with "Write it for me" (`ai`
+     only), and a folded "Buyers choose a size" with the size presets. Save goes through `saveProduct`/`cleanProduct`.
+     "I’ll do this later" skips; "Import them from a sheet" goes to the import (products then answer this step).
+  3. **How buyers pay:** network chips, Lipa Namba or number, the name on payments (`saveSetupPayment`; a number that
+     reads as a Tanzanian mobile is marked personal). "Only cash on delivery for now" passes the step on purpose.
+  4. **Your shop is live:** the link with WhatsApp, Copy and native share (`ShareActions`, tracked as `seller_share`
+     `setup-<how>`), the QR card (`QrSheet`), the shop as buyers see it (`LiveCard`; a phone frame on desktop) where
+     "Add a line about your shop" opens a sheet with the bio and "Write it for me" (`WriteBio`), and "Put it in your
+     Instagram bio" (`BioSteps`: Edit profile, Links, Add external link; TikTok: Edit profile, Website).
+  5. **Orders on your phone:** turn on notifications (`usePhoneApp`, a test push), install the app or the iPhone guide
+     (`InstallSheet`), then "Go to my shop". `catchInstallPrompt()` runs on `/onboard` too.
+  - **Resumable:** `shops.setup_step` keeps the furthest step passed (`passStep` in `src/server/setup.ts`, never back);
+    the step shown is the next one, skipping 2 when the shop has a product and 3 when it has a Lipa Namba
+    (`nextSetupStep`). Home (`/app/` index) sends a shop with `setup_step` 1 to 4 back to `/onboard`; other seller pages
+    stay open (the import, a push's order link). Shops opened before this have `setup_step` NULL and never see it. The
+    session carries it (`session.shop.setup`).
+  - **Recorded:** `setup_steps` gets a row per step passed (`done` or `skip`, seconds on its screen); `/admin` Shops shows
+    "The five-step setup" (passed, skipped, the median time per step, shops still in it). No personal data.
+  - Desktop: the dark panel shows the shop taking shape (`ShopCard`: name, category, the product being typed, the
+    payment line), the live shop in a phone at step 4, and a sample order notification at step 5 (`OrderNotice`).
+    Phones get the same preview as a small card that opens it (`PreviewToggle`), and step 4 shows the card inline.
+- **The shop score** (`src/lib/score.ts`, the founder: "every shop owner reaches a 100% set-up shop"): 100 points over
+  eight items: name and link 10; three shown products with a photo, a price and a description 30 (10 each); a way to be
+  paid 10 (a Lipa Namba, or cash on delivery on purpose: setup step 3 passed, or a shop older than the setup); WhatsApp
+  10; logo 10; delivery areas or "we send to other regions" 10; the link shared from Shopi once (a `seller_share`
+  event: setup, Home's Copy/Share, a product's Send, the QR card) 10; the link in a bio (a visit with source
+  `instagram` or `tiktok`, or tag `bio`) 10. The facts are one SQL fragment (`scoreSelect` in `src/server/score.ts`)
+  shared by Home (`getDashboard().score`) and `/admin`. **Home:** no product yet, the large "Add your first product"
+  card with "Your shop is 30% ready" above it; then `ScoreCard`: the percentage, its bar, the one next step with its
+  button (products first, then the Lipa Namba, then the rest in order; a product missing a description opens it with
+  "Write it for me" when AI is on), and "See all" for the eight items. A shop with orders gets it as one line that
+  opens. Gone at 100%. **/admin:** the Shops table's Ready column, "How ready shops are" (bands and each item's
+  count), a shop's page lists what it still misses; the CSV has "Ready (%)".
+- **"Write it for me" for the shop's line** (`writeBio` in `src/server/ai.ts`, `writeShopBio`, `WriteBio`): one
+  sentence in the shop's language from its name, category, location and product names; what the seller typed is taken
+  as facts; no delivery, price or quality claims. `BIO_MONTH` = 10 a month on any plan, counted in `ai_uses` as `bio`
+  (not against the 10 descriptions). In setup step 4 and under Shop settings' Short bio. Privacy names OpenAI.
 - Setup's "Your Instagram, TikTok or WhatsApp link" (`src/lib/social.ts`, `readSocialLink`): a pasted profile link fills
-  a first shop name and link (`nameFromHandle`), that social handle (saved by `createShop` and shown again in step 3), or
-  the WhatsApp number. Nothing is fetched from Meta; only a TikTok short link (vm.tiktok.com) is opened on the server
+  a first shop name and link (`nameFromHandle`), that social handle (saved by `createShop`; Shop settings shows it), or
+  the WhatsApp number (shown under the field; the quiet line opens to change it). Nothing is fetched from Meta; only a TikTok short link (vm.tiktok.com) is opened on the server
   (`expandSocialLink`, TikTok hosts only, the redirect alone is read). A `wa.me/message/…` link hides the number, so the
   seller is asked to type it.
 - Shop look (`/app/look`, from Shop settings; migration `0017_shop_look.sql`): `shops.theme_color` (#rrggbb, NULL = Shopi

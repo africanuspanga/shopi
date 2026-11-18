@@ -2,6 +2,7 @@ import { Link, createFileRoute, useBlocker, useRouter } from '@tanstack/react-ro
 import { Camera, Check, ChevronRight, Copy, Globe, LogOut, Palette, Plus, QrCode as QrCodeIcon, TicketPercent, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
+import { WriteBio } from '#/components/ai-write'
 import { PhoneAppSettings } from '#/components/phone-app'
 import { QrSheet } from '#/components/qr-sheet'
 import { useCan } from '#/components/tembo'
@@ -124,9 +125,12 @@ function ShopSettings() {
               onChange={(lang) => setS({ ...s, lang })}
               hint={t('The language buyers see: your shop, checkout and order pages.')}
             />
-            <Field label={t('Short bio')} aside={`${s.bio.length}/300`}>
-              <textarea className="input" maxLength={300} value={s.bio} onChange={set('bio')} placeholder={t('e.g. Kitenge outfits made in Sinza. Delivery across Dar the same day.')} />
-            </Field>
+            <div>
+              <Field label={t('Short bio')} aside={`${s.bio.length}/300`}>
+                <textarea className="input" maxLength={300} value={s.bio} onChange={set('bio')} placeholder={t('e.g. Kitenge outfits made in Sinza. Delivery across Dar the same day.')} />
+              </Field>
+              <WriteBio notes={s.bio} onText={(bio) => setS((x) => ({ ...x, bio }))} />
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('What you sell')}>
                 <select className="input" value={s.category} onChange={set('category')}>

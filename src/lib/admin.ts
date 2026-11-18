@@ -23,7 +23,11 @@ export type AdminShop = {
   products: number
   /** Products buyers can't see a photo of. */
   noPhoto: number
+  /** The shop score, 0 to 100 (src/lib/score.ts), and what it still misses. */
   setup: number
+  missing: string[]
+  /** The furthest step of the five-step setup passed; null for shops opened before it. */
+  setupStep: number | null
   plan: PlanState
   orders: number
   /** Online orders ever, for "no orders yet". */

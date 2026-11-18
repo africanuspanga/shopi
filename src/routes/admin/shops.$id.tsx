@@ -9,6 +9,8 @@ import { CATEGORIES, localPhone, timeAgo, waLink, type OrderStatus } from '#/lib
 import { useLang, useT } from '#/lib/i18n'
 import { usePlanText } from './index'
 import { Ranges } from './route'
+import { SCORE_LABELS, type ScoreKey } from '#/lib/score'
+import { SETUP_STEPS } from '#/lib/setup'
 
 /** One shop, for the owner: its numbers, its seller and what it has set up. */
 export const Route = createFileRoute('/admin/shops/$id')({
@@ -99,7 +101,9 @@ function ShopPage() {
           <Row label={t('Last log-in')} value={ago(s.last_login)} />
           <Row label={t('Link')} value={<span className="code">{s.domain ?? `shopi.tz/${s.slug}`}</span>} />
           <Row label={t('Language')} value={s.lang === 'sw' ? 'Kiswahili' : 'English'} />
-          <Row label={t('Set up')} value={`${s.setup}/4`} />
+          <Row label={t('Ready')} value={`${s.setup}%`} />
+          {s.missing.length > 0 && <Row label={t('Still to do')} value={s.missing.map((k) => t(SCORE_LABELS[k as ScoreKey])).join(' · ')} />}
+          {s.setupStep != null && s.setupStep < SETUP_STEPS && <Row label={t('Setup')} value={t('Stopped before step {n} of {total}', { n: s.setupStep + 1, total: SETUP_STEPS })} />}
           <Row label={t('App on the Home Screen')} value={s.app ? `${s.app === 'ios' ? 'iPhone' : s.app === 'android' ? 'Android' : t('Yes')} · ${ago(s.appSeen)}` : t('No')} />
           <Row label={t('Notifications on')} value={on(s.notifications)} />
           <Row label={t('Own look')} value={on(s.look)} />
