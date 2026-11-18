@@ -1658,5 +1658,9 @@
   "{n} left this month": "{n} zimebaki mwezi huu",
   "Uses the name, the options and what you typed. Check it before you save: it only knows what you told it.": "Inatumia jina, machaguo na ulichoandika. Angalia kabla ya kuhifadhi: inajua tu ulichoiambia.",
   "AI descriptions written": "Maelezo ya AI yaliyoandikwa",
-  "QR code downloaded or shared": "QR code iliyopakuliwa au kutumwa"
+  "QR code downloaded or shared": "QR code iliyopakuliwa au kutumwa",
+  "Making the QR code": "Tunatengeneza QR code",
+  "Save it or send it to a friend. Scanning it with a phone camera opens {shop}.": "Ihifadhi au mtumie rafiki. Ukiiscan kwa kamera ya simu, {shop} inafunguka.",
+  "Save or share the QR code": "Hifadhi au tuma QR code",
+  "Save or share": "Hifadhi au tuma"
 }

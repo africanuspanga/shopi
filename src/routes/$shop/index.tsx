@@ -164,7 +164,7 @@ function Storefront() {
           {/* Under a cover the logo overlaps its edge, so both columns start at the top and the card keeps clear of it. */}
           <aside className={`${rise2} hidden rounded-[20px] bg-page p-6 md:block ${cover ? 'md:mt-8' : ''}`}>
             <ShopFacts shop={shop} areas={areas} />
-            <ShopQr slug={shop.slug} name={shop.name} className="mt-5 border-t border-line pt-5" plain />
+            <ShopQr shop={shop} className="mt-5 border-t border-line pt-5" plain />
           </aside>
         </section>
 

@@ -54,5 +54,9 @@
   "{n} left this month",
   "Uses the name, the options and what you typed. Check it before you save: it only knows what you told it.",
   "AI descriptions written",
-  "QR code downloaded or shared"
+  "QR code downloaded or shared",
+  "Making the QR code",
+  "Save it or send it to a friend. Scanning it with a phone camera opens {shop}.",
+  "Save or share the QR code",
+  "Save or share"
 ]
