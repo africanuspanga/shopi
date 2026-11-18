@@ -62,23 +62,23 @@ export function WhatsAppHelp({ show, phone, text, onSand = false }: { show: bool
     }
   }
   const local = localPhone(phone)
-  const small = 'btn btn-ghost btn-sm h-9 px-3 text-[13px]'
+  const small = 'btn btn-ghost btn-sm h-9 px-3 text-13'
   return (
-    <div className={`fade mt-3 rounded-[16px] p-4 text-[13px] leading-5 ${onSand ? 'bg-card shadow-[inset_0_0_0_1px_var(--color-line)]' : 'bg-page'}`}>
+    <div className={`fade mt-3 rounded-16 p-4 text-13 leading-5 ${onSand ? 'bg-card shadow-[inset_0_0_0_1px_var(--color-line)]' : 'bg-page'}`}>
       <p className="font-medium text-ink">{t('WhatsApp didn’t open?')}</p>
       <p className="mt-0.5 text-muted">{t('Message this number from your WhatsApp, or call.')}</p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="code mr-1 text-[14px] text-ink">{local}</span>
+        <span className="code mr-1 text-14 text-ink">{local}</span>
         <button type="button" className={small} onClick={() => copy('number', local.replace(/\s/g, ''))}>
-          {copied === 'number' ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.6} />}
+          {copied === 'number' ? <Check size={14} strokeWidth={2.25} /> : <Copy size={14} strokeWidth={1.75} />}
           {copied === 'number' ? t('Copied') : t('Copy')}
         </button>
         <a href={`tel:${phone}`} className={small}>
-          <Phone size={14} strokeWidth={1.6} /> {t('Call')}
+          <Phone size={14} strokeWidth={1.75} /> {t('Call')}
         </a>
         {text && (
           <button type="button" className={small} onClick={() => copy('message', text)}>
-            {copied === 'message' ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.6} />}
+            {copied === 'message' ? <Check size={14} strokeWidth={2.25} /> : <Copy size={14} strokeWidth={1.75} />}
             {copied === 'message' ? t('Copied') : t('Copy message')}
           </button>
         )}

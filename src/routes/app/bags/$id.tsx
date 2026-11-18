@@ -80,23 +80,23 @@ function BagDetail() {
         <div className="space-y-4 lg:sticky lg:top-8 lg:order-2">
           {b.state === 'open' && (
             <section className={`card p-6 ${made ? 'rise' : ''}`}>
-              <h2 className="text-[17px] font-semibold">{made ? t('Your bag link is ready') : t('Send the link')}</h2>
-              <p className="mt-1.5 text-[14px] leading-relaxed text-muted">
+              <h2 className="text-17 font-semibold">{made ? t('Your bag link is ready') : t('Send the link')}</h2>
+              <p className="mt-1.5 text-14 leading-relaxed text-muted">
                 {b.phone
                   ? t('WhatsApp opens your chat with {who}. The link works once, until {date}.', { who: b.name || b.phone, date: date(b.expires_at) })
                   : t('Send it in your chat with the buyer. The link works once, until {date}.', { date: date(b.expires_at) })}
               </p>
-              <p className="code mt-4 truncate rounded-[12px] bg-page px-3.5 py-3 text-[13px] text-ink-2">{prettyUrl(url)}</p>
+              <p className="code mt-4 truncate rounded-12 bg-page px-3.5 py-3 text-13 text-ink-2">{prettyUrl(url)}</p>
               <div className="mt-3">
                 <ShareActions url={url} text={message} title={t('Your bag from {shop}', { shop: shop.name })} phone={b.phone || undefined} onShared={(how) => track('seller_share', { shopId: shop.id, detail: `bag-${how}` })} />
               </div>
-              {blocked && <p className="mt-4 rounded-[14px] bg-moto-soft px-4 py-3 text-[14px] text-moto-ink">{t('Something in this bag can no longer be ordered. Cancel this link and make a new one.')}</p>}
+              {blocked && <p className="mt-4 rounded-14 bg-moto-soft px-4 py-3 text-14 text-moto-ink">{t('Something in this bag can no longer be ordered. Cancel this link and make a new one.')}</p>}
             </section>
           )}
           {b.state === 'used' && b.order_id && (
             <section className="card p-6">
-              <h2 className="text-[17px] font-semibold">{t('The buyer ordered this bag')}</h2>
-              <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{t('It is order #{code}. Check the payment and send it from there.', { code: b.order_code ?? '' })}</p>
+              <h2 className="text-17 font-semibold">{t('The buyer ordered this bag')}</h2>
+              <p className="mt-1.5 text-14 leading-relaxed text-muted">{t('It is order #{code}. Check the payment and send it from there.', { code: b.order_code ?? '' })}</p>
               <Link to="/app/orders/$id" params={{ id: b.order_id }} className="btn mt-5 w-full">
                 {t('Open the order')} <ArrowRight size={16} strokeWidth={1.75} />
               </Link>
@@ -104,20 +104,20 @@ function BagDetail() {
           )}
           {(b.state === 'expired' || b.state === 'cancelled') && (
             <section className="card p-6">
-              <h2 className="text-[17px] font-semibold">{b.state === 'expired' ? t('This link has ended') : t('You cancelled this link')}</h2>
-              <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{t('The buyer can no longer order from it. Make a new bag link if they still want it.')}</p>
+              <h2 className="text-17 font-semibold">{b.state === 'expired' ? t('This link has ended') : t('You cancelled this link')}</h2>
+              <p className="mt-1.5 text-14 leading-relaxed text-muted">{t('The buyer can no longer order from it. Make a new bag link if they still want it.')}</p>
               <Link to="/app/bags/new" className="btn btn-ghost mt-5 w-full">
-                <Plus size={16} strokeWidth={2} /> {t('New bag link')}
+                <Plus size={16} strokeWidth={2.25} /> {t('New bag link')}
               </Link>
             </section>
           )}
 
           {(b.name || b.phone || b.note) && (
             <section className="card p-6">
-              <p className="text-[13px] text-muted">{t('For')}</p>
-              {b.name && <p className="mt-1 text-[18px] font-semibold">{b.name}</p>}
-              {b.phone && <p className="code mt-0.5 text-[14px] text-ink-2">{b.phone}</p>}
-              {b.note && <p className="mt-4 rounded-[14px] bg-page px-4 py-3 text-[14px] leading-relaxed text-ink-2">“{b.note}”</p>}
+              <p className="text-13 text-muted">{t('For')}</p>
+              {b.name && <p className="mt-1 text-17 font-semibold">{b.name}</p>}
+              {b.phone && <p className="code mt-0.5 text-14 text-ink-2">{b.phone}</p>}
+              {b.note && <p className="mt-4 rounded-14 bg-page px-4 py-3 text-14 leading-relaxed text-ink-2">“{b.note}”</p>}
             </section>
           )}
         </div>
@@ -125,16 +125,16 @@ function BagDetail() {
         <div className="min-w-0 space-y-4 lg:order-1">
           <div className="receipt px-6 pt-6 pb-7">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-[15px] font-semibold">{t('In the bag')}</h2>
+              <h2 className="text-15 font-semibold">{t('In the bag')}</h2>
               <p className="meta">{t('Made {date}', { date: date(b.created_at) })}</p>
             </div>
             <div className="mt-4 space-y-4">
               {b.lines.map((l, i) => (
                 <div key={i} className="flex items-center gap-4">
-                  <Img size="thumb" k={l.image} alt={l.name} className={`h-16 w-14 shrink-0 rounded-[10px] ${l.problem ? 'opacity-50' : ''}`} />
+                  <Img size="thumb" k={l.image} alt={l.name} className={`h-16 w-14 shrink-0 rounded-12 ${l.problem ? 'opacity-50' : ''}`} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-medium">{l.name}</p>
-                    <p className="mt-0.5 text-[13px] text-muted">
+                    <p className="truncate text-15 font-medium">{l.name}</p>
+                    <p className="mt-0.5 text-13 text-muted">
                       {l.size && (
                         <>
                           <span className="font-medium text-ink">{optionText(t, l.option, l.size)}</span>
@@ -143,21 +143,21 @@ function BagDetail() {
                       )}
                       {l.qty} × <span className="tnum">{tzs(l.price)}</span>
                     </p>
-                    {b.state === 'open' && l.problem && <p className="mt-0.5 text-[13px] text-moto-ink">{problem[l.problem]}</p>}
+                    {b.state === 'open' && l.problem && <p className="mt-0.5 text-13 text-moto-ink">{problem[l.problem]}</p>}
                   </div>
-                  <p className="font-mono text-[14px]">{tzs(l.qty * l.price)}</p>
+                  <p className="font-mono text-14">{tzs(l.qty * l.price)}</p>
                 </div>
               ))}
             </div>
-            <div className="receipt-rule mt-6 space-y-2 pt-4 text-[14px]">
+            <div className="receipt-rule mt-6 space-y-2 pt-4 text-14">
               <div className="flex items-baseline justify-between gap-4">
                 <span className="text-ink-2">{t('Delivery')}</span>
-                <span className="font-mono text-[13px]">{t('Agree on WhatsApp')}</span>
+                <span className="font-mono text-13">{t('Agree on WhatsApp')}</span>
               </div>
             </div>
             <div className="receipt-rule mt-4 flex items-baseline justify-between pt-4">
-              <span className="text-[15px] font-medium">{t('Total')}</span>
-              <span className="font-mono text-[22px] font-medium tracking-tight">{tzs(b.total)}</span>
+              <span className="text-15 font-medium">{t('Total')}</span>
+              <span className="font-mono text-20 font-medium tracking-tight">{tzs(b.total)}</span>
             </div>
           </div>
 

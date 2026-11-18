@@ -42,8 +42,8 @@ function OwnerPage() {
     <>
       <header className="mt-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 lg:mt-0">
         <div className="min-w-0">
-          <h1 className="title text-[24px] md:text-[30px]">{label(d.tab)}</h1>
-          <p className="mt-1 text-[14px] leading-5 text-pretty text-muted">
+          <h1 className="title text-24 md:text-28">{label(d.tab)}</h1>
+          <p className="mt-1 text-14 leading-5 text-pretty text-muted">
             {subs[d.tab]} {d.tab !== 'health' && t('Tanzania time; demo shops are not counted.')}
           </p>
         </div>
@@ -52,7 +52,7 @@ function OwnerPage() {
           <Ranges className="hidden md:flex" />
           {d.tab === 'shops' && (
             <a href={`/api/admin-export?days=${d.days}`} className="btn btn-sm h-10 shrink-0 md:h-9" download>
-              <Download size={15} strokeWidth={1.8} /> {t('Export')}
+              <Download size={16} strokeWidth={1.75} /> {t('Export')}
             </a>
           )}
         </div>
@@ -128,7 +128,7 @@ function Today({ d }: { d: OwnerSection<'today'> }) {
       <Grid>
         <section className="card flex min-w-0 flex-col p-5 md:p-6 lg:col-span-8">
           <DayChart points={d.sales} money total={d.now.sales} chip={<Change now={d.now.sales} before={d.before.sales} />} caption={t('Sales, last {n} days', { n: d.days })} />
-          <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 rounded-[16px] bg-page p-4 sm:grid-cols-4 lg:mt-auto">
+          <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 rounded-16 bg-page p-4 sm:grid-cols-4 lg:mt-auto">
             <Mini label={t('Orders today')} value={num(d.day.orders)} extra={<Change now={d.day.orders} before={d.day.orders_before} />} note={lastWeek} />
             <Mini label={t('Sales today')} value={<Money value={d.day.sales} short cur="text-[0.7em] text-muted" />} extra={<Change now={d.day.sales} before={d.day.sales_before} />} note={lastWeek} />
             <Mini label={t('New shops today')} value={num(d.day.shops)} note={t(d.day.signups === 1 ? '{n} sign-up' : '{n} sign-ups', { n: num(d.day.signups) })} />
@@ -153,7 +153,7 @@ function Today({ d }: { d: OwnerSection<'today'> }) {
               <ul className="divide-y divide-line">
                 {d.latest.map((o) => (
                   <li key={o.code} className="py-2.5">
-                    <div className="flex items-baseline justify-between gap-3 text-[14px]">
+                    <div className="flex items-baseline justify-between gap-3 text-14">
                       <span className="min-w-0 truncate font-medium">{o.shop}</span>
                       <Money value={o.total} className="shrink-0" cur="text-[0.8em] text-muted" />
                     </div>
@@ -177,12 +177,12 @@ function Today({ d }: { d: OwnerSection<'today'> }) {
 function Mini({ label, value, extra, note }: { label: string; value: ReactNode; extra?: ReactNode; note: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-[12.5px] text-muted">{label}</p>
+      <p className="text-13 text-muted">{label}</p>
       <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-        <span className="tnum text-[20px] font-semibold tracking-[-0.02em] whitespace-nowrap">{value}</span>
+        <span className="tnum text-20 font-semibold tracking-[-0.02em] whitespace-nowrap">{value}</span>
         {extra}
       </p>
-      <p className="mt-0.5 text-[12px] leading-4 text-muted">{note}</p>
+      <p className="mt-0.5 text-12 leading-4 text-muted">{note}</p>
     </div>
   )
 }
@@ -213,10 +213,10 @@ function Shops({ d }: { d: OwnerSection<'shops'> }) {
   const shown = inFilter(filter).filter((s) => !q || `${s.name} ${s.slug} ${s.owner} ${s.phone} ${s.domain ?? ''}`.toLowerCase().includes(q))
   const flags = (s: AdminShop) => (
     <span className="flex items-center gap-1.5 text-muted">
-      {s.app && <Smartphone size={14} strokeWidth={1.6} aria-label={t('App on the Home Screen')} />}
-      {s.notifications && <Bell size={14} strokeWidth={1.6} aria-label={t('Notifications on')} />}
-      {s.look && <Palette size={14} strokeWidth={1.6} aria-label={t('Own look')} />}
-      {s.domain && <Globe size={14} strokeWidth={1.6} aria-label={t('Own domain')} />}
+      {s.app && <Smartphone size={14} strokeWidth={1.75} aria-label={t('App on the Home Screen')} />}
+      {s.notifications && <Bell size={14} strokeWidth={1.75} aria-label={t('Notifications on')} />}
+      {s.look && <Palette size={14} strokeWidth={1.75} aria-label={t('Own look')} />}
+      {s.domain && <Globe size={14} strokeWidth={1.75} aria-label={t('Own domain')} />}
     </span>
   )
 
@@ -232,11 +232,11 @@ function Shops({ d }: { d: OwnerSection<'shops'> }) {
             ))}
           </div>
           <label className="input flex w-full items-center gap-2.5 md:ml-auto md:w-[300px]">
-            <Search size={16} strokeWidth={1.6} className="shrink-0 text-muted" />
+            <Search size={16} strokeWidth={1.75} className="shrink-0 text-muted" />
             <input className="min-w-0 flex-1 bg-transparent outline-none" placeholder={t('Search shop, seller or phone')} value={query} onChange={(e) => setQuery(e.target.value)} />
           </label>
         </div>
-        <p className="mt-3 text-[13px] text-muted">{t('Orders, sales and visits for the last {n} days. Most sales first.', { n: d.days })}</p>
+        <p className="mt-3 text-13 text-muted">{t('Orders, sales and visits for the last {n} days. Most sales first.', { n: d.days })}</p>
         {!shown.length && <div className="mt-4"><Nothing>{t('No shop matches.')}</Nothing></div>}
 
         {/* Phones: two lines per shop; a tap opens its page. */}
@@ -244,13 +244,13 @@ function Shops({ d }: { d: OwnerSection<'shops'> }) {
           {shown.map((s) => (
             <li key={s.id} className={s.status === 'demo' ? 'text-muted' : ''}>
               <Link to="/admin/shops/$id" params={{ id: s.id }} search={{ days: d.days === 30 ? undefined : d.days }} className="flex items-center gap-3 py-3.5">
-                <ShopAvatar name={s.name} logo={s.logo_key} className="h-9 w-9 text-[12px]" />
+                <ShopAvatar name={s.name} logo={s.logo_key} className="h-9 w-9 text-12" />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-baseline justify-between gap-3">
-                    <span className="min-w-0 truncate text-[15px] font-medium">{s.name}</span>
-                    <Money value={s.sales} className="shrink-0 text-[15px]" cur="text-[0.8em] text-muted" />
+                    <span className="min-w-0 truncate text-15 font-medium">{s.name}</span>
+                    <Money value={s.sales} className="shrink-0 text-15" cur="text-[0.8em] text-muted" />
                   </span>
-                  <span className="mt-0.5 flex items-center gap-2 text-[13px] text-muted">
+                  <span className="mt-0.5 flex items-center gap-2 text-13 text-muted">
                     <span className="min-w-0 truncate">
                       {planText(s)} · {t(s.orders === 1 ? '{n} order' : '{n} orders', { n: num(s.orders) })}
                     </span>
@@ -264,9 +264,9 @@ function Shops({ d }: { d: OwnerSection<'shops'> }) {
 
         {/* Desktop: a table. */}
         <div className="mt-2 hidden overflow-x-auto md:block">
-          <table className="w-full text-left text-[14px]">
+          <table className="w-full text-left text-14">
             <thead>
-              <tr className="border-b border-line text-[13px] text-muted">
+              <tr className="border-b border-line text-13 text-muted">
                 <th className="py-2.5 pr-4 font-normal">{t('Shop')}</th>
                 <th className="py-2.5 pr-4 font-normal">{t('Seller')}</th>
                 <th className="py-2.5 pr-4 font-normal">{t('Plan')}</th>
@@ -283,7 +283,7 @@ function Shops({ d }: { d: OwnerSection<'shops'> }) {
                 <tr key={s.id} className={s.status === 'demo' ? 'text-muted' : ''}>
                   <td className="max-w-[320px] py-3 pr-4">
                     <Link to="/admin/shops/$id" params={{ id: s.id }} search={{ days: d.days === 30 ? undefined : d.days }} className="flex items-center gap-3">
-                      <ShopAvatar name={s.name} logo={s.logo_key} className="h-9 w-9 text-[12px]" />
+                      <ShopAvatar name={s.name} logo={s.logo_key} className="h-9 w-9 text-12" />
                       <span className="min-w-0">
                         <span className="flex items-center gap-2 font-medium">
                           <span className="truncate hover:underline">{s.name}</span>
@@ -321,13 +321,13 @@ function Shops({ d }: { d: OwnerSection<'shops'> }) {
           {d.noShop.length ? (
             <ul className="divide-y divide-line">
               {d.noShop.map((u) => (
-                <li key={u.phone} className="flex items-center gap-3 py-2.5 text-[14px]">
+                <li key={u.phone} className="flex items-center gap-3 py-2.5 text-14">
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 font-medium [overflow-wrap:anywhere]">{u.name}</p>
                     <p className="meta">{timeAgo(u.created_at, lang)}</p>
                   </div>
                   <a href={waLink(u.phone, t('Hi {name}, this is the Shopi team. Can we help you open your shop?', { name: u.name }))} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm shrink-0">
-                    <WhatsAppIcon size={15} /> {localPhone(u.phone)}
+                    <WhatsAppIcon size={16} /> {localPhone(u.phone)}
                   </a>
                 </li>
               ))}
@@ -387,8 +387,8 @@ function MoneyTab({ d }: { d: OwnerSection<'money'> }) {
             <ul className="divide-y divide-line">
               {d.top.map((s) => (
                 <li key={s.id}>
-                  <Link to="/admin/shops/$id" params={{ id: s.id }} search={{ days: d.days === 30 ? undefined : d.days }} className="flex items-center gap-3 py-2.5 text-[14px]">
-                    <ShopAvatar name={s.name} logo={s.logo_key} className="h-8 w-8 text-[11px]" />
+                  <Link to="/admin/shops/$id" params={{ id: s.id }} search={{ days: d.days === 30 ? undefined : d.days }} className="flex items-center gap-3 py-2.5 text-14">
+                    <ShopAvatar name={s.name} logo={s.logo_key} className="h-8 w-8 text-11" />
                     <span className="min-w-0 flex-1 truncate font-medium">{s.name}</span>
                     <Money value={s.sales} className="shrink-0" cur="text-[0.8em] text-muted" />
                   </Link>
@@ -433,7 +433,7 @@ function TemboPayments({ d }: { d: OwnerSection<'money'> }) {
       title={t('Tembo payments')}
       sub={t('{n} paid in the last {days} days, {amount} in all. Newest first.', { n: num(d.received.n), days: d.days, amount: `TSh ${num(d.received.total)}` })}
       right={
-        <span className={`inline-flex items-center gap-1.5 text-[13px] ${d.selcom === 'ok' ? 'text-ink-2' : 'text-moto-ink'}`}>
+        <span className={`inline-flex items-center gap-1.5 text-13 ${d.selcom === 'ok' ? 'text-ink-2' : 'text-moto-ink'}`}>
           <span className={`h-1.5 w-1.5 rounded-full ${d.selcom === 'ok' ? 'bg-ok' : 'bg-moto'}`} />
           {proxy}
         </span>
@@ -458,7 +458,7 @@ function TemboPayments({ d }: { d: OwnerSection<'money'> }) {
               ) : null
             // Phones: the list rule (name and money, then status, detail and time); the id and Re-check under it.
             return (
-              <li key={p.id} className="flex items-center gap-4 py-3 text-[14px]">
+              <li key={p.id} className="flex items-center gap-4 py-3 text-14">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-3">
                     <Link to="/admin/shops/$id" params={{ id: p.shop_id }} className="truncate font-medium">
@@ -468,7 +468,7 @@ function TemboPayments({ d }: { d: OwnerSection<'money'> }) {
                   </div>
                   <div className="mt-1 flex items-center gap-3">
                     <PayPill status={p.status} />
-                    <span className="min-w-0 flex-1 truncate text-[13px] text-muted">{detail.join(' · ')}</span>
+                    <span className="min-w-0 flex-1 truncate text-13 text-muted">{detail.join(' · ')}</span>
                     <span className="meta shrink-0 md:hidden" suppressHydrationWarning>
                       {timeAgo(p.created_at, lang)}
                     </span>
@@ -498,13 +498,13 @@ function PayPill({ status }: { status: 'pending' | 'completed' | 'failed' }) {
   const t = useT()
   if (status === 'pending')
     return (
-      <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-moto-soft px-2.5 text-[12px] font-medium whitespace-nowrap text-moto-ink">
+      <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-moto-soft px-2.5 text-12 font-medium whitespace-nowrap text-moto-ink">
         <span className="h-1.5 w-1.5 rounded-full bg-moto" />
         {t('Waiting for payment')}
       </span>
     )
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[13px] whitespace-nowrap ${status === 'failed' ? 'text-muted' : 'text-ink-2'}`}>
+    <span className={`inline-flex items-center gap-1.5 text-13 whitespace-nowrap ${status === 'failed' ? 'text-muted' : 'text-ink-2'}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${status === 'failed' ? 'bg-faint' : 'bg-ok'}`} />
       {status === 'failed' ? t('Not paid') : t('Paid')}
     </span>
@@ -537,7 +537,7 @@ function Growth({ d }: { d: OwnerSection<'growth'> }) {
   const cell = (n: number, of: number) => (
     <td className="tnum py-2.5 pr-4 text-right">
       {num(n)}
-      <span className="ml-1.5 text-[12px] text-muted">{of ? `${pct(n, of)}%` : ''}</span>
+      <span className="ml-1.5 text-12 text-muted">{of ? `${pct(n, of)}%` : ''}</span>
     </td>
   )
   return (
@@ -558,13 +558,13 @@ function Growth({ d }: { d: OwnerSection<'growth'> }) {
         <Card title={t('From sign-up to fifth order')} sub={t('Every seller so far, and how far they got.')} className="lg:col-span-12">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
             {steps.map((s, i) => (
-              <div key={s.label} className="rounded-[14px] bg-page p-4">
-                <p className="text-[13px] text-muted">{s.label}</p>
-                <p className="tnum mt-1 text-[22px] font-semibold tracking-[-0.02em]">{num(s.n)}</p>
+              <div key={s.label} className="rounded-14 bg-page p-4">
+                <p className="text-13 text-muted">{s.label}</p>
+                <p className="tnum mt-1 text-20 font-semibold tracking-[-0.02em]">{num(s.n)}</p>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-raised">
                   <span className="block h-full bg-ink" style={{ width: `${Math.min(100, pct(s.n, f.signups))}%` }} />
                 </div>
-                <p className="mt-2 text-[12px] text-muted">{i === 0 ? t('Everyone') : t('{n}% of sign-ups', { n: pct(s.n, f.signups) })}</p>
+                <p className="mt-2 text-12 text-muted">{i === 0 ? t('Everyone') : t('{n}% of sign-ups', { n: pct(s.n, f.signups) })}</p>
               </div>
             ))}
           </div>
@@ -572,9 +572,9 @@ function Growth({ d }: { d: OwnerSection<'growth'> }) {
         <Card title={t('Sellers by the week they joined')} sub={t('The last 8 weeks, and how far each week’s sellers have got since.')} className="lg:col-span-12">
           {d.cohorts.length ? (
             <div className="-mx-5 overflow-x-auto px-5 md:mx-0 md:px-0">
-              <table className="w-full min-w-[560px] text-left text-[14px]">
+              <table className="w-full min-w-[560px] text-left text-14">
                 <thead>
-                  <tr className="border-b border-line text-[13px] text-muted">
+                  <tr className="border-b border-line text-13 text-muted">
                     <th className="py-2.5 pr-4 font-normal">{t('Week of')}</th>
                     <th className="py-2.5 pr-4 text-right font-normal">{t('Signed up')}</th>
                     <th className="py-2.5 pr-4 text-right font-normal">{t('Opened a shop')}</th>
@@ -767,11 +767,11 @@ function Health({ d }: { d: OwnerSection<'health'> }) {
           <ul className="divide-y divide-line">
             {d.domains.map((x) => (
               <li key={x.hostname} className="py-2.5">
-                <div className="flex items-baseline justify-between gap-3 text-[14px]">
+                <div className="flex items-baseline justify-between gap-3 text-14">
                   <span className="code min-w-0 truncate">{x.hostname}</span>
-                  <span className={`shrink-0 text-[13px] ${x.status === 'active' ? 'text-ok' : 'text-wait'}`}>{status[x.status] ?? x.status}</span>
+                  <span className={`shrink-0 text-13 ${x.status === 'active' ? 'text-ok' : 'text-wait'}`}>{status[x.status] ?? x.status}</span>
                 </div>
-                <p className="mt-0.5 text-[13px] text-muted">
+                <p className="mt-0.5 text-13 text-muted">
                   {x.shop} · {date(x.created_at)}
                   {x.status === 'active' && !x.turnstile ? ` · ${t('bot check not on this domain')}` : ''}
                 </p>
@@ -824,9 +824,9 @@ function SetupCards({ d }: { d: OwnerSection<'shops'> }) {
       <Card title={t('How ready shops are')} sub={t('The score sellers see on Home. Each line: shops that have it.')} className="lg:col-span-6">
         <div className="grid grid-cols-4 gap-2">
           {bands.map((b) => (
-            <div key={b.label} className="rounded-[14px] bg-page p-3">
-              <p className="tnum text-[20px] font-semibold tracking-[-0.02em]">{num(b.n)}</p>
-              <p className="mt-0.5 text-[12px] leading-4 text-muted">{b.label}</p>
+            <div key={b.label} className="rounded-14 bg-page p-3">
+              <p className="tnum text-20 font-semibold tracking-[-0.02em]">{num(b.n)}</p>
+              <p className="mt-0.5 text-12 leading-4 text-muted">{b.label}</p>
             </div>
           ))}
         </div>
@@ -846,8 +846,8 @@ function SetupCards({ d }: { d: OwnerSection<'shops'> }) {
           <>
             <ul className="divide-y divide-line">
               {steps.map((x, i) => (
-                <li key={x.name} className="flex items-center gap-3 py-2.5 text-[14px]">
-                  <span className="tnum flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-well text-[12px] font-medium">{i + 1}</span>
+                <li key={x.name} className="flex items-center gap-3 py-2.5 text-14">
+                  <span className="tnum flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-well text-12 font-medium">{i + 1}</span>
                   <span className="min-w-0 flex-1 truncate">{x.name}</span>
                   <span className="tnum shrink-0 text-right">
                     {t('{n} passed', { n: num(x.passed) })}
@@ -857,7 +857,7 @@ function SetupCards({ d }: { d: OwnerSection<'shops'> }) {
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-[13px] text-muted">
+            <p className="mt-3 text-13 text-muted">
               {stuck ? t(stuck === 1 ? '1 shop is still in the setup.' : '{n} shops are still in the setup.', { n: num(stuck) }) : t('Every shop finished the setup.')}
             </p>
           </>
@@ -893,16 +893,16 @@ function EmailCard({ e, days, className = '' }: { e: OwnerSection<'health'>['ema
           <Row label={t('Sellers who added an email')} value={num(e.sellers.added)} />
           <Row label={t('Get the weekly summary')} value={num(e.sellers.weekly)} />
           {e.lastFailure && <Row label={t('Last failure')} value={`${kindName(e.lastFailure.kind)} · ${(e.lastFailure.error ?? '').slice(0, 60)}`} />}
-          <p className="mt-4 text-[13px] font-medium">{t('Last {n} days', { n: days })}</p>
+          <p className="mt-4 text-13 font-medium">{t('Last {n} days', { n: days })}</p>
           {e.log.length ? e.log.map((r) => <Row key={`${r.kind}-${r.status}`} label={`${kindName(r.kind)} · ${statusName[r.status] ?? r.status}`} value={num(r.n)} />) : <div className="mt-2"><Nothing>{t('No email yet.')}</Nothing></div>}
         </div>
         <div>
-          <p className="text-[13px] font-medium">{t('See each email')}</p>
+          <p className="text-13 font-medium">{t('See each email')}</p>
           <ul className="mt-2 divide-y divide-line">
             {EMAIL_KINDS.map((k) => (
-              <li key={k} className="flex items-center justify-between gap-3 py-2.5 text-[14px]">
+              <li key={k} className="flex items-center justify-between gap-3 py-2.5 text-14">
                 <span className="min-w-0 truncate">{names[k]}</span>
-                <span className="flex shrink-0 gap-3 text-[13px]">
+                <span className="flex shrink-0 gap-3 text-13">
                   <a className="underline decoration-line-strong underline-offset-4 hover:decoration-ink" href={`/api/admin-email-preview?kind=${k}&lang=en`} target="_blank" rel="noreferrer">English</a>
                   <a className="underline decoration-line-strong underline-offset-4 hover:decoration-ink" href={`/api/admin-email-preview?kind=${k}&lang=sw`} target="_blank" rel="noreferrer">Kiswahili</a>
                 </span>
@@ -910,7 +910,7 @@ function EmailCard({ e, days, className = '' }: { e: OwnerSection<'health'>['ema
             ))}
           </ul>
           <form
-            className="mt-5 space-y-3 rounded-[16px] bg-page p-4"
+            className="mt-5 space-y-3 rounded-16 bg-page p-4"
             onSubmit={async (ev) => {
               ev.preventDefault()
               setBusy(true)
@@ -936,7 +936,7 @@ function EmailCard({ e, days, className = '' }: { e: OwnerSection<'health'>['ema
               }
             }}
           >
-            <p className="text-[14px] font-medium">{t('Send a test')}</p>
+            <p className="text-14 font-medium">{t('Send a test')}</p>
             <input className="input" type="email" inputMode="email" autoCapitalize="none" spellCheck={false} placeholder={t('Your email')} value={to} onChange={(ev) => setTo(ev.target.value)} />
             <div className="flex flex-wrap gap-2">
               {EMAIL_KINDS.map((k) => (
@@ -955,7 +955,7 @@ function EmailCard({ e, days, className = '' }: { e: OwnerSection<'health'>['ema
                 {busy ? t('Sending') : t('Send the test')}
               </button>
             </div>
-            {result && <p className="text-[13px] leading-5 text-ink-2">{result}</p>}
+            {result && <p className="text-13 leading-5 text-ink-2">{result}</p>}
           </form>
         </div>
       </div>

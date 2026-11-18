@@ -55,44 +55,44 @@ export function ShopCard({ shop, products, payment, bio, note }: { shop: Preview
   const t = useT()
   const category = t(CATEGORIES.find((c) => c.id === shop.category)?.label ?? 'Other')
   return (
-    <div className="w-full rounded-[28px] bg-card p-5 text-ink sm:p-6">
+    <div className="w-full rounded-28 bg-card p-5 text-ink sm:p-6">
       <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
-        <p className="code min-w-0 truncate text-[13px] text-muted">shopi.tz/{shop.slug || 'yourshop'}</p>
-        <span className="flex h-8 shrink-0 items-center gap-1.5 rounded-full pr-1 pl-3 text-[12px] font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
-          {t('Bag')} <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-ink text-[12px] text-white">0</span>
+        <p className="code min-w-0 truncate text-13 text-muted">shopi.tz/{shop.slug || 'yourshop'}</p>
+        <span className="flex h-8 shrink-0 items-center gap-1.5 rounded-full pr-1 pl-3 text-12 font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
+          {t('Bag')} <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-ink text-12 text-white">0</span>
         </span>
       </div>
       <div className="pt-5">
-        <ShopAvatar name={shop.name || 'S'} logo={shop.logo} className="h-14 w-14 text-[18px]" />
-        <p className={`display mt-4 text-[30px] break-words ${shop.name ? '' : 'text-faint'}`}>{shop.name || t('Your shop')}</p>
-        {bio ?? (shop.bio ? <p className="mt-2 text-[14px] leading-relaxed text-ink-2">{shop.bio}</p> : null)}
-        <span className="mt-3 inline-flex h-8 items-center rounded-full bg-page px-3 text-[13px] text-ink-2">{category}</span>
+        <ShopAvatar name={shop.name || 'S'} logo={shop.logo} className="h-14 w-14 text-17" />
+        <p className={`display mt-4 text-28 break-words ${shop.name ? '' : 'text-faint'}`}>{shop.name || t('Your shop')}</p>
+        {bio ?? (shop.bio ? <p className="mt-2 text-14 leading-relaxed text-ink-2">{shop.bio}</p> : null)}
+        <span className="mt-3 inline-flex h-8 items-center rounded-full bg-page px-3 text-13 text-ink-2">{category}</span>
       </div>
       <div className="mt-5 grid grid-cols-3 gap-2">
         {[0, 1, 2].map((i) => {
           const p = products[i]
           return p ? (
             <div key={i} className="min-w-0">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-[12px] bg-well">
-                {p.image ? <Img size="thumb" k={p.image} alt="" className="h-full w-full" /> : <span className="flex h-full items-center justify-center text-faint"><ImagePlus size={18} strokeWidth={1.5} /></span>}
+              <div className="relative aspect-[4/5] overflow-hidden rounded-12 bg-well">
+                {p.image ? <Img size="thumb" k={p.image} alt="" className="h-full w-full" /> : <span className="flex h-full items-center justify-center text-faint"><ImagePlus size={18} strokeWidth={1.75} /></span>}
                 {p.uploading && (
                   <span className="absolute inset-0 flex items-center justify-center bg-card/60">
                     <Loader2 size={18} className="animate-spin" />
                   </span>
                 )}
               </div>
-              <p className={`mt-1.5 truncate text-[12px] ${p.name ? '' : 'text-faint'}`}>{p.name || t('Product name')}</p>
-              <p className="tnum text-[12px] font-medium">{p.price ? tzs(p.price) : 'TSh —'}</p>
+              <p className={`mt-1.5 truncate text-12 ${p.name ? '' : 'text-faint'}`}>{p.name || t('Product name')}</p>
+              <p className="tnum text-12 font-medium">{p.price ? tzs(p.price) : 'TSh —'}</p>
             </div>
           ) : (
-            <div key={i} className="flex aspect-[4/5] items-center justify-center rounded-[12px] bg-well text-faint">
-              <ImagePlus size={18} strokeWidth={1.5} />
+            <div key={i} className="flex aspect-[4/5] items-center justify-center rounded-12 bg-well text-faint">
+              <ImagePlus size={18} strokeWidth={1.75} />
             </div>
           )
         })}
       </div>
-      {payment && <p className="mt-4 rounded-[14px] bg-page px-3 py-2.5 text-[13px] leading-5 text-ink-2">{payment}</p>}
-      {note && <p className="mt-4 text-[13px] text-muted">{note}</p>}
+      {payment && <p className="mt-4 rounded-14 bg-page px-3 py-2.5 text-13 leading-5 text-ink-2">{payment}</p>}
+      {note && <p className="mt-4 text-13 text-muted">{note}</p>}
     </div>
   )
 }
@@ -101,7 +101,7 @@ export function ShopCard({ shop, products, payment, bio, note }: { shop: Preview
 export function PreviewAside({ label, children }: { label: string; children: ReactNode }) {
   return (
     <>
-      <p className="text-[15px] text-white/60">{label}</p>
+      <p className="text-15 text-white/60">{label}</p>
       <div className="mt-auto mb-auto w-full max-w-[440px] self-center shadow-[0_40px_80px_-30px_rgb(0_0_0/0.6)]">{children}</div>
     </>
   )
@@ -116,19 +116,19 @@ export function PreviewToggle({ shop, children }: { shop: PreviewShop; children:
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-6 flex w-full items-center gap-3 rounded-[18px] bg-card p-3 text-left shadow-[inset_0_0_0_1px_var(--color-line)] transition-colors hover:bg-well lg:hidden"
+        className="mt-6 flex w-full items-center gap-3 rounded-16 bg-card p-3 text-left shadow-[inset_0_0_0_1px_var(--color-line)] transition-colors hover:bg-well lg:hidden"
       >
-        <ShopAvatar name={shop.name || 'S'} logo={shop.logo} className="h-11 w-11 text-[15px]" />
+        <ShopAvatar name={shop.name || 'S'} logo={shop.logo} className="h-11 w-11 text-15" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[15px] font-semibold">{shop.name}</span>
-          <span className="code block truncate text-[13px] text-muted">shopi.tz/{shop.slug}</span>
+          <span className="block truncate text-15 font-semibold">{shop.name}</span>
+          <span className="code block truncate text-13 text-muted">shopi.tz/{shop.slug}</span>
         </span>
-        <span className="flex shrink-0 items-center gap-1 pr-1 text-[13px] font-medium text-ink-2">
-          {t('Preview')} <ChevronRight size={15} strokeWidth={1.75} />
+        <span className="flex shrink-0 items-center gap-1 pr-1 text-13 font-medium text-ink-2">
+          {t('Preview')} <ChevronRight size={16} strokeWidth={1.75} />
         </span>
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title={t('Your shop, as buyers will see it')}>
-        <div className="rounded-[28px] shadow-[inset_0_0_0_1px_var(--color-line)]">{children}</div>
+        <div className="rounded-28 shadow-[inset_0_0_0_1px_var(--color-line)]">{children}</div>
       </Sheet>
     </>
   )
@@ -139,8 +139,8 @@ export function StepHead({ bar, title, sub }: { bar: ReactNode; title: string; s
   return (
     <>
       {bar}
-      <h1 className="title mt-6 text-[32px] md:text-[38px]">{title}</h1>
-      <p className="mt-2 text-[15px] leading-relaxed text-muted">{sub}</p>
+      <h1 className="title mt-6 text-32 md:text-40">{title}</h1>
+      <p className="mt-2 text-15 leading-relaxed text-muted">{sub}</p>
     </>
   )
 }
@@ -237,20 +237,20 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
           <div className="hide-scroll -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
             {images.map((k, i) => (
               <div key={k} className="relative shrink-0">
-                <Img size="thumb" k={k} alt="" className={`rounded-[14px] ${i === 0 ? 'h-[160px] w-[128px]' : 'h-[160px] w-[96px]'}`} />
-                {i === 0 && images.length > 1 && <span className="absolute bottom-2 left-2 rounded-full bg-ink px-2.5 py-1 text-[11px] font-medium text-white">{t('Main')}</span>}
+                <Img size="thumb" k={k} alt="" className={`rounded-14 ${i === 0 ? 'h-[160px] w-[128px]' : 'h-[160px] w-[96px]'}`} />
+                {i === 0 && images.length > 1 && <span className="absolute bottom-2 left-2 rounded-full bg-ink px-2.5 py-1 text-11 font-medium text-white">{t('Main')}</span>}
                 <button
                   type="button"
                   aria-label={t('Remove photo')}
                   onClick={() => setImages(images.filter((x) => x !== k))}
                   className="absolute top-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-card/95 shadow-[0_1px_2px_rgb(10_10_10/0.15)] transition-colors hover:bg-card"
                 >
-                  <X size={14} strokeWidth={2} />
+                  <X size={14} strokeWidth={2.25} />
                 </button>
               </div>
             ))}
             {Array.from({ length: uploading }).map((_, i) => (
-              <div key={`u${i}`} className="flex h-[160px] w-[128px] shrink-0 flex-col items-center justify-center gap-2 rounded-[14px] bg-well text-[12px] text-muted">
+              <div key={`u${i}`} className="flex h-[160px] w-[128px] shrink-0 flex-col items-center justify-center gap-2 rounded-14 bg-well text-12 text-muted">
                 <Loader2 size={20} className="animate-spin" />
                 {t('Uploading')}
               </div>
@@ -259,9 +259,9 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className={`flex h-[160px] shrink-0 flex-col items-center justify-center gap-2 rounded-[14px] border border-dashed border-line-strong px-3 text-center text-[13px] font-medium transition-colors hover:border-ink hover:bg-card ${images.length || uploading ? 'w-[96px]' : 'w-full max-w-[220px]'}`}
+                className={`flex h-[160px] shrink-0 flex-col items-center justify-center gap-2 rounded-14 border border-dashed border-line-strong px-3 text-center text-13 font-medium transition-colors hover:border-ink hover:bg-card ${images.length || uploading ? 'w-[96px]' : 'w-full max-w-[220px]'}`}
               >
-                <ImagePlus size={22} strokeWidth={1.5} />
+                <ImagePlus size={24} strokeWidth={1.75} />
                 {images.length || uploading ? t('Add more') : t('Add a photo')}
               </button>
             )}
@@ -291,10 +291,10 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
           {ai && <WriteItForMe name={name} notes={description} option="size" options={sizes ?? []} onText={setDescription} />}
         </div>
 
-        <div className="rounded-[18px] bg-card shadow-[inset_0_0_0_1px_var(--color-line)]">
-          <button type="button" className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-[15px] font-medium" aria-expanded={moreOpen} onClick={() => setMoreOpen(!moreOpen)}>
+        <div className="rounded-16 bg-card shadow-[inset_0_0_0_1px_var(--color-line)]">
+          <button type="button" className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-15 font-medium" aria-expanded={moreOpen} onClick={() => setMoreOpen(!moreOpen)}>
             {sizes?.length ? t('Sizes: {sizes}', { sizes: sizes.join(' · ') }) : t('Buyers choose a size')}
-            <ChevronDown size={17} strokeWidth={1.75} className={`shrink-0 text-muted transition-transform ${moreOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={18} strokeWidth={1.75} className={`shrink-0 text-muted transition-transform ${moreOpen ? 'rotate-180' : ''}`} />
           </button>
           {moreOpen && (
             <div className="fade border-t border-line px-4 pt-3 pb-4">
@@ -320,7 +320,7 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
             {t('I’ll do this later')}
           </button>
         </div>
-        <p className="text-center text-[14px] text-muted">
+        <p className="text-center text-14 text-muted">
           {t('Many products?')}{' '}
           <Link to="/app/products/import" className="font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink">
             {t('Import them from a sheet')}
@@ -461,31 +461,31 @@ export function LiveStep({ shop, products, ai, bar }: { shop: SetupShop; product
         }
       />
 
-      <section className="mt-6 rounded-[22px] bg-card p-5 shadow-[inset_0_0_0_1px_var(--color-line)]">
-        <p className="text-[13px] text-muted">{t('Your shop link')}</p>
-        <p className="code mt-1 truncate text-[18px]">shopi.tz/{shop.slug}</p>
+      <section className="mt-6 rounded-20 bg-card p-5 shadow-[inset_0_0_0_1px_var(--color-line)]">
+        <p className="text-13 text-muted">{t('Your shop link')}</p>
+        <p className="code mt-1 truncate text-17">shopi.tz/{shop.slug}</p>
         <div className="mt-4">
           <ShareActions url={url} title={shop.name} text={t('My shop is open. You can order here:')} onShared={shared} />
         </div>
         {/* May wrap: in Swahili the label is long ("QR code ya kuchapisha au kuweka mtandaoni"). */}
         <button type="button" className="btn btn-ghost btn-sm mt-2 h-auto min-h-11 w-full py-2 text-center leading-5 whitespace-normal" onClick={() => setQrOpen(true)}>
-          <QrCodeIcon size={16} strokeWidth={1.6} className="shrink-0" /> {t('QR code to print or post')}
+          <QrCodeIcon size={16} strokeWidth={1.75} className="shrink-0" /> {t('QR code to print or post')}
         </button>
       </section>
 
       <div className="mt-4 lg:hidden">
-        <div className="rounded-[28px] shadow-[inset_0_0_0_1px_var(--color-line)]">
+        <div className="rounded-28 shadow-[inset_0_0_0_1px_var(--color-line)]">
           <LiveCard shop={shop} products={products} ai={ai} />
         </div>
       </div>
 
-      <section className="mt-4 rounded-[22px] bg-card shadow-[inset_0_0_0_1px_var(--color-line)]">
+      <section className="mt-4 rounded-20 bg-card shadow-[inset_0_0_0_1px_var(--color-line)]">
         <button type="button" className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left" aria-expanded={igOpen} onClick={() => setIgOpen(!igOpen)}>
           <span className="min-w-0">
-            <span className="block text-[15px] font-medium">{t('Put it in your Instagram bio')}</span>
-            <span className="block text-[13px] text-muted">{t('Three steps, about a minute')}</span>
+            <span className="block text-15 font-medium">{t('Put it in your Instagram bio')}</span>
+            <span className="block text-13 text-muted">{t('Three steps, about a minute')}</span>
           </span>
-          <ChevronDown size={17} strokeWidth={1.75} className={`shrink-0 text-muted transition-transform ${igOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown size={18} strokeWidth={1.75} className={`shrink-0 text-muted transition-transform ${igOpen ? 'rotate-180' : ''}`} />
         </button>
         {igOpen && (
           <div className="fade border-t border-line px-5 pt-4 pb-5">
@@ -528,14 +528,14 @@ export function BioSteps({ onCopy, copied }: { onCopy: () => void; copied: boole
     <>
       <ol className="space-y-3">
         {steps.map((s, i) => (
-          <li key={i} className="flex gap-3 text-[14px] leading-5">
-            <span className="tnum flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-[12px] font-medium text-white">{i + 1}</span>
+          <li key={i} className="flex gap-3 text-14 leading-5">
+            <span className="tnum flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-12 font-medium text-white">{i + 1}</span>
             <span className="pt-0.5">{s}</span>
           </li>
         ))}
       </ol>
       <button type="button" className="btn btn-quiet btn-sm mt-4" onClick={onCopy}>
-        {copied ? <Check size={15} strokeWidth={2.25} /> : null}
+        {copied ? <Check size={16} strokeWidth={2.25} /> : null}
         {copied ? t('Copied') : t('Copy my link')}
       </button>
       <p className="hint">{t('On TikTok it goes under Edit profile, Website. Shopi ticks this off when a buyer arrives from Instagram or TikTok.')}</p>
@@ -554,10 +554,10 @@ export function LiveCard({ shop, products, ai }: { shop: SetupShop; products: Se
   const slot = (
     <button type="button" onClick={() => setOpen(true)} className="group mt-2 block w-full text-left">
       {shop.bio ? (
-        <span className="text-[14px] leading-relaxed text-ink-2 underline decoration-line-strong decoration-dashed underline-offset-4 group-hover:decoration-ink">{shop.bio}</span>
+        <span className="text-14 leading-relaxed text-ink-2 underline decoration-line-strong decoration-dashed underline-offset-4 group-hover:decoration-ink">{shop.bio}</span>
       ) : (
-        <span className="flex items-center gap-2 rounded-[12px] border border-dashed border-line-strong px-3 py-2.5 text-[13px] font-medium text-ink-2 transition-colors group-hover:border-ink">
-          <Plus size={15} strokeWidth={2} /> {t('Add a line about your shop')}
+        <span className="flex items-center gap-2 rounded-12 border border-dashed border-line-strong px-3 py-2.5 text-13 font-medium text-ink-2 transition-colors group-hover:border-ink">
+          <Plus size={16} strokeWidth={2.25} /> {t('Add a line about your shop')}
         </span>
       )}
     </button>
@@ -617,21 +617,21 @@ export function LivePhone({ shop, products, ai }: { shop: SetupShop; products: S
 export function OrderNotice({ shop, product, className = '' }: { shop: SetupShop; product: SetupProduct | null; className?: string }) {
   const t = useT()
   return (
-    <div className={`w-full max-w-[340px] rounded-[22px] bg-card p-4 text-ink shadow-[var(--shadow-float)] ring-1 ring-line ${className}`}>
+    <div className={`w-full max-w-[340px] rounded-20 bg-card p-4 text-ink shadow-[var(--shadow-float)] ring-1 ring-line ${className}`}>
       <div className="flex items-center justify-between gap-3">
-        <p className="flex min-w-0 items-center gap-2 text-[13px] font-semibold">
-          <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-6 w-6 text-[10px]" />
+        <p className="flex min-w-0 items-center gap-2 text-13 font-semibold">
+          <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-6 w-6 text-11" />
           <span className="truncate">Shopi</span>
         </p>
         <p className="meta shrink-0">{t('now')}</p>
       </div>
       <div className="mt-3 flex items-center gap-3">
-        {product?.image && <Img size="thumb" k={product.image} alt="" className="h-[52px] w-[42px] shrink-0 rounded-[8px]" />}
+        {product?.image && <Img size="thumb" k={product.image} alt="" className="h-[52px] w-[42px] shrink-0 rounded-8" />}
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-2 text-[14px] font-medium">
+          <p className="flex items-center gap-2 text-14 font-medium">
             <span className="signal shrink-0" /> {product ? t('New order: {total}', { total: tzs(product.price) }) : t('New order')}
           </p>
-          <p className="truncate text-[12px] text-muted">{product?.name ?? shop.name}</p>
+          <p className="truncate text-12 text-muted">{product?.name ?? shop.name}</p>
         </div>
       </div>
     </div>
@@ -678,11 +678,11 @@ export function PhoneStep({ shop, product, bar }: { shop: SetupShop; product: Se
   return (
     <>
       <StepHead bar={bar} title={t('Orders on your phone')} sub={t('A notification the moment a buyer orders, even when Shopi is closed. And Shopi on your Home Screen, one tap from your orders.')} />
-      <div className="mt-6 flex justify-center rounded-[22px] bg-well px-4 py-6 lg:hidden">
+      <div className="mt-6 flex justify-center rounded-20 bg-well px-4 py-6 lg:hidden">
         <OrderNotice shop={shop} product={product} />
       </div>
       {status && (
-        <p className="mt-6 flex items-start gap-2.5 text-[15px] leading-6">
+        <p className="mt-6 flex items-start gap-2.5 text-15 leading-6">
           {app.state === 'on' ? <Check size={18} strokeWidth={2.25} className="mt-0.5 shrink-0 text-ok" /> : <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-faint" aria-hidden />}
           {status}
         </p>
@@ -696,7 +696,7 @@ export function PhoneStep({ shop, product, bar }: { shop: SetupShop; product: Se
         )}
         {!app.installed && app.state !== 'loading' && (
           <button type="button" className={`btn btn-lg w-full ${app.state === 'ios' ? '' : 'btn-ghost'}`} onClick={() => (app.canInstall ? app.install() : setGuide(true))}>
-            <Download size={17} strokeWidth={1.75} /> {app.canInstall ? t('Install the app') : t('Put Shopi on your Home Screen')}
+            <Download size={18} strokeWidth={1.75} /> {app.canInstall ? t('Install the app') : t('Put Shopi on your Home Screen')}
           </button>
         )}
         {/* Main once there is nothing left to turn on here (on, blocked, or a browser without notifications). */}

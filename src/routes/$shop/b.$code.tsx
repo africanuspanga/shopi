@@ -91,12 +91,12 @@ function BagPage() {
       title={t('Your bag is ready')}
       intro={
         <>
-          <p className="max-w-[52ch] text-[15px] leading-relaxed text-ink-2">
+          <p className="max-w-[52ch] text-15 leading-relaxed text-ink-2">
             {t('{shop} made this bag for you. Add where to deliver and how you pay, and it is on its way.', { shop: shop.name })}
           </p>
           {bag.note && (
-            <figure className="mt-4 max-w-[52ch] rounded-[16px] bg-card px-4 py-3.5 shadow-[inset_0_0_0_1px_var(--color-line)]">
-              <blockquote className="text-[15px] leading-relaxed whitespace-pre-line">“{bag.note}”</blockquote>
+            <figure className="mt-4 max-w-[52ch] rounded-16 bg-card px-4 py-3.5 shadow-[inset_0_0_0_1px_var(--color-line)]">
+              <blockquote className="text-15 leading-relaxed whitespace-pre-line">“{bag.note}”</blockquote>
               <figcaption className="meta mt-1.5">{shop.name}</figcaption>
             </figure>
           )}
@@ -133,7 +133,7 @@ function Ended({ shop, bag }: { shop: PublicShop; bag: PublicBag }) {
       </a>
     ) : null
   const toShop = (
-    <Link to="/$shop" params={{ shop: shop.slug }} className="text-[14px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
+    <Link to="/$shop" params={{ shop: shop.slug }} className="text-14 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
       {t('See {shop}', { shop: shop.name })}
     </Link>
   )
@@ -165,10 +165,10 @@ function Ended({ shop, bag }: { shop: PublicShop; bag: PublicBag }) {
       <main className="mx-auto max-w-[560px] px-4 pt-8 pb-16 md:pt-16">
         <section className={`${rise} card flex flex-col items-center p-6 text-center md:p-10`}>
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-well text-ink-2">
-            <ShoppingBag size={20} strokeWidth={1.5} />
+            <ShoppingBag size={20} strokeWidth={1.75} />
           </span>
-          <h1 className="title mt-5 text-[24px] md:text-[30px]">{c.title}</h1>
-          <p className="mt-2 max-w-[40ch] text-[15px] leading-relaxed text-muted">{c.body}</p>
+          <h1 className="title mt-5 text-24 md:text-28">{c.title}</h1>
+          <p className="mt-2 max-w-[40ch] text-15 leading-relaxed text-muted">{c.body}</p>
           <div className="mt-7 flex flex-col items-center gap-4">
             {c.action}
             {toShop}

@@ -16,7 +16,7 @@ const FORM_ID = 'collection-form'
 /** A collection's cover: its first four photos in a square, quiet wells where there are fewer. */
 export function CollectionCover({ images, className = '' }: { images: string[]; className?: string }) {
   return (
-    <div className={`grid shrink-0 grid-cols-2 gap-0.5 overflow-hidden rounded-[14px] bg-well ${className}`}>
+    <div className={`grid shrink-0 grid-cols-2 gap-0.5 overflow-hidden rounded-14 bg-well ${className}`}>
       {[0, 1, 2, 3].map((i) =>
         images[i] ? <Img key={i} size="thumb" k={images[i]} alt="" className="h-full w-full" /> : <div key={i} className="bg-well" />,
       )}
@@ -118,24 +118,24 @@ export function CollectionForm({ collection, products, title }: { collection?: C
               <button
                 type="button"
                 onClick={() => setPicking(true)}
-                className="flex w-full flex-col items-center justify-center gap-2 rounded-[16px] border border-dashed border-line-strong px-6 py-10 text-center transition-colors hover:border-ink hover:bg-page"
+                className="flex w-full flex-col items-center justify-center gap-2 rounded-16 border border-dashed border-line-strong px-6 py-10 text-center transition-colors hover:border-ink hover:bg-page"
               >
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white">
-                  <Plus size={18} strokeWidth={2} />
+                  <Plus size={18} strokeWidth={2.25} />
                 </span>
-                <span className="text-[15px] font-medium">{t('Add products')}</span>
-                <span className="text-[13px] text-muted">{t('Pick as many as you like')}</span>
+                <span className="text-15 font-medium">{t('Add products')}</span>
+                <span className="text-13 text-muted">{t('Pick as many as you like')}</span>
               </button>
             ) : (
               <>
                 <ul className="-mx-2 divide-y divide-line">
                   {chosen.map((p, i) => (
                     <li key={p.id} className="flex items-center gap-3 px-2 py-2.5">
-                      <span className="tnum hidden w-5 shrink-0 text-right text-[13px] text-muted sm:block">{i + 1}</span>
-                      <Img size="thumb" k={p.images[0]} alt={p.name} className="h-12 w-10 shrink-0 rounded-[8px]" />
+                      <span className="tnum hidden w-5 shrink-0 text-right text-13 text-muted sm:block">{i + 1}</span>
+                      <Img size="thumb" k={p.images[0]} alt={p.name} className="h-12 w-10 shrink-0 rounded-8" />
                       <span className="min-w-0 flex-1">
-                        <span className="line-clamp-2 text-[14px] leading-5 font-medium">{p.name}</span>
-                        <span className="block text-[13px] text-muted">
+                        <span className="line-clamp-2 text-14 leading-5 font-medium">{p.name}</span>
+                        <span className="block text-13 text-muted">
                           <span className="tnum">{tzs(p.price)}</span>
                           {!p.active ? ` · ${t('Hidden')}` : p.stock === 0 ? ` · ${t('Sold out')}` : ''}
                         </span>
@@ -155,7 +155,7 @@ export function CollectionForm({ collection, products, title }: { collection?: C
                   ))}
                 </ul>
                 <button type="button" className="btn btn-quiet btn-sm mt-3" onClick={() => setPicking(true)}>
-                  <Plus size={15} strokeWidth={2} /> {t('Add or remove products')}
+                  <Plus size={16} strokeWidth={2.25} /> {t('Add or remove products')}
                 </button>
                 <p className="hint">{t('A product you hide stays in the collection, out of sight, until you show it again.')}</p>
               </>
@@ -170,17 +170,17 @@ export function CollectionForm({ collection, products, title }: { collection?: C
 
           {collection && (
             <button type="button" className="btn mt-4 w-full bg-transparent text-bad hover:bg-bad/[0.06] lg:w-auto" onClick={remove}>
-              <Trash2 size={16} strokeWidth={1.6} /> {t('Delete collection')}
+              <Trash2 size={16} strokeWidth={1.75} /> {t('Delete collection')}
             </button>
           )}
         </div>
 
         <aside className="hidden space-y-4 lg:sticky lg:top-8 lg:block">
           <div className="card p-5">
-            <p className="text-[13px] text-muted">{t('In your shop')}</p>
+            <p className="text-13 text-muted">{t('In your shop')}</p>
             <CollectionCover images={chosen.flatMap((p) => p.images.slice(0, 1))} className="mt-3 aspect-square w-full" />
-            <p className="mt-3 truncate text-[15px] font-semibold">{name || t('Collection name')}</p>
-            <p className="text-[13px] text-muted">{t(chosen.length === 1 ? '{n} product' : '{n} products', { n: chosen.length })}</p>
+            <p className="mt-3 truncate text-15 font-semibold">{name || t('Collection name')}</p>
+            <p className="text-13 text-muted">{t(chosen.length === 1 ? '{n} product' : '{n} products', { n: chosen.length })}</p>
           </div>
           <ErrorText>{error}</ErrorText>
           {saveButton}
@@ -207,8 +207,8 @@ export function ShareCard({ collection }: { collection: Pick<CollectionRow, 'slu
   const url = `${useOrigin()}/${shop.slug}/c/${collection.slug}`
   return (
     <section className="card p-5">
-      <h2 className="text-[15px] font-semibold">{t('Share this collection')}</h2>
-      <p className="code mt-1 truncate text-[12px] text-muted">{prettyUrl(url)}</p>
+      <h2 className="text-15 font-semibold">{t('Share this collection')}</h2>
+      <p className="code mt-1 truncate text-12 text-muted">{prettyUrl(url)}</p>
       <div className="mt-4">
         <ShareActions
           url={url}
@@ -239,8 +239,8 @@ function IconButton({ label, disabled, onClick, children }: { label: string; dis
 function Card({ title, sub, children }: { title?: string; sub?: string; children: ReactNode }) {
   return (
     <section className="card p-6">
-      {title && <h2 className="text-[15px] font-semibold">{title}</h2>}
-      {sub && <p className="mt-1 text-[13px] leading-5 text-muted">{sub}</p>}
+      {title && <h2 className="text-15 font-semibold">{title}</h2>}
+      {sub && <p className="mt-1 text-13 leading-5 text-muted">{sub}</p>}
       <div className={title ? 'mt-4' : ''}>{children}</div>
     </section>
   )

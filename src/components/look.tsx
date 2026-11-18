@@ -14,8 +14,8 @@ export type Look = { color: string; font: FontId; cover: string | null }
 export function LookSection({ title, sub, children }: { title: string; sub: string; children: ReactNode }) {
   return (
     <section className="card p-5 md:p-6">
-      <h2 className="text-[16px] font-semibold">{title}</h2>
-      <p className="mt-1 text-[14px] leading-5 text-muted">{sub}</p>
+      <h2 className="text-15 font-semibold">{title}</h2>
+      <p className="mt-1 text-14 leading-5 text-muted">{sub}</p>
       <div className="mt-5">{children}</div>
     </section>
   )
@@ -56,32 +56,32 @@ export function CoverPicker({ cover, onChange, onError }: { cover: string | null
         type="button"
         onClick={() => ref.current?.click()}
         disabled={busy}
-        className="group flex aspect-[2/1] w-full flex-col items-center justify-center gap-3 rounded-[16px] border border-dashed border-line-strong text-center transition-colors hover:border-ink md:aspect-[16/5]"
+        className="group flex aspect-[2/1] w-full flex-col items-center justify-center gap-3 rounded-16 border border-dashed border-line-strong text-center transition-colors hover:border-ink md:aspect-[16/5]"
       >
         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white transition-transform group-active:scale-95">
           {busy ? <Loader2 size={18} className="animate-spin" /> : <ImagePlus size={18} strokeWidth={1.75} />}
         </span>
-        <span className="px-6 text-[14px] font-medium">{busy ? t('Uploading') : t('Add a cover photo')}</span>
+        <span className="px-6 text-14 font-medium">{busy ? t('Uploading') : t('Add a cover photo')}</span>
         {input}
       </button>
     )
   }
   return (
     <div>
-      <div className="relative aspect-[2/1] overflow-hidden rounded-[16px] bg-well md:aspect-[16/5]">
+      <div className="relative aspect-[2/1] overflow-hidden rounded-16 bg-well md:aspect-[16/5]">
         <Img k={cover} alt="" sizes="(min-width: 1024px) 700px, 100vw" className="h-full w-full" />
         {busy && (
           <span className="absolute inset-0 flex items-center justify-center bg-card/60">
-            <Loader2 size={22} className="animate-spin" />
+            <Loader2 size={24} className="animate-spin" />
           </span>
         )}
       </div>
       <div className="mt-3 flex gap-2">
         <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => ref.current?.click()}>
-          <ImagePlus size={15} strokeWidth={1.75} /> {t('Change photo')}
+          <ImagePlus size={16} strokeWidth={1.75} /> {t('Change photo')}
         </button>
         <button type="button" className="btn btn-sm bg-transparent text-bad hover:bg-bad/[0.06]" disabled={busy} onClick={() => onChange(null)}>
-          <Trash2 size={15} strokeWidth={1.75} /> {t('Remove')}
+          <Trash2 size={16} strokeWidth={1.75} /> {t('Remove')}
         </button>
       </div>
       {input}
@@ -103,7 +103,7 @@ function Swatch({ hex, name, on, onPick }: { hex: string; name: string; on: bool
       className={`flex h-11 w-11 items-center justify-center rounded-full transition-transform active:scale-95 ${on ? 'ring-2 ring-ink ring-offset-2 ring-offset-card' : 'shadow-[inset_0_0_0_1px_rgb(10_10_10/0.1)]'}`}
       style={{ background: hex, color: c.onFill }}
     >
-      {on && <Check size={18} strokeWidth={2.5} />}
+      {on && <Check size={18} strokeWidth={2.25} />}
     </button>
   )
 }
@@ -157,13 +157,13 @@ export function ColorPicker({ value, logo, onChange }: { value: string; logo: st
             className={`relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full ${!preset ? 'ring-2 ring-ink ring-offset-2 ring-offset-card' : 'shadow-[inset_0_0_0_1px_rgb(10_10_10/0.1)]'}`}
             style={{ background: !preset ? value : 'var(--color-well)', color: !preset ? c.onFill : 'var(--color-ink)' }}
           >
-            {preset ? <Pipette size={17} strokeWidth={1.75} /> : <Check size={18} strokeWidth={2.5} />}
+            {preset ? <Pipette size={18} strokeWidth={1.75} /> : <Check size={18} strokeWidth={2.25} />}
             <input type="color" className="absolute inset-0 cursor-pointer opacity-0" aria-label={t('Pick a colour')} value={value} onChange={(e) => onChange(e.target.value)} />
           </label>
           <span className="input flex h-11 w-40 items-center gap-1 px-3">
-            <span className="code text-[14px] text-muted">#</span>
+            <span className="code text-14 text-muted">#</span>
             <input
-              className="code min-w-0 flex-1 bg-transparent text-[14px] uppercase outline-none"
+              className="code min-w-0 flex-1 bg-transparent text-14 uppercase outline-none"
               aria-label={t('Colour code')}
               value={typed.replace(/^#/, '')}
               maxLength={6}
@@ -178,7 +178,7 @@ export function ColorPicker({ value, logo, onChange }: { value: string; logo: st
         </div>
       </div>
       {notes.length > 0 && (
-        <ul className="space-y-1.5 rounded-[14px] bg-page px-4 py-3 text-[13px] leading-5 text-ink-2">
+        <ul className="space-y-1.5 rounded-14 bg-page px-4 py-3 text-13 leading-5 text-ink-2">
           {notes.map((n) => (
             <li key={n}>{n}</li>
           ))}
@@ -202,16 +202,16 @@ export function FontPicker({ value, name, onChange, locked = false }: { value: F
           aria-pressed={value === f.id}
           disabled={locked && f.id !== 'clean'}
           onClick={() => onChange(f.id)}
-          className={`min-w-0 rounded-[16px] p-4 text-left transition-colors disabled:cursor-default disabled:opacity-55 ${value === f.id ? 'bg-card shadow-[inset_0_0_0_2px_var(--color-ink)]' : 'bg-page enabled:hover:bg-well'}`}
+          className={`min-w-0 rounded-16 p-4 text-left transition-colors disabled:cursor-default disabled:opacity-55 ${value === f.id ? 'bg-card shadow-[inset_0_0_0_2px_var(--color-ink)]' : 'bg-page enabled:hover:bg-well'}`}
         >
           <span data-font={fontAttr(f.id)} className="block">
-            <span className="display block truncate text-[24px]">{name || 'Duka'}</span>
+            <span className="display block truncate text-24">{name || 'Duka'}</span>
           </span>
-          <span className="mt-3 flex items-center gap-1.5 text-[14px] font-medium">
+          <span className="mt-3 flex items-center gap-1.5 text-14 font-medium">
             {t(f.name)}
-            {value === f.id && <Check size={14} strokeWidth={2.5} />}
+            {value === f.id && <Check size={14} strokeWidth={2.25} />}
           </span>
-          <span className="mt-0.5 block text-[12px] leading-4 text-muted">{t(f.feel)}</span>
+          <span className="mt-0.5 block text-12 leading-4 text-muted">{t(f.feel)}</span>
         </button>
       ))}
     </div>
@@ -229,9 +229,9 @@ export function LookPreview({ shop, products, look, compact = false }: { shop: S
   const shown = products.filter((p) => p.images[0]).slice(0, 2)
   const sale = shown[0]
   return (
-    <div style={themeStyle(look.color)} data-font={fontAttr(look.font)} className="overflow-hidden rounded-[28px] bg-card shadow-[inset_0_0_0_1px_var(--color-line)]">
+    <div style={themeStyle(look.color)} data-font={fontAttr(look.font)} className="overflow-hidden rounded-28 bg-card shadow-[inset_0_0_0_1px_var(--color-line)]">
       {look.cover && (
-        <div className={`m-3 mb-0 overflow-hidden rounded-[16px] bg-well ${compact ? 'aspect-[4/1]' : 'aspect-[2/1]'}`}>
+        <div className={`m-3 mb-0 overflow-hidden rounded-16 bg-well ${compact ? 'aspect-[4/1]' : 'aspect-[2/1]'}`}>
           <Img k={look.cover} alt="" sizes="400px" className="h-full w-full" />
         </div>
       )}
@@ -240,19 +240,19 @@ export function LookPreview({ shop, products, look, compact = false }: { shop: S
           <ShopAvatar
             name={shop.name}
             logo={shop.logo_key}
-            className={`${compact ? 'h-11 w-11 text-[14px]' : 'h-14 w-14 text-[17px]'} ${look.cover ? `relative ml-2 ring-4 ring-card ${compact ? '-mt-6' : '-mt-8'}` : ''}`}
+            className={`${compact ? 'h-11 w-11 text-14' : 'h-14 w-14 text-17'} ${look.cover ? `relative ml-2 ring-4 ring-card ${compact ? '-mt-6' : '-mt-8'}` : ''}`}
           />
           <div className="min-w-0 pb-0.5">
-            <p className={`display truncate ${compact ? 'text-[22px]' : 'text-[28px]'}`}>{shop.name}</p>
-            {!compact && shop.location && <p className="mt-1 truncate text-[13px] text-muted">{shop.location}</p>}
+            <p className={`display truncate ${compact ? 'text-20' : 'text-28'}`}>{shop.name}</p>
+            {!compact && shop.location && <p className="mt-1 truncate text-13 text-muted">{shop.location}</p>}
           </div>
         </div>
         <div className={`flex items-center gap-2 ${compact ? 'mt-3' : 'mt-4'}`}>
           <Tag hot>−20%</Tag>
-          <span className="text-[13px] text-moto-ink">{t('Only {n} left', { n: 2 })}</span>
-          <span className="ml-auto flex h-9 items-center gap-2 rounded-full pr-1 pl-3 text-[13px] font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
+          <span className="text-13 text-moto-ink">{t('Only {n} left', { n: 2 })}</span>
+          <span className="ml-auto flex h-9 items-center gap-2 rounded-full pr-1 pl-3 text-13 font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
             {t('Bag')}
-            <span className="tnum flex h-7 min-w-7 items-center justify-center rounded-full bg-moto px-1.5 text-[12px] text-on-moto">2</span>
+            <span className="tnum flex h-7 min-w-7 items-center justify-center rounded-full bg-moto px-1.5 text-12 text-on-moto">2</span>
           </span>
         </div>
         {!compact && (
@@ -261,7 +261,7 @@ export function LookPreview({ shop, products, look, compact = false }: { shop: S
               <div className="mt-5 grid grid-cols-2 gap-3">
                 {shown.map((p) => (
                   <div key={p.id} className="min-w-0">
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-[14px] bg-well">
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-14 bg-well">
                       <Img k={p.images[0]} alt="" size="thumb" className="h-full w-full" />
                       {p === sale && (
                         <span className="absolute top-2 left-2">
@@ -269,20 +269,20 @@ export function LookPreview({ shop, products, look, compact = false }: { shop: S
                         </span>
                       )}
                     </div>
-                    <p className="mt-2 truncate text-[13px] font-medium">{p.name}</p>
-                    <p className="tnum text-[13px] text-ink-2">{tzs(p.price)}</p>
+                    <p className="mt-2 truncate text-13 font-medium">{p.name}</p>
+                    <p className="tnum text-13 text-ink-2">{tzs(p.price)}</p>
                   </div>
                 ))}
               </div>
             )}
-            <p className="title mt-5 text-[17px]">{t('All products')}</p>
+            <p className="title mt-5 text-17">{t('All products')}</p>
             <span className="btn btn-shop mt-4 w-full">{t('Add to bag')}</span>
             <div className="mx-auto mt-5 flex h-14 max-w-[260px] items-center justify-around rounded-full bg-ink text-white">
-              <Store size={19} strokeWidth={2} className="text-moto-lit" />
-              <Search size={19} strokeWidth={1.6} />
+              <Store size={20} strokeWidth={2.25} className="text-moto-lit" />
+              <Search size={20} strokeWidth={1.75} />
               <span className="relative">
-                <ShoppingBag size={19} strokeWidth={1.6} />
-                <span className="tnum absolute -top-2 -right-2.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-moto-lit px-1 text-[10px] font-semibold text-on-moto-lit ring-2 ring-ink">2</span>
+                <ShoppingBag size={20} strokeWidth={1.75} />
+                <span className="tnum absolute -top-2 -right-2.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-moto-lit px-1 text-11 font-semibold text-on-moto-lit ring-2 ring-ink">2</span>
               </span>
             </div>
           </>

@@ -35,7 +35,7 @@ export function ProductPicker({
   return (
     <Sheet open={open} onClose={onClose} title={title}>
       <label className="input flex items-center gap-2 px-3">
-        <Search size={16} strokeWidth={1.6} className="shrink-0 text-muted" />
+        <Search size={16} strokeWidth={1.75} className="shrink-0 text-muted" />
         <input className="min-w-0 flex-1 bg-transparent outline-none" placeholder={t('Search')} value={q} onChange={(e) => setQ(e.target.value)} />
       </label>
       <ul className="mt-3 divide-y divide-line">
@@ -54,24 +54,24 @@ export function ProductPicker({
                   <span
                     className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors ${picked.has(p.id) ? 'bg-ink text-white' : 'shadow-[inset_0_0_0_1.5px_var(--color-line-strong)]'}`}
                   >
-                    {picked.has(p.id) && <Check size={12} strokeWidth={3} />}
+                    {picked.has(p.id) && <Check size={12} strokeWidth={2.25} />}
                   </span>
                 )}
-                <Img size="thumb" k={p.images[0]} alt={p.name} className="h-12 w-10 shrink-0 rounded-[8px]" />
+                <Img size="thumb" k={p.images[0]} alt={p.name} className="h-12 w-10 shrink-0 rounded-8" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px]">{p.name}</span>
-                  <span className="block text-[13px] text-muted">
+                  <span className="block truncate text-15">{p.name}</span>
+                  <span className="block text-13 text-muted">
                     {p.stock == null ? t('In stock') : p.stock === 0 ? t('Sold out') : t('{n} in stock', { n: p.stock })}
                     {!p.active && ` · ${t('Hidden')}`}
                   </span>
                 </span>
-                <span className="tnum shrink-0 text-[14px]">{tzs(p.price)}</span>
+                <span className="tnum shrink-0 text-14">{tzs(p.price)}</span>
               </button>
             </li>
           )
         })}
       </ul>
-      {shown.length === 0 && <p className="py-6 text-center text-[14px] text-muted">{t('No products match.')}</p>}
+      {shown.length === 0 && <p className="py-6 text-center text-14 text-muted">{t('No products match.')}</p>}
       {picked && (
         <div className="sticky bottom-0 -mx-5 mt-2 bg-gradient-to-t from-card from-70% to-transparent px-5 pt-6 md:-mx-6 md:px-6">
           <button type="button" className="btn btn-lg w-full" onClick={onClose}>

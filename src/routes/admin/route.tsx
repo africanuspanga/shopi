@@ -82,7 +82,7 @@ function AdminLayout() {
         <nav className="mt-6 flex-1 space-y-5 overflow-y-auto" aria-label={t('Sections')}>
           {groups.map((g) => (
             <div key={g.title}>
-              <p className="px-3 pb-1.5 text-[12px] text-muted">{g.title}</p>
+              <p className="px-3 pb-1.5 text-12 text-muted">{g.title}</p>
               <div className="space-y-0.5">
                 {g.tabs.map((x) => {
                   const on = x.id === tab
@@ -92,7 +92,7 @@ function AdminLayout() {
                       to="/admin"
                       search={{ tab: x.id === 'today' ? undefined : x.id, days: days === 30 ? undefined : days }}
                       aria-current={on ? 'page' : undefined}
-                      className={`flex h-10 items-center gap-3 rounded-[12px] px-3 text-[14px] font-medium transition-colors ${on ? 'bg-well text-ink' : 'text-ink-2 hover:bg-page hover:text-ink'}`}
+                      className={`flex h-10 items-center gap-3 rounded-12 px-3 text-14 font-medium transition-colors ${on ? 'bg-well text-ink' : 'text-ink-2 hover:bg-page hover:text-ink'}`}
                     >
                       <x.icon size={18} strokeWidth={on ? 2 : 1.6} className="shrink-0" />
                       {x.label}
@@ -103,14 +103,14 @@ function AdminLayout() {
             </div>
           ))}
         </nav>
-        <div className="rounded-[16px] bg-ink p-4 text-white">
-          <p className="truncate text-[14px] font-semibold">{user.name}</p>
-          <p className="mt-0.5 text-[12.5px] text-white/60">{t('You see every shop on Shopi.')}</p>
+        <div className="rounded-16 bg-ink p-4 text-white">
+          <p className="truncate text-14 font-semibold">{user.name}</p>
+          <p className="mt-0.5 text-13 text-white/60">{t('You see every shop on Shopi.')}</p>
           <Link to="/app" className="btn btn-sm mt-3.5 w-full bg-white text-ink">
-            {t('Seller app')} <ArrowUpRight size={14} strokeWidth={1.8} />
+            {t('Seller app')} <ArrowUpRight size={14} strokeWidth={1.75} />
           </Link>
-          <button type="button" className="mt-1 flex h-9 w-full items-center justify-center gap-2 rounded-full text-[13.5px] font-medium text-white/75 transition-colors hover:text-white" onClick={out}>
-            <LogOut size={14} strokeWidth={1.8} /> {t('Log out')}
+          <button type="button" className="mt-1 flex h-9 w-full items-center justify-center gap-2 rounded-full text-13 font-medium text-white/75 transition-colors hover:text-white" onClick={out}>
+            <LogOut size={14} strokeWidth={1.75} /> {t('Log out')}
           </button>
         </div>
       </aside>
@@ -127,7 +127,7 @@ function AdminLayout() {
                 {t('Seller app')}
               </Link>
               <button type="button" className="btn btn-ghost btn-sm" onClick={out}>
-                <LogOut size={15} strokeWidth={1.6} /> {t('Log out')}
+                <LogOut size={16} strokeWidth={1.75} /> {t('Log out')}
               </button>
             </div>
           </div>

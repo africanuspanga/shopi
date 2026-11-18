@@ -1,3 +1,4 @@
+/* design-check: off. Coded pictures of phones and cards at their own small scale (DESIGN.md). */
 import { BatteryFull, Check, CircleCheck, MapPin, Phone as PhoneIcon, Signal, Wifi } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { InstagramIcon, WhatsAppMark } from '#/components/brand-icons'

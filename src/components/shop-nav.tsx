@@ -74,7 +74,7 @@ function SearchSheet({ open, onClose, shop, products }: { open: boolean; onClose
   return (
     <Sheet open={open} onClose={onClose} title={t('Search {shop}', { shop: shop.name })}>
       <label className="input flex items-center gap-2 px-4">
-        <Search size={17} strokeWidth={1.6} className="shrink-0 text-muted" />
+        <Search size={18} strokeWidth={1.75} className="shrink-0 text-muted" />
         <input
           autoFocus
           type="text"
@@ -89,7 +89,7 @@ function SearchSheet({ open, onClose, shop, products }: { open: boolean; onClose
       </label>
       <p className="meta mt-4">{needle ? t(results.length === 1 ? '{n} product' : '{n} products', { n: results.length }) : t('Newest')}</p>
       {results.length === 0 ? (
-        <p className="mt-3 rounded-[14px] bg-page px-4 py-6 text-center text-[14px] leading-relaxed text-muted">
+        <p className="mt-3 rounded-14 bg-page px-4 py-6 text-center text-14 leading-relaxed text-muted">
           {t('Nothing matches "{q}". Try another word, or ask the seller on WhatsApp.', { q: q.trim() })}
         </p>
       ) : (
@@ -97,9 +97,9 @@ function SearchSheet({ open, onClose, shop, products }: { open: boolean; onClose
           {results.map((p) => (
             <li key={p.id}>
               <Link to="/$shop/$product" params={{ shop: shop.slug, product: p.slug ?? p.id }} onClick={onClose} className="flex items-center gap-3 py-3">
-                <Img size="thumb" k={p.images[0]} alt={p.name} className="h-16 w-[52px] shrink-0 rounded-[10px]" />
+                <Img size="thumb" k={p.images[0]} alt={p.name} className="h-16 w-[52px] shrink-0 rounded-12" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px]">{p.name}</span>
+                  <span className="block truncate text-15">{p.name}</span>
                   <Price p={shownPrice(p)} />
                 </span>
                 {p.stock === 0 ? <Tag>{t('Sold out')}</Tag> : onSale(p) ? <Tag hot>−{discount(p)}%</Tag> : null}
@@ -117,28 +117,28 @@ function InfoSheet({ open, onClose, shop, areas, onShare }: { open: boolean; onC
   return (
     <Sheet open={open} onClose={onClose} title={t('About this shop')}>
       <div className="flex items-center gap-3">
-        <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-12 w-12 text-[16px]" />
+        <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-12 w-12 text-15" />
         <div className="min-w-0">
-          <p className="truncate text-[16px] font-semibold">{shop.name}</p>
-          <p className="code truncate text-[12px] text-muted">shopi.tz/{shop.slug}</p>
+          <p className="truncate text-15 font-semibold">{shop.name}</p>
+          <p className="code truncate text-12 text-muted">shopi.tz/{shop.slug}</p>
         </div>
       </div>
-      {shop.bio && <p className="mt-4 text-[14px] leading-relaxed text-ink-2">{shop.bio}</p>}
-      <div className="mt-5 rounded-[16px] bg-page p-4">
+      {shop.bio && <p className="mt-4 text-14 leading-relaxed text-ink-2">{shop.bio}</p>}
+      <div className="mt-5 rounded-16 bg-page p-4">
         <ShopFacts shop={shop} areas={areas} short />
       </div>
       <ShopQr shop={shop} className="mt-4" />
       {areas.length > 0 && (
         <div className="mt-6">
-          <p className="text-[14px] font-medium">{t('Delivery areas')}</p>
+          <p className="text-14 font-medium">{t('Delivery areas')}</p>
           <ul className="mt-3 flex flex-wrap gap-2">
             {areas.map((a) => (
-              <li key={a.name} className="flex h-8 items-center rounded-full bg-page px-3 text-[13px] text-ink-2">
+              <li key={a.name} className="flex h-8 items-center rounded-full bg-page px-3 text-13 text-ink-2">
                 {a.name}
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-[13px] leading-5 text-muted">
+          <p className="mt-3 text-13 leading-5 text-muted">
             {shop.ships_regions
               ? t('Somewhere else? This shop also sends to other regions. Agree the fee with the seller on WhatsApp.')
               : t('Not on the list? Ask the seller on WhatsApp before you order. You agree the delivery fee there too.')}
@@ -148,7 +148,7 @@ function InfoSheet({ open, onClose, shop, areas, onShare }: { open: boolean; onC
       <div className="mt-6 flex items-center justify-between gap-3">
         <SocialLinks shop={shop} />
         <button type="button" className="btn btn-ghost btn-sm" onClick={onShare}>
-          <Share2 size={15} strokeWidth={1.6} /> {t('Share shop')}
+          <Share2 size={16} strokeWidth={1.75} /> {t('Share shop')}
         </button>
       </div>
     </Sheet>

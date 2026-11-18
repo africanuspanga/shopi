@@ -102,16 +102,16 @@ export function NotifySheet({
   return (
     <Sheet open={open} onClose={onClose} title={done ? t('You’re on the list') : t('Get a message when it’s back')}>
       <div className="flex items-center gap-4">
-        <Img size="thumb" k={imageOf(product, size)} alt={product.name} className="h-20 w-16 shrink-0 rounded-[10px]" />
+        <Img size="thumb" k={imageOf(product, size)} alt={product.name} className="h-20 w-16 shrink-0 rounded-12" />
         <div className="min-w-0">
-          <p className="line-clamp-2 text-[15px] font-medium">{product.name}</p>
-          {size && <p className="text-[14px] text-ink-2">{optionText(t, product.option_name, size)}</p>}
-          <p className="mt-0.5 text-[13px] text-muted">{t('Sold out')}</p>
+          <p className="line-clamp-2 text-15 font-medium">{product.name}</p>
+          {size && <p className="text-14 text-ink-2">{optionText(t, product.option_name, size)}</p>}
+          <p className="mt-0.5 text-13 text-muted">{t('Sold out')}</p>
         </div>
       </div>
       {done ? (
         <div className="fade">
-          <p className="mt-6 flex items-start gap-3 rounded-[16px] bg-page px-4 py-4 text-[15px] leading-relaxed">
+          <p className="mt-6 flex items-start gap-3 rounded-16 bg-page px-4 py-4 text-15 leading-relaxed">
             <Check size={18} strokeWidth={2.25} className="mt-0.5 shrink-0 text-ok" />
             {t('{shop} will message you on WhatsApp when {what} is back.', { shop: shop.name, what })}
           </p>
@@ -130,7 +130,7 @@ export function NotifySheet({
           <Field label={t('Your WhatsApp number')}>
             <input className="input tnum" type="tel" inputMode="tel" autoComplete="tel" placeholder="0754 123 456" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </Field>
-          <p className="text-[13px] leading-5 text-muted">
+          <p className="text-13 leading-5 text-muted">
             {t('By tapping Notify me, you agree that {shop} may message you on WhatsApp about this product. Shopi deletes your number once they have, or after 90 days.', { shop: shop.name })}{' '}
             <Link to="/privacy" className="underline decoration-line-strong underline-offset-4 hover:text-ink">
               {t('Privacy')}
@@ -139,7 +139,7 @@ export function NotifySheet({
           <div ref={check.slot} />
           <ErrorText>{error}</ErrorText>
           <button className="btn btn-shop btn-lg w-full" disabled={busy || phone.replace(/\D/g, '').length < 9}>
-            <Bell size={17} strokeWidth={1.75} /> {busy ? t('Saving') : t('Notify me')}
+            <Bell size={18} strokeWidth={1.75} /> {busy ? t('Saving') : t('Notify me')}
           </button>
         </form>
       )}
@@ -167,11 +167,11 @@ export function WaitingCard({ product, alerts: initial }: { product: { id: strin
 
   return (
     <section id="waiting" className={`card scroll-mt-6 p-6 ${back ? 'shadow-[inset_0_3px_0_var(--color-moto)]' : ''}`}>
-      <h2 className="flex items-center gap-2.5 text-[17px] font-semibold">
+      <h2 className="flex items-center gap-2.5 text-17 font-semibold">
         {back > 0 && <span className="signal" />}
         {t(alerts.length === 1 ? '{n} person waiting' : '{n} people waiting', { n: alerts.length })}
       </h2>
-      <p className="mt-1.5 text-[14px] leading-relaxed text-muted">
+      <p className="mt-1.5 text-14 leading-relaxed text-muted">
         {back
           ? t('What they asked for is back. Message each one on WhatsApp, then tap the check: their number is deleted.')
           : t('They asked for a WhatsApp message when it is back. Restock it, then message each one here.')}
@@ -185,10 +185,10 @@ export function WaitingCard({ product, alerts: initial }: { product: { id: strin
               <div className="min-w-0 flex-1">
                 {/* The time sits by the number, so the second line has room for the option and where it stands on a phone. */}
                 <p className="flex items-baseline gap-2">
-                  <span className="code truncate text-[14px]">{localPhone(a.phone)}</span>
+                  <span className="code truncate text-14">{localPhone(a.phone)}</span>
                   <span className="meta shrink-0">{timeAgo(a.created_at, lang)}</span>
                 </p>
-                <p className="mt-0.5 flex items-center gap-1.5 text-[13px] text-muted">
+                <p className="mt-0.5 flex items-center gap-1.5 text-13 text-muted">
                   <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${a.back ? 'bg-ok' : 'bg-faint'}`} />
                   <span className="truncate">
                     {a.variant ? `${optionText(t, a.product.option_name, a.variant)} · ` : ''}
@@ -213,7 +213,7 @@ export function WaitingCard({ product, alerts: initial }: { product: { id: strin
                 title={t('Told them: delete the number')}
                 onClick={() => done(a.id)}
               >
-                <Check size={16} strokeWidth={2} />
+                <Check size={16} strokeWidth={2.25} />
               </button>
             </li>
           )

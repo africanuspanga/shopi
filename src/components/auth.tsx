@@ -24,7 +24,7 @@ export function AuthLayout({ children, topRight, aside }: { children: ReactNode;
         <main className={`${rise} mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-8`}>{children}</main>
       </div>
       <aside className="sticky top-0 hidden h-dvh p-3 lg:block">
-        <div className="relative flex h-full flex-col overflow-hidden rounded-[32px] bg-ink p-10 text-white">{aside ?? <ProductAside />}</div>
+        <div className="relative flex h-full flex-col overflow-hidden rounded-32 bg-ink p-10 text-white">{aside ?? <ProductAside />}</div>
       </aside>
     </div>
   )
@@ -34,10 +34,10 @@ function ProductAside() {
   const t = useT()
   return (
     <>
-      <p className="display text-[44px] xl:text-[56px]">
+      <p className="display text-40 xl:text-56">
         {t('Your shop in one link')}<span className="text-moto">.</span>
       </p>
-      <p className="mt-4 max-w-[26rem] text-[16px] leading-relaxed text-white/60">{t('One link for your Instagram, TikTok and WhatsApp. Buyers order by themselves; you see every order in one place.')}</p>
+      <p className="mt-4 max-w-[26rem] text-15 leading-relaxed text-white/60">{t('One link for your Instagram, TikTok and WhatsApp. Buyers order by themselves; you see every order in one place.')}</p>
       <div className="relative mt-auto h-[480px] xl:h-[540px]">
         <Phone className="absolute top-0 left-1/2 h-[620px] w-[310px] -translate-x-1/2 xl:h-[660px] xl:w-[328px]">
           <MiniStore />
@@ -82,7 +82,7 @@ export function PasswordInput({ value, onChange, autoComplete }: { value: string
         aria-pressed={show}
         onClick={() => setShow(!show)}
       >
-        {show ? <EyeOff size={17} strokeWidth={1.6} /> : <Eye size={17} strokeWidth={1.6} />}
+        {show ? <EyeOff size={18} strokeWidth={1.75} /> : <Eye size={18} strokeWidth={1.75} />}
       </button>
     </span>
   )

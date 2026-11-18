@@ -63,14 +63,14 @@ function ShopLook() {
         sub={t('Your colour, the style of your name, and a cover photo')}
         right={
           <button type="button" className="btn btn-sm h-10 px-5" disabled={busy || !dirty} onClick={save}>
-            {busy && <Loader2 size={15} className="animate-spin" />}
+            {busy && <Loader2 size={16} className="animate-spin" />}
             {busy ? t('Saving') : t('Save')}
           </button>
         }
       />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-10">
         {/* Phones: a short preview stays in view while the seller taps colours and styles. */}
-        <div className="sticky top-2 z-10 -mx-1 rounded-[30px] bg-page p-1 lg:hidden">
+        <div className="sticky top-2 z-10 -mx-1 rounded-28 bg-page p-1 lg:hidden">
           <LookPreview shop={shop} products={products} look={look} compact />
         </div>
         <div className="min-w-0 space-y-4">
@@ -96,7 +96,7 @@ function ShopLook() {
           <p className="meta mb-3">{t('Preview')}</p>
           <LookPreview shop={shop} products={products} look={look} />
           <a href={`/${shop.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm mt-4 w-full">
-            {t('Open your shop')} <ArrowUpRight size={15} strokeWidth={1.75} />
+            {t('Open your shop')} <ArrowUpRight size={16} strokeWidth={1.75} />
           </a>
         </aside>
       </div>

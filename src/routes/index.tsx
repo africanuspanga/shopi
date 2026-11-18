@@ -68,11 +68,11 @@ function Container({ children, className = '' }: { children: ReactNode; classNam
 }
 
 function H2({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <h2 className={`display text-[36px] md:text-[52px] lg:text-[60px] ${className}`}>{children}</h2>
+  return <h2 className={`display text-32 md:text-48 lg:text-56 ${className}`}>{children}</h2>
 }
 
 function Lead({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <p className={`max-w-[34rem] text-[17px] leading-relaxed text-ink-2 md:text-[18px] ${className}`}>{children}</p>
+  return <p className={`max-w-[34rem] text-17 leading-relaxed text-ink-2 md:text-17 ${className}`}>{children}</p>
 }
 
 /* ---------- Nav: a floating capsule at the top; on phones the sections live in the bottom capsule ---------- */
@@ -91,7 +91,7 @@ function Nav({ start, signedIn, hasShop }: { start: string; signedIn: boolean; h
         <Link to="/" aria-label="Shopi" className="shrink-0">
           <Wordmark className="h-[22px] w-auto md:h-[24px]" />
         </Link>
-        <nav className="mx-auto hidden items-center gap-1 text-[14px] text-ink-2 md:flex" aria-label={t('Sections')}>
+        <nav className="mx-auto hidden items-center gap-1 text-14 text-ink-2 md:flex" aria-label={t('Sections')}>
           {links.map(([href, label]) => (
             <a key={href} href={href} className="rounded-full px-3.5 py-2 transition-colors hover:bg-page hover:text-ink">
               {label}
@@ -100,11 +100,11 @@ function Nav({ start, signedIn, hasShop }: { start: string; signedIn: boolean; h
         </nav>
         <div className="ml-auto flex items-center gap-1 md:ml-0">
           {signedIn ? (
-            <Link to={start} className="rounded-full px-4 py-2 text-[14px] font-medium text-ink-2 transition-colors hover:text-ink md:hidden">
+            <Link to={start} className="rounded-full px-4 py-2 text-14 font-medium text-ink-2 transition-colors hover:text-ink md:hidden">
               {hasShop ? t('My shop') : t('Finish my shop')}
             </Link>
           ) : (
-            <Link to="/login" className="rounded-full px-4 py-2 text-[14px] font-medium text-ink-2 transition-colors hover:text-ink">
+            <Link to="/login" className="rounded-full px-4 py-2 text-14 font-medium text-ink-2 transition-colors hover:text-ink">
               {t('Log in')}
             </Link>
           )}
@@ -154,7 +154,7 @@ function Hero({ start, startLabel }: { start: string; startLabel: string }) {
     <section id="top" className="relative">
       <Container className="grid items-center gap-12 pt-10 pb-16 md:pt-16 lg:min-h-[calc(100dvh-72px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,500px)] lg:gap-16 lg:pt-6 lg:pb-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
         <div className={rise}>
-          <h1 className="display text-[44px] text-balance sm:text-[60px] lg:text-[74px] xl:text-[84px]">
+          <h1 className="display text-40 text-balance sm:text-56 lg:text-72 xl:text-80">
             {t('Stop answering')} <span className="whitespace-nowrap">“bei gani?”</span> {t('in your DMs')}
           </h1>
           <Lead className="mt-6 md:mt-8">
@@ -168,10 +168,10 @@ function Hero({ start, startLabel }: { start: string; startLabel: string }) {
               {t('See how it works')}
             </a>
           </div>
-          <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-[14px] text-ink-2">
+          <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-14 text-ink-2">
             {[t('Free to start'), t('No commission on sales'), t('Ready in 5 minutes')].map((x) => (
               <li key={x} className="flex items-center gap-2">
-                <Check size={15} strokeWidth={2} className="text-ink" /> {x}
+                <Check size={16} strokeWidth={2.25} className="text-ink" /> {x}
               </li>
             ))}
           </ul>
@@ -213,12 +213,12 @@ function Steps() {
         </div>
         <ol className="mt-12 grid gap-4 md:mt-16 md:grid-cols-3 md:gap-5">
           {steps.map((s, i) => (
-            <li key={s.title} className="flex flex-col rounded-[28px] bg-card p-3">
-              <div className="flex h-[220px] items-center justify-center rounded-[20px] bg-page px-5">{s.visual}</div>
+            <li key={s.title} className="flex flex-col rounded-28 bg-card p-3">
+              <div className="flex h-[220px] items-center justify-center rounded-20 bg-page px-5">{s.visual}</div>
               <div className="px-4 pt-6 pb-5">
                 <p className="meta">{t('Step {n}', { n: i + 1 })}</p>
-                <h3 className="title mt-2 text-[22px]">{s.title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{s.body}</p>
+                <h3 className="title mt-2 text-20">{s.title}</h3>
+                <p className="mt-2 text-15 leading-relaxed text-ink-2">{s.body}</p>
               </div>
             </li>
           ))}
@@ -234,11 +234,11 @@ function Payments() {
   const t = useT()
   return (
     <section id="pay" className="scroll-mt-24 px-2 md:px-4">
-      <div className="mx-auto max-w-[1400px] rounded-[32px] bg-ink py-16 text-white md:rounded-[40px] md:py-28">
+      <div className="mx-auto max-w-[1400px] rounded-32 bg-ink py-16 text-white md:rounded-40 md:py-28">
         <Container className="grid gap-14 lg:grid-cols-2 lg:items-center lg:gap-20">
           <div>
             <H2>{t('Every shilling goes straight to you')}</H2>
-            <p className="mt-6 max-w-[34rem] text-[17px] leading-relaxed text-white/70 md:text-[18px]">
+            <p className="mt-6 max-w-[34rem] text-17 leading-relaxed text-white/70 md:text-17">
               {t('Buyers pay your own Lipa Namba, the way they already pay sellers. Then they paste the confirmation SMS. Shopi checks the amount, the name and the transaction ID, and refuses an SMS already used on another order. You confirm with one tap.')}
             </p>
             <ul className="mt-10 divide-y divide-white/10 border-y border-white/10">
@@ -249,31 +249,31 @@ function Payments() {
               ].map(([Icon, label]) => {
                 const I = Icon as typeof Smartphone
                 return (
-                  <li key={label as string} className="flex items-center gap-4 py-4 text-[16px]">
-                    <I size={20} strokeWidth={1.5} className="shrink-0 text-white/60" /> {label as string}
+                  <li key={label as string} className="flex items-center gap-4 py-4 text-15">
+                    <I size={20} strokeWidth={1.75} className="shrink-0 text-white/60" /> {label as string}
                   </li>
                 )
               })}
             </ul>
           </div>
           <div className="mx-auto w-full max-w-[440px]">
-            <p className="text-[13px] text-white/50">{t('The buyer’s SMS, pasted on their order page')}</p>
+            <p className="text-13 text-white/50">{t('The buyer’s SMS, pasted on their order page')}</p>
             <div className="mt-3">
               <SmsBubble />
             </div>
-            <div className="mt-6 rounded-[24px] bg-card p-6 text-ink">
+            <div className="mt-6 rounded-20 bg-card p-6 text-ink">
               <div className="flex items-baseline justify-between">
-                <p className="text-[15px] font-semibold">{t('Shopi checked it')}</p>
-                <p className="code text-[12px] text-muted">#HAN8RG</p>
+                <p className="text-15 font-semibold">{t('Shopi checked it')}</p>
+                <p className="code text-12 text-muted">#HAN8RG</p>
               </div>
-              <ul className="mt-4 space-y-3 text-[14px]">
+              <ul className="mt-4 space-y-3 text-14">
                 {[t('Amount matches the order'), t('Paid to your shop’s name'), t('Transaction never used before')].map((x) => (
                   <li key={x} className="flex items-center gap-3">
                     <CircleCheck size={18} strokeWidth={1.75} className="shrink-0 text-ok" /> {x}
                   </li>
                 ))}
               </ul>
-              <div className="mt-6 flex h-12 items-center justify-center rounded-full bg-ink text-[15px] font-medium text-white">{t('Payment received')}</div>
+              <div className="mt-6 flex h-12 items-center justify-center rounded-full bg-ink text-15 font-medium text-white">{t('Payment received')}</div>
             </div>
           </div>
         </Container>
@@ -289,7 +289,7 @@ function Orders() {
   return (
     <section className="py-20 md:py-32">
       <Container className="grid gap-14 lg:grid-cols-2 lg:items-center lg:gap-20">
-        <div className="order-2 flex justify-center rounded-[32px] bg-well px-4 py-10 md:py-14 lg:order-1">
+        <div className="order-2 flex justify-center rounded-32 bg-well px-4 py-10 md:py-14 lg:order-1">
           <OrderPreview />
         </div>
         <div className="order-1 lg:order-2">
@@ -297,10 +297,10 @@ function Orders() {
           <Lead className="mt-6">
             {t('Every order comes with the buyer’s name, number, area, their location on the map if they share it, and the size they picked. The buyer gets a page to follow it, and your stock goes down by itself.')}
           </Lead>
-          <ul className="mt-8 space-y-3 text-[15px]">
+          <ul className="mt-8 space-y-3 text-15">
             {[t('One tap to call or WhatsApp the buyer'), t('Statuses the buyer can see: confirmed, on the way, delivered'), t('Sold out shows by itself when stock runs out')].map((x) => (
               <li key={x} className="flex items-start gap-3">
-                <Check size={18} strokeWidth={2} className="mt-0.5 shrink-0" /> {x}
+                <Check size={18} strokeWidth={2.25} className="mt-0.5 shrink-0" /> {x}
               </li>
             ))}
           </ul>
@@ -328,7 +328,7 @@ function Dashboard() {
             height={1200}
             loading="lazy"
             alt={t('Shopi seller dashboard on a laptop: sales today, orders that need you, the last 7 days and best sellers')}
-            className="w-full rounded-[20px] shadow-[0_1px_2px_rgb(10_10_10/0.06),0_40px_80px_-40px_rgb(10_10_10/0.35)] ring-1 ring-line md:rounded-[28px]"
+            className="w-full rounded-20 shadow-[0_1px_2px_rgb(10_10_10/0.06),0_40px_80px_-40px_rgb(10_10_10/0.35)] ring-1 ring-line md:rounded-28"
           />
           <img
             src="/images/shopi-seller-dashboard-phone.webp"
@@ -336,10 +336,10 @@ function Dashboard() {
             height={1688}
             loading="lazy"
             alt=""
-            className="absolute -right-6 -bottom-12 hidden w-[230px] rounded-[36px] border-[8px] border-[#0b0b0b] shadow-[0_40px_80px_-30px_rgb(10_10_10/0.5)] lg:block"
+            className="absolute -right-6 -bottom-12 hidden w-[230px] rounded-32 border-[8px] border-ink shadow-[0_40px_80px_-30px_rgb(10_10_10/0.5)] lg:block"
           />
         </div>
-        <p className="mt-6 text-center text-[13px] text-muted lg:mt-16">{t('Demo shop with example data')}</p>
+        <p className="mt-6 text-center text-13 text-muted lg:mt-16">{t('Demo shop with example data')}</p>
       </Container>
     </section>
   )
@@ -366,15 +366,15 @@ function Features() {
         <div className="mt-12 grid gap-x-10 border-t border-line sm:grid-cols-2 lg:grid-cols-4">
           {items.map(([Icon, title, sub]) => (
             <div key={title} className="flex gap-4 border-b border-line py-6">
-              <Icon size={20} strokeWidth={1.5} className="mt-0.5 shrink-0" />
+              <Icon size={20} strokeWidth={1.75} className="mt-0.5 shrink-0" />
               <div>
-                <p className="text-[15px] font-medium">{title}</p>
-                <p className="mt-1 text-[14px] leading-5 text-muted">{sub}</p>
+                <p className="text-15 font-medium">{title}</p>
+                <p className="mt-1 text-14 leading-5 text-muted">{sub}</p>
               </div>
             </div>
           ))}
         </div>
-        <p className="mt-8 text-[14px] text-muted">{t('Coming next: the Shopi assistant, which answers buyers’ questions, and weekly best-product votes.')}</p>
+        <p className="mt-8 text-14 text-muted">{t('Coming next: the Shopi assistant, which answers buyers’ questions, and weekly best-product votes.')}</p>
       </Container>
     </section>
   )
@@ -393,10 +393,10 @@ function Pricing({ start }: { start: string }) {
         </div>
         <div className="mt-10 grid gap-4 md:mt-14 lg:grid-cols-2 lg:gap-6">
           {PLANS.map((p, i) => (
-            <div key={p.name} className={`flex flex-col rounded-[32px] p-3 ${i === 1 ? 'bg-ink text-white' : 'bg-card'}`}>
-              <div className={`rounded-[24px] p-6 md:p-8 ${i === 1 ? 'bg-white/[0.08]' : 'bg-page'}`}>
-                <p className="title text-[22px]">{t(p.name)}</p>
-                <p className={`mt-1 text-[15px] ${i === 1 ? 'text-white/70' : 'text-ink-2'}`}>{t(p.lead)}</p>
+            <div key={p.name} className={`flex flex-col rounded-32 p-3 ${i === 1 ? 'bg-ink text-white' : 'bg-card'}`}>
+              <div className={`rounded-20 p-6 md:p-8 ${i === 1 ? 'bg-white/[0.08]' : 'bg-page'}`}>
+                <p className="title text-20">{t(p.name)}</p>
+                <p className={`mt-1 text-15 ${i === 1 ? 'text-white/70' : 'text-ink-2'}`}>{t(p.lead)}</p>
                 <PlanPrice plan={p} dark={i === 1} className="mt-5" />
               </div>
               <PlanItems plan={p} dark={i === 1} className="flex-1 px-6 pt-6 md:px-8" />
@@ -408,7 +408,7 @@ function Pricing({ start }: { start: string }) {
             </div>
           ))}
         </div>
-        <p className="mt-6 text-[14px] text-muted">{t('Tembo is paid by mobile money. If it ends unpaid, your shop goes back to Free and keeps selling. Nothing is deleted.')}</p>
+        <p className="mt-6 text-14 text-muted">{t('Tembo is paid by mobile money. If it ends unpaid, your shop goes back to Free and keeps selling. Nothing is deleted.')}</p>
       </Container>
     </section>
   )
@@ -433,11 +433,11 @@ function Faq() {
         <div className="border-t border-line">
           {qs.map(([q, a]) => (
             <details key={q} className="group border-b border-line">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-[17px] font-medium md:text-[18px] [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-17 font-medium md:text-17 [&::-webkit-details-marker]:hidden">
                 {q}
-                <ChevronDown size={20} strokeWidth={1.5} className="shrink-0 text-muted transition-transform duration-200 group-open:rotate-180" />
+                <ChevronDown size={20} strokeWidth={1.75} className="shrink-0 text-muted transition-transform duration-200 group-open:rotate-180" />
               </summary>
-              <p className="-mt-2 max-w-[60ch] pb-6 text-[16px] leading-relaxed text-ink-2">{a}</p>
+              <p className="-mt-2 max-w-[60ch] pb-6 text-15 leading-relaxed text-ink-2">{a}</p>
             </details>
           ))}
         </div>
@@ -467,12 +467,12 @@ function Finale({ start, startLabel, signedIn }: { start: string; startLabel: st
   ]
   return (
     <section className="px-2 pb-2 md:px-4 md:pb-4">
-      <div className="mx-auto max-w-[1400px] overflow-hidden rounded-[32px] bg-ink text-white md:rounded-[40px]">
+      <div className="mx-auto max-w-[1400px] overflow-hidden rounded-32 bg-ink text-white md:rounded-40">
         <div className="px-6 pt-20 pb-20 text-center md:pt-32 md:pb-28">
-          <h2 className="display text-[52px] sm:text-[80px] lg:text-[112px]">
+          <h2 className="display text-48 sm:text-80 lg:text-112">
             {t('Your shop in one link')}<span className="text-moto">.</span>
           </h2>
-          <p className="mx-auto mt-6 max-w-[30rem] text-[17px] text-white/65 md:text-[18px]">{t('Your buyers are already on their phones. Open your shop today and share the link tonight.')}</p>
+          <p className="mx-auto mt-6 max-w-[30rem] text-17 text-white/65 md:text-17">{t('Your buyers are already on their phones. Open your shop today and share the link tonight.')}</p>
           <Link to={start} className="btn btn-lg mt-10 bg-white text-ink hover:bg-white/90">
             {startLabel} <ArrowRight size={18} strokeWidth={1.75} />
           </Link>
@@ -480,11 +480,11 @@ function Finale({ start, startLabel, signedIn }: { start: string; startLabel: st
 
         <footer className="border-t border-white/10">
           <div className="mx-auto grid max-w-[1280px] gap-10 px-6 py-14 sm:grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1.2fr] md:px-10">
-            <p className="max-w-[22rem] text-[15px] leading-relaxed text-white/60">{t('An online shop in one link, for sellers on Instagram, TikTok and WhatsApp in Tanzania.')}</p>
+            <p className="max-w-[22rem] text-15 leading-relaxed text-white/60">{t('An online shop in one link, for sellers on Instagram, TikTok and WhatsApp in Tanzania.')}</p>
             {cols.map((c) => (
               <div key={c.title}>
-                <p className="text-[13px] text-white/55">{c.title}</p>
-                <ul className="mt-4 space-y-3 text-[15px]">
+                <p className="text-13 text-white/55">{c.title}</p>
+                <ul className="mt-4 space-y-3 text-15">
                   {c.links.map(([href, label]) => (
                     <li key={label}>
                       {href.startsWith('#') ? (
@@ -502,12 +502,12 @@ function Finale({ start, startLabel, signedIn }: { start: string; startLabel: st
               </div>
             ))}
             <div>
-              <p className="text-[13px] text-white/55">{t('Company')}</p>
-              <ul className="mt-4 space-y-3 text-[15px] text-white/75">
+              <p className="text-13 text-white/55">{t('Company')}</p>
+              <ul className="mt-4 space-y-3 text-15 text-white/75">
                 <li>Driftmark Technologies Limited</li>
                 <li>Dar es Salaam, Tanzania</li>
                 <li>
-                  <a href="mailto:hello@shopi.tz" className="code text-[14px] transition-colors hover:text-white">
+                  <a href="mailto:hello@shopi.tz" className="code text-14 transition-colors hover:text-white">
                     hello@shopi.tz
                   </a>
                 </li>
@@ -523,7 +523,7 @@ function Finale({ start, startLabel, signedIn }: { start: string; startLabel: st
               </ul>
             </div>
           </div>
-          <div className="mx-auto flex max-w-[1280px] flex-col gap-3 border-t border-white/10 px-6 py-6 text-[13px] text-white/55 md:flex-row md:items-center md:justify-between md:px-10">
+          <div className="mx-auto flex max-w-[1280px] flex-col gap-3 border-t border-white/10 px-6 py-6 text-13 text-white/55 md:flex-row md:items-center md:justify-between md:px-10">
             <p>© {new Date().getFullYear()} Driftmark Technologies Limited</p>
             <p>{t('Shopi never holds buyers’ money. Sellers are paid directly.')}</p>
           </div>

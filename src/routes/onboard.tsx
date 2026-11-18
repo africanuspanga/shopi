@@ -47,7 +47,7 @@ function Onboard() {
   const leave = (
     <button
       type="button"
-      className="text-[14px] font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
+      className="text-14 font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
       onClick={async () => {
         await logout()
         await router.invalidate()
@@ -79,14 +79,14 @@ function Onboard() {
       </PreviewAside>
     ) : step === 4 ? (
       <>
-        <p className="text-[15px] text-white/60">{t('Open now at shopi.tz/{slug}', { slug: shop.slug })}</p>
+        <p className="text-15 text-white/60">{t('Open now at shopi.tz/{slug}', { slug: shop.slug })}</p>
         <div className="mt-auto mb-auto self-center">
           <LivePhone shop={shop} products={data.products} ai={data.ai} />
         </div>
       </>
     ) : (
       <>
-        <p className="text-[15px] text-white/60">{t('What a new order looks like')}</p>
+        <p className="text-15 text-white/60">{t('What a new order looks like')}</p>
         <div className="mt-auto mb-auto flex w-full justify-center self-center">
           <OrderNotice shop={shop} product={first} className="scale-[1.15]" />
         </div>
@@ -167,15 +167,15 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
       <span className="text-muted">{t('At least 3 letters or numbers')}</span>
     ) : checking ? (
       <span className="flex items-center gap-1.5 text-muted">
-        <Loader2 size={13} className="animate-spin" /> {t('Checking')}
+        <Loader2 size={14} className="animate-spin" /> {t('Checking')}
       </span>
     ) : free ? (
       <span className="flex items-center gap-1.5 text-ok">
-        <Check size={14} strokeWidth={2.5} /> {t('Available')}
+        <Check size={14} strokeWidth={2.25} /> {t('Available')}
       </span>
     ) : (
       <span className="flex items-center gap-1.5 text-bad">
-        <X size={14} strokeWidth={2.5} /> {t('Taken. Try another')}
+        <X size={14} strokeWidth={2.25} /> {t('Taken. Try another')}
       </span>
     )
 
@@ -229,13 +229,13 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
         sub={firstName ? t('Welcome, {name}. A name and a link, and your shop is open.', { name: firstName }) : t('A name and a link, and your shop is open.')}
       />
 
-      <div className="mt-6 flex items-center gap-3 rounded-[18px] bg-card p-3 shadow-[inset_0_0_0_1px_var(--color-line)] lg:hidden">
-        <ShopAvatar name={name || 'S'} logo={null} className="h-11 w-11 text-[15px]" />
+      <div className="mt-6 flex items-center gap-3 rounded-16 bg-card p-3 shadow-[inset_0_0_0_1px_var(--color-line)] lg:hidden">
+        <ShopAvatar name={name || 'S'} logo={null} className="h-11 w-11 text-15" />
         <div className="min-w-0">
-          <p className="truncate text-[15px] font-semibold">{name || t('Your shop')}</p>
-          <p className="code truncate text-[13px] text-muted">shopi.tz/{slug || 'yourshop'}</p>
+          <p className="truncate text-15 font-semibold">{name || t('Your shop')}</p>
+          <p className="code truncate text-13 text-muted">shopi.tz/{slug || 'yourshop'}</p>
         </div>
-        <span className="ml-auto hidden shrink-0 rounded-full bg-page px-2.5 py-1 text-[12px] text-ink-2 min-[400px]:inline">{categoryLabel}</span>
+        <span className="ml-auto hidden shrink-0 rounded-full bg-page px-2.5 py-1 text-12 text-ink-2 min-[400px]:inline">{categoryLabel}</span>
       </div>
 
       <form
@@ -264,7 +264,7 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
           hint={
             linkNote ? (
               <span className={`flex items-start gap-1.5 ${linkNote.ok ? 'text-ink-2' : 'text-bad'}`}>
-                {linkNote.ok && <Check size={14} strokeWidth={2.5} className="mt-0.5 shrink-0 text-ok" />}
+                {linkNote.ok && <Check size={14} strokeWidth={2.25} className="mt-0.5 shrink-0 text-ok" />}
                 {linkNote.text}
               </span>
             ) : (
@@ -273,7 +273,7 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
           }
         >
           <span className="input flex items-center gap-2.5">
-            <Link2 size={16} strokeWidth={1.6} className="shrink-0 text-muted" />
+            <Link2 size={16} strokeWidth={1.75} className="shrink-0 text-muted" />
             <input
               className="min-w-0 flex-1 bg-transparent outline-none"
               value={link}
@@ -325,19 +325,19 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
         </div>
 
         {details ? (
-          <div className="fade space-y-5 rounded-[18px] bg-card p-4 shadow-[inset_0_0_0_1px_var(--color-line)]">
+          <div className="fade space-y-5 rounded-16 bg-card p-4 shadow-[inset_0_0_0_1px_var(--color-line)]">
             <ShopLangChoice value={shopLang} onChange={chooseLang} hint={t('Buyers see your shop in this language. You can change it later in Shop settings.')} />
             <Field label={t('Shop WhatsApp')} hint={t('Buyers message you here about orders')}>
               <input className="input" type="tel" inputMode="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
             </Field>
           </div>
         ) : (
-          <div className="flex items-start justify-between gap-4 rounded-[16px] bg-well/70 px-4 py-3">
-            <p className="min-w-0 text-[14px] leading-5 text-ink-2">
+          <div className="flex items-start justify-between gap-4 rounded-16 bg-well/70 px-4 py-3">
+            <p className="min-w-0 text-14 leading-5 text-ink-2">
               <span className="font-medium text-ink">{langName}</span> · <span className="code">{localPhone(normalizePhone(whatsapp) || whatsapp)}</span>
-              <span className="mt-0.5 block text-[13px] text-muted">{t('The language buyers see, and the WhatsApp they message.')}</span>
+              <span className="mt-0.5 block text-13 text-muted">{t('The language buyers see, and the WhatsApp they message.')}</span>
             </p>
-            <button type="button" className="shrink-0 text-[14px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink" onClick={() => setDetails(true)}>
+            <button type="button" className="shrink-0 text-14 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink" onClick={() => setDetails(true)}>
               {t('Change')}
             </button>
           </div>

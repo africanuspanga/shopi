@@ -11,7 +11,7 @@ export function useCan(feature: Feature, opts: { using?: boolean } = {}) {
 
 /** A small label beside a Tembo feature's name. */
 export function TemboPill({ className = '' }: { className?: string }) {
-  return <span className={`inline-flex h-5 shrink-0 items-center rounded-full bg-ink px-2 text-[12px] font-medium text-white ${className}`}>Tembo</span>
+  return <span className={`inline-flex h-5 shrink-0 items-center rounded-full bg-ink px-2 text-12 font-medium text-white ${className}`}>Tembo</span>
 }
 
 /**
@@ -21,13 +21,13 @@ export function TemboPill({ className = '' }: { className?: string }) {
 export function TemboLock({ title, body, className = '' }: { title: string; body: string; className?: string }) {
   const t = useT()
   return (
-    <div className={`rounded-[20px] bg-page p-5 ${className}`}>
+    <div className={`rounded-20 bg-page p-5 ${className}`}>
       <div className="flex items-center gap-2">
         <TemboPill />
-        <p className="text-[15px] font-semibold">{title}</p>
+        <p className="text-15 font-semibold">{title}</p>
       </div>
-      <p className="mt-1.5 text-[14px] leading-relaxed text-ink-2">{body}</p>
-      <Link to="/app/plan" className="mt-3 inline-flex items-center gap-1 text-[14px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
+      <p className="mt-1.5 text-14 leading-relaxed text-ink-2">{body}</p>
+      <Link to="/app/plan" className="mt-3 inline-flex items-center gap-1 text-14 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
         {t('See what Tembo adds')} <ArrowRight size={14} strokeWidth={1.75} />
       </Link>
     </div>

@@ -63,9 +63,9 @@ export function BackButton({ to, label = 'Back' }: { to: string; label?: string 
 export function PhoneBar({ lead, title, right }: { lead?: ReactNode; title: ReactNode; right?: ReactNode }) {
   return (
     <div className="sticky top-0 z-30 -mx-4 -mt-[max(12px,env(safe-area-inset-top))] mb-4 border-b border-line bg-card pt-[env(safe-area-inset-top)] md:hidden">
-      <div className="flex h-[60px] items-center gap-2.5 px-4 [&_.btn]:h-10 [&_.btn]:px-4 [&_.btn]:text-[14px]">
+      <div className="flex h-[60px] items-center gap-2.5 px-4 [&_.btn]:h-10 [&_.btn]:px-4 [&_.btn]:text-14">
         {lead}
-        <h1 className="title min-w-0 flex-1 truncate text-[20px]">{title}</h1>
+        <h1 className="title min-w-0 flex-1 truncate text-20">{title}</h1>
         {right && <div className="flex shrink-0 items-center gap-2">{right}</div>}
       </div>
     </div>
@@ -80,12 +80,12 @@ export function TopBar({ title, sub, back, right }: { title: ReactNode; sub?: Re
   return (
     <>
       <PhoneBar lead={back && <BackButton to={back} />} title={title} right={right} />
-      {sub && <p className="mb-5 text-[14px] text-pretty text-muted md:hidden">{sub}</p>}
+      {sub && <p className="mb-5 text-14 text-pretty text-muted md:hidden">{sub}</p>}
       <header className="mb-8 hidden min-h-12 items-center gap-3 md:flex">
         {back && <BackButton to={back} />}
         <div className="min-w-0 flex-1">
-          <h1 className="title truncate text-[30px]">{title}</h1>
-          {sub && <p className="mt-1 line-clamp-2 text-[14px] text-pretty text-muted">{sub}</p>}
+          <h1 className="title truncate text-28">{title}</h1>
+          {sub && <p className="mt-1 line-clamp-2 text-14 text-pretty text-muted">{sub}</p>}
         </div>
         {right && <div className="flex shrink-0 items-center gap-2">{right}</div>}
       </header>
@@ -124,14 +124,14 @@ export function StatusPill({ status }: { status: OrderStatus }) {
   const s = STATUS_LABEL[status]
   if (s.tone === 'act') {
     return (
-      <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-moto-soft px-2.5 text-[12px] font-medium whitespace-nowrap text-moto-ink">
+      <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-moto-soft px-2.5 text-12 font-medium whitespace-nowrap text-moto-ink">
         <span className="h-1.5 w-1.5 rounded-full bg-moto" />
         {t(s.label)}
       </span>
     )
   }
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[13px] whitespace-nowrap ${status === 'cancelled' ? 'text-muted' : 'text-ink-2'}`}>
+    <span className={`inline-flex items-center gap-1.5 text-13 whitespace-nowrap ${status === 'cancelled' ? 'text-muted' : 'text-ink-2'}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${DOT[s.tone]}`} />
       {t(s.label)}
     </span>
@@ -163,7 +163,7 @@ export function Img({
   if (!k) {
     return (
       <div className={`flex items-center justify-center bg-well text-faint ${className}`} role="img" aria-label={alt}>
-        <ImageIcon size={20} strokeWidth={1.5} />
+        <ImageIcon size={20} strokeWidth={1.75} />
       </div>
     )
   }
@@ -182,7 +182,7 @@ export function Img({
 }
 
 /** A shop's logo, or its initials on black when there is none. */
-export function ShopAvatar({ name, logo, className = 'h-10 w-10 text-[14px]' }: { name: string; logo: string | null | undefined; className?: string }) {
+export function ShopAvatar({ name, logo, className = 'h-10 w-10 text-14' }: { name: string; logo: string | null | undefined; className?: string }) {
   if (logo) return <Img k={logo} alt={name} className={`shrink-0 rounded-full ${className}`} eager />
   const initials = name
     .split(/\s+/)
@@ -221,11 +221,11 @@ export function shortNumber(value: number) {
 
 /** Change against the period before. Up is ink, down is muted: no traffic lights on a seller's own numbers. */
 export function Delta({ now, before, label }: { now: number; before: number; label: string }) {
-  if (!before) return <span className="text-[13px] text-muted">{label}</span>
+  if (!before) return <span className="text-13 text-muted">{label}</span>
   const pct = Math.round(((now - before) / before) * 100)
   const up = pct >= 0
   return (
-    <span className="text-[13px] text-muted">
+    <span className="text-13 text-muted">
       <span className={`tnum font-medium ${up ? 'text-ink' : 'text-ink-2'}`}>
         {up ? '↑' : '↓'} {Math.abs(pct)}%
       </span>{' '}
@@ -250,11 +250,11 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6" role="dialog" aria-modal="true" aria-label={title}>
       <button type="button" aria-label="Close" className="fade absolute inset-0 bg-ink/40" onClick={onClose} />
-      <div className="sheet-up relative max-h-[92dvh] w-full max-w-[520px] overflow-y-auto rounded-t-[28px] bg-card px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] md:rounded-[28px] md:p-6">
+      <div className="sheet-up relative max-h-[92dvh] w-full max-w-[520px] overflow-y-auto rounded-t-28 bg-card px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] md:rounded-28 md:p-6">
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-raised md:hidden" />
         {title && (
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="title text-[20px]">{title}</h2>
+            <h2 className="title text-20">{title}</h2>
             <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
               <X size={18} strokeWidth={1.75} />
             </button>
@@ -274,7 +274,7 @@ export function LangSwitch() {
   return (
     <button
       type="button"
-      className="icon-btn code text-[12px]"
+      className="icon-btn code text-12"
       aria-label={next === 'en' ? 'English' : 'Kiswahili'}
       onClick={async () => {
         await setLang({ data: { lang: next } })
@@ -295,7 +295,7 @@ export function ShopLangChoice({ value, onChange, hint }: { value: Lang; onChang
       <span className="label">{t('Shop language')}</span>
       <div className="grid grid-cols-2 gap-2">
         {LANGUAGES.map(([id, name]) => (
-          <button key={id} type="button" lang={id} className="chip h-12 justify-center text-[15px]" aria-pressed={value === id} onClick={() => onChange(id)}>
+          <button key={id} type="button" lang={id} className="chip h-12 justify-center text-15" aria-pressed={value === id} onClick={() => onChange(id)}>
             {name}
           </button>
         ))}
@@ -308,7 +308,7 @@ export function ShopLangChoice({ value, onChange, hint }: { value: Lang; onChang
 export function ErrorText({ children }: { children: ReactNode }) {
   if (!children) return null
   return (
-    <p role="alert" className="rounded-[14px] bg-bad/[0.06] px-4 py-3 text-[14px] text-bad">
+    <p role="alert" className="rounded-14 bg-bad/[0.06] px-4 py-3 text-14 text-bad">
       {children}
     </p>
   )
@@ -319,7 +319,7 @@ export function Field({ label, children, hint, aside }: { label: string; childre
     <label className="field">
       <span className="label flex items-baseline justify-between gap-3">
         {label}
-        {aside && <span className="text-[13px] font-normal text-muted">{aside}</span>}
+        {aside && <span className="text-13 font-normal text-muted">{aside}</span>}
       </span>
       {children}
       {hint && <small className="hint">{hint}</small>}
@@ -344,8 +344,8 @@ export function Switch({
   return (
     <label className={`flex items-center justify-between gap-4 py-1 ${disabled ? 'cursor-default' : 'cursor-pointer'}`}>
       <span className="min-w-0">
-        <span className={`block text-[15px] font-medium ${disabled ? 'text-muted' : ''}`}>{label}</span>
-        {sub && <span className="mt-0.5 block text-[13px] text-muted">{sub}</span>}
+        <span className={`block text-15 font-medium ${disabled ? 'text-muted' : ''}`}>{label}</span>
+        {sub && <span className="mt-0.5 block text-13 text-muted">{sub}</span>}
       </span>
       <span className={`relative inline-flex shrink-0 ${disabled ? 'opacity-50' : ''}`}>
         <input type="checkbox" className="peer sr-only" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
@@ -359,10 +359,10 @@ export function Switch({
 /** Nothing here yet: says what will appear and how to get it. */
 export function Empty({ icon, title, body, action }: { icon?: ReactNode; title: string; body?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center rounded-[20px] border border-dashed border-line-strong px-6 py-12 text-center">
+    <div className="flex flex-col items-center rounded-20 border border-dashed border-line-strong px-6 py-12 text-center">
       {icon && <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-well text-ink-2">{icon}</span>}
-      <p className="text-[16px] font-medium">{title}</p>
-      {body && <p className="mt-1.5 max-w-[34ch] text-[14px] leading-relaxed text-muted">{body}</p>}
+      <p className="text-15 font-medium">{title}</p>
+      {body && <p className="mt-1.5 max-w-[34ch] text-14 leading-relaxed text-muted">{body}</p>}
       {action && <div className="mt-6">{action}</div>}
     </div>
   )
@@ -380,7 +380,7 @@ export function Toast({ show, children }: { show: boolean; children: ReactNode }
   return (
     <div
       role="status"
-      className="rise fixed inset-x-0 bottom-28 z-50 mx-auto flex w-fit items-center gap-2 rounded-full bg-ink px-5 py-3 text-[14px] text-white shadow-[var(--shadow-float)] md:bottom-10"
+      className="rise fixed inset-x-0 bottom-28 z-50 mx-auto flex w-fit items-center gap-2 rounded-full bg-ink px-5 py-3 text-14 text-white shadow-[var(--shadow-float)] md:bottom-10"
     >
       {children}
     </div>

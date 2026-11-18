@@ -107,7 +107,7 @@ function ImportProducts() {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-10">
           <MatchColumns rows={rows} header={header} fields={fields} kind={kind} onHeader={setHeader} onField={setField} onKind={setKind} />
           <aside className="card space-y-4 p-5 md:p-6 lg:sticky lg:top-6">
-            <ul className="space-y-2 text-[14px]">
+            <ul className="space-y-2 text-14">
               <Need ok={hasName} label={t('A column with the name')} />
               <Need ok={hasPrice} label={t('A column with the price')} />
             </ul>
@@ -124,14 +124,14 @@ function ImportProducts() {
       {step === 'check' && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-10">
           <aside className="card space-y-4 p-5 md:p-6 lg:sticky lg:top-6 lg:order-2">
-            <dl className="space-y-1.5 text-[14px]">
+            <dl className="space-y-1.5 text-14">
               <Count label={t('Ready')} n={ready.length} />
               <Count label={t('Need a fix')} n={drafts.filter((d) => fixIssue(d.issue)).length} tone="bad" />
               <Count label={t('Left out')} n={drafts.filter((d) => d.issue && !fixIssue(d.issue)).length} />
             </dl>
             <PhotoFilesCard drafts={drafts} files={files} onFiles={setFiles} />
             {links > 0 && (
-              <p className="text-[13px] leading-5 text-muted">
+              <p className="text-13 leading-5 text-muted">
                 {links === 1
                   ? t('1 photo comes from a link. It is downloaded and made smaller before it goes in your shop, so Wi-Fi is best.')
                   : t('{n} photos come from links. Each is downloaded and made smaller before it goes in your shop, so Wi-Fi is best.', { n: links })}
@@ -144,7 +144,7 @@ function ImportProducts() {
             <button type="button" className="btn w-full" disabled={!ready.length || tooMany} onClick={start}>
               {ready.length === 1 ? t('Import 1 product') : t('Import {n} products', { n: ready.length })}
             </button>
-            <p className="text-[13px] leading-5 text-muted">{t('Fix the other rows in your sheet and import it again later. Products already in your shop are left out.')}</p>
+            <p className="text-13 leading-5 text-muted">{t('Fix the other rows in your sheet and import it again later. Products already in your shop are left out.')}</p>
             <button type="button" className="btn btn-quiet btn-sm w-full" onClick={() => setStep('match')}>
               {t('Back to the columns')}
             </button>

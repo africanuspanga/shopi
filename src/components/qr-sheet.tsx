@@ -101,14 +101,14 @@ export function QrCardSheet({ open, onClose, shop, who }: { open: boolean; onClo
       <span ref={mark} className="hidden" aria-hidden>
         <Wordmark />
       </span>
-      <div className="mx-auto w-full max-w-[340px] overflow-hidden rounded-[20px] bg-well shadow-[inset_0_0_0_1px_rgb(10_10_10/0.08)]" style={{ aspectRatio: `${CARD_W} / ${CARD_H}` }}>
+      <div className="mx-auto w-full max-w-[340px] overflow-hidden rounded-20 bg-well shadow-[inset_0_0_0_1px_rgb(10_10_10/0.08)]" style={{ aspectRatio: `${CARD_W} / ${CARD_H}` }}>
         {card ? (
           <img src={card.url} alt={t('QR code for {shop}', { shop: name })} className="fade h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full items-center justify-center px-6 text-center text-[14px] text-muted">{failed ? t('The QR code could not be made. Try again.') : t('Making the QR code')}</div>
+          <div className="flex h-full items-center justify-center px-6 text-center text-14 text-muted">{failed ? t('The QR code could not be made. Try again.') : t('Making the QR code')}</div>
         )}
       </div>
-      <p className="mx-auto mt-4 max-w-[44ch] text-center text-[14px] leading-relaxed text-ink-2">
+      <p className="mx-auto mt-4 max-w-[44ch] text-center text-14 leading-relaxed text-ink-2">
         {who === 'seller'
           ? t('Print it for your packaging, your stall or your receipts, or post it. Buyers scan it with their phone camera and your shop opens.')
           : t('Save it or send it to a friend. Scanning it with a phone camera opens {shop}.', { shop: name })}
@@ -121,13 +121,13 @@ export function QrCardSheet({ open, onClose, shop, who }: { open: boolean; onClo
           className={`btn flex-1 ${card ? '' : 'pointer-events-none opacity-50'}`}
           onClick={() => card && count('download')}
         >
-          <Download size={16} strokeWidth={1.6} /> {t('Download')}
+          <Download size={16} strokeWidth={1.75} /> {t('Download')}
         </a>
         <button type="button" className="btn btn-ghost flex-1" onClick={share} disabled={!card}>
-          {copied ? <Check size={16} strokeWidth={2} /> : <Share2 size={16} strokeWidth={1.6} />} {copied ? t('Link copied') : t('Share')}
+          {copied ? <Check size={16} strokeWidth={2.25} /> : <Share2 size={16} strokeWidth={1.75} />} {copied ? t('Link copied') : t('Share')}
         </button>
       </div>
-      {who === 'seller' && <p className="mt-3 text-center text-[13px] text-muted">{t('Scans show in Analytics as the link tag “qr”.')}</p>}
+      {who === 'seller' && <p className="mt-3 text-center text-13 text-muted">{t('Scans show in Analytics as the link tag “qr”.')}</p>}
     </Sheet>
   )
 }

@@ -53,11 +53,11 @@ export function PhoneAlertsCard() {
   return (
     <section className="card relative mt-6 flex flex-col gap-4 p-5 md:mt-8 md:flex-row md:items-center md:gap-6 md:p-6">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-white">
-        <Bell size={19} strokeWidth={1.75} />
+        <Bell size={20} strokeWidth={1.75} />
       </span>
       <div className="min-w-0 flex-1 pr-8 md:pr-0">
-        <h2 className="text-[16px] font-semibold">{t('Get new orders as notifications')}</h2>
-        <p className="mt-1 text-[14px] leading-5 text-muted">
+        <h2 className="text-15 font-semibold">{t('Get new orders as notifications')}</h2>
+        <p className="mt-1 text-14 leading-5 text-muted">
           {app.ios
             ? t('On iPhone, put Shopi on your Home Screen first. Then open it from there and turn on notifications.')
             : t('A notification the moment a buyer orders, even when Shopi is closed.')}
@@ -72,12 +72,12 @@ export function PhoneAlertsCard() {
         <div className="flex flex-wrap gap-2 md:shrink-0">
           {app.state === 'off' && (
             <button type="button" className="btn btn-sm" disabled={app.busy} onClick={on}>
-              <Bell size={15} strokeWidth={1.75} /> {t('Turn on notifications')}
+              <Bell size={16} strokeWidth={1.75} /> {t('Turn on notifications')}
             </button>
           )}
           {app.canInstall && (
             <button type="button" className="btn btn-ghost btn-sm" onClick={app.install}>
-              <Download size={15} strokeWidth={1.75} /> {t('Install the app')}
+              <Download size={16} strokeWidth={1.75} /> {t('Install the app')}
             </button>
           )}
         </div>
@@ -91,7 +91,7 @@ export function PhoneAlertsCard() {
       )}
       <InstallSheet open={guide} onClose={() => setGuide(false)} app={app} />
       <button type="button" className="icon-btn absolute top-3 right-3 h-9 w-9 md:static md:shrink-0" aria-label={t('Not now')} onClick={notNow}>
-        <X size={17} strokeWidth={1.6} />
+        <X size={18} strokeWidth={1.75} />
       </button>
     </section>
   )
@@ -127,7 +127,7 @@ export function PhoneAppSettings() {
     <div className="space-y-5">
       <div className="flex items-start gap-3">
         <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${app.state === 'on' ? 'bg-ok' : 'bg-faint'}`} aria-hidden />
-        <p className="min-h-5 text-[15px] leading-6">{status}</p>
+        <p className="min-h-5 text-15 leading-6">{status}</p>
       </div>
       <ErrorText>{error || (tested === 'failed' ? t('The test didn’t send. Turn notifications off and on again.') : '')}</ErrorText>
       {(app.state === 'on' || app.state === 'off') && (
@@ -150,14 +150,14 @@ export function PhoneAppSettings() {
       )}
       <div className="border-t border-line pt-5">
         {app.installed ? (
-          <p className="flex items-center gap-2 text-[14px] text-ink-2">
-            <Check size={16} strokeWidth={2} className="text-ok" /> {t('Shopi is installed on this phone.')}
+          <p className="flex items-center gap-2 text-14 text-ink-2">
+            <Check size={16} strokeWidth={2.25} className="text-ok" /> {t('Shopi is installed on this phone.')}
           </p>
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
             <div className="min-w-0">
-              <p className="text-[15px] font-medium">{t('Put Shopi on your Home Screen')}</p>
-              <p className="mt-0.5 text-[14px] leading-5 text-muted">{t('It opens like an app, one tap from your orders.')}</p>
+              <p className="text-15 font-medium">{t('Put Shopi on your Home Screen')}</p>
+              <p className="mt-0.5 text-14 leading-5 text-muted">{t('It opens like an app, one tap from your orders.')}</p>
             </div>
             <button type="button" className="btn btn-ghost" onClick={() => (app.canInstall ? app.install() : setGuide(true))}>
               <Download size={16} strokeWidth={1.75} /> {app.canInstall ? t('Install the app') : t('Show me how')}
@@ -183,7 +183,7 @@ export function InstallRow({ onOpen }: { onOpen: () => void }) {
     <>
       <button
         type="button"
-        className="flex w-full items-center gap-4 rounded-[18px] bg-page px-4 py-4 text-left transition-colors hover:bg-well"
+        className="flex w-full items-center gap-4 rounded-16 bg-page px-4 py-4 text-left transition-colors hover:bg-well"
         onClick={() => {
           if (app.canInstall) {
             onOpen()
@@ -192,11 +192,11 @@ export function InstallRow({ onOpen }: { onOpen: () => void }) {
         }}
       >
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-ink ring-1 ring-line-strong">
-          <Smartphone size={19} strokeWidth={1.75} />
+          <Smartphone size={20} strokeWidth={1.75} />
         </span>
         <span className="min-w-0">
-          <span className="block text-[15px] font-medium">{t('Put Shopi on your Home Screen')}</span>
-          <span className="block text-[13px] text-muted">{t('It opens like an app, one tap from your orders.')}</span>
+          <span className="block text-15 font-medium">{t('Put Shopi on your Home Screen')}</span>
+          <span className="block text-13 text-muted">{t('It opens like an app, one tap from your orders.')}</span>
         </span>
       </button>
       <InstallSheet open={guide} onClose={() => setGuide(false)} app={app} />
@@ -214,28 +214,28 @@ export function InstallSheet({ open, onClose, app }: { open: boolean; onClose: (
   useEffect(() => setInApp(inAppBrowser()), [])
   const steps: { title: string; sub: string; art: ReactNode }[] = app.apple
     ? [
-        { title: t('Tap Share'), sub: t('The square with an arrow, at the bottom of Safari.'), art: <BarArt icon={<Share size={18} strokeWidth={1.9} />} bottom /> },
-        { title: t('Choose Add to Home Screen'), sub: t('Scroll down the list if you don’t see it.'), art: <MenuArt icon={<SquarePlus size={15} strokeWidth={1.9} />} /> },
+        { title: t('Tap Share'), sub: t('The square with an arrow, at the bottom of Safari.'), art: <BarArt icon={<Share size={18} strokeWidth={1.75} />} bottom /> },
+        { title: t('Choose Add to Home Screen'), sub: t('Scroll down the list if you don’t see it.'), art: <MenuArt icon={<SquarePlus size={16} strokeWidth={1.75} />} /> },
         { title: t('Open Shopi from your Home Screen'), sub: t('Then turn on notifications for new orders.'), art: <HomeArt /> },
       ]
     : [
-        { title: t('Open your browser’s menu'), sub: t('The three dots at the top of Chrome.'), art: <BarArt icon={<EllipsisVertical size={18} strokeWidth={1.9} />} /> },
-        { title: t('Choose Add to Home screen'), sub: t('It may say Install app.'), art: <MenuArt icon={<Smartphone size={15} strokeWidth={1.9} />} /> },
+        { title: t('Open your browser’s menu'), sub: t('The three dots at the top of Chrome.'), art: <BarArt icon={<EllipsisVertical size={18} strokeWidth={1.75} />} /> },
+        { title: t('Choose Add to Home screen'), sub: t('It may say Install app.'), art: <MenuArt icon={<Smartphone size={16} strokeWidth={1.75} />} /> },
         { title: t('Open Shopi from your Home Screen'), sub: t('Then turn on notifications for new orders.'), art: <HomeArt /> },
       ]
   return (
     <Sheet open={open} onClose={onClose} title={t('Put Shopi on your Home Screen')}>
       {app.apple && inApp && (
-        <p className="mb-4 rounded-[14px] bg-moto-soft px-4 py-3 text-[14px] leading-5 text-moto-ink">{t('First open shopi.tz in Safari. This app’s own browser can’t add to the Home Screen.')}</p>
+        <p className="mb-4 rounded-14 bg-moto-soft px-4 py-3 text-14 leading-5 text-moto-ink">{t('First open shopi.tz in Safari. This app’s own browser can’t add to the Home Screen.')}</p>
       )}
       <ol className="grid gap-3">
         {steps.map((x, i) => (
-          <li key={i} className="flex items-center gap-4 rounded-[18px] bg-page p-3">
+          <li key={i} className="flex items-center gap-4 rounded-16 bg-page p-3">
             {x.art}
             <div className="min-w-0">
               <p className="meta">{t('Step {n}', { n: i + 1 })}</p>
-              <p className="mt-0.5 text-[15px] leading-5 font-medium">{x.title}</p>
-              <p className="mt-1 text-[13px] leading-[18px] text-muted">{x.sub}</p>
+              <p className="mt-0.5 text-15 leading-5 font-medium">{x.title}</p>
+              <p className="mt-1 text-13 leading-[18px] text-muted">{x.sub}</p>
             </div>
           </li>
         ))}
@@ -249,7 +249,7 @@ export function InstallSheet({ open, onClose, app }: { open: boolean; onClose: (
   )
 }
 
-const ART = 'relative flex h-[84px] w-[84px] shrink-0 flex-col overflow-hidden rounded-[14px] bg-card ring-1 ring-line'
+const ART = 'relative flex h-[84px] w-[84px] shrink-0 flex-col overflow-hidden rounded-14 bg-card ring-1 ring-line'
 
 /** A browser's bar with one control picked out: Safari's is at the bottom, Chrome's at the top. */
 function BarArt({ icon, bottom = false }: { icon: ReactNode; bottom?: boolean }) {
@@ -279,7 +279,7 @@ function MenuArt({ icon }: { icon: ReactNode }) {
   return (
     <div className={`${ART} justify-center gap-1.5 px-2`} aria-hidden>
       <span className="block h-2 w-12 rounded-full bg-raised" />
-      <span className="flex h-6 items-center gap-1 rounded-[7px] bg-ink px-1.5 text-white">
+      <span className="flex h-6 items-center gap-1 rounded-8 bg-ink px-1.5 text-white">
         {icon}
         <span className="h-1.5 flex-1 rounded-full bg-white/70" />
       </span>
@@ -293,10 +293,10 @@ function HomeArt() {
   return (
     <div className={`${ART} grid grid-cols-3 content-center gap-1.5 bg-well p-2.5`} aria-hidden>
       {[0, 1, 2, 3].map((i) => (
-        <span key={i} className="aspect-square rounded-[6px] bg-raised" />
+        <span key={i} className="aspect-square rounded-4 bg-raised" />
       ))}
-      <img src="/icon-192.png" alt="" className="aspect-square w-full rounded-[6px]" />
-      <span className="aspect-square rounded-[6px] bg-raised" />
+      <img src="/icon-192.png" alt="" className="aspect-square w-full rounded-4" />
+      <span className="aspect-square rounded-4 bg-raised" />
     </div>
   )
 }

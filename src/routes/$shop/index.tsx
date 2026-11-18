@@ -101,7 +101,7 @@ function Storefront() {
         right={
           <>
             <button type="button" className="icon-btn hidden sm:inline-flex" aria-label={t('Share shop')} onClick={share}>
-              <Share2 size={17} strokeWidth={1.6} />
+              <Share2 size={18} strokeWidth={1.75} />
             </button>
             <span className="hidden md:block">
               <BagButton shopSlug={shop.slug} count={cart.count} />
@@ -112,7 +112,7 @@ function Storefront() {
 
       <main className="mx-auto max-w-[1280px] px-4 md:px-10">
         {cover && (
-          <div className="mt-2 aspect-[2/1] overflow-hidden rounded-[20px] bg-well md:mt-8 md:aspect-[16/5] md:rounded-[28px]">
+          <div className="mt-2 aspect-[2/1] overflow-hidden rounded-20 bg-well md:mt-8 md:aspect-[16/5] md:rounded-28">
             {/* Phones get the 600px copy: the cover is the first thing they paint, and data costs money. */}
             <Img k={shop.cover_key} alt="" priority sizes="(min-width: 768px) 1200px, 50vw" className="h-full w-full" />
           </div>
@@ -125,19 +125,19 @@ function Storefront() {
               <ShopAvatar
                 name={shop.name}
                 logo={shop.logo_key}
-                className={`h-16 w-16 shrink-0 text-[20px] md:h-24 md:w-24 md:text-[28px] ${cover ? 'relative -mt-8 ml-3 ring-4 ring-card md:-mt-12 md:ml-8' : ''} max-md:hidden`}
+                className={`h-16 w-16 shrink-0 text-20 md:h-24 md:w-24 md:text-28 ${cover ? 'relative -mt-8 ml-3 ring-4 ring-card md:-mt-12 md:ml-8' : ''} max-md:hidden`}
               />
               <div className={`min-w-0 ${cover ? 'pb-1 md:mt-6 md:pb-0' : 'md:mt-8'}`}>
-                <h1 className={`display text-[30px] break-words md:text-[60px] lg:text-[72px] max-md:hidden`}>{shop.name}</h1>
+                <h1 className={`display text-28 break-words md:text-56 lg:text-72 max-md:hidden`}>{shop.name}</h1>
                 {shop.location && (
-                  <p className="mt-1.5 flex items-center gap-1.5 text-[14px] text-muted md:mt-4 md:text-[15px]">
-                    <MapPin size={15} strokeWidth={1.6} className="shrink-0" />
+                  <p className="mt-1.5 flex items-center gap-1.5 text-14 text-muted md:mt-4 md:text-15">
+                    <MapPin size={16} strokeWidth={1.75} className="shrink-0" />
                     <span className="truncate">{shop.location}</span>
                   </p>
                 )}
               </div>
             </div>
-            {shop.bio && <p className="mt-4 max-w-[58ch] text-[15px] leading-relaxed text-ink-2 md:mt-6 md:text-[17px]">{shop.bio}</p>}
+            {shop.bio && <p className="mt-4 max-w-[58ch] text-15 leading-relaxed text-ink-2 md:mt-6 md:text-17">{shop.bio}</p>}
             <div className="mt-5 flex flex-wrap items-center gap-2 md:mt-8">
               {shop.whatsapp && (
                 <a
@@ -152,7 +152,7 @@ function Storefront() {
                 </a>
               )}
               <button type="button" className="btn btn-ghost btn-sm h-10 px-4" onClick={share}>
-                <Share2 size={15} strokeWidth={1.6} /> {t('Share')}
+                <Share2 size={16} strokeWidth={1.75} /> {t('Share')}
               </button>
               <SocialLinks shop={shop} whatsapp={false} />
             </div>
@@ -162,7 +162,7 @@ function Storefront() {
             </div>
           </div>
           {/* Under a cover the logo overlaps its edge, so both columns start at the top and the card keeps clear of it. */}
-          <aside className={`${rise2} hidden rounded-[20px] bg-page p-6 md:block ${cover ? 'md:mt-8' : ''}`}>
+          <aside className={`${rise2} hidden rounded-20 bg-page p-6 md:block ${cover ? 'md:mt-8' : ''}`}>
             <ShopFacts shop={shop} areas={areas} />
             <ShopQr shop={shop} className="mt-5 border-t border-line pt-5" plain />
           </aside>
@@ -189,7 +189,7 @@ function Storefront() {
                 ]}
               />
             ) : (
-              <h2 className="title text-[18px]">{searching ? found : t('All products')}</h2>
+              <h2 className="title text-17">{searching ? found : t('All products')}</h2>
             )}
             <div className="hidden shrink-0 items-center gap-4 md:flex">
               {products.length > 0 && <p className="meta">{found}</p>}
@@ -201,16 +201,16 @@ function Storefront() {
         {products.length === 0 ? (
           <div className="mt-6">
             <Empty
-              icon={<Store size={20} strokeWidth={1.5} />}
+              icon={<Store size={20} strokeWidth={1.75} />}
               title={t('New products are on the way')}
               body={t('This shop is adding its first products. Message the seller on WhatsApp to ask what is in stock.')}
             />
           </div>
         ) : (
           <>
-            {!searching && group?.description && <p className="fade pt-5 text-[15px] leading-relaxed text-ink-2 md:pt-6">{group.description}</p>}
+            {!searching && group?.description && <p className="fade pt-5 text-15 leading-relaxed text-ink-2 md:pt-6">{group.description}</p>}
             {searching && shown.length === 0 ? (
-              <p className="mt-6 rounded-[20px] bg-page px-5 py-10 text-center text-[15px] leading-relaxed text-muted">
+              <p className="mt-6 rounded-20 bg-page px-5 py-10 text-center text-15 leading-relaxed text-muted">
                 {t('Nothing matches "{q}". Try another word, or ask the seller on WhatsApp.', { q: q.trim() })}
               </p>
             ) : (

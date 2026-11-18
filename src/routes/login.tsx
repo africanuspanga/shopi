@@ -23,13 +23,13 @@ function Login() {
   return (
     <AuthLayout
       topRight={
-        <Link to="/signup" className="text-[14px] font-medium text-ink-2 transition-colors hover:text-ink">
+        <Link to="/signup" className="text-14 font-medium text-ink-2 transition-colors hover:text-ink">
           {t('Open a shop')}
         </Link>
       }
     >
-      <h1 className="title text-[32px] md:text-[38px]">{t('Log in to your shop')}</h1>
-      <p className="mt-2 text-[15px] text-muted">{t('Use the phone number you signed up with.')}</p>
+      <h1 className="title text-32 md:text-40">{t('Log in to your shop')}</h1>
+      <p className="mt-2 text-15 text-muted">{t('Use the phone number you signed up with.')}</p>
       <form
         className="mt-8 space-y-4"
         onSubmit={async (e) => {
@@ -55,10 +55,10 @@ function Login() {
           {busy ? t('Logging in') : t('Log in')}
         </button>
       </form>
-      <p className="mt-8 text-[14px] text-muted">
+      <p className="mt-8 text-14 text-muted">
         {t('New to Shopi?')} <TextLink to="/signup">{t('Open a shop')}</TextLink>
       </p>
-      <p className="mt-2 text-[14px] text-muted">{t('Forgot your password? Message the Shopi team on WhatsApp and we will reset it.')}</p>
+      <p className="mt-2 text-14 text-muted">{t('Forgot your password? Message the Shopi team on WhatsApp and we will reset it.')}</p>
     </AuthLayout>
   )
 }

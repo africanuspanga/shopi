@@ -43,16 +43,16 @@ function useSources() {
     tiktok: { label: 'TikTok', icon: <TikTokIcon size={16} /> },
     whatsapp: { label: 'WhatsApp', icon: <WhatsAppIcon size={16} /> },
     facebook: { label: 'Facebook', icon: <FacebookIcon size={16} /> },
-    google: { label: 'Google', icon: <Search className={icon} strokeWidth={1.6} /> },
-    telegram: { label: 'Telegram', icon: <Send className={icon} strokeWidth={1.6} /> },
-    email: { label: t('Email'), icon: <Mail className={icon} strokeWidth={1.6} /> },
-    x: { label: 'X', icon: <Globe className={icon} strokeWidth={1.6} /> },
-    direct: { label: t('Direct'), icon: <Link2 className={icon} strokeWidth={1.6} /> },
-    unknown: { label: t('Before tracking'), icon: <Globe className={icon} strokeWidth={1.6} /> },
-    manual: { label: t('Recorded by you'), icon: <PenLine className={icon} strokeWidth={1.6} /> },
-    bag_link: { label: t('Bag links'), icon: <ShoppingBag className={icon} strokeWidth={1.6} /> },
+    google: { label: 'Google', icon: <Search className={icon} strokeWidth={1.75} /> },
+    telegram: { label: 'Telegram', icon: <Send className={icon} strokeWidth={1.75} /> },
+    email: { label: t('Email'), icon: <Mail className={icon} strokeWidth={1.75} /> },
+    x: { label: 'X', icon: <Globe className={icon} strokeWidth={1.75} /> },
+    direct: { label: t('Direct'), icon: <Link2 className={icon} strokeWidth={1.75} /> },
+    unknown: { label: t('Before tracking'), icon: <Globe className={icon} strokeWidth={1.75} /> },
+    manual: { label: t('Recorded by you'), icon: <PenLine className={icon} strokeWidth={1.75} /> },
+    bag_link: { label: t('Bag links'), icon: <ShoppingBag className={icon} strokeWidth={1.75} /> },
   }
-  return (s: string) => map[s] ?? { label: s, icon: <Globe className={icon} strokeWidth={1.6} /> }
+  return (s: string) => map[s] ?? { label: s, icon: <Globe className={icon} strokeWidth={1.75} /> }
 }
 
 function AnalyticsPage() {
@@ -70,8 +70,8 @@ function AnalyticsPage() {
 
       {empty && (
         <div className="card mb-4 p-6">
-          <p className="text-[16px] font-medium">{t('No visits in these {n} days yet', { n: a.days })}</p>
-          <p className="mt-1 max-w-[56ch] text-[14px] leading-relaxed text-muted">
+          <p className="text-15 font-medium">{t('No visits in these {n} days yet', { n: a.days })}</p>
+          <p className="mt-1 max-w-[56ch] text-14 leading-relaxed text-muted">
             {t('Put your link in your Instagram and TikTok bio and your WhatsApp status. Make a tagged link for each place below, and this page will show which one sells.')}
           </p>
         </div>
@@ -146,8 +146,8 @@ function Card({ title, sub, action, children, className = '' }: { title: string;
     <section className={`card min-w-0 p-5 md:p-6 ${className}`}>
       <div className="mb-5 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold">{title}</h2>
-          {sub && <p className="mt-0.5 text-[13px] leading-5 text-muted">{sub}</p>}
+          <h2 className="text-15 font-semibold">{title}</h2>
+          {sub && <p className="mt-0.5 text-13 leading-5 text-muted">{sub}</p>}
         </div>
         {action}
       </div>
@@ -157,14 +157,14 @@ function Card({ title, sub, action, children, className = '' }: { title: string;
 }
 
 function Nothing({ children }: { children: ReactNode }) {
-  return <p className="rounded-[14px] bg-page px-4 py-6 text-center text-[14px] text-muted">{children}</p>
+  return <p className="rounded-14 bg-page px-4 py-6 text-center text-14 text-muted">{children}</p>
 }
 
 function Kpi({ label, value, delta, on, onClick }: { label: string; value: ReactNode; delta: ReactNode; on?: boolean; onClick?: () => void }) {
   const body = (
     <>
-      <span className="block text-[13px] text-muted">{label}</span>
-      <span className="tnum mt-1.5 block truncate text-[20px] font-semibold tracking-[-0.02em] md:text-[26px]">{value}</span>
+      <span className="block text-13 text-muted">{label}</span>
+      <span className="tnum mt-1.5 block truncate text-20 font-semibold tracking-[-0.02em] md:text-24">{value}</span>
       <span className="mt-1.5 block">{delta}</span>
     </>
   )
@@ -197,19 +197,19 @@ function TrendChart({ a, metric, className }: { a: Analytics; metric: Metric; cl
     <section className={`card min-w-0 p-5 md:p-6 ${className}`}>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <div>
-          <h2 className="text-[15px] font-semibold">{t('{metric} by day', { metric: label })}</h2>
-          <p className="mt-0.5 text-[13px] text-muted">{t('Tap a number above to switch. Slide along the bars to read each day.')}</p>
+          <h2 className="text-15 font-semibold">{t('{metric} by day', { metric: label })}</h2>
+          <p className="mt-0.5 text-13 text-muted">{t('Tap a number above to switch. Slide along the bars to read each day.')}</p>
         </div>
         <p className="text-right">
-          <span className="block text-[13px] text-muted">{sel == null ? t('Total in {n} days', { n: a.days }) : date(a.series[i].day, true)}</span>
-          <span className="tnum text-[22px] font-semibold tracking-[-0.02em]">{fmt(sel == null ? total : values[i])}</span>
+          <span className="block text-13 text-muted">{sel == null ? t('Total in {n} days', { n: a.days }) : date(a.series[i].day, true)}</span>
+          <span className="tnum text-20 font-semibold tracking-[-0.02em]">{fmt(sel == null ? total : values[i])}</span>
         </p>
       </div>
       <div className="relative mt-6 h-[200px] md:h-[240px]" onPointerLeave={() => setSel(null)}>
         <div className="absolute inset-0 bottom-6 left-11">
           {[0, 1, 2, 3, 4].map((k) => (
             <div key={k} className="absolute inset-x-0 border-t border-dashed border-line" style={{ bottom: `${(k / 4) * 100}%` }}>
-              {k % 2 === 0 && <span className="meta absolute -top-2 -left-11 w-9 text-right text-[11px]">{compact((top * k) / 4)}</span>}
+              {k % 2 === 0 && <span className="meta absolute -top-2 -left-11 w-9 text-right text-11">{compact((top * k) / 4)}</span>}
             </div>
           ))}
           <div
@@ -227,7 +227,7 @@ function TrendChart({ a, metric, className }: { a: Analytics; metric: Metric; cl
                 onClick={() => setSel(k)}
               >
                 <span
-                  className={`w-full rounded-t-[3px] transition-colors ${k === values.length - 1 ? 'bg-moto' : sel === k ? 'bg-ink' : 'bg-raised group-hover:bg-faint'}`}
+                  className={`w-full rounded-t-2 transition-colors ${k === values.length - 1 ? 'bg-moto' : sel === k ? 'bg-ink' : 'bg-raised group-hover:bg-faint'}`}
                   style={{ height: `${Math.max(1.5, (values[k] / top) * 100)}%` }}
                 />
               </button>
@@ -255,7 +255,7 @@ function Channels({ a, className }: { a: Analytics; className: string }) {
         <Nothing>{t('No visits yet')}</Nothing>
       ) : (
         <div>
-          <div className="hidden grid-cols-[minmax(0,1.4fr)_70px_60px_minmax(0,1fr)_70px] gap-x-4 border-b border-line pb-2 text-[12px] text-muted md:grid">
+          <div className="hidden grid-cols-[minmax(0,1.4fr)_70px_60px_minmax(0,1fr)_70px] gap-x-4 border-b border-line pb-2 text-12 text-muted md:grid">
             <span>{t('Source')}</span>
             <span className="text-right">{t('Visits')}</span>
             <span className="text-right">{t('Orders')}</span>
@@ -269,10 +269,10 @@ function Channels({ a, className }: { a: Analytics; className: string }) {
               return (
                 <li key={c.source} className="py-3 md:grid md:grid-cols-[minmax(0,1.4fr)_70px_60px_minmax(0,1fr)_70px] md:items-center md:gap-x-4">
                   <div className="min-w-0">
-                    <p className="flex items-center gap-2.5 text-[14px] font-medium">
+                    <p className="flex items-center gap-2.5 text-14 font-medium">
                       <span className="text-ink-2">{s.icon}</span>
                       <span className="truncate">{s.label}</span>
-                      <span className="tnum ml-auto text-[14px] md:hidden">{tzs(c.sales)}</span>
+                      <span className="tnum ml-auto text-14 md:hidden">{tzs(c.sales)}</span>
                     </p>
                     <div className="mt-2 h-1 overflow-hidden rounded-full bg-well">
                       <div className={`h-full rounded-full ${c.sales ? 'bg-ink' : 'bg-faint'}`} style={{ width: `${Math.max(2, bar * 100)}%` }} />
@@ -281,15 +281,15 @@ function Channels({ a, className }: { a: Analytics; className: string }) {
                       {t('{v} visits · {o} orders · {c} ordered', { v: n(c.visits), o: n(c.orders), c: pct(share(c.orders, c.visits)) })}
                     </p>
                   </div>
-                  <span className="tnum hidden text-right text-[14px] md:block">{n(c.visits)}</span>
-                  <span className="tnum hidden text-right text-[14px] md:block">{n(c.orders)}</span>
-                  <span className="tnum hidden text-right text-[14px] font-medium md:block">{tzs(c.sales)}</span>
-                  <span className="tnum hidden text-right text-[14px] text-ink-2 md:block">{c.visits ? pct(share(c.orders, c.visits)) : '—'}</span>
+                  <span className="tnum hidden text-right text-14 md:block">{n(c.visits)}</span>
+                  <span className="tnum hidden text-right text-14 md:block">{n(c.orders)}</span>
+                  <span className="tnum hidden text-right text-14 font-medium md:block">{tzs(c.sales)}</span>
+                  <span className="tnum hidden text-right text-14 text-ink-2 md:block">{c.visits ? pct(share(c.orders, c.visits)) : '—'}</span>
                 </li>
               )
             })}
           </ul>
-          <p className="mt-3 text-[12px] leading-5 text-muted">{t('Direct means the link was typed, saved, or opened from an app that does not say which one.')}</p>
+          <p className="mt-3 text-12 leading-5 text-muted">{t('Direct means the link was typed, saved, or opened from an app that does not say which one.')}</p>
         </div>
       )}
     </Card>
@@ -329,10 +329,10 @@ function Funnel({ a, className }: { a: Analytics; className: string }) {
           <ol className="space-y-3">
             {steps.map(([label, value], k) => (
               <li key={label}>
-                <div className="flex items-baseline justify-between gap-3 text-[14px]">
+                <div className="flex items-baseline justify-between gap-3 text-14">
                   <span className={k === worst ? 'font-medium' : 'text-ink-2'}>{label}</span>
                   <span className="tnum">
-                    {n(value)} <span className="text-[12px] text-muted">{pct(share(value, top))}</span>
+                    {n(value)} <span className="text-12 text-muted">{pct(share(value, top))}</span>
                   </span>
                 </div>
                 <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-well">
@@ -342,7 +342,7 @@ function Funnel({ a, className }: { a: Analytics; className: string }) {
             ))}
           </ol>
           {worst > 0 && (
-            <p className="mt-5 rounded-[14px] bg-moto-soft px-4 py-3 text-[13px] leading-5 text-moto-ink">
+            <p className="mt-5 rounded-14 bg-moto-soft px-4 py-3 text-13 leading-5 text-moto-ink">
               {t('Most people leave before "{step}": {lost} of those who reach "{prev}" stop there.', {
                 step: steps[worst][0],
                 prev: steps[worst - 1][0],
@@ -367,7 +367,7 @@ function Products({ a, className }: { a: Analytics; className: string }) {
       className={className}
       action={
         a.products.length > 8 ? (
-          <button type="button" className="shrink-0 text-[13px] text-muted transition-colors hover:text-ink" onClick={() => setAll(!all)}>
+          <button type="button" className="shrink-0 text-13 text-muted transition-colors hover:text-ink" onClick={() => setAll(!all)}>
             {all ? t('Show fewer') : t('Show all {n}', { n: a.products.length })}
           </button>
         ) : null
@@ -377,7 +377,7 @@ function Products({ a, className }: { a: Analytics; className: string }) {
         <Nothing>{t('Add products to see how each one does')}</Nothing>
       ) : (
         <div>
-          <div className="hidden grid-cols-[minmax(0,2fr)_80px_80px_70px_minmax(0,1fr)_90px] gap-x-4 border-b border-line pb-2 text-[12px] text-muted md:grid">
+          <div className="hidden grid-cols-[minmax(0,2fr)_80px_80px_70px_minmax(0,1fr)_90px] gap-x-4 border-b border-line pb-2 text-12 text-muted md:grid">
             <span>{t('Product')}</span>
             <span className="text-right">{t('Views')}</span>
             <span className="text-right">{t('Bag adds')}</span>
@@ -394,20 +394,20 @@ function Products({ a, className }: { a: Analytics; className: string }) {
                   className="flex items-center gap-3 py-3 transition-colors hover:bg-page md:grid md:grid-cols-[minmax(0,2fr)_80px_80px_70px_minmax(0,1fr)_90px] md:gap-x-4"
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-3">
-                    <Img size="thumb" k={p.image} alt="" className="h-11 w-11 shrink-0 rounded-[10px]" />
+                    <Img size="thumb" k={p.image} alt="" className="h-11 w-11 shrink-0 rounded-12" />
                     <span className="min-w-0">
-                      <span className="block truncate text-[14px] font-medium">{p.name}</span>
+                      <span className="block truncate text-14 font-medium">{p.name}</span>
                       <span className="meta block md:hidden">
                         {t('{v} views · {a} adds · {s} sold', { v: compact(p.views), a: n(p.adds), s: n(p.units) })}
                       </span>
-                      {p.stock != null && p.stock <= 3 && <span className="block text-[12px] text-moto-ink">{p.stock === 0 ? t('Sold out') : t('Only {n} left', { n: p.stock })}</span>}
+                      {p.stock != null && p.stock <= 3 && <span className="block text-12 text-moto-ink">{p.stock === 0 ? t('Sold out') : t('Only {n} left', { n: p.stock })}</span>}
                     </span>
                   </span>
-                  <span className="tnum hidden text-right text-[14px] md:block">{n(p.views)}</span>
-                  <span className="tnum hidden text-right text-[14px] md:block">{n(p.adds)}</span>
-                  <span className="tnum hidden text-right text-[14px] md:block">{n(p.units)}</span>
-                  <span className="tnum shrink-0 text-right text-[14px] font-medium">{tzs(p.sales)}</span>
-                  <span className="tnum hidden text-right text-[14px] text-ink-2 md:block">{p.viewers ? pct(share(p.orders, p.viewers)) : '—'}</span>
+                  <span className="tnum hidden text-right text-14 md:block">{n(p.views)}</span>
+                  <span className="tnum hidden text-right text-14 md:block">{n(p.adds)}</span>
+                  <span className="tnum hidden text-right text-14 md:block">{n(p.units)}</span>
+                  <span className="tnum shrink-0 text-right text-14 font-medium">{tzs(p.sales)}</span>
+                  <span className="tnum hidden text-right text-14 text-ink-2 md:block">{p.viewers ? pct(share(p.orders, p.viewers)) : '—'}</span>
                 </Link>
               </li>
             ))}
@@ -456,7 +456,7 @@ function When({ a, className }: { a: Analytics; className: string }) {
                       <span
                         key={h}
                         title={`${long[d]} ${hh(h)}: ${n(v)}`}
-                        className={`aspect-square rounded-[3px] ${isPeak ? 'bg-moto' : v ? 'bg-ink' : 'bg-well'}`}
+                        className={`aspect-square rounded-2 ${isPeak ? 'bg-moto' : v ? 'bg-ink' : 'bg-well'}`}
                         style={!isPeak && v ? { opacity: 0.12 + 0.88 * (v / max) } : undefined}
                       />
                     )
@@ -489,8 +489,8 @@ function Clicks({ a, className }: { a: Analytics; className: string }) {
     [<InstagramIcon size={16} />, t('Instagram taps'), c.instagram],
     [<TikTokIcon size={16} />, t('TikTok taps'), c.tiktok],
     [<FacebookIcon size={16} />, t('Facebook taps'), c.facebook],
-    [<Send className="size-4" strokeWidth={1.6} />, t('Shared by buyers'), c.shares, t('{w} on WhatsApp · {c} links copied', { w: n(c.sharesOnWhatsApp), c: n(c.copies) })],
-    [<Link2 className="size-4" strokeWidth={1.6} />, t('Products you sent'), c.sellerShares],
+    [<Send className="size-4" strokeWidth={1.75} />, t('Shared by buyers'), c.shares, t('{w} on WhatsApp · {c} links copied', { w: n(c.sharesOnWhatsApp), c: n(c.copies) })],
+    [<Link2 className="size-4" strokeWidth={1.75} />, t('Products you sent'), c.sellerShares],
   ]
   return (
     <Card title={t('Taps and shares')} sub={t('What buyers did besides ordering')} className={className}>
@@ -499,10 +499,10 @@ function Clicks({ a, className }: { a: Analytics; className: string }) {
           <li key={label} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
             <span className="text-ink-2">{icon}</span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[14px]">{label}</span>
-              {sub && value > 0 && <span className="block text-[12px] text-muted">{sub}</span>}
+              <span className="block text-14">{label}</span>
+              {sub && value > 0 && <span className="block text-12 text-muted">{sub}</span>}
             </span>
-            <span className="tnum text-[15px] font-medium">{n(value)}</span>
+            <span className="tnum text-15 font-medium">{n(value)}</span>
           </li>
         ))}
       </ul>
@@ -521,7 +521,7 @@ function Areas({ a, className }: { a: Analytics; className: string }) {
         <ul className="space-y-3">
           {a.areas.map((x) => (
             <li key={x.area}>
-              <div className="flex items-baseline justify-between gap-3 text-[14px]">
+              <div className="flex items-baseline justify-between gap-3 text-14">
                 <span className="truncate">{x.area}</span>
                 <span className="tnum shrink-0 text-ink-2">{t(x.orders === 1 ? '{n} order' : '{n} orders', { n: x.orders })}</span>
               </div>
@@ -553,7 +553,7 @@ function Devices({ a, className }: { a: Analytics; className: string }) {
               <span key={d.device} className={tone[d.device] ?? 'bg-raised'} style={{ width: `${share(d.visits, total) * 100}%` }} />
             ))}
           </div>
-          <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[13px]">
+          <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-13">
             {sorted.map((d) => (
               <li key={d.device} className="flex items-center gap-2">
                 <span className={`h-2 w-2 rounded-full ${tone[d.device] ?? 'bg-raised'}`} />
@@ -565,7 +565,7 @@ function Devices({ a, className }: { a: Analytics; className: string }) {
           {a.cities.length > 0 && (
             <ul className="mt-5 divide-y divide-line border-t border-line">
               {a.cities.map((c) => (
-                <li key={c.city} className="flex justify-between gap-3 py-2.5 text-[14px] last:pb-0">
+                <li key={c.city} className="flex justify-between gap-3 py-2.5 text-14 last:pb-0">
                   <span className="truncate">{c.city}</span>
                   <span className="tnum text-ink-2">{t('{n} visits', { n: n(c.visits) })}</span>
                 </li>
@@ -589,11 +589,11 @@ function Sizes({ a, className }: { a: Analytics; className: string }) {
         <ul className="space-y-3">
           {a.sizes.map((x) => (
             <li key={x.size} className="flex items-center gap-3">
-              <span className="chip tnum h-8 min-w-12 justify-center px-3 text-[13px]">{x.size}</span>
+              <span className="chip tnum h-8 min-w-12 justify-center px-3 text-13">{x.size}</span>
               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-well">
                 <div className="h-full rounded-full bg-ink" style={{ width: `${share(x.units, a.sizes[0].units) * 100}%` }} />
               </div>
-              <span className="tnum w-20 text-right text-[14px] text-ink-2">{t('{n} sold', { n: n(x.units) })}</span>
+              <span className="tnum w-20 text-right text-14 text-ink-2">{t('{n} sold', { n: n(x.units) })}</span>
             </li>
           ))}
         </ul>
@@ -615,15 +615,15 @@ function Buyers({ a, className }: { a: Analytics; className: string }) {
       action={
         <div className="flex shrink-0 gap-2">
           <a href={`/api/export?what=orders&days=${a.days}`} className="btn btn-ghost btn-sm" download>
-            <ArrowDownToLine size={15} strokeWidth={1.75} /> {t('Orders')}
+            <ArrowDownToLine size={16} strokeWidth={1.75} /> {t('Orders')}
           </a>
           <a href={`/api/export?what=customers&days=${a.days}`} className="btn btn-ghost btn-sm hidden sm:inline-flex" download>
-            <ArrowDownToLine size={15} strokeWidth={1.75} /> {t('Buyers')}
+            <ArrowDownToLine size={16} strokeWidth={1.75} /> {t('Buyers')}
           </a>
         </div>
       }
     >
-      <div className="grid grid-cols-3 gap-3 rounded-[16px] bg-page p-4">
+      <div className="grid grid-cols-3 gap-3 rounded-16 bg-page p-4">
         <Mini label={t('Buyers')} value={n(b.total)} />
         <Mini label={t('Came back')} value={n(b.returning)} />
         <Mini label={t('Return rate')} value={pct(share(b.returning, b.total))} />
@@ -637,17 +637,17 @@ function Buyers({ a, className }: { a: Analytics; className: string }) {
           {b.top.map((x) => (
             <li key={x.phone} className="flex items-center gap-3 py-3 last:pb-0">
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-2 truncate text-[14px] font-medium">
+                <p className="flex items-center gap-2 truncate text-14 font-medium">
                   {x.name}
-                  {x.returning && <span className="rounded-full bg-well px-2 py-0.5 text-[11px] font-medium text-ink-2">{t('Came back')}</span>}
+                  {x.returning && <span className="rounded-full bg-well px-2 py-0.5 text-11 font-medium text-ink-2">{t('Came back')}</span>}
                 </p>
-                <p className="code mt-0.5 truncate text-[12px] text-muted">
+                <p className="code mt-0.5 truncate text-12 text-muted">
                   {x.phone} · {t('last {date}', { date: day(x.last) })}
                 </p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="tnum text-[14px] font-medium">{tzs(x.spent)}</p>
-                <p className="text-[12px] text-muted">{t(x.orders === 1 ? '{n} order' : '{n} orders', { n: x.orders })}</p>
+                <p className="tnum text-14 font-medium">{tzs(x.spent)}</p>
+                <p className="text-12 text-muted">{t(x.orders === 1 ? '{n} order' : '{n} orders', { n: x.orders })}</p>
               </div>
             </li>
           ))}
@@ -660,8 +660,8 @@ function Buyers({ a, className }: { a: Analytics; className: string }) {
 function Mini({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[12px] text-muted">{label}</p>
-      <p className="tnum mt-0.5 text-[18px] font-semibold tracking-[-0.02em]">{value}</p>
+      <p className="text-12 text-muted">{label}</p>
+      <p className="tnum mt-0.5 text-17 font-semibold tracking-[-0.02em]">{value}</p>
     </div>
   )
 }
@@ -709,14 +709,14 @@ function Links({ a, className }: { a: Analytics; className: string }) {
       >
         <input className="input h-11" value={label} onChange={(e) => setLabel(e.target.value)} placeholder={t('e.g. Instagram bio')} aria-label={t('Link name')} maxLength={40} />
         <button className="btn btn-sm h-11 shrink-0 px-4" disabled={busy || !label.trim()}>
-          <Plus size={16} strokeWidth={2} /> {t('Make')}
+          <Plus size={16} strokeWidth={2.25} /> {t('Make')}
         </button>
       </form>
       {presets.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {presets.map((p) => (
-            <button key={p} type="button" className="chip h-8 px-3 text-[13px]" disabled={busy} onClick={() => add(p)}>
-              <Plus size={13} strokeWidth={2} /> {p}
+            <button key={p} type="button" className="chip h-8 px-3 text-13" disabled={busy} onClick={() => add(p)}>
+              <Plus size={14} strokeWidth={2.25} /> {p}
             </button>
           ))}
         </div>
@@ -726,7 +726,7 @@ function Links({ a, className }: { a: Analytics; className: string }) {
           {a.tags.map((x) => (
             <li key={x.tag} className="py-3.5 last:pb-0">
               <div className="flex items-center gap-2">
-                <p className="min-w-0 flex-1 truncate text-[14px] font-medium">{x.label ?? x.tag}</p>
+                <p className="min-w-0 flex-1 truncate text-14 font-medium">{x.label ?? x.tag}</p>
                 <button type="button" className="icon-btn h-8 w-8" aria-label={t('Copy link')} onClick={() => copy(x.tag)}>
                   {copied === x.tag ? <Check size={14} strokeWidth={2.25} /> : <Copy size={14} strokeWidth={1.75} />}
                 </button>
@@ -744,8 +744,8 @@ function Links({ a, className }: { a: Analytics; className: string }) {
                   </button>
                 )}
               </div>
-              <p className="code mt-0.5 truncate text-[12px] text-muted">{prettyUrl(`${base}?s=${x.tag}`)}</p>
-              <p className="tnum mt-1 text-[13px] text-ink-2">
+              <p className="code mt-0.5 truncate text-12 text-muted">{prettyUrl(`${base}?s=${x.tag}`)}</p>
+              <p className="tnum mt-1 text-13 text-ink-2">
                 {t('{v} visits · {o} orders · {s}', { v: n(x.visits), o: n(x.orders), s: tzs(x.sales) })}
               </p>
             </li>

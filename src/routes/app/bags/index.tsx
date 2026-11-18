@@ -41,7 +41,7 @@ function BagLinks() {
         sub={count('open') ? t(count('open') === 1 ? '{n} waiting for a buyer' : '{n} waiting for buyers', { n: count('open') }) : t('A bag you build for one buyer, sent as one link')}
         right={
           <Link to="/app/bags/new" className="btn btn-sm">
-            <Plus size={15} strokeWidth={2} /> {t('New bag link')}
+            <Plus size={16} strokeWidth={2.25} /> {t('New bag link')}
           </Link>
         }
       />
@@ -61,7 +61,7 @@ function BagLinks() {
       <div className="mt-5">
         {shown.length === 0 ? (
           <Empty
-            icon={<ShoppingBag size={20} strokeWidth={1.5} />}
+            icon={<ShoppingBag size={20} strokeWidth={1.75} />}
             title={filter === 'open' ? t('No open bag links') : filter === 'used' ? t('No bag links ordered yet') : t('Nothing here')}
             body={
               filter === 'open'
@@ -71,7 +71,7 @@ function BagLinks() {
             action={
               filter === 'open' ? (
                 <Link to="/app/bags/new" className="btn btn-sm">
-                  <Plus size={15} strokeWidth={2} /> {t('New bag link')}
+                  <Plus size={16} strokeWidth={2.25} /> {t('New bag link')}
                 </Link>
               ) : undefined
             }
@@ -85,26 +85,26 @@ function BagLinks() {
                 params={{ id: b.id }}
                 className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-x-3 px-5 py-3.5 transition-colors hover:bg-page lg:grid-cols-[44px_minmax(0,1.4fr)_100px_140px_minmax(0,1fr)_120px] lg:gap-x-6 lg:px-6"
               >
-                <Img size="thumb" k={b.image} alt="" className="h-11 w-11 rounded-[10px]" />
+                <Img size="thumb" k={b.image} alt="" className="h-11 w-11 rounded-12" />
                 {/* Phone: who and how much, then where it stands */}
                 <div className="min-w-0 lg:hidden">
                   <div className="flex items-baseline justify-between gap-3">
-                    <p className="min-w-0 truncate text-[15px] font-medium">{b.name || t('Bag link')}</p>
-                    <p className="tnum shrink-0 text-[15px] font-medium">{tzs(b.total)}</p>
+                    <p className="min-w-0 truncate text-15 font-medium">{b.name || t('Bag link')}</p>
+                    <p className="tnum shrink-0 text-15 font-medium">{tzs(b.total)}</p>
                   </div>
                   <div className="mt-0.5 flex h-6 items-center gap-3">
                     <BagPill state={b.state} />
-                    <p className="min-w-0 flex-1 truncate text-[13px] text-muted">{t(b.count === 1 ? '{n} item' : '{n} items', { n: b.count })}</p>
+                    <p className="min-w-0 flex-1 truncate text-13 text-muted">{t(b.count === 1 ? '{n} item' : '{n} items', { n: b.count })}</p>
                     <p className="meta shrink-0">{when(b)}</p>
                   </div>
                 </div>
                 {/* Desktop: a table row */}
                 <div className="hidden min-w-0 lg:block">
-                  <p className="truncate text-[14px] font-medium">{b.name || t('Bag link')}</p>
+                  <p className="truncate text-14 font-medium">{b.name || t('Bag link')}</p>
                   <p className="meta mt-0.5 truncate">{b.phone || b.code}</p>
                 </div>
-                <p className="hidden text-[14px] text-ink-2 lg:block">{t(b.count === 1 ? '{n} item' : '{n} items', { n: b.count })}</p>
-                <p className="tnum hidden text-right text-[14px] font-medium lg:block">{tzs(b.total)}</p>
+                <p className="hidden text-14 text-ink-2 lg:block">{t(b.count === 1 ? '{n} item' : '{n} items', { n: b.count })}</p>
+                <p className="tnum hidden text-right text-14 font-medium lg:block">{tzs(b.total)}</p>
                 <div className="hidden lg:block">
                   <BagPill state={b.state} />
                 </div>

@@ -43,7 +43,7 @@ function Checkout() {
       <div className="min-h-dvh bg-page">
         <CheckoutHeader shop={shop} />
         <main className="mx-auto max-w-[1120px] px-4 md:px-10">
-          <h1 className="title mt-2 text-[28px] md:mt-6 md:text-[40px]">{t('Checkout')}</h1>
+          <h1 className="title mt-2 text-28 md:mt-6 md:text-40">{t('Checkout')}</h1>
         </main>
       </div>
     )
@@ -55,7 +55,7 @@ function Checkout() {
         <CheckoutHeader shop={shop} />
         <main className="mx-auto max-w-[560px] px-4 pt-10">
           <Empty
-            icon={<ShoppingBag size={20} strokeWidth={1.5} />}
+            icon={<ShoppingBag size={20} strokeWidth={1.75} />}
             title={t('Your bag is empty')}
             body={t('Add something you like and it will wait for you here.')}
             action={

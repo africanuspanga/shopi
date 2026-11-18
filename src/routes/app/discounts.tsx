@@ -35,19 +35,19 @@ function Discounts() {
         sub={codes.length ? t(on === 1 ? '{n} code buyers can use' : '{n} codes buyers can use', { n: on }) : t('Money off for buyers who type a code at checkout')}
         right={
           <button type="button" className="btn btn-sm" onClick={() => setEditing('new')}>
-            <Plus size={15} strokeWidth={2} /> {t('New code')}
+            <Plus size={16} strokeWidth={2.25} /> {t('New code')}
           </button>
         }
       />
 
       {codes.length === 0 ? (
         <Empty
-          icon={<TicketPercent size={20} strokeWidth={1.5} />}
+          icon={<TicketPercent size={20} strokeWidth={1.75} />}
           title={t('No discount codes yet')}
           body={t('Make a code like EID10 for 10% off, share it in your status, and buyers type it at checkout.')}
           action={
             <button type="button" className="btn btn-sm" onClick={() => setEditing('new')}>
-              <Plus size={15} strokeWidth={2} /> {t('New code')}
+              <Plus size={16} strokeWidth={2.25} /> {t('New code')}
             </button>
           }
         />
@@ -95,10 +95,10 @@ function CodeCard({ c, onEdit, onShare }: { c: DiscountRow; onEdit: () => void; 
     <section className="card flex flex-col p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="code truncate text-[20px]">{c.code}</p>
-          <p className="mt-1 flex items-center gap-2 text-[15px] font-medium">
+          <p className="code truncate text-20">{c.code}</p>
+          <p className="mt-1 flex items-center gap-2 text-15 font-medium">
             {discountLabel(t, c)}
-            <span className={`inline-flex items-center gap-1.5 text-[13px] font-normal ${state === 'on' ? 'text-ink-2' : 'text-muted'}`}>
+            <span className={`inline-flex items-center gap-1.5 text-13 font-normal ${state === 'on' ? 'text-ink-2' : 'text-muted'}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${state === 'on' ? 'bg-ok' : 'bg-faint'}`} />
               {label[state]}
             </span>
@@ -115,7 +115,7 @@ function CodeCard({ c, onEdit, onShare }: { c: DiscountRow; onEdit: () => void; 
           }}
         />
       </div>
-      <p className="mt-2 text-[13px] leading-5 text-muted">{conditions(c)}</p>
+      <p className="mt-2 text-13 leading-5 text-muted">{conditions(c)}</p>
       <dl className="mt-4 grid grid-cols-3 gap-3 border-t border-line pt-4">
         <Stat label={t('Orders')} value={c.max_uses ? `${c.uses}/${c.max_uses}` : String(c.uses)} />
         <Stat label={t('Taken off')} value={tzs(c.off)} />
@@ -123,10 +123,10 @@ function CodeCard({ c, onEdit, onShare }: { c: DiscountRow; onEdit: () => void; 
       </dl>
       <div className="mt-4 flex gap-2">
         <button type="button" className="btn btn-quiet btn-sm flex-1" onClick={onShare} disabled={state !== 'on'}>
-          <Share2 size={15} strokeWidth={1.6} /> {t('Share')}
+          <Share2 size={16} strokeWidth={1.75} /> {t('Share')}
         </button>
         <button type="button" className="btn btn-ghost btn-sm flex-1" onClick={onEdit}>
-          <PenLine size={15} strokeWidth={1.6} /> {t('Edit')}
+          <PenLine size={16} strokeWidth={1.75} /> {t('Edit')}
         </button>
       </div>
     </section>
@@ -136,8 +136,8 @@ function CodeCard({ c, onEdit, onShare }: { c: DiscountRow; onEdit: () => void; 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className="truncate text-[12px] text-muted">{label}</dt>
-      <dd className="tnum mt-0.5 truncate text-[15px] font-semibold">{value}</dd>
+      <dt className="truncate text-12 text-muted">{label}</dt>
+      <dd className="tnum mt-0.5 truncate text-15 font-semibold">{value}</dd>
     </div>
   )
 }
@@ -233,7 +233,7 @@ function EditSheet({ code, onClose }: { code: DiscountRow | null; onClose: () =>
             ))}
           </div>
           <label className="input mt-3 flex items-center gap-2 px-4">
-            {form.kind === 'amount' && <span className="text-[14px] text-muted">TSh</span>}
+            {form.kind === 'amount' && <span className="text-14 text-muted">TSh</span>}
             <input
               className="tnum min-w-0 flex-1 bg-transparent outline-none"
               inputMode="numeric"
@@ -242,13 +242,13 @@ function EditSheet({ code, onClose }: { code: DiscountRow | null; onClose: () =>
               value={form.kind === 'percent' ? form.value : money(form.value)}
               onChange={(e) => setForm({ ...form, value: digits(e.target.value, form.kind === 'percent' ? 3 : 9) })}
             />
-            {form.kind === 'percent' && <span className="text-[14px] text-muted">%</span>}
+            {form.kind === 'percent' && <span className="text-14 text-muted">%</span>}
           </label>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t('Minimum order')} aside={t('Optional')}>
             <label className="input flex items-center gap-2 px-4">
-              <span className="text-[14px] text-muted">TSh</span>
+              <span className="text-14 text-muted">TSh</span>
               <input
                 className="tnum min-w-0 flex-1 bg-transparent outline-none"
                 inputMode="numeric"
@@ -265,7 +265,7 @@ function EditSheet({ code, onClose }: { code: DiscountRow | null; onClose: () =>
         <Field label={t('Most orders')} aside={t('Optional')} hint={t('How many orders can use it. Cancelled orders don’t count.')}>
           <input className="input tnum" inputMode="numeric" placeholder={t('No limit')} value={form.max_uses} onChange={(e) => setForm({ ...form, max_uses: digits(e.target.value, 6) })} />
         </Field>
-        <div className="rounded-[16px] bg-page p-4">
+        <div className="rounded-16 bg-page p-4">
           <Switch
             label={t('Buyers can use it')}
             sub={form.active ? t('On: it works at checkout') : t('Off: nobody can use it until you switch it on')}
@@ -279,7 +279,7 @@ function EditSheet({ code, onClose }: { code: DiscountRow | null; onClose: () =>
         </button>
         {code && (
           <button type="button" className="btn w-full bg-transparent text-bad hover:bg-bad/[0.06]" disabled={busy} onClick={remove}>
-            <Trash2 size={16} strokeWidth={1.6} /> {t('Delete code')}
+            <Trash2 size={16} strokeWidth={1.75} /> {t('Delete code')}
           </button>
         )}
       </form>
@@ -296,12 +296,12 @@ function ShareSheet({ c, onClose }: { c: DiscountRow | null; onClose: () => void
     <Sheet open={!!c} onClose={onClose} title={t('Share a code')}>
       {c && (
         <>
-          <div className="rounded-[16px] bg-page px-5 py-4">
-            <p className="code text-[22px]">{c.code}</p>
-            <p className="mt-1 text-[14px] text-ink-2">{discountLabel(t, c)}</p>
+          <div className="rounded-16 bg-page px-5 py-4">
+            <p className="code text-20">{c.code}</p>
+            <p className="mt-1 text-14 text-ink-2">{discountLabel(t, c)}</p>
           </div>
-          <p className="mt-5 text-[14px] leading-relaxed text-muted">{t('The link opens your shop with the code saved. It comes off at checkout without typing.')}</p>
-          <p className="code mt-3 truncate text-[12px] text-muted">{prettyUrl(url)}</p>
+          <p className="mt-5 text-14 leading-relaxed text-muted">{t('The link opens your shop with the code saved. It comes off at checkout without typing.')}</p>
+          <p className="code mt-3 truncate text-12 text-muted">{prettyUrl(url)}</p>
           <div className="mt-4">
             <ShareActions
               url={url}

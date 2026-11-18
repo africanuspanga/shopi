@@ -179,8 +179,8 @@ function Track() {
             <p className="meta">
               {t('Order')} <span className="code text-ink">#{o.code}</span> · {timeAgo(o.created_at, lang)}
             </p>
-            <h1 className="title mt-3 text-[28px] md:text-[40px]">{head[o.status].title}</h1>
-            <p className="mt-2 max-w-[52ch] text-[15px] leading-relaxed text-ink-2">{head[o.status].sub}</p>
+            <h1 className="title mt-3 text-28 md:text-40">{head[o.status].title}</h1>
+            <p className="mt-2 max-w-[52ch] text-15 leading-relaxed text-ink-2">{head[o.status].sub}</p>
             {o.status !== 'cancelled' && (
               <ol className="mt-8 grid grid-cols-4 gap-1.5" aria-label={t('Order progress')}>
                 {steps.map((label, i) => {
@@ -188,9 +188,9 @@ function Track() {
                   return (
                     <li key={i} aria-current={state === 'now' ? 'step' : undefined}>
                       <div className={`h-1.5 rounded-full ${state === 'done' ? 'bg-ink' : state === 'now' ? 'bg-moto' : 'bg-raised'}`} />
-                      <p className={`mt-2.5 flex items-center gap-1 text-[12px] leading-4 md:text-[13px] ${state === 'next' ? 'text-muted' : 'font-medium text-ink'}`}>
+                      <p className={`mt-2.5 flex items-center gap-1 text-12 leading-4 md:text-13 ${state === 'next' ? 'text-muted' : 'font-medium text-ink'}`}>
                         {/* On phones the ink bar already says "done"; the check would push "Confirmed" onto two lines. */}
-                        {state === 'done' && <Check size={13} strokeWidth={2.5} className="hidden shrink-0 md:block" />}
+                        {state === 'done' && <Check size={14} strokeWidth={2.25} className="hidden shrink-0 md:block" />}
                         {label}
                       </p>
                     </li>
@@ -203,7 +203,7 @@ function Track() {
           {needsPayment && (
             <section className={`${rise2} card p-6 md:p-8`}>
               <Step n={1} title={t('Pay by mobile money')} />
-              <div className="mt-5 divide-y divide-line rounded-[16px] bg-page px-5">
+              <div className="mt-5 divide-y divide-line rounded-16 bg-page px-5">
                 <CopyRow
                   label={
                     !o.shop.lipa_network || /lipa/i.test(o.shop.lipa_network)
@@ -221,9 +221,9 @@ function Track() {
 
               <div className="mt-8">
                 <Step n={2} title={t('Paste the payment SMS')} />
-                <p className="mt-2 text-[14px] leading-relaxed text-muted">{t('Copy the whole confirmation message you got after paying and paste it here.')}</p>
+                <p className="mt-2 text-14 leading-relaxed text-muted">{t('Copy the whole confirmation message you got after paying and paste it here.')}</p>
                 <textarea
-                  className="input mt-4 font-mono text-[13px]"
+                  className="input mt-4 font-mono text-13"
                   rows={5}
                   value={sms}
                   onChange={(e) => setSms(e.target.value)}
@@ -280,38 +280,38 @@ function Track() {
         <aside className={`${rise2} mt-8 md:sticky md:top-6 md:mt-0 print:mx-auto print:mt-0 print:max-w-[420px]`}>
           <div className="receipt px-5 pt-5 pb-6">
             <div className="flex items-baseline justify-between">
-              <p className="text-[15px] font-semibold">{receiptTitle}</p>
-              <p className="code text-[13px] text-muted">#{o.code}</p>
+              <p className="text-15 font-semibold">{receiptTitle}</p>
+              <p className="code text-13 text-muted">#{o.code}</p>
             </div>
             <p className="meta mt-1 text-muted">{when}</p>
             <div className="mt-4 space-y-3">
               {o.lines.map((l, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <Img size="thumb" k={l.image} alt={l.name} className="h-14 w-12 shrink-0 rounded-[8px]" />
+                  <Img size="thumb" k={l.image} alt={l.name} className="h-14 w-12 shrink-0 rounded-8" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px]">{l.name}</p>
-                    <p className="text-[13px] text-muted">
+                    <p className="truncate text-14">{l.name}</p>
+                    <p className="text-13 text-muted">
                       {l.qty} × <span className="tnum">{tzs(l.price)}</span>
                       {l.variant ? ` · ${optionText(t, l.option, l.variant)}` : ''}
                     </p>
                   </div>
-                  <p className="font-mono text-[13px]">{tzs(l.qty * l.price)}</p>
+                  <p className="font-mono text-13">{tzs(l.qty * l.price)}</p>
                 </div>
               ))}
             </div>
-            <div className="receipt-rule mt-5 space-y-2 pt-4 text-[14px]">
+            <div className="receipt-rule mt-5 space-y-2 pt-4 text-14">
               <Line label={t('Items')} value={tzs(o.subtotal)} />
               {o.discount > 0 && <Line label={t('Discount ({code})', { code: o.discount_code ?? '' })} value={`−${tzs(o.discount)}`} />}
               <Line label={t('Delivery')} value={o.delivery_fee ? tzs(o.delivery_fee) : t('Agreed on WhatsApp')} />
             </div>
             <div className="receipt-rule mt-4 flex items-baseline justify-between pt-4">
-              <span className="text-[15px] font-medium">{t('Total')}</span>
-              <span className="font-mono text-[20px] font-medium tracking-tight">{tzs(o.total)}</span>
+              <span className="text-15 font-medium">{t('Total')}</span>
+              <span className="font-mono text-20 font-medium tracking-tight">{tzs(o.total)}</span>
             </div>
-            <div className="mt-5 space-y-1.5 text-[13px] text-muted">
+            <div className="mt-5 space-y-1.5 text-13 text-muted">
               {o.area && (
                 <p className="flex items-start gap-2">
-                  <MapPin size={14} strokeWidth={1.6} className="mt-0.5 shrink-0" />
+                  <MapPin size={14} strokeWidth={1.75} className="mt-0.5 shrink-0" />
                   <span>
                     {o.area.replace(' (fee to agree)', '')}
                     {o.landmark ? ` · ${o.landmark}` : ''}
@@ -321,22 +321,22 @@ function Track() {
               )}
               <p>{paid ? `${t('Paid')} · ${payLine}` : payLine}</p>
               {o.shop.tin && <p>{t('Seller TIN {tin}', { tin: formatTin(o.shop.tin) })}</p>}
-              <p className="pt-2 text-[12px]">{t('Not a TRA fiscal receipt')}</p>
+              <p className="pt-2 text-12">{t('Not a TRA fiscal receipt')}</p>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2 print:hidden">
             <button type="button" className="btn btn-ghost btn-sm" onClick={saveImage} disabled={saving}>
-              <ImageDown size={15} strokeWidth={1.6} /> {t('Save as image')}
+              <ImageDown size={16} strokeWidth={1.75} /> {t('Save as image')}
             </button>
             <button type="button" className="btn btn-ghost btn-sm" onClick={shareReceipt}>
-              {copied === 'receipt' ? <Check size={15} strokeWidth={2} /> : <Share2 size={15} strokeWidth={1.6} />}
+              {copied === 'receipt' ? <Check size={16} strokeWidth={2.25} /> : <Share2 size={16} strokeWidth={1.75} />}
               {copied === 'receipt' ? t('Link copied') : t('Share')}
             </button>
             <button type="button" className="btn btn-quiet btn-sm col-span-2 hidden md:inline-flex" onClick={() => window.print()}>
-              <Printer size={15} strokeWidth={1.6} /> {t('Print')}
+              <Printer size={16} strokeWidth={1.75} /> {t('Print')}
             </button>
           </div>
-          <p className="mt-4 text-center text-[13px] text-muted print:hidden">{t('Bookmark this page to follow your order.')}</p>
+          <p className="mt-4 text-center text-13 text-muted print:hidden">{t('Bookmark this page to follow your order.')}</p>
           <div className="print:hidden">
             {o.shop.badge && <MadeWithShopi shopSlug={o.shop.slug} invite />}
           </div>
@@ -348,8 +348,8 @@ function Track() {
 
 function Step({ n, title }: { n: number; title: string }) {
   return (
-    <h2 className="flex items-center gap-3 text-[17px] font-semibold">
-      <span className="tnum flex h-7 w-7 items-center justify-center rounded-full bg-ink text-[13px] text-white">{n}</span>
+    <h2 className="flex items-center gap-3 text-17 font-semibold">
+      <span className="tnum flex h-7 w-7 items-center justify-center rounded-full bg-ink text-13 text-white">{n}</span>
       {title}
     </h2>
   )
@@ -359,7 +359,7 @@ function Line({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
       <span className="text-ink-2">{label}</span>
-      <span className="font-mono text-[13px]">{value}</span>
+      <span className="font-mono text-13">{value}</span>
     </div>
   )
 }
@@ -369,12 +369,12 @@ function CopyRow({ label, value, onCopy, copied, big = false }: { label: string;
   return (
     <div className="flex items-center justify-between gap-4 py-4">
       <div className="min-w-0">
-        <p className="text-[13px] text-muted">{label}</p>
-        <p className={`mt-1 truncate font-mono font-medium ${big ? 'text-[26px] tracking-[0.04em]' : 'text-[17px]'}`}>{value}</p>
+        <p className="text-13 text-muted">{label}</p>
+        <p className={`mt-1 truncate font-mono font-medium ${big ? 'text-24 tracking-[0.04em]' : 'text-17'}`}>{value}</p>
       </div>
       {onCopy && (
         <button type="button" className={`btn btn-sm shrink-0 ${copied ? '' : 'btn-ghost'}`} onClick={onCopy}>
-          {copied ? <Check size={15} strokeWidth={2.25} /> : <Copy size={15} strokeWidth={1.6} />}
+          {copied ? <Check size={16} strokeWidth={2.25} /> : <Copy size={16} strokeWidth={1.75} />}
           {copied ? t('Copied') : t('Copy')}
         </button>
       )}

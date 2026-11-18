@@ -296,20 +296,20 @@ function Flow({
   if (step.kind === 'waiting')
     return (
       <div>
-        {notice && <p className="mb-4 rounded-[14px] bg-moto-soft px-4 py-3 text-[14px] text-moto-ink">{notice}</p>}
+        {notice && <p className="mb-4 rounded-14 bg-moto-soft px-4 py-3 text-14 text-moto-ink">{notice}</p>}
         <div className="flex flex-col items-center px-2 pt-2 text-center">
           <span className="relative flex size-16 items-center justify-center rounded-full bg-well">
-            <Smartphone size={26} strokeWidth={1.5} />
+            <Smartphone size={24} strokeWidth={1.75} />
             <span className="signal absolute top-3 right-3.5" />
           </span>
-          <h3 className="title mt-4 text-[22px]">{t('Check your phone')}</h3>
-          <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-ink-2">
+          <h3 className="title mt-4 text-20">{t('Check your phone')}</h3>
+          <p className="mt-2 max-w-[34ch] text-15 leading-relaxed text-ink-2">
             {t('Enter your PIN on {phone} to pay {amount}.', { phone: step.phone, amount: nb(tzs(TEMBO_PRICE)) })}
           </p>
         </div>
 
         {peek && (
-          <p className="mt-6 rounded-[16px] bg-page px-4 py-3.5 text-[14px] leading-relaxed text-ink-2">
+          <p className="mt-6 rounded-16 bg-page px-4 py-3.5 text-14 leading-relaxed text-ink-2">
             <LipaLine ussd={peek.ussd} lipa={peek.lipa} />
           </p>
         )}
@@ -330,7 +330,7 @@ function Flow({
             </button>
           </div>
         )}
-        {resend === 'error' && <p className="mt-3 text-center text-[13px] text-bad">{t('The prompt could not be sent. Pay with Lipa Namba instead.')}</p>}
+        {resend === 'error' && <p className="mt-3 text-center text-13 text-bad">{t('The prompt could not be sent. Pay with Lipa Namba instead.')}</p>}
 
         <Foot onAnother={fallback ? anotherNumber : undefined} />
       </div>
@@ -339,9 +339,9 @@ function Flow({
   if (step.kind === 'lipa')
     return (
       <div>
-        {notice && <p className="mb-4 rounded-[14px] bg-moto-soft px-4 py-3 text-[14px] text-moto-ink">{notice}</p>}
+        {notice && <p className="mb-4 rounded-14 bg-moto-soft px-4 py-3 text-14 text-moto-ink">{notice}</p>}
         <LipaCard lipa={step.lipa} amount={step.amount} ussd={step.ussd} />
-        <p className="mt-5 text-[13px] leading-relaxed text-muted">
+        <p className="mt-5 text-13 leading-relaxed text-muted">
           {t('Use it before {time}. This number is for this payment only.', { time: clock(step.expiresAt) })}
         </p>
         <Foot onAnother={anotherNumber} />
@@ -377,7 +377,7 @@ function Flow({
           {t('Pay with Lipa Namba instead')}
         </button>
       )}
-      <p className="text-center text-[13px] leading-5 text-muted">{t('Paid to Driftmark Technologies, the company behind Shopi. Once a year, no commission on your sales.')}</p>
+      <p className="text-center text-13 leading-5 text-muted">{t('Paid to Driftmark Technologies, the company behind Shopi. Once a year, no commission on your sales.')}</p>
     </form>
   )
 }
@@ -387,9 +387,9 @@ function Foot({ onAnother }: { onAnother?: () => void }) {
   const t = useT()
   return (
     <div className="mt-6 space-y-3 text-center">
-      <p className="text-[13px] leading-5 text-muted">{t('You can close this. Tembo turns on by itself once the payment arrives.')}</p>
+      <p className="text-13 leading-5 text-muted">{t('You can close this. Tembo turns on by itself once the payment arrives.')}</p>
       {onAnother && (
-        <button type="button" className="text-[14px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink" onClick={onAnother}>
+        <button type="button" className="text-14 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink" onClick={onAnother}>
           {t('Use another number')}
         </button>
       )}
@@ -428,7 +428,7 @@ function LipaCard({ lipa, amount, ussd }: { lipa: string; amount: number; ussd: 
         <div className="flex flex-wrap gap-2">
           {android && (
             <a className="btn btn-sm" href={`tel:${ussd.replace(/#/g, '%23')}`}>
-              <Phone size={15} strokeWidth={1.75} /> {t('Open the dialler')}
+              <Phone size={16} strokeWidth={1.75} /> {t('Open the dialler')}
             </a>
           )}
           <CopyButton value={ussd} />
@@ -448,9 +448,9 @@ function LipaCard({ lipa, amount, ussd }: { lipa: string; amount: number; ussd: 
 function LipaStep({ n, title, children }: { n: number; title: string; children?: ReactNode }) {
   return (
     <li className="flex gap-3">
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ink font-mono text-[13px] text-white">{n}</span>
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ink font-mono text-13 text-white">{n}</span>
       <div className="min-w-0 flex-1 space-y-2 pt-0.5">
-        <p className="text-[15px] font-medium">{title}</p>
+        <p className="text-15 font-medium">{title}</p>
         {children}
       </div>
     </li>
@@ -459,8 +459,8 @@ function LipaStep({ n, title, children }: { n: number; title: string; children?:
 
 function Value({ text, copy }: { text: string; copy: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-[14px] bg-page py-2.5 pr-2.5 pl-4">
-      <span className="font-mono text-[22px] font-medium tracking-wide">{text}</span>
+    <div className="flex items-center justify-between gap-3 rounded-14 bg-page py-2.5 pr-2.5 pl-4">
+      <span className="font-mono text-20 font-medium tracking-wide">{text}</span>
       <CopyButton value={copy} />
     </div>
   )
@@ -480,7 +480,7 @@ function CopyButton({ value }: { value: string }) {
   }
   return (
     <button type="button" className="btn btn-sm btn-ghost shrink-0" onClick={copy}>
-      {done ? <Check size={15} strokeWidth={2} /> : <Copy size={15} strokeWidth={1.6} />}
+      {done ? <Check size={16} strokeWidth={2.25} /> : <Copy size={16} strokeWidth={1.75} />}
       {done ? t('Copied') : t('Copy')}
     </button>
   )
@@ -491,7 +491,7 @@ function Slip({ rows, total }: { rows: [string, string][]; total?: string }) {
   const t = useT()
   return (
     <div className="receipt px-5 pt-5 pb-6" style={{ '--receipt-bg': 'var(--color-page)' } as CSSProperties}>
-      <div className="space-y-2.5 text-[14px]">
+      <div className="space-y-2.5 text-14">
         {rows.map(([label, value]) => (
           <div key={label} className="flex items-baseline justify-between gap-4">
             <span className="shrink-0 text-ink-2">{label}</span>
@@ -501,8 +501,8 @@ function Slip({ rows, total }: { rows: [string, string][]; total?: string }) {
       </div>
       {total && (
         <div className="receipt-rule mt-4 flex items-baseline justify-between pt-4">
-          <span className="text-[15px] font-medium">{t('Total')}</span>
-          <span className="font-mono text-[20px] font-medium tracking-tight">{total}</span>
+          <span className="text-15 font-medium">{t('Total')}</span>
+          <span className="font-mono text-20 font-medium tracking-tight">{total}</span>
         </div>
       )}
     </div>
@@ -516,10 +516,10 @@ function Paid({ ref_, until, onDone }: { ref_: string; until: number; onDone: ()
     <div className="pt-2">
       <div className="flex flex-col items-center text-center">
         <span className="flex size-14 items-center justify-center rounded-full bg-ok/10 text-ok">
-          <Check size={26} strokeWidth={2} />
+          <Check size={24} strokeWidth={2.25} />
         </span>
-        <h3 className="title mt-4 text-[24px]">{t('Tembo is on')}</h3>
-        <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-ink-2">{t('Thank you. Your shop has Tembo until {date}.', { date: longDate(until, lang) })}</p>
+        <h3 className="title mt-4 text-24">{t('Tembo is on')}</h3>
+        <p className="mt-2 max-w-[34ch] text-15 leading-relaxed text-ink-2">{t('Thank you. Your shop has Tembo until {date}.', { date: longDate(until, lang) })}</p>
       </div>
       <div className="mt-6">
         <Slip rows={[[t('Tembo, 1 year'), tzs(TEMBO_PRICE)], [t('Paid until'), longDate(until, lang)], [t('Reference'), ref_]]} />

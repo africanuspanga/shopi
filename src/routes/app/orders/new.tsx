@@ -78,7 +78,7 @@ function RecordSale() {
       <div className="md:grid md:grid-cols-[minmax(0,1fr)_360px] md:items-start md:gap-10">
         <div className="space-y-8">
           <section>
-            <h2 className="text-[17px] font-semibold">{t('What was sold')}</h2>
+            <h2 className="text-17 font-semibold">{t('What was sold')}</h2>
             {lines.length > 0 && (
               <div className="card mt-3 divide-y divide-line overflow-hidden">
                 {lines.map((l) => (
@@ -86,8 +86,8 @@ function RecordSale() {
                     <div className="flex items-center gap-3">
                       {l.product ? (
                         <>
-                          <Img size="thumb" k={l.product.images[0]} alt={l.product.name} className="h-12 w-10 shrink-0 rounded-[8px]" />
-                          <p className="min-w-0 flex-1 truncate text-[15px] font-medium">{l.product.name}</p>
+                          <Img size="thumb" k={l.product.images[0]} alt={l.product.name} className="h-12 w-10 shrink-0 rounded-8" />
+                          <p className="min-w-0 flex-1 truncate text-15 font-medium">{l.product.name}</p>
                         </>
                       ) : (
                         <input
@@ -119,7 +119,7 @@ function RecordSale() {
                             }
                           >
                             {s.label}
-                            {s.stock != null && <span className="text-[12px] opacity-60">{s.stock}</span>}
+                            {s.stock != null && <span className="text-12 opacity-60">{s.stock}</span>}
                           </button>
                         ))}
                       </div>
@@ -127,15 +127,15 @@ function RecordSale() {
                     <div className="flex items-center gap-3">
                       <div className="flex h-11 items-center rounded-full shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
                         <button type="button" className="flex h-11 w-11 items-center justify-center" aria-label={t('Fewer')} onClick={() => update(l.key, { qty: Math.max(1, l.qty - 1) })}>
-                          <Minus size={15} strokeWidth={2} />
+                          <Minus size={16} strokeWidth={2.25} />
                         </button>
-                        <span className="tnum w-6 text-center text-[15px]">{l.qty}</span>
+                        <span className="tnum w-6 text-center text-15">{l.qty}</span>
                         <button type="button" className="flex h-11 w-11 items-center justify-center" aria-label={t('More')} onClick={() => update(l.key, { qty: Math.min(999, l.qty + 1) })}>
-                          <Plus size={15} strokeWidth={2} />
+                          <Plus size={16} strokeWidth={2.25} />
                         </button>
                       </div>
                       <label className="input flex h-11 min-w-0 flex-1 items-center gap-1.5 px-3">
-                        <span className="text-[13px] text-muted">TSh</span>
+                        <span className="text-13 text-muted">TSh</span>
                         <input
                           className="tnum min-w-0 flex-1 bg-transparent text-right outline-none"
                           inputMode="numeric"
@@ -153,17 +153,17 @@ function RecordSale() {
             <div className="mt-3 flex flex-wrap gap-2">
               {products.length > 0 && (
                 <button type="button" className="btn btn-sm" onClick={() => setPicking(true)}>
-                  <PackagePlus size={15} strokeWidth={1.75} /> {t('Add from your products')}
+                  <PackagePlus size={16} strokeWidth={1.75} /> {t('Add from your products')}
                 </button>
               )}
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => add({ name: '', price: '', qty: 1, size: null })}>
-                <PenLine size={15} strokeWidth={1.75} /> {t('Something else')}
+                <PenLine size={16} strokeWidth={1.75} /> {t('Something else')}
               </button>
             </div>
           </section>
 
           <section>
-            <h2 className="text-[17px] font-semibold">{t('How they paid')}</h2>
+            <h2 className="text-17 font-semibold">{t('How they paid')}</h2>
             <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label={t('How they paid')}>
               {PAYMENTS.map((m) => (
                 <button key={m} type="button" role="radio" aria-checked={payment === m} className="chip" aria-pressed={payment === m} onClick={() => setPayment(m)}>
@@ -174,7 +174,7 @@ function RecordSale() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-[17px] font-semibold">{t('Details')}</h2>
+            <h2 className="text-17 font-semibold">{t('Details')}</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('Buyer’s name')} aside={t('Optional')}>
                 <input className="input" value={buyer.name} onChange={(e) => setBuyer({ ...buyer, name: e.target.value })} />
@@ -209,7 +209,7 @@ function RecordSale() {
 
         <aside className="mt-8 md:sticky md:top-6 md:mt-10">
           <div className="receipt px-5 pt-5 pb-6">
-            <div className="space-y-2 text-[14px]">
+            <div className="space-y-2 text-14">
               {lines.length === 0 && <p className="text-muted">{t('Nothing added yet')}</p>}
               {lines.map((l) => (
                 <div key={l.key} className="flex items-baseline justify-between gap-4">
@@ -217,13 +217,13 @@ function RecordSale() {
                     {l.qty} × {l.product?.name || l.name || t('Item')}
                     {l.size ? ` · ${l.size}` : ''}
                   </span>
-                  <span className="font-mono text-[13px]">{tzs((Number(l.price) || 0) * l.qty)}</span>
+                  <span className="font-mono text-13">{tzs((Number(l.price) || 0) * l.qty)}</span>
                 </div>
               ))}
             </div>
             <div className="receipt-rule mt-4 flex items-baseline justify-between pt-4">
-              <span className="text-[15px] font-medium">{t('Total')}</span>
-              <span className="font-mono text-[20px] font-medium tracking-tight">{tzs(total)}</span>
+              <span className="text-15 font-medium">{t('Total')}</span>
+              <span className="font-mono text-20 font-medium tracking-tight">{tzs(total)}</span>
             </div>
           </div>
           <ErrorText>{error}</ErrorText>

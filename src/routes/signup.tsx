@@ -33,13 +33,13 @@ function Signup() {
   return (
     <AuthLayout
       topRight={
-        <Link to="/login" className="text-[14px] font-medium text-ink-2 transition-colors hover:text-ink">
+        <Link to="/login" className="text-14 font-medium text-ink-2 transition-colors hover:text-ink">
           {t('Log in')}
         </Link>
       }
     >
-      <h1 className="title text-[32px] md:text-[38px]">{t('Open your shop')}</h1>
-      <p className="mt-2 text-[15px] text-muted">{t('First, your account. Your shop comes next.')}</p>
+      <h1 className="title text-32 md:text-40">{t('Open your shop')}</h1>
+      <p className="mt-2 text-15 text-muted">{t('First, your account. Your shop comes next.')}</p>
       <form
         className="mt-8 space-y-4"
         onSubmit={async (e) => {
@@ -72,12 +72,12 @@ function Signup() {
         <button className="btn btn-lg w-full" disabled={busy}>
           {busy ? t('Creating your account') : t('Continue')}
         </button>
-        <p className="text-[13px] leading-relaxed text-muted">
+        <p className="text-13 leading-relaxed text-muted">
           {t('By continuing you agree to the')} <TextLink to="/terms">{t('Terms')}</TextLink> {t('and')}{' '}
           <TextLink to="/privacy">{t('Privacy')}</TextLink>.
         </p>
       </form>
-      <p className="mt-8 text-[14px] text-muted">
+      <p className="mt-8 text-14 text-muted">
         {t('Already have a shop?')} <TextLink to="/login">{t('Log in')}</TextLink>
       </p>
     </AuthLayout>

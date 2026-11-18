@@ -19,7 +19,7 @@ export function LegalPage({ title, lead, children }: { title: string; lead: stri
         <Link to="/" aria-label="Shopi" className="flex h-9 items-center">
           <Wordmark className="h-[22px] w-auto" />
         </Link>
-        <nav className="flex gap-4 text-[14px] text-ink-2">
+        <nav className="flex gap-4 text-14 text-ink-2">
           {links.map(([to, label]) => (
             <Link key={to} to={to} className="hover:text-ink" activeProps={{ className: 'text-ink font-medium' }}>
               {label}
@@ -29,10 +29,10 @@ export function LegalPage({ title, lead, children }: { title: string; lead: stri
       </header>
       <main className="mx-auto max-w-[720px] px-4 pt-6 pb-24 md:px-0 md:pt-12">
         <p className="meta text-muted">{t('Last updated {date}', { date: LEGAL_UPDATED })}</p>
-        <h1 className="display mt-3 text-[40px] md:text-[56px]">{title}</h1>
-        <p className="mt-5 text-[17px] leading-relaxed text-ink-2 md:text-[18px]">{lead}</p>
+        <h1 className="display mt-3 text-40 md:text-56">{title}</h1>
+        <p className="mt-5 text-17 leading-relaxed text-ink-2 md:text-17">{lead}</p>
         <div className="mt-10 space-y-10">{children}</div>
-        <p className="mt-16 border-t border-line pt-6 text-[14px] leading-relaxed text-muted">
+        <p className="mt-16 border-t border-line pt-6 text-14 leading-relaxed text-muted">
           {withEmailLink(t('Shopi is run by Driftmark Technologies Limited, Dar es Salaam, Tanzania. Questions: hello@shopi.tz'))}
         </p>
       </main>
@@ -43,8 +43,8 @@ export function LegalPage({ title, lead, children }: { title: string; lead: stri
 export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <h2 className="title text-[22px] md:text-[26px]">{title}</h2>
-      <div className="mt-3 space-y-3 text-[16px] leading-relaxed text-ink-2 [&_li]:pl-1 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5">{children}</div>
+      <h2 className="title text-20 md:text-24">{title}</h2>
+      <div className="mt-3 space-y-3 text-15 leading-relaxed text-ink-2 [&_li]:pl-1 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5">{children}</div>
     </section>
   )
 }

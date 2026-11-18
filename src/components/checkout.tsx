@@ -50,8 +50,8 @@ export function CheckoutHeader({ shop }: { shop: Pick<PublicShop, 'slug' | 'name
         shop={shop}
         back
         right={
-          <span className="hidden items-center gap-1.5 text-[13px] text-muted sm:flex">
-            <ShieldCheck size={15} strokeWidth={1.6} /> {t('You pay the seller directly')}
+          <span className="hidden items-center gap-1.5 text-13 text-muted sm:flex">
+            <ShieldCheck size={16} strokeWidth={1.75} /> {t('You pay the seller directly')}
           </span>
         }
       />
@@ -178,21 +178,21 @@ export function CheckoutView({
   const bag = (
     <section className="card overflow-hidden">
       <div className="flex items-center justify-between px-5 pt-4 pb-1">
-        <h2 className="text-[15px] font-semibold">{t('Your bag')}</h2>
+        <h2 className="text-15 font-semibold">{t('Your bag')}</h2>
         <p className="meta">{t(count === 1 ? '{n} item' : '{n} items', { n: count })}</p>
       </div>
       <div className="divide-y divide-line">
         {lines.map((l) => (
           <div key={l.key} className="flex items-center gap-3 px-5 py-3.5">
-            <Img size="thumb" k={l.image} alt={l.name} className={`h-[68px] w-14 shrink-0 rounded-[10px] ${l.problem ? 'opacity-50' : ''}`} />
+            <Img size="thumb" k={l.image} alt={l.name} className={`h-[68px] w-14 shrink-0 rounded-12 ${l.problem ? 'opacity-50' : ''}`} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[14px] font-medium">{l.name}</p>
-              <p className="mt-0.5 text-[13px] text-muted">
+              <p className="truncate text-14 font-medium">{l.name}</p>
+              <p className="mt-0.5 text-13 text-muted">
                 {l.size ? `${optionText(t, l.option, l.size)} · ` : ''}
                 {fixed && l.qty > 1 ? `${l.qty} × ` : ''}
                 <span className="tnum">{tzs(l.price)}</span>
               </p>
-              {l.problem && <p className="mt-0.5 text-[13px] text-moto-ink">{l.problem}</p>}
+              {l.problem && <p className="mt-0.5 text-13 text-moto-ink">{l.problem}</p>}
             </div>
             {onQty ? (
               <div className="flex h-9 items-center rounded-full shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
@@ -202,9 +202,9 @@ export function CheckoutView({
                   aria-label={l.qty === 1 ? t('Remove') : t('Fewer')}
                   onClick={() => onQty(l.key, l.qty - 1)}
                 >
-                  {l.qty === 1 ? <Trash2 size={14} strokeWidth={1.6} /> : <Minus size={14} strokeWidth={1.75} />}
+                  {l.qty === 1 ? <Trash2 size={14} strokeWidth={1.75} /> : <Minus size={14} strokeWidth={1.75} />}
                 </button>
-                <span className="tnum w-5 text-center text-[14px] font-medium">{l.qty}</span>
+                <span className="tnum w-5 text-center text-14 font-medium">{l.qty}</span>
                 <button
                   type="button"
                   className="flex h-full w-9 items-center justify-center text-ink-2 disabled:text-faint"
@@ -216,7 +216,7 @@ export function CheckoutView({
                 </button>
               </div>
             ) : (
-              <p className="shrink-0 font-mono text-[13px]">{tzs(l.price * l.qty)}</p>
+              <p className="shrink-0 font-mono text-13">{tzs(l.price * l.qty)}</p>
             )}
           </div>
         ))}
@@ -242,14 +242,14 @@ export function CheckoutView({
         />
       )}
       <div className="receipt px-5 pt-5 pb-6">
-        <div className="space-y-2.5 text-[14px]">
+        <div className="space-y-2.5 text-14">
           <Row label={t('Items ({n})', { n: count })} value={tzs(subtotal)} />
           {off > 0 && applied && <Row label={t('Discount ({code})', { code: applied.code })} value={`−${tzs(off)}`} />}
           <Row label={t('Delivery')} value={t('Agreed on WhatsApp')} quiet />
         </div>
         <div className="receipt-rule mt-4 flex items-baseline justify-between pt-4">
-          <span className="text-[15px] font-medium">{t('Total')}</span>
-          <span className="font-mono text-[20px] font-medium tracking-tight">{tzs(total)}</span>
+          <span className="text-15 font-medium">{t('Total')}</span>
+          <span className="font-mono text-20 font-medium tracking-tight">{tzs(total)}</span>
         </div>
       </div>
       <div ref={check.slot} />
@@ -257,12 +257,12 @@ export function CheckoutView({
       <button form={FORM_ID} className="btn btn-shop btn-lg w-full" disabled={busy || demo || !!blocked || (!canLipa && !canCod)}>
         {demo ? t('Orders are off in this demo shop') : busy ? t('Placing your order') : t('Place order')}
       </button>
-      {foot && <p className="text-center text-[13px] leading-5 text-muted">{foot}</p>}
-      <p className="flex items-start justify-center gap-2 text-center text-[13px] leading-5 text-muted">
-        <ShieldCheck size={15} strokeWidth={1.6} className="mt-0.5 shrink-0" />
+      {foot && <p className="text-center text-13 leading-5 text-muted">{foot}</p>}
+      <p className="flex items-start justify-center gap-2 text-center text-13 leading-5 text-muted">
+        <ShieldCheck size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
         {t('You pay the seller directly. Shopi never holds your money.')}
       </p>
-      <p className="text-center text-[12px] leading-5 text-muted">
+      <p className="text-center text-12 leading-5 text-muted">
         {t('Your details go to {shop} to deliver your order.', { shop: shop.name })}{' '}
         <Link to="/privacy" className="underline decoration-line-strong underline-offset-4 hover:text-ink">
           {t('Privacy')}
@@ -276,7 +276,7 @@ export function CheckoutView({
       <CheckoutHeader shop={shop} />
       <main className="mx-auto max-w-[1120px] px-4 pb-16 md:grid md:grid-cols-[minmax(0,1fr)_400px] md:items-start md:gap-12 md:px-10">
         <div className="min-w-0">
-          <h1 className="title mt-2 mb-6 text-[28px] md:mt-6 md:mb-8 md:text-[40px]">{title}</h1>
+          <h1 className="title mt-2 mb-6 text-28 md:mt-6 md:mb-8 md:text-40">{title}</h1>
           {intro && <div className="-mt-2 mb-8 md:-mt-4">{intro}</div>}
           <div className="mb-8 md:hidden">{bag}</div>
 
@@ -329,7 +329,7 @@ export function CheckoutView({
             {returning ? (
               <Block title={t('Deliver to')}>
                 <div className="card flex items-start gap-4 p-5">
-                  <div className="min-w-0 flex-1 text-[15px] leading-6">
+                  <div className="min-w-0 flex-1 text-15 leading-6">
                     <p className="font-medium">
                       {form.name} · <span className="tnum">{form.phone}</span>
                     </p>
@@ -338,14 +338,14 @@ export function CheckoutView({
                       {form.landmark ? ` · ${form.landmark}` : ''}
                     </p>
                     {pin && (
-                      <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-muted">
-                        <MapPin size={14} strokeWidth={1.6} /> {t('Location shared')}
+                      <p className="mt-1.5 flex items-center gap-1.5 text-13 text-muted">
+                        <MapPin size={14} strokeWidth={1.75} /> {t('Location shared')}
                       </p>
                     )}
                   </div>
                   <button
                     type="button"
-                    className="shrink-0 text-[14px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink"
+                    className="shrink-0 text-14 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink"
                     onClick={() => setReturning(false)}
                   >
                     {t('Change')}
@@ -410,10 +410,10 @@ export function CheckoutView({
             ) : (
               <button
                 type="button"
-                className="-mt-2 flex items-center gap-2 text-[14px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink"
+                className="-mt-2 flex items-center gap-2 text-14 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink"
                 onClick={() => setSellerNote(true)}
               >
-                <Plus size={15} strokeWidth={1.75} /> {t('Add a note for the seller')}
+                <Plus size={16} strokeWidth={1.75} /> {t('Add a note for the seller')}
               </button>
             )}
 
@@ -423,7 +423,7 @@ export function CheckoutView({
                   <PayOption
                     active={payment === 'lipa'}
                     onClick={() => setPayment('lipa')}
-                    icon={<Smartphone size={20} strokeWidth={1.5} />}
+                    icon={<Smartphone size={20} strokeWidth={1.75} />}
                     title={t('Mobile money')}
                     sub={
                       shop.lipa_network
@@ -436,7 +436,7 @@ export function CheckoutView({
                   <PayOption
                     active={payment === 'cod'}
                     onClick={() => setPayment('cod')}
-                    icon={<Banknote size={20} strokeWidth={1.5} />}
+                    icon={<Banknote size={20} strokeWidth={1.75} />}
                     title={t('Cash on delivery')}
                     sub={t('Pay the rider when your order arrives')}
                   />
@@ -515,13 +515,13 @@ function LocationField({ pin, onPin }: { pin: Pin | null; onPin: (pin: Pin | nul
   if (pin) {
     const rough = pin.m != null && pin.m > ROUGH_M
     return (
-      <div className="fade flex items-center gap-3 rounded-[16px] bg-card p-4 shadow-[inset_0_0_0_1.5px_var(--color-ink)]">
+      <div className="fade flex items-center gap-3 rounded-16 bg-card p-4 shadow-[inset_0_0_0_1.5px_var(--color-ink)]">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-white">
           <MapPin size={18} strokeWidth={1.75} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-medium">{t('Location shared')}</p>
-          <p className={`text-[13px] leading-5 ${rough ? 'text-ink-2' : 'text-muted'}`}>
+          <p className="text-15 font-medium">{t('Location shared')}</p>
+          <p className={`text-13 leading-5 ${rough ? 'text-ink-2' : 'text-muted'}`}>
             {pin.m == null
               ? t('From your link')
               : rough
@@ -532,15 +532,15 @@ function LocationField({ pin, onPin }: { pin: Pin | null; onPin: (pin: Pin | nul
             href={pinLink(pin)}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-1 inline-flex items-center gap-1 text-[13px] font-medium whitespace-nowrap text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink"
+            className="mt-1 inline-flex items-center gap-1 text-13 font-medium whitespace-nowrap text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink"
           >
-            {t('Check on the map')} <ArrowUpRight size={13} strokeWidth={1.75} />
+            {t('Check on the map')} <ArrowUpRight size={14} strokeWidth={1.75} />
           </a>
         </div>
         <button
           type="button"
           aria-label={t('Remove location')}
-          className="shrink-0 text-[13px] font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
+          className="shrink-0 text-13 font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
           onClick={() => onPin(null)}
         >
           {t('Remove')}
@@ -555,18 +555,18 @@ function LocationField({ pin, onPin }: { pin: Pin | null; onPin: (pin: Pin | nul
         type="button"
         onClick={locate}
         disabled={state === 'finding'}
-        className="flex w-full items-center gap-3 rounded-[16px] bg-card p-4 text-left shadow-[inset_0_0_0_1px_var(--color-line)] transition-shadow hover:shadow-[inset_0_0_0_1px_var(--color-line-strong)] active:scale-[0.99] disabled:opacity-70"
+        className="flex w-full items-center gap-3 rounded-16 bg-card p-4 text-left shadow-[inset_0_0_0_1px_var(--color-line)] transition-shadow hover:shadow-[inset_0_0_0_1px_var(--color-line-strong)] active:scale-[0.99] disabled:opacity-70"
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-well text-ink">
           <LocateFixed size={18} strokeWidth={1.75} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[15px] font-medium">{state === 'finding' ? t('Finding your location') : t('Share my location')}</span>
-          <span className="block text-[13px] text-muted">{t('So the rider comes straight to you')}</span>
+          <span className="block text-15 font-medium">{state === 'finding' ? t('Finding your location') : t('Share my location')}</span>
+          <span className="block text-13 text-muted">{t('So the rider comes straight to you')}</span>
         </span>
       </button>
-      {state === 'denied' && <p className="fade mt-2 text-[13px] leading-5 text-ink-2">{t('Location is off for this page. Type your area below, or paste a location link.')}</p>}
-      {state === 'failed' && <p className="fade mt-2 text-[13px] leading-5 text-ink-2">{t('We couldn’t find you. Try again, or type your area below.')}</p>}
+      {state === 'denied' && <p className="fade mt-2 text-13 leading-5 text-ink-2">{t('Location is off for this page. Type your area below, or paste a location link.')}</p>}
+      {state === 'failed' && <p className="fade mt-2 text-13 leading-5 text-ink-2">{t('We couldn’t find you. Try again, or type your area below.')}</p>}
       {pasting ? (
         <div className="fade mt-4">
           <label className="label" htmlFor="checkout-map-link">
@@ -598,12 +598,12 @@ function LocationField({ pin, onPin }: { pin: Pin | null; onPin: (pin: Pin | nul
               {reading ? t('Reading') : t('Use it')}
             </button>
           </div>
-          {linkError && <p className="mt-2 text-[13px] leading-5 text-bad">{linkError}</p>}
+          {linkError && <p className="mt-2 text-13 leading-5 text-bad">{linkError}</p>}
         </div>
       ) : (
         <button
           type="button"
-          className="mt-3 text-[13px] font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
+          className="mt-3 text-13 font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
           onClick={() => setPasting(true)}
         >
           {t('Paste a location link instead')}
@@ -644,15 +644,15 @@ function DiscountField({
   if (applied) {
     const short = applied.min_order != null && subtotal < applied.min_order
     return (
-      <div className="flex items-center gap-3 rounded-[16px] bg-card px-4 py-3 shadow-[inset_0_0_0_1px_var(--color-line)]">
-        <TicketPercent size={18} strokeWidth={1.6} className="shrink-0 text-ink-2" />
+      <div className="flex items-center gap-3 rounded-16 bg-card px-4 py-3 shadow-[inset_0_0_0_1px_var(--color-line)]">
+        <TicketPercent size={18} strokeWidth={1.75} className="shrink-0 text-ink-2" />
         <div className="min-w-0 flex-1">
-          <p className="code truncate text-[14px]">{applied.code}</p>
-          <p className="text-[13px] text-muted">
+          <p className="code truncate text-14">{applied.code}</p>
+          <p className="text-13 text-muted">
             {short ? t('Works on orders from {min}', { min: tzs(applied.min_order!) }) : discountLabel(t, applied)}
           </p>
         </div>
-        <button type="button" className="shrink-0 text-[13px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink" onClick={onRemove}>
+        <button type="button" className="shrink-0 text-13 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink" onClick={onRemove}>
           {t('Remove')}
         </button>
       </div>
@@ -662,10 +662,10 @@ function DiscountField({
     return (
       <button
         type="button"
-        className="flex items-center gap-2 text-[14px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink"
+        className="flex items-center gap-2 text-14 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink"
         onClick={() => setOpen(true)}
       >
-        <TicketPercent size={16} strokeWidth={1.6} /> {t('Have a discount code?')}
+        <TicketPercent size={16} strokeWidth={1.75} /> {t('Have a discount code?')}
       </button>
     )
   }
@@ -710,7 +710,7 @@ function DiscountField({
           {busy ? t('Checking') : t('Apply')}
         </button>
       </div>
-      {error && <p className="mt-2 text-[13px] text-bad">{error}</p>}
+      {error && <p className="mt-2 text-13 text-bad">{error}</p>}
     </form>
   )
 }
@@ -718,8 +718,8 @@ function DiscountField({
 function Block({ title, sub, children }: { title: string; sub?: string; children: ReactNode }) {
   return (
     <section>
-      <h2 className="title text-[18px]">{title}</h2>
-      {sub && <p className="mt-1 text-[14px] text-muted">{sub}</p>}
+      <h2 className="title text-17">{title}</h2>
+      {sub && <p className="mt-1 text-14 text-muted">{sub}</p>}
       <div className="mt-4">{children}</div>
     </section>
   )
@@ -729,7 +729,7 @@ function Row({ label, value, quiet = false }: { label: string; value: string; qu
   return (
     <div className="flex items-baseline justify-between gap-4">
       <span className="text-ink-2">{label}</span>
-      <span className={`font-mono text-[13px] ${quiet ? 'text-muted' : 'text-ink'}`}>{value}</span>
+      <span className={`font-mono text-13 ${quiet ? 'text-muted' : 'text-ink'}`}>{value}</span>
     </div>
   )
 }
@@ -737,18 +737,18 @@ function Row({ label, value, quiet = false }: { label: string; value: string; qu
 function PayOption({ active, onClick, icon, title, sub }: { active: boolean; onClick: () => void; icon: ReactNode; title: string; sub: string }) {
   return (
     <label
-      className={`relative flex cursor-pointer flex-col gap-3 rounded-[20px] bg-card p-4 transition-shadow ${active ? 'shadow-[inset_0_0_0_1.5px_var(--color-ink)]' : 'shadow-[inset_0_0_0_1px_var(--color-line)] hover:shadow-[inset_0_0_0_1px_var(--color-line-strong)]'}`}
+      className={`relative flex cursor-pointer flex-col gap-3 rounded-20 bg-card p-4 transition-shadow ${active ? 'shadow-[inset_0_0_0_1.5px_var(--color-ink)]' : 'shadow-[inset_0_0_0_1px_var(--color-line)] hover:shadow-[inset_0_0_0_1px_var(--color-line-strong)]'}`}
     >
       <input type="radio" name="payment" className="sr-only" checked={active} onChange={onClick} />
       <span className="flex items-center justify-between">
         <span className="text-ink">{icon}</span>
         <span className={`flex h-5 w-5 items-center justify-center rounded-full transition-colors ${active ? 'bg-ink text-white' : 'shadow-[inset_0_0_0_1.5px_var(--color-line-strong)]'}`}>
-          {active && <Check size={12} strokeWidth={3} />}
+          {active && <Check size={12} strokeWidth={2.25} />}
         </span>
       </span>
       <span>
-        <span className="block text-[15px] font-medium">{title}</span>
-        <span className="mt-0.5 block text-[13px] leading-5 text-muted">{sub}</span>
+        <span className="block text-15 font-medium">{title}</span>
+        <span className="mt-0.5 block text-13 leading-5 text-muted">{sub}</span>
       </span>
     </label>
   )

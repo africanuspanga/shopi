@@ -89,8 +89,8 @@ function DomainPage() {
         {!ready && !domain && (
           <section className="card p-5 md:p-6">
             <Icon />
-            <h2 className="mt-4 text-[16px] font-semibold">{t('Own domains aren’t switched on yet')}</h2>
-            <p className="mt-1 text-[14px] leading-relaxed text-muted">{t('Your shop works as always at shopi.tz/{slug}. This page will let you connect your domain once they are.', { slug: shop.slug })}</p>
+            <h2 className="mt-4 text-15 font-semibold">{t('Own domains aren’t switched on yet')}</h2>
+            <p className="mt-1 text-14 leading-relaxed text-muted">{t('Your shop works as always at shopi.tz/{slug}. This page will let you connect your domain once they are.', { slug: shop.slug })}</p>
           </section>
         )}
 
@@ -104,7 +104,7 @@ function DomainPage() {
         {ready && !domain && tembo && (
           <>
             <Step n={1} title={t('Buy a domain')}>
-              <p className="text-[14px] leading-relaxed text-muted">{t('From a company that sells domains: a .co.tz from a Tanzanian registrar, or a .com. Shopi doesn’t sell domains.')}</p>
+              <p className="text-14 leading-relaxed text-muted">{t('From a company that sells domains: a .co.tz from a Tanzanian registrar, or a .com. Shopi doesn’t sell domains.')}</p>
             </Step>
             <Step n={2} title={t('Connect it')}>
               <form
@@ -129,8 +129,8 @@ function DomainPage() {
             <div className="flex items-start gap-4">
               <Icon />
               <div className="min-w-0 flex-1">
-                <p className="code truncate text-[16px]">{domain.hostname}</p>
-                <p className={`mt-1 flex items-center gap-2 text-[14px] ${domain.status === 'failed' ? 'text-bad' : 'text-ink-2'}`}>
+                <p className="code truncate text-15">{domain.hostname}</p>
+                <p className={`mt-1 flex items-center gap-2 text-14 ${domain.status === 'failed' ? 'text-bad' : 'text-ink-2'}`}>
                   <span className={`h-2 w-2 shrink-0 rounded-full ${domain.status === 'active' ? 'bg-ok' : domain.status === 'failed' ? 'bg-bad' : 'bg-wait'}`} />
                   {domain.status === 'active' ? t('Live') : domain.status === 'failed' ? t('Not connected') : t('Waiting for your DNS record')}
                 </p>
@@ -139,20 +139,20 @@ function DomainPage() {
 
             {domain.status === 'active' && (
               <div className="mt-5 space-y-3">
-                <p className="text-[14px] leading-relaxed text-muted">{t('Your shop opens at this address. Put it in your bio; shopi.tz/{slug} keeps working too.', { slug: shop.slug })}</p>
+                <p className="text-14 leading-relaxed text-muted">{t('Your shop opens at this address. Put it in your bio; shopi.tz/{slug} keeps working too.', { slug: shop.slug })}</p>
                 <a href={`https://${domain.hostname}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
-                  {t('Open your shop')} <ArrowUpRight size={15} strokeWidth={1.75} />
+                  {t('Open your shop')} <ArrowUpRight size={16} strokeWidth={1.75} />
                 </a>
               </div>
             )}
 
             {domain.status !== 'active' && <DnsSteps host={domain.hostname} target={target} />}
-            {domain.detail && domain.status !== 'active' && <p className="code mt-4 rounded-[12px] bg-page px-3 py-2 text-[12px] leading-5 text-muted">{domain.detail}</p>}
+            {domain.detail && domain.status !== 'active' && <p className="code mt-4 rounded-12 bg-page px-3 py-2 text-12 leading-5 text-muted">{domain.detail}</p>}
 
             <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-line pt-5">
               {domain.status !== 'active' && (
                 <button type="button" className="btn btn-sm" disabled={!!busy} onClick={() => act('check')}>
-                  {busy === 'check' ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} strokeWidth={1.75} />}
+                  {busy === 'check' ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} strokeWidth={1.75} />}
                   {domain.status === 'failed' ? t('Try again') : t('Check now')}
                 </button>
               )}
@@ -171,7 +171,7 @@ function DomainPage() {
 function Icon() {
   return (
     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-white">
-      <Globe size={19} strokeWidth={1.75} />
+      <Globe size={20} strokeWidth={1.75} />
     </span>
   )
 }
@@ -179,8 +179,8 @@ function Icon() {
 function Step({ n, title, children }: { n: number; title: string; children: ReactNode }) {
   return (
     <section className="card p-5 md:p-6">
-      <h2 className="flex items-center gap-3 text-[16px] font-semibold">
-        <span className="tnum flex h-7 w-7 items-center justify-center rounded-full bg-ink text-[13px] text-white">{n}</span>
+      <h2 className="flex items-center gap-3 text-15 font-semibold">
+        <span className="tnum flex h-7 w-7 items-center justify-center rounded-full bg-ink text-13 text-white">{n}</span>
         {title}
       </h2>
       <div className="mt-4">{children}</div>
@@ -194,13 +194,13 @@ function DnsSteps({ host, target }: { host: string; target: string }) {
   const [apex, name] = splitDomain(host)
   return (
     <div className="mt-5 space-y-4">
-      <p className="text-[14px] leading-relaxed text-ink-2">{t('Where you bought the domain, open its DNS settings and add this record:')}</p>
-      <dl className="divide-y divide-line rounded-[16px] bg-page">
+      <p className="text-14 leading-relaxed text-ink-2">{t('Where you bought the domain, open its DNS settings and add this record:')}</p>
+      <dl className="divide-y divide-line rounded-16 bg-page">
         <Row label={t('Type')} value="CNAME" />
         <Row label={t('Name')} value={name} copy />
         <Row label={t('Points to')} value={target} copy />
       </dl>
-      <p className="text-[13px] leading-5 text-muted">
+      <p className="text-13 leading-5 text-muted">
         {t('It usually works within minutes and can take up to a day. To make {apex} open your shop too, turn on forwarding from {apex} to https://{host} in the same place.', { apex, host })}
       </p>
     </div>
@@ -212,8 +212,8 @@ function Row({ label, value, copy = false }: { label: string; value: string; cop
   const [done, setDone] = useState(false)
   return (
     <div className="flex items-center gap-3 px-4 py-3">
-      <dt className="w-24 shrink-0 text-[13px] text-muted">{label}</dt>
-      <dd className="code min-w-0 flex-1 text-[14px] break-all">{value}</dd>
+      <dt className="w-24 shrink-0 text-13 text-muted">{label}</dt>
+      <dd className="code min-w-0 flex-1 text-14 break-all">{value}</dd>
       {copy && (
         <button
           type="button"
@@ -226,7 +226,7 @@ function Row({ label, value, copy = false }: { label: string; value: string; cop
             })
           }}
         >
-          {done ? <Check size={15} strokeWidth={2} /> : <Copy size={15} strokeWidth={1.75} />}
+          {done ? <Check size={16} strokeWidth={2.25} /> : <Copy size={16} strokeWidth={1.75} />}
         </button>
       )}
     </div>

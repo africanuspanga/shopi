@@ -71,15 +71,15 @@ export function ShopQr({ shop, className = '', plain = false }: { shop: QrShop; 
   const t = useT()
   const [open, setOpen] = useState(false)
   return (
-    <div className={`flex items-center gap-4 ${plain ? '' : 'rounded-[16px] bg-page p-4'} ${className}`}>
-      <button type="button" className="shrink-0 rounded-[10px] transition-transform active:scale-[0.97]" onClick={() => setOpen(true)} aria-label={t('Save or share the QR code')}>
-        <QrCode text={qrUrl(shop.slug)} label={t('QR code for {shop}', { shop: shop.name })} brand className="size-[96px] rounded-[10px] shadow-[inset_0_0_0_1px_rgb(10_10_10/0.08)]" />
+    <div className={`flex items-center gap-4 ${plain ? '' : 'rounded-16 bg-page p-4'} ${className}`}>
+      <button type="button" className="shrink-0 rounded-12 transition-transform active:scale-[0.97]" onClick={() => setOpen(true)} aria-label={t('Save or share the QR code')}>
+        <QrCode text={qrUrl(shop.slug)} label={t('QR code for {shop}', { shop: shop.name })} brand className="size-[96px] rounded-12 shadow-[inset_0_0_0_1px_rgb(10_10_10/0.08)]" />
       </button>
       <div className="min-w-0">
-        <p className="text-[14px] font-medium">{t('Open this shop on another phone')}</p>
-        <p className="mt-0.5 text-[13px] leading-5 text-muted">{t('Point the phone’s camera at the code.')}</p>
+        <p className="text-14 font-medium">{t('Open this shop on another phone')}</p>
+        <p className="mt-0.5 text-13 leading-5 text-muted">{t('Point the phone’s camera at the code.')}</p>
         <button type="button" className="btn btn-sm btn-ghost mt-2.5" onClick={() => setOpen(true)}>
-          <Download size={15} strokeWidth={1.6} /> {t('Save or share')}
+          <Download size={16} strokeWidth={1.75} /> {t('Save or share')}
         </button>
       </div>
       {/* On the page's body: inside the Info sheet, its animated frame would otherwise hold this sheet inside it. */}

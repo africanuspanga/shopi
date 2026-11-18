@@ -15,11 +15,11 @@ export function PlanPrice({ plan, dark = false, className = '' }: { plan: Plan; 
   return (
     <div className={className}>
       <p className="flex items-baseline gap-2 whitespace-nowrap">
-        <span className="text-[18px] font-medium md:text-[22px]">TSh</span>
-        <span className="display text-[48px] md:text-[64px]">{money(plan.price)}</span>
-        <span className={`text-[15px] ${quiet}`}>{plan.price ? t('a year') : t('no time limit')}</span>
+        <span className="text-17 font-medium md:text-20">TSh</span>
+        <span className="display text-48 md:text-64">{money(plan.price)}</span>
+        <span className={`text-15 ${quiet}`}>{plan.price ? t('a year') : t('no time limit')}</span>
       </p>
-      <p className={`mt-1 text-[14px] ${quiet}`}>
+      <p className={`mt-1 text-14 ${quiet}`}>
         {plan.price ? t('About TSh {n} a month', { n: money(TEMBO_MONTH) }) : t('Open your shop and sell, for as long as you like')}
       </p>
     </div>
@@ -30,14 +30,14 @@ export function PlanPrice({ plan, dark = false, className = '' }: { plan: Plan; 
 export function PlanItems({ plan, dark = false, className = '' }: { plan: Plan; dark?: boolean; className?: string }) {
   const t = useT()
   return (
-    <ul className={`space-y-3 text-[15px] ${className}`}>
+    <ul className={`space-y-3 text-15 ${className}`}>
       {plan.items.map((x) => (
         <li key={x.text} className="flex items-start gap-3">
-          <Check size={17} strokeWidth={2} className="mt-[3px] shrink-0" />
+          <Check size={18} strokeWidth={2.25} className="mt-[3px] shrink-0" />
           <span>
             {t(x.text)}
             {x.soon && (
-              <span className={`ml-2 inline-flex h-5 items-center rounded-full px-2 align-[2px] text-[12px] font-medium ${dark ? 'bg-white/15 text-white' : 'bg-well text-ink-2'}`}>
+              <span className={`ml-2 inline-flex h-5 items-center rounded-full px-2 align-[2px] text-12 font-medium ${dark ? 'bg-white/15 text-white' : 'bg-well text-ink-2'}`}>
                 {t('Soon')}
               </span>
             )}

@@ -47,12 +47,12 @@ export function ShopSearch({ value, onChange, shopName, className = '' }: { valu
   const t = useT()
   return (
     <label className={`input flex h-11 items-center gap-2 px-4 md:h-10 ${className}`}>
-      <Search size={16} strokeWidth={1.6} className="shrink-0 text-muted" />
+      <Search size={16} strokeWidth={1.75} className="shrink-0 text-muted" />
       <input
         type="text"
         inputMode="search"
         enterKeyHint="search"
-        className="min-w-0 flex-1 bg-transparent text-[15px] outline-none md:text-[14px]"
+        className="min-w-0 flex-1 bg-transparent text-15 outline-none md:text-14"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => e.key === 'Escape' && onChange('')}
@@ -61,7 +61,7 @@ export function ShopSearch({ value, onChange, shopName, className = '' }: { valu
       />
       {value && (
         <button type="button" className="-mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-well hover:text-ink" aria-label={t('Clear search')} onClick={() => onChange('')}>
-          <X size={15} strokeWidth={1.75} />
+          <X size={16} strokeWidth={1.75} />
         </button>
       )}
     </label>
@@ -80,9 +80,9 @@ export function Price({ p, size = 'sm' }: { p: { price: number; compare_price: n
   const t = useT()
   const was = !p.from && p.compare_price && p.compare_price > p.price
   return (
-    <p className={`tnum flex flex-wrap items-baseline gap-x-2 ${size === 'lg' ? 'text-[22px] font-medium tracking-[-0.01em]' : 'text-[14px] font-medium'}`}>
+    <p className={`tnum flex flex-wrap items-baseline gap-x-2 ${size === 'lg' ? 'text-20 font-medium tracking-[-0.01em]' : 'text-14 font-medium'}`}>
       <span>{p.from ? t('From {price}', { price: tzs(p.price) }) : tzs(p.price)}</span>
-      {was && <span className={`font-normal text-muted line-through ${size === 'lg' ? 'text-[16px]' : 'text-[13px]'}`}>{tzs(p.compare_price!)}</span>}
+      {was && <span className={`font-normal text-muted line-through ${size === 'lg' ? 'text-15' : 'text-13'}`}>{tzs(p.compare_price!)}</span>}
     </p>
   )
 }
@@ -111,7 +111,7 @@ export function OptionChip({
       aria-pressed={selected}
       data-soldout={soldOut || undefined}
       onClick={onClick}
-      className={`chip tnum h-11 min-w-14 justify-center text-[14px] ${option.image ? 'pr-4 pl-1.5' : 'px-4'} ${className}`}
+      className={`chip tnum h-11 min-w-14 justify-center text-14 ${option.image ? 'pr-4 pl-1.5' : 'px-4'} ${className}`}
     >
       {option.image && <Img size="thumb" k={option.image} alt="" className="h-8 w-8 rounded-full" />}
       {option.label}
@@ -121,7 +121,7 @@ export function OptionChip({
 
 export function Tag({ children, hot = false }: { children: ReactNode; hot?: boolean }) {
   return (
-    <span className={`tnum inline-flex h-6 items-center rounded-full px-2.5 text-[12px] font-medium ${hot ? 'bg-moto text-on-moto' : 'bg-card text-ink'}`}>
+    <span className={`tnum inline-flex h-6 items-center rounded-full px-2.5 text-12 font-medium ${hot ? 'bg-moto text-on-moto' : 'bg-card text-ink'}`}>
       {children}
     </span>
   )
@@ -158,8 +158,8 @@ export function ProductCard({
   const [peek, setPeek] = useState(false)
   return (
     <div className="group relative" onPointerEnter={(e) => e.pointerType === 'mouse' && setPeek(true)}>
-      <Link to="/$shop/$product" params={{ shop: shopSlug, product: p.slug ?? p.id }} onClick={onOpen} className="block rounded-[16px] focus-visible:outline-offset-4">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-[16px] bg-well">
+      <Link to="/$shop/$product" params={{ shop: shopSlug, product: p.slug ?? p.id }} onClick={onOpen} className="block rounded-16 focus-visible:outline-offset-4">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-16 bg-well">
           <Img
             k={p.images[0]}
             alt={p.name}
@@ -173,7 +173,7 @@ export function ProductCard({
           </div>
         </div>
         <div className="mt-3 px-0.5">
-          <p className="line-clamp-1 text-[14px] leading-5">{p.name}</p>
+          <p className="line-clamp-1 text-14 leading-5">{p.name}</p>
           <div className="mt-0.5">
             <Price p={shownPrice(p)} />
           </div>
@@ -208,13 +208,13 @@ export function QuickAddSheet({ shopSlug, p, onClose, onAdd }: { shopSlug: strin
   return (
     <Sheet open onClose={onClose} title={t(kind.choose)}>
       <div className="flex gap-4">
-        <Img k={imageOf(p, chosen?.label)} size="thumb" alt={p.name} className="h-[100px] w-20 shrink-0 rounded-[12px]" />
+        <Img k={imageOf(p, chosen?.label)} size="thumb" alt={p.name} className="h-[100px] w-20 shrink-0 rounded-12" />
         <div className="min-w-0 py-1">
-          <p className="truncate text-[16px] font-medium">{p.name}</p>
+          <p className="truncate text-15 font-medium">{p.name}</p>
           <div className="mt-1">
             <Price p={shownPrice(p, chosen?.label)} />
           </div>
-          <Link to="/$shop/$product" params={{ shop: shopSlug, product: p.slug ?? p.id }} className="mt-2 inline-block text-[13px] text-muted underline decoration-line-strong underline-offset-4 hover:text-ink">
+          <Link to="/$shop/$product" params={{ shop: shopSlug, product: p.slug ?? p.id }} className="mt-2 inline-block text-13 text-muted underline decoration-line-strong underline-offset-4 hover:text-ink">
             {t('See photos and details')}
           </Link>
         </div>
@@ -222,8 +222,8 @@ export function QuickAddSheet({ shopSlug, p, onClose, onAdd }: { shopSlug: strin
       {p.sizes && (
         <div className="mt-6">
           <div className="mb-3 flex items-baseline justify-between">
-            <p className="text-[14px] font-medium">{chosen ? optionText(t, p.option_name, chosen.label) : t(kind.choose)}</p>
-            {low && <p className="text-[13px] text-moto-ink">{t('Only {n} left', { n: chosen!.stock! })}</p>}
+            <p className="text-14 font-medium">{chosen ? optionText(t, p.option_name, chosen.label) : t(kind.choose)}</p>
+            {low && <p className="text-13 text-moto-ink">{t('Only {n} left', { n: chosen!.stock! })}</p>}
           </div>
           <div className="flex flex-wrap gap-2">
             {p.sizes.map((s) => (
@@ -296,7 +296,7 @@ export function TopPicks({ shop, products, cart }: { shop: Pick<PublicShop, 'id'
   const quick = useQuickBuy(shop, cart)
   return (
     <section aria-labelledby="top-picks" className="pb-8 md:pb-14">
-      <h2 id="top-picks" className="title text-[20px] md:text-[26px]">
+      <h2 id="top-picks" className="title text-20 md:text-24">
         {t('Top picks')}
       </h2>
       <div className="hide-scroll -mx-4 mt-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 md:mx-0 md:mt-6 md:grid md:grid-cols-4 md:gap-6 md:overflow-visible md:px-0">
@@ -326,10 +326,10 @@ export function BagButton({ shopSlug, count }: { shopSlug: string; count: number
       to="/$shop/checkout"
       params={{ shop: shopSlug }}
       aria-label={t(count === 1 ? 'Bag, {n} item' : 'Bag, {n} items', { n: count })}
-      className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-card pr-1 pl-4 text-[14px] font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)] transition-colors hover:bg-well"
+      className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-card pr-1 pl-4 text-14 font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)] transition-colors hover:bg-well"
     >
       {t('Bag')}
-      <span className={`tnum flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] transition-colors ${count ? 'bg-moto text-on-moto' : 'bg-ink text-white'}`}>
+      <span className={`tnum flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-13 transition-colors ${count ? 'bg-moto text-on-moto' : 'bg-ink text-white'}`}>
         {count}
       </span>
     </Link>
@@ -362,24 +362,24 @@ function useShopFacts(shop: PublicShop, areas: { name: string; fee: number }[], 
   const facts: Fact[] = []
   if (areas.length)
     facts.push({
-      icon: <Truck size={18} strokeWidth={1.5} />,
+      icon: <Truck size={18} strokeWidth={1.75} />,
       text: placesText(t, areas.map((a) => a.name), short),
       sub: t('Fee agreed on WhatsApp'),
     })
   // Buyers ask "mikoani mnatuma?" before anything else.
   if (shop.ships_regions)
-    facts.push({ icon: <Bus size={18} strokeWidth={1.5} />, text: t('Sends to other regions'), sub: shop.regions_note || t('Ask the seller how on WhatsApp') })
+    facts.push({ icon: <Bus size={18} strokeWidth={1.75} />, text: t('Sends to other regions'), sub: shop.regions_note || t('Ask the seller how on WhatsApp') })
   if (shop.lipa_number)
     facts.push({
-      icon: <Smartphone size={18} strokeWidth={1.5} />,
+      icon: <Smartphone size={18} strokeWidth={1.75} />,
       text: t('Mobile money'),
       sub: shop.lipa_network ? t('{network} Lipa Namba', { network: shop.lipa_network }) : t('Lipa Namba'),
     })
-  if (shop.cod_enabled) facts.push({ icon: <Banknote size={18} strokeWidth={1.5} />, text: t('Cash on delivery'), sub: t('Pay when it arrives') })
+  if (shop.cod_enabled) facts.push({ icon: <Banknote size={18} strokeWidth={1.75} />, text: t('Cash on delivery'), sub: t('Pay when it arrives') })
   if (shop.location || shop.maps_url)
-    facts.push({ icon: <MapPin size={18} strokeWidth={1.5} />, text: shop.location || t('Directions'), href: shop.maps_url || undefined })
-  if (shop.hours) facts.push({ icon: <Clock size={18} strokeWidth={1.5} />, text: shop.hours })
-  if (shop.tin) facts.push({ icon: <FileText size={18} strokeWidth={1.5} />, text: `TIN ${formatTin(shop.tin)}`, sub: t('Registered with TRA') })
+    facts.push({ icon: <MapPin size={18} strokeWidth={1.75} />, text: shop.location || t('Directions'), href: shop.maps_url || undefined })
+  if (shop.hours) facts.push({ icon: <Clock size={18} strokeWidth={1.75} />, text: shop.hours })
+  if (shop.tin) facts.push({ icon: <FileText size={18} strokeWidth={1.75} />, text: `TIN ${formatTin(shop.tin)}`, sub: t('Registered with TRA') })
   return facts
 }
 
@@ -393,9 +393,9 @@ export function ShopFacts({ shop, areas, short = false }: { shop: PublicShop; ar
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-0.5 flex w-fit items-center gap-1 text-[13px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink"
+      className="mt-0.5 flex w-fit items-center gap-1 text-13 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink"
     >
-      {t('Directions')} <ArrowUpRight size={13} strokeWidth={1.75} />
+      {t('Directions')} <ArrowUpRight size={14} strokeWidth={1.75} />
     </a>
   )
   return (
@@ -403,13 +403,13 @@ export function ShopFacts({ shop, areas, short = false }: { shop: PublicShop; ar
       {facts.map((f) => (
         <li key={f.text} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
           <span className="mt-px shrink-0 text-ink-2">{f.icon}</span>
-          <span className="min-w-0 text-[14px] leading-5">
+          <span className="min-w-0 text-14 leading-5">
             {f.href && !shop.location ? (
               directions(f.href)
             ) : (
               <>
                 {f.text}
-                {f.sub && <span className="block text-[13px] text-muted">{f.sub}</span>}
+                {f.sub && <span className="block text-13 text-muted">{f.sub}</span>}
                 {f.href && directions(f.href)}
               </>
             )}
@@ -425,7 +425,7 @@ export function FactPills({ shop, areas }: { shop: PublicShop; areas: { name: st
   const t = useT()
   const facts = useShopFacts(shop, areas, true).filter((f) => (f.href || f.text !== shop.location) && !f.text.startsWith('TIN '))
   if (!facts.length) return null
-  const pill = 'flex h-9 shrink-0 items-center gap-2 rounded-full bg-page px-3.5 text-[13px] whitespace-nowrap text-ink-2 [&_svg]:size-4'
+  const pill = 'flex h-9 shrink-0 items-center gap-2 rounded-full bg-page px-3.5 text-13 whitespace-nowrap text-ink-2 [&_svg]:size-4'
   return (
     <div className="hide-scroll -mx-4 flex gap-2 overflow-x-auto px-4">
       {facts.map((f) =>
@@ -482,7 +482,7 @@ export function SocialLinks({ shop, whatsapp = true, className = '' }: { shop: P
 export function DemoBanner({ shopSlug }: { shopSlug: string }) {
   const t = useT()
   return (
-    <div className="bg-ink px-4 py-2.5 text-center text-[13px] leading-5 text-white">
+    <div className="bg-ink px-4 py-2.5 text-center text-13 leading-5 text-white">
       {t('Demo shop with sample products. Orders are switched off.')}{' '}
       <a href={refLink(shopSlug, 'banner')} className="font-medium whitespace-nowrap underline decoration-white/40 underline-offset-4 hover:decoration-white">
         {t('Open your own shop')}
@@ -502,7 +502,7 @@ export function MadeWithShopi({ shopSlug, invite = false }: { shopSlug: string; 
   return (
     <a
       href={refLink(shopSlug, invite ? 'order' : 'footer')}
-      className="group mx-auto mt-12 flex w-fit flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[13px] text-muted transition-colors hover:text-ink"
+      className="group mx-auto mt-12 flex w-fit flex-wrap items-center justify-center gap-x-2 gap-y-1 text-13 text-muted transition-colors hover:text-ink"
     >
       <span className="flex items-center gap-2">
         {t('Shop made with')} <Wordmark className="h-[14px] w-auto" />
@@ -528,9 +528,9 @@ export function ShopFooter({ shop }: { shop: PublicShop }) {
     <footer className="mx-auto mt-20 max-w-[1280px] px-4 pb-10 md:px-10">
       <div className="flex flex-col gap-6 border-t border-line pt-8 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-11 w-11 text-[15px]" />
+          <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-11 w-11 text-15" />
           <div className="min-w-0">
-            <p className="text-[15px] font-semibold">{shop.name}</p>
+            <p className="text-15 font-semibold">{shop.name}</p>
             <p className="meta mt-0.5">shopi.tz/{shop.slug}</p>
           </div>
         </div>
@@ -539,13 +539,13 @@ export function ShopFooter({ shop }: { shop: PublicShop }) {
       {shop.badge && (
         <a
           href={refLink(shop.slug, 'footer')}
-          className="group mt-8 flex items-center justify-between gap-4 rounded-[20px] bg-page px-5 py-4 transition-colors hover:bg-well"
+          className="group mt-8 flex items-center justify-between gap-4 rounded-20 bg-page px-5 py-4 transition-colors hover:bg-well"
         >
-          <span className="flex items-center gap-2 text-[13px] text-muted">
+          <span className="flex items-center gap-2 text-13 text-muted">
             {t('Shop made with')} <Wordmark className="h-[14px] w-auto text-ink" />
           </span>
-          <span className="flex items-center gap-1 text-[13px] font-medium">
-            {t('Open your own shop')} <ArrowUpRight size={15} strokeWidth={1.75} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          <span className="flex items-center gap-1 text-13 font-medium">
+            {t('Open your own shop')} <ArrowUpRight size={16} strokeWidth={1.75} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </span>
         </a>
       )}
@@ -583,8 +583,8 @@ export function ShopTopBar({
           </button>
         )}
         <Link to="/$shop" params={{ shop: shop.slug }} className="flex min-w-0 flex-1 items-center gap-3">
-          <ShopAvatar name={shop.name} logo={shop.logo_key} className={`text-[13px] md:h-9 md:w-9 ${back ? 'h-9 w-9' : 'h-11 w-11'}`} />
-          <span className={`title truncate md:text-[15px] md:font-semibold ${back ? 'text-[17px]' : 'text-[20px]'}`}>{shop.name}</span>
+          <ShopAvatar name={shop.name} logo={shop.logo_key} className={`text-13 md:h-9 md:w-9 ${back ? 'h-9 w-9' : 'h-11 w-11'}`} />
+          <span className={`title truncate md:text-15 md:font-semibold ${back ? 'text-17' : 'text-20'}`}>{shop.name}</span>
         </Link>
         {right}
         {bagCount !== undefined && (
@@ -592,10 +592,10 @@ export function ShopTopBar({
             to="/$shop/checkout"
             params={{ shop: shop.slug }}
             aria-label={t(bagCount === 1 ? 'Bag, {n} item' : 'Bag, {n} items', { n: bagCount })}
-            className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-card pr-1 pl-3.5 text-[14px] font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)] md:hidden"
+            className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-card pr-1 pl-3.5 text-14 font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)] md:hidden"
           >
             {t('Bag')}
-            <span className={`tnum flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] transition-colors ${bagCount ? 'bg-moto text-on-moto' : 'bg-ink text-white'}`}>{bagCount}</span>
+            <span className={`tnum flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-13 transition-colors ${bagCount ? 'bg-moto text-on-moto' : 'bg-ink text-white'}`}>{bagCount}</span>
           </Link>
         )}
       </div>

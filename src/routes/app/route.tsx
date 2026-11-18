@@ -58,8 +58,8 @@ function OrdersBadge({ dot = false }: { dot?: boolean }) {
   const { toCheck, toSend } = Route.useLoaderData()
   if (dot) return toCheck > 0 ? <span className="absolute -top-1 -right-1.5 h-2.5 w-2.5 rounded-full bg-moto ring-2 ring-ink" /> : null
   if (toCheck > 0)
-    return <span className="tnum ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-moto px-1.5 text-[12px] font-medium text-ink">{toCheck}</span>
-  if (toSend > 0) return <span className="tnum ml-auto text-[13px] text-muted">{toSend}</span>
+    return <span className="tnum ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-moto px-1.5 text-12 font-medium text-ink">{toCheck}</span>
+  if (toSend > 0) return <span className="tnum ml-auto text-13 text-muted">{toSend}</span>
   return null
 }
 
@@ -87,14 +87,14 @@ function Sidebar() {
         href={`/${shop.slug}`}
         target="_blank"
         rel="noreferrer"
-        className="group mt-6 flex items-center gap-3 rounded-[14px] bg-page p-2.5 transition-colors hover:bg-well"
+        className="group mt-6 flex items-center gap-3 rounded-14 bg-page p-2.5 transition-colors hover:bg-well"
       >
-        <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-9 w-9 text-[13px]" />
+        <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-9 w-9 text-13" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[14px] font-semibold">{shop.name}</span>
+          <span className="block truncate text-14 font-semibold">{shop.name}</span>
           <span className="meta block truncate">shopi.tz/{shop.slug}</span>
         </span>
-        <ArrowUpRight size={16} strokeWidth={1.6} className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        <ArrowUpRight size={16} strokeWidth={1.75} className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
       </a>
 
       <nav className="mt-6 space-y-0.5" aria-label={t('Main')}>
@@ -105,7 +105,7 @@ function Sidebar() {
               key={tab.to}
               to={tab.to}
               aria-current={on ? 'page' : undefined}
-              className={`flex h-10 items-center gap-3 rounded-[12px] px-3 text-[14px] font-medium transition-colors ${on ? 'bg-well text-ink' : 'text-ink-2 hover:bg-page hover:text-ink'}`}
+              className={`flex h-10 items-center gap-3 rounded-12 px-3 text-14 font-medium transition-colors ${on ? 'bg-well text-ink' : 'text-ink-2 hover:bg-page hover:text-ink'}`}
             >
               <tab.icon size={18} strokeWidth={on ? 2 : 1.6} className="shrink-0" />
               {tab.label}
@@ -116,16 +116,16 @@ function Sidebar() {
       </nav>
 
       <Link to="/app/products/new" className="btn btn-sm mt-6 h-10 w-full">
-        <Plus size={16} strokeWidth={2} /> {t('Add product')}
+        <Plus size={16} strokeWidth={2.25} /> {t('Add product')}
       </Link>
       <Link to="/app/bags/new" className="btn btn-ghost btn-sm mt-2 h-10 w-full">
-        <ShoppingBag size={15} strokeWidth={1.75} /> {t('Send a bag link')}
+        <ShoppingBag size={16} strokeWidth={1.75} /> {t('Send a bag link')}
       </Link>
       <Link to="/app/orders/new" className="btn btn-ghost btn-sm mt-2 h-10 w-full">
-        <PenLine size={15} strokeWidth={1.75} /> {t('Record a sale')}
+        <PenLine size={16} strokeWidth={1.75} /> {t('Record a sale')}
       </Link>
 
-      <div className="mt-auto rounded-[14px] px-3 py-3 text-[13px] leading-5 text-muted">
+      <div className="mt-auto rounded-14 px-3 py-3 text-13 leading-5 text-muted">
         {t('Share your link in your Instagram bio and WhatsApp status. That is where buyers come from.')}
       </div>
     </aside>
@@ -158,13 +158,13 @@ function BottomNav() {
             { to: '/app/orders/new', icon: PenLine, title: t('Record a sale'), sub: t('A sale in person, on a call or in a chat') },
             { to: '/app/products/import', icon: FileSpreadsheet, title: t('Import products'), sub: t('Many at once, from Excel or Google Sheets') },
           ].map((x) => (
-            <Link key={x.to} to={x.to} onClick={() => setAdding(false)} className="flex items-center gap-4 rounded-[18px] bg-page px-4 py-4 transition-colors hover:bg-well">
+            <Link key={x.to} to={x.to} onClick={() => setAdding(false)} className="flex items-center gap-4 rounded-16 bg-page px-4 py-4 transition-colors hover:bg-well">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-white">
-                <x.icon size={19} strokeWidth={1.75} />
+                <x.icon size={20} strokeWidth={1.75} />
               </span>
               <span className="min-w-0">
-                <span className="block text-[15px] font-medium">{x.title}</span>
-                <span className="block text-[13px] text-muted">{x.sub}</span>
+                <span className="block text-15 font-medium">{x.title}</span>
+                <span className="block text-13 text-muted">{x.sub}</span>
               </span>
             </Link>
           ))}

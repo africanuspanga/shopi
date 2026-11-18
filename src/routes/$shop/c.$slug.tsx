@@ -89,7 +89,7 @@ function CollectionPage() {
         right={
           <>
             <button type="button" className="icon-btn hidden sm:inline-flex" aria-label={t('Share collection')} onClick={share}>
-              <Share2 size={17} strokeWidth={1.6} />
+              <Share2 size={18} strokeWidth={1.75} />
             </button>
             <span className="hidden md:block">
               <BagButton shopSlug={shop.slug} count={cart.count} />
@@ -100,14 +100,14 @@ function CollectionPage() {
 
       <main className="mx-auto max-w-[1280px] px-4 md:px-10">
         <section className={`${rise} pt-8 pb-7 md:pt-16 md:pb-12`}>
-          <Link to="/$shop" params={{ shop: shop.slug }} className="text-[14px] text-muted transition-colors hover:text-ink md:text-[15px]">
+          <Link to="/$shop" params={{ shop: shop.slug }} className="text-14 text-muted transition-colors hover:text-ink md:text-15">
             {shop.name}
           </Link>
-          <h1 className="display mt-2 text-[36px] break-words md:mt-3 md:text-[64px] lg:text-[76px]">{c.name}</h1>
-          {c.description && <p className="mt-3 max-w-[58ch] text-[15px] leading-relaxed text-ink-2 md:mt-5 md:text-[17px]">{c.description}</p>}
+          <h1 className="display mt-2 text-32 break-words md:mt-3 md:text-64 lg:text-72">{c.name}</h1>
+          {c.description && <p className="mt-3 max-w-[58ch] text-15 leading-relaxed text-ink-2 md:mt-5 md:text-17">{c.description}</p>}
           <div className="mt-5 flex items-center gap-3 md:mt-8">
             <button type="button" className="btn btn-ghost btn-sm h-10 px-4" onClick={share}>
-              <Share2 size={15} strokeWidth={1.6} /> {t('Share')}
+              <Share2 size={16} strokeWidth={1.75} /> {t('Share')}
             </button>
             <p className="meta">{t(items.length === 1 ? '{n} product' : '{n} products', { n: items.length })}</p>
           </div>
@@ -129,7 +129,7 @@ function CollectionPage() {
         ) : (
           <div className="mt-6">
             <Empty
-              icon={<Layers size={20} strokeWidth={1.5} />}
+              icon={<Layers size={20} strokeWidth={1.75} />}
               title={t('Nothing in this collection right now')}
               body={t('The seller is restocking it. Everything else is in the shop.')}
               action={

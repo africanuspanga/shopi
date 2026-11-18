@@ -44,19 +44,19 @@ function Collections() {
         sub={t('Groups of products, each with its own link')}
         right={
           <Link to="/app/collections/new" className="btn btn-sm">
-            <Plus size={15} strokeWidth={2} /> {t('New collection')}
+            <Plus size={16} strokeWidth={2.25} /> {t('New collection')}
           </Link>
         }
       />
 
       {list.length === 0 ? (
         <Empty
-          icon={<Layers size={20} strokeWidth={1.5} />}
+          icon={<Layers size={20} strokeWidth={1.75} />}
           title={t('No collections yet')}
           body={t('Group products for a season or a price, like Eid or Under 30k. Each collection gets its own link to share.')}
           action={
             <Link to="/app/collections/new" className="btn btn-sm">
-              <Plus size={15} strokeWidth={2} /> {t('New collection')}
+              <Plus size={16} strokeWidth={2.25} /> {t('New collection')}
             </Link>
           }
         />
@@ -70,10 +70,10 @@ function Collections() {
               <div className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <Link to="/app/collections/$id" params={{ id: c.id }} className="block truncate text-[16px] font-semibold hover:underline hover:decoration-line-strong hover:underline-offset-4">
+                    <Link to="/app/collections/$id" params={{ id: c.id }} className="block truncate text-15 font-semibold hover:underline hover:decoration-line-strong hover:underline-offset-4">
                       {c.name}
                     </Link>
-                    <p className="text-[13px] text-muted">{t(c.productIds.length === 1 ? '{n} product' : '{n} products', { n: c.productIds.length })}</p>
+                    <p className="text-13 text-muted">{t(c.productIds.length === 1 ? '{n} product' : '{n} products', { n: c.productIds.length })}</p>
                   </div>
                   {list.length > 1 && (
                     <span className="-mt-1 -mr-1 flex shrink-0">
@@ -86,13 +86,13 @@ function Collections() {
                     </span>
                   )}
                 </div>
-                <p className="code mt-1 truncate text-[12px] text-muted">{prettyUrl(urlOf(c))}</p>
+                <p className="code mt-1 truncate text-12 text-muted">{prettyUrl(urlOf(c))}</p>
                 <div className="mt-auto flex gap-2 pt-3">
                   <button type="button" className="btn btn-quiet btn-sm flex-1" onClick={() => setSharing(c)} disabled={!c.productIds.length}>
-                    <Share2 size={15} strokeWidth={1.6} /> {t('Share')}
+                    <Share2 size={16} strokeWidth={1.75} /> {t('Share')}
                   </button>
                   <Link to="/app/collections/$id" params={{ id: c.id }} className="btn btn-ghost btn-sm flex-1">
-                    <PenLine size={15} strokeWidth={1.6} /> {t('Edit')}
+                    <PenLine size={16} strokeWidth={1.75} /> {t('Edit')}
                   </Link>
                 </div>
               </div>
@@ -100,7 +100,7 @@ function Collections() {
           ))}
         </div>
       )}
-      {list.length > 1 && <p className="mt-4 text-[13px] text-muted">{t('Your shop shows collections in this order.')}</p>}
+      {list.length > 1 && <p className="mt-4 text-13 text-muted">{t('Your shop shows collections in this order.')}</p>}
 
       <Sheet open={!!sharing} onClose={() => setSharing(null)} title={t('Share this collection')}>
         {sharing && (
@@ -108,12 +108,12 @@ function Collections() {
             <div className="flex items-center gap-4">
               <CollectionCover images={sharing.images} className="h-20 w-20" />
               <div className="min-w-0">
-                <p className="truncate text-[16px] font-semibold">{sharing.name}</p>
-                <p className="text-[13px] text-muted">{t(sharing.productIds.length === 1 ? '{n} product' : '{n} products', { n: sharing.productIds.length })}</p>
-                <p className="code mt-1 truncate text-[12px] text-muted">{prettyUrl(urlOf(sharing))}</p>
+                <p className="truncate text-15 font-semibold">{sharing.name}</p>
+                <p className="text-13 text-muted">{t(sharing.productIds.length === 1 ? '{n} product' : '{n} products', { n: sharing.productIds.length })}</p>
+                <p className="code mt-1 truncate text-12 text-muted">{prettyUrl(urlOf(sharing))}</p>
               </div>
             </div>
-            <p className="mt-5 text-[14px] leading-relaxed text-muted">{t('The link opens on these products only. WhatsApp shows the first photo.')}</p>
+            <p className="mt-5 text-14 leading-relaxed text-muted">{t('The link opens on these products only. WhatsApp shows the first photo.')}</p>
             <div className="mt-5">
               <ShareActions
                 url={urlOf(sharing)}

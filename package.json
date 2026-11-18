@@ -11,7 +11,8 @@
     "build": "vite build",
     "preview": "npm run build && vite preview",
     "deploy": "npm run build && wrangler deploy",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "check:design": "node scripts/check-design.mjs"
   },
   "dependencies": {
     "@block65/webcrypto-web-push": "^2.0.0",

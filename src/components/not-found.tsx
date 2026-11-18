@@ -7,9 +7,9 @@ export function NotFound({ title, body, href = '/', action = 'Go to Shopi' }: { 
       <a href="/" aria-label="Shopi" className="mb-10">
         <Wordmark className="h-[22px] w-auto" />
       </a>
-      <p className="code text-[13px] text-muted">404</p>
-      <h1 className="title mt-3 text-[30px]">{title}</h1>
-      <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-muted">{body}</p>
+      <p className="code text-13 text-muted">404</p>
+      <h1 className="title mt-3 text-28">{title}</h1>
+      <p className="mt-2 max-w-[34ch] text-15 leading-relaxed text-muted">{body}</p>
       <a href={href} className="btn mt-8">
         {action}
       </a>

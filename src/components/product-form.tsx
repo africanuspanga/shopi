@@ -146,7 +146,7 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
         title={title}
         right={
           <button form={FORM_ID} className="btn btn-sm h-10 px-5" disabled={busy || uploading > 0}>
-            {uploading > 0 && <Loader2 size={15} className="animate-spin" />}
+            {uploading > 0 && <Loader2 size={16} className="animate-spin" />}
             {uploading > 0 ? t('Waiting for photos') : busy ? t('Saving') : t('Save')}
           </button>
         }
@@ -167,13 +167,13 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                 <div key={k} className="relative shrink-0">
                   <button
                     type="button"
-                    className="block overflow-hidden rounded-[14px]"
+                    className="block overflow-hidden rounded-14"
                     aria-label={i === 0 ? t('Main photo') : t('Make this the main photo')}
                     onClick={() => i > 0 && setImages([k, ...images.filter((x) => x !== k)])}
                   >
                     <Img size="thumb" k={k} alt="" className="h-[150px] w-[120px]" />
                   </button>
-                  {i === 0 && <span className="absolute bottom-2 left-2 rounded-full bg-ink px-2.5 py-1 text-[11px] font-medium text-white">{t('Main')}</span>}
+                  {i === 0 && <span className="absolute bottom-2 left-2 rounded-full bg-ink px-2.5 py-1 text-11 font-medium text-white">{t('Main')}</span>}
                   <button
                     type="button"
                     aria-label={t('Remove photo')}
@@ -183,12 +183,12 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                     }}
                     className="absolute top-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-card/95 shadow-[0_1px_2px_rgb(10_10_10/0.15)] transition-colors hover:bg-card"
                   >
-                    <X size={14} strokeWidth={2} />
+                    <X size={14} strokeWidth={2.25} />
                   </button>
                 </div>
               ))}
               {Array.from({ length: uploading }).map((_, i) => (
-                <div key={`u${i}`} className="flex h-[150px] w-[120px] shrink-0 flex-col items-center justify-center gap-2 rounded-[14px] bg-well text-[12px] text-muted">
+                <div key={`u${i}`} className="flex h-[150px] w-[120px] shrink-0 flex-col items-center justify-center gap-2 rounded-14 bg-well text-12 text-muted">
                   <Loader2 size={20} className="animate-spin" />
                   {t('Uploading')}
                 </div>
@@ -197,9 +197,9 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="flex h-[150px] w-[120px] shrink-0 flex-col items-center justify-center gap-2 rounded-[14px] border border-dashed border-line-strong text-[13px] font-medium transition-colors hover:border-ink hover:bg-page"
+                  className="flex h-[150px] w-[120px] shrink-0 flex-col items-center justify-center gap-2 rounded-14 border border-dashed border-line-strong text-13 font-medium transition-colors hover:border-ink hover:bg-page"
                 >
-                  <ImagePlus size={22} strokeWidth={1.5} />
+                  <ImagePlus size={24} strokeWidth={1.75} />
                   {images.length ? t('Add more') : t('Add photos')}
                 </button>
               )}
@@ -275,11 +275,11 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                 </div>
                 {sizes.length === 0 && option !== 'size' ? (
                   <button type="button" className="btn btn-quiet btn-sm mt-5" onClick={() => setSizes([blankRow()])}>
-                    <Plus size={15} strokeWidth={2} /> {t('Add an option')}
+                    <Plus size={16} strokeWidth={2.25} /> {t('Add an option')}
                   </button>
                 ) : sizes.length === 0 ? (
                   <div className="mt-5">
-                    <p className="text-[14px] text-muted">{t('Start from a set')}</p>
+                    <p className="text-14 text-muted">{t('Start from a set')}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {SIZE_PRESETS.map((p) => (
                         <button key={p.label} type="button" className="chip" onClick={() => setSizes(p.sizes.map((label) => ({ ...blankRow(), label })))}>
@@ -287,7 +287,7 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                         </button>
                       ))}
                       <button type="button" className="chip" onClick={() => setSizes([blankRow()])}>
-                        <Plus size={14} strokeWidth={2} /> {t('My own')}
+                        <Plus size={14} strokeWidth={2.25} /> {t('My own')}
                       </button>
                     </div>
                   </div>
@@ -307,9 +307,9 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                                 type="button"
                                 aria-label={s.image ? t('Change the photo for {option}', { option: s.label || t(kind.label) }) : t('Choose a photo for {option}', { option: s.label || t(kind.label) })}
                                 onClick={() => setPhotoFor(i)}
-                                className={`row-span-2 h-11 w-11 self-start overflow-hidden rounded-[12px] transition-colors sm:order-1 sm:row-span-1 ${s.image && images.includes(s.image) ? '' : 'flex items-center justify-center border border-dashed border-line-strong text-faint hover:border-ink hover:text-ink'}`}
+                                className={`row-span-2 h-11 w-11 self-start overflow-hidden rounded-12 transition-colors sm:order-1 sm:row-span-1 ${s.image && images.includes(s.image) ? '' : 'flex items-center justify-center border border-dashed border-line-strong text-faint hover:border-ink hover:text-ink'}`}
                               >
-                                {s.image && images.includes(s.image) ? <Img size="thumb" k={s.image} alt="" className="h-full w-full" /> : <ImagePlus size={17} strokeWidth={1.5} />}
+                                {s.image && images.includes(s.image) ? <Img size="thumb" k={s.image} alt="" className="h-full w-full" /> : <ImagePlus size={18} strokeWidth={1.75} />}
                               </button>
                             )}
                             <input
@@ -324,7 +324,7 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                             </button>
                             <div className="col-span-2 grid grid-cols-2 gap-2 sm:contents">
                               <label className="input flex h-11 items-center gap-2 px-3 sm:order-3">
-                                <span className="shrink-0 text-[13px] text-muted">{t('Stock')}</span>
+                                <span className="shrink-0 text-13 text-muted">{t('Stock')}</span>
                                 <input
                                   className="tnum min-w-0 flex-1 bg-transparent text-right outline-none"
                                   inputMode="numeric"
@@ -335,7 +335,7 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                                 />
                               </label>
                               <label className="input flex h-11 items-center gap-2 px-3 sm:order-4">
-                                <span className="shrink-0 text-[13px] text-muted">TSh</span>
+                                <span className="shrink-0 text-13 text-muted">TSh</span>
                                 <input
                                   className="tnum min-w-0 flex-1 bg-transparent text-right outline-none"
                                   inputMode="numeric"
@@ -351,7 +351,7 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                       })}
                     </div>
                     <button type="button" className="btn btn-quiet btn-sm mt-3" onClick={() => setSizes([...sizes, blankRow()])}>
-                      <Plus size={15} strokeWidth={2} /> {t('Add an option')}
+                      <Plus size={16} strokeWidth={2.25} /> {t('Add an option')}
                     </button>
                     <p className="hint">
                       {t('Stock left empty is not counted; at 0 an option shows as sold out. A price left empty is the product’s price.')}
@@ -415,26 +415,26 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                 router.navigate({ to: '/app/products' })
               }}
             >
-              <Trash2 size={16} strokeWidth={1.6} /> {t('Delete product')}
+              <Trash2 size={16} strokeWidth={1.75} /> {t('Delete product')}
             </button>
           )}
         </div>
 
         <aside className="hidden space-y-4 lg:sticky lg:top-8 lg:block">
           <div className="card p-5">
-            <p className="text-[13px] text-muted">{t('In your shop')}</p>
-            <div className="relative mt-3 aspect-[4/5] overflow-hidden rounded-[14px] bg-well">
-              {images[0] ? <Img size="thumb" k={images[0]} alt="" className="h-full w-full" /> : <div className="flex h-full items-center justify-center text-faint"><ImagePlus size={24} strokeWidth={1.5} /></div>}
+            <p className="text-13 text-muted">{t('In your shop')}</p>
+            <div className="relative mt-3 aspect-[4/5] overflow-hidden rounded-14 bg-well">
+              {images[0] ? <Img size="thumb" k={images[0]} alt="" className="h-full w-full" /> : <div className="flex h-full items-center justify-center text-faint"><ImagePlus size={24} strokeWidth={1.75} /></div>}
               {was > price && price > 0 && (
                 <div className="absolute top-2.5 left-2.5">
                   <Tag hot>−{Math.round((1 - price / was) * 100)}%</Tag>
                 </div>
               )}
             </div>
-            <p className="mt-3 truncate text-[14px]">{form.name || t('Product name')}</p>
-            <p className="tnum flex items-baseline gap-2 text-[14px] font-medium">
+            <p className="mt-3 truncate text-14">{form.name || t('Product name')}</p>
+            <p className="tnum flex items-baseline gap-2 text-14 font-medium">
               {price ? tzs(price) : 'TSh —'}
-              {was > price && price > 0 && <span className="text-[13px] font-normal text-muted line-through">{tzs(was)}</span>}
+              {was > price && price > 0 && <span className="text-13 font-normal text-muted line-through">{tzs(was)}</span>}
             </p>
             {sizes && sizes.some((s) => s.label.trim()) && (
               <p className="meta mt-1 truncate">
@@ -458,7 +458,7 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
         onClose={() => setPhotoFor(null)}
         title={t('Photo for {option}', { option: (photoFor != null && sizes?.[photoFor]?.label) || t(kind.label) })}
       >
-        <p className="-mt-1 mb-4 text-[14px] text-muted">{t('Buyers see it when they choose this option.')}</p>
+        <p className="-mt-1 mb-4 text-14 text-muted">{t('Buyers see it when they choose this option.')}</p>
         <div className="grid grid-cols-3 gap-2">
           {images.map((k) => {
             const on = photoFor != null && sizes?.[photoFor]?.image === k
@@ -467,7 +467,7 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                 key={k}
                 type="button"
                 aria-pressed={on}
-                className={`relative overflow-hidden rounded-[12px] transition-shadow ${on ? 'shadow-[0_0_0_2px_var(--color-ink)]' : ''}`}
+                className={`relative overflow-hidden rounded-12 transition-shadow ${on ? 'shadow-[0_0_0_2px_var(--color-ink)]' : ''}`}
                 onClick={() => {
                   if (sizes && photoFor != null) setSizes(sizes.map((x, j) => (j === photoFor ? { ...x, image: k } : x)))
                   setPhotoFor(null)
@@ -476,7 +476,7 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
                 <Img size="thumb" k={k} alt="" className="aspect-[4/5] w-full" />
                 {on && (
                   <span className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-white">
-                    <Check size={13} strokeWidth={3} />
+                    <Check size={14} strokeWidth={2.25} />
                   </span>
                 )}
               </button>
@@ -505,8 +505,8 @@ function SendCard({ product }: { product: ProductRow }) {
   const url = `${useOrigin()}/${shop.slug}/${product.slug ?? product.id}`
   return (
     <section className="card p-5">
-      <h2 className="text-[15px] font-semibold">{t('Send this product')}</h2>
-      <p className="code mt-1 truncate text-[12px] text-muted">{prettyUrl(url)}</p>
+      <h2 className="text-15 font-semibold">{t('Send this product')}</h2>
+      <p className="code mt-1 truncate text-12 text-muted">{prettyUrl(url)}</p>
       <div className="mt-4">
         <ShareActions
           url={url}
@@ -539,8 +539,8 @@ function SaveButtons({ product, busy, uploading, onAgain }: { product?: ProductR
 function Card({ title, sub, children }: { title?: string; sub?: string; children: ReactNode }) {
   return (
     <section className="card p-6">
-      {title && <h2 className="text-[15px] font-semibold">{title}</h2>}
-      {sub && <p className="mt-1 text-[13px] leading-5 text-muted">{sub}</p>}
+      {title && <h2 className="text-15 font-semibold">{title}</h2>}
+      {sub && <p className="mt-1 text-13 leading-5 text-muted">{sub}</p>}
       <div className={title ? 'mt-4' : ''}>{children}</div>
     </section>
   )
@@ -551,7 +551,7 @@ export function PriceInput({ value, onValue, placeholder }: { value: string; onV
   const digits = value.replace(/\D/g, '')
   return (
     <span className="input flex items-center gap-2 px-4">
-      <span className="text-[14px] text-muted">TSh</span>
+      <span className="text-14 text-muted">TSh</span>
       <input
         className="tnum min-w-0 flex-1 bg-transparent outline-none"
         inputMode="numeric"

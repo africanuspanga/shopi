@@ -53,11 +53,11 @@ function Orders() {
         right={
           <>
           <Link to="/app/orders/new" className="btn btn-sm">
-            <Plus size={15} strokeWidth={2} /> {t('Record a sale')}
+            <Plus size={16} strokeWidth={2.25} /> {t('Record a sale')}
           </Link>
           <label className="input hidden h-10 w-64 items-center gap-2 px-3 md:flex">
-            <Search size={16} strokeWidth={1.6} className="shrink-0 text-muted" />
-            <input className="min-w-0 flex-1 bg-transparent text-[14px] outline-none" placeholder={t('Search')} value={q} onChange={(e) => setQ(e.target.value)} />
+            <Search size={16} strokeWidth={1.75} className="shrink-0 text-muted" />
+            <input className="min-w-0 flex-1 bg-transparent text-14 outline-none" placeholder={t('Search')} value={q} onChange={(e) => setQ(e.target.value)} />
           </label>
           </>
         }
@@ -66,21 +66,21 @@ function Orders() {
       {/* Bag links: a bag the seller builds for one buyer in a chat. Their list lives here, under Orders. */}
       <Link to="/app/bags" className="card mb-4 flex items-center gap-3 px-4 py-3 transition-colors hover:bg-page md:mb-6 md:max-w-[560px]">
         <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${openBags ? 'bg-ink text-white' : 'bg-well text-ink-2'}`}>
-          <ShoppingBag size={17} strokeWidth={1.75} />
+          <ShoppingBag size={18} strokeWidth={1.75} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[14px] font-medium">{t('Bag links')}</span>
-          <span className="block truncate text-[13px] text-muted">
+          <span className="block text-14 font-medium">{t('Bag links')}</span>
+          <span className="block truncate text-13 text-muted">
             {openBags
               ? t(openBags === 1 ? '{n} waiting for a buyer' : '{n} waiting for buyers', { n: openBags })
               : t('Send a buyer their bag as one link')}
           </span>
         </span>
-        <ChevronRight size={16} strokeWidth={1.6} className="shrink-0 text-faint" />
+        <ChevronRight size={16} strokeWidth={1.75} className="shrink-0 text-faint" />
       </Link>
 
       <label className="input mb-4 flex items-center gap-2 px-3 md:hidden">
-        <Search size={16} strokeWidth={1.6} className="shrink-0 text-muted" />
+        <Search size={16} strokeWidth={1.75} className="shrink-0 text-muted" />
         <input className="min-w-0 flex-1 bg-transparent outline-none" placeholder={t('Search name, phone or order')} value={q} onChange={(e) => setQ(e.target.value)} />
       </label>
 
@@ -101,13 +101,13 @@ function Orders() {
       <div className="mt-5">
         {shown.length === 0 ? (
           <Empty
-            icon={<ReceiptText size={20} strokeWidth={1.5} />}
+            icon={<ReceiptText size={20} strokeWidth={1.75} />}
             title={needle ? t('No orders match') : filter === 'todo' ? t('Nothing to do right now') : t('No orders here')}
             body={needle ? t('Try a name, a phone number or an order code.') : filter === 'todo' ? t('New orders show up here the moment a buyer places them.') : undefined}
           />
         ) : (
           <div className="card overflow-hidden">
-            <div className="hidden grid-cols-[110px_minmax(0,1.3fr)_minmax(0,1fr)_70px_90px_130px_130px] gap-x-6 border-b border-line px-6 py-3 text-[13px] text-muted lg:grid">
+            <div className="hidden grid-cols-[110px_minmax(0,1.3fr)_minmax(0,1fr)_70px_90px_130px_130px] gap-x-6 border-b border-line px-6 py-3 text-13 text-muted lg:grid">
               <span>{t('Order')}</span>
               <span>{t('Customer')}</span>
               <span>{t('Delivery')}</span>
@@ -127,28 +127,28 @@ function Orders() {
                   {/* Phone: who and how much, then where it stands. The code is on the order page and in search. */}
                   <div className="lg:hidden">
                     <div className="flex items-baseline justify-between gap-4">
-                      <p className="min-w-0 truncate text-[15px] font-medium">{o.customer_name || t('Sale recorded by you')}</p>
-                      <p className="tnum shrink-0 text-[15px] font-medium">{tzs(o.total)}</p>
+                      <p className="min-w-0 truncate text-15 font-medium">{o.customer_name || t('Sale recorded by you')}</p>
+                      <p className="tnum shrink-0 text-15 font-medium">{tzs(o.total)}</p>
                     </div>
                     <div className="mt-1 flex h-6 items-center gap-3">
                       <StatusPill status={o.status} />
-                      <p className="min-w-0 flex-1 truncate text-[13px] text-muted">{o.area || t('No area')}</p>
+                      <p className="min-w-0 flex-1 truncate text-13 text-muted">{o.area || t('No area')}</p>
                       <p className="meta shrink-0">{timeAgo(o.created_at, lang)}</p>
                     </div>
                   </div>
                   {/* Desktop: a table row. */}
                   <div className="hidden lg:block">
-                    <p className="code text-[13px]">#{o.code}</p>
+                    <p className="code text-13">#{o.code}</p>
                     <p className="meta mt-0.5">{timeAgo(o.created_at, lang)}</p>
                   </div>
                   <div className="hidden min-w-0 lg:block">
-                    <p className="truncate text-[14px] font-medium">{o.customer_name || t('Sale recorded by you')}</p>
+                    <p className="truncate text-14 font-medium">{o.customer_name || t('Sale recorded by you')}</p>
                     <p className="meta mt-0.5">{o.customer_phone}</p>
                   </div>
-                  <p className="hidden truncate text-[14px] text-ink-2 lg:block">{o.area || '—'}</p>
-                  <p className="tnum hidden text-[14px] text-ink-2 lg:block">{o.items}</p>
-                  <p className="hidden text-[14px] text-ink-2 lg:block">{o.payment_method === 'lipa' ? 'Lipa' : o.payment_method === 'cod' ? t('Cash') : t(PAYMENT_LABEL[o.payment_method])}</p>
-                  <p className="tnum hidden text-right text-[14px] font-medium lg:block">{tzs(o.total)}</p>
+                  <p className="hidden truncate text-14 text-ink-2 lg:block">{o.area || '—'}</p>
+                  <p className="tnum hidden text-14 text-ink-2 lg:block">{o.items}</p>
+                  <p className="hidden text-14 text-ink-2 lg:block">{o.payment_method === 'lipa' ? 'Lipa' : o.payment_method === 'cod' ? t('Cash') : t(PAYMENT_LABEL[o.payment_method])}</p>
+                  <p className="tnum hidden text-right text-14 font-medium lg:block">{tzs(o.total)}</p>
                   <div className="hidden lg:block">
                     <StatusPill status={o.status} />
                   </div>

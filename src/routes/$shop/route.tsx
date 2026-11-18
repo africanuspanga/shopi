@@ -36,9 +36,9 @@ export const Route = createFileRoute('/$shop')({
   },
   notFoundComponent: () => (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-page px-6 text-center">
-      <p className="code text-[13px] text-muted">404</p>
-      <h1 className="title mt-3 text-[30px]">This shop is not here</h1>
-      <p className="mt-2 max-w-[30ch] text-[15px] leading-relaxed text-muted">Check the link for a typo, or ask the seller for their Shopi link.</p>
+      <p className="code text-13 text-muted">404</p>
+      <h1 className="title mt-3 text-28">This shop is not here</h1>
+      <p className="mt-2 max-w-[30ch] text-15 leading-relaxed text-muted">Check the link for a typo, or ask the seller for their Shopi link.</p>
       <a href="/" className="btn mt-8">
         Go to Shopi
       </a>

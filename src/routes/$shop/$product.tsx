@@ -170,7 +170,7 @@ function ProductPage() {
           right={
             <>
               <button type="button" className="icon-btn" aria-label={t('Share')} onClick={share}>
-                <Share2 size={17} strokeWidth={1.6} />
+                <Share2 size={18} strokeWidth={1.75} />
               </button>
               <span className="hidden md:block">
                 <BagButton shopSlug={shop.slug} count={cart.count} />
@@ -186,7 +186,7 @@ function ProductPage() {
           <div className="relative md:sticky md:top-26 md:self-start">
             <div
               ref={gallery}
-              className="hide-scroll flex snap-x snap-mandatory overflow-x-auto md:overflow-hidden md:rounded-[20px]"
+              className="hide-scroll flex snap-x snap-mandatory overflow-x-auto md:overflow-hidden md:rounded-20"
               onScroll={(e) => {
                 const el = e.currentTarget
                 if (el.clientWidth) setSlide(Math.round(el.scrollLeft / el.clientWidth))
@@ -198,7 +198,7 @@ function ProductPage() {
             </div>
 
             {images.length > 1 && (
-              <span className="tnum absolute right-4 bottom-4 rounded-full bg-ink/70 px-2.5 py-1 text-[12px] font-medium text-white backdrop-blur md:hidden">
+              <span className="tnum absolute right-4 bottom-4 rounded-full bg-ink/70 px-2.5 py-1 text-12 font-medium text-white backdrop-blur md:hidden">
                 {slide + 1} / {images.length}
               </span>
             )}
@@ -211,7 +211,7 @@ function ProductPage() {
                     aria-label={t('Photo {n}', { n: i + 1 })}
                     aria-pressed={slide === i}
                     onClick={() => goTo(i)}
-                    className={`overflow-hidden rounded-[12px] transition-shadow ${slide === i ? 'shadow-[0_0_0_2px_var(--color-ink)]' : 'opacity-70 hover:opacity-100'}`}
+                    className={`overflow-hidden rounded-12 transition-shadow ${slide === i ? 'shadow-[0_0_0_2px_var(--color-ink)]' : 'opacity-70 hover:opacity-100'}`}
                   >
                     <Img size="thumb" k={k} alt="" className="h-20 w-16" />
                   </button>
@@ -222,7 +222,7 @@ function ProductPage() {
 
           <div className={`${rise} px-4 pt-6 md:px-0 md:pt-2`}>
             <nav aria-label={t('Breadcrumb')}>
-              <ol className="flex min-w-0 items-center gap-1.5 text-[14px] text-muted">
+              <ol className="flex min-w-0 items-center gap-1.5 text-14 text-muted">
                 <li className="min-w-0 truncate">
                   <Link to="/$shop" params={{ shop: shop.slug }} className="transition-colors hover:text-ink">
                     {shop.name}
@@ -242,7 +242,7 @@ function ProductPage() {
                 )}
               </ol>
             </nav>
-            <h1 className="title mt-2 text-[26px] md:text-[40px] lg:text-[46px]">{p.name}</h1>
+            <h1 className="title mt-2 text-24 md:text-40 lg:text-48">{p.name}</h1>
             <div className="mt-3 flex items-center gap-3">
               <Price p={shown} size="lg" />
               {sale && !soldOut && <Tag hot>−{Math.round((1 - shown.price / shown.compare_price!) * 100)}%</Tag>}
@@ -252,20 +252,20 @@ function ProductPage() {
             {p.sizes && (
               <div id="sizes" className="mt-8 scroll-mt-24">
                 <div className="mb-3 flex items-baseline justify-between">
-                  <p className="text-[14px] font-medium">{chosen ? optionText(t, p.option_name, chosen.label) : t(kind.choose)}</p>
-                  {lowStock && chosen && <p className="text-[13px] text-moto-ink">{t('Only {n} left', { n: left! })}</p>}
+                  <p className="text-14 font-medium">{chosen ? optionText(t, p.option_name, chosen.label) : t(kind.choose)}</p>
+                  {lowStock && chosen && <p className="text-13 text-moto-ink">{t('Only {n} left', { n: left! })}</p>}
                 </div>
-                <div className={`flex flex-wrap gap-2 rounded-[22px] ${needSize && !chosen ? 'outline-2 outline-offset-[6px] outline-moto' : ''}`}>
+                <div className={`flex flex-wrap gap-2 rounded-20 ${needSize && !chosen ? 'outline-2 outline-offset-[6px] outline-moto' : ''}`}>
                   {p.sizes.map((s) => (
                     <OptionChip key={s.label} option={s} soldOut={s.stock === 0} selected={size === s.label} onClick={() => choose(s.label)} />
                   ))}
                 </div>
-                {needSize && !chosen && <p className="mt-3 text-[13px] text-moto-ink">{t(kind.choose)}</p>}
+                {needSize && !chosen && <p className="mt-3 text-13 text-moto-ink">{t(kind.choose)}</p>}
               </div>
             )}
-            {!p.sizes && lowStock && <p className="mt-5 text-[13px] text-moto-ink">{t('Only {n} left', { n: left! })}</p>}
+            {!p.sizes && lowStock && <p className="mt-5 text-13 text-moto-ink">{t('Only {n} left', { n: left! })}</p>}
             {canNotify && (
-              <p className="fade mt-5 text-[14px] leading-relaxed text-ink-2">
+              <p className="fade mt-5 text-14 leading-relaxed text-ink-2">
                 {asked
                   ? t('You asked {shop} to message you on WhatsApp when it’s back.', { shop: shop.name })
                   : t('Sold out for now. Leave your WhatsApp number and {shop} will message you when it’s back.', { shop: shop.name })}
@@ -274,7 +274,7 @@ function ProductPage() {
 
             {!canNotify && (
               <div className="mt-6 flex items-center justify-between md:hidden">
-                <p className="text-[14px] font-medium">{t('Quantity')}</p>
+                <p className="text-14 font-medium">{t('Quantity')}</p>
                 <Qty qty={qty} max={max} onChange={setQty} />
               </div>
             )}
@@ -296,17 +296,17 @@ function ProductPage() {
               )}
             </div>
             {added && (
-              <p className="fade mt-3 hidden items-center gap-2 text-[14px] text-ink-2 md:flex">
-                <Check size={16} strokeWidth={2} /> {t('Added to your bag.')}{' '}
+              <p className="fade mt-3 hidden items-center gap-2 text-14 text-ink-2 md:flex">
+                <Check size={16} strokeWidth={2.25} /> {t('Added to your bag.')}{' '}
                 <Link to="/$shop" params={{ shop: shop.slug }} className="underline decoration-line-strong underline-offset-4 hover:decoration-ink">
                   {t('Keep shopping')}
                 </Link>
               </p>
             )}
 
-            {p.description && <p className="mt-8 max-w-[60ch] text-[15px] leading-relaxed whitespace-pre-line text-ink-2">{p.description}</p>}
+            {p.description && <p className="mt-8 max-w-[60ch] text-15 leading-relaxed whitespace-pre-line text-ink-2">{p.description}</p>}
 
-            <dl className="mt-8 rounded-[20px] bg-page px-5 py-1">
+            <dl className="mt-8 rounded-20 bg-page px-5 py-1">
               <Detail label={t('Delivery')}>
                 {t('Fee agreed on WhatsApp')}
                 {areas.length > 0 && <span className="text-muted"> · {t(areas.length === 1 ? '{n} area' : '{n} areas', { n: areas.length })}</span>}
@@ -322,7 +322,7 @@ function ProductPage() {
             {shop.whatsapp && (
               <div className="mt-6">
                 <a
-                  className="inline-flex items-center gap-2 text-[14px] font-medium underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink"
+                  className="inline-flex items-center gap-2 text-14 font-medium underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink"
                   href={waLink(shop.whatsapp, ask)}
                   target="_blank"
                   rel="noreferrer"
@@ -334,9 +334,9 @@ function ProductPage() {
               </div>
             )}
 
-            <div className="mt-8 rounded-[20px] p-5 shadow-[inset_0_0_0_1px_var(--color-line)]">
-              <p className="text-[15px] font-medium">{t('Share with a friend')}</p>
-              <p className="mt-0.5 text-[13px] text-muted">{t('Send it on WhatsApp, or copy the link for anywhere else')}</p>
+            <div className="mt-8 rounded-20 p-5 shadow-[inset_0_0_0_1px_var(--color-line)]">
+              <p className="text-15 font-medium">{t('Share with a friend')}</p>
+              <p className="mt-0.5 text-13 text-muted">{t('Send it on WhatsApp, or copy the link for anywhere else')}</p>
               <div className="mt-4">
                 <ShareActions
                   url={shopAddress(origin, shop.slug, `/${p.slug ?? p.id}`)}
@@ -352,8 +352,8 @@ function ProductPage() {
         {more.length > 0 && (
           <section className="mt-16 px-4 md:mt-24 md:px-0">
             <div className="mb-5 flex items-baseline justify-between gap-4 md:mb-8">
-              <h2 className="title text-[20px] md:text-[26px]">{t('More from {shop}', { shop: shop.name })}</h2>
-              <Link to="/$shop" params={{ shop: shop.slug }} className="shrink-0 text-[14px] text-muted transition-colors hover:text-ink">
+              <h2 className="title text-20 md:text-24">{t('More from {shop}', { shop: shop.name })}</h2>
+              <Link to="/$shop" params={{ shop: shop.slug }} className="shrink-0 text-14 text-muted transition-colors hover:text-ink">
                 {t('See all')}
               </Link>
             </div>
@@ -372,22 +372,22 @@ function ProductPage() {
         <div className="pointer-events-auto mx-auto flex h-[68px] max-w-[440px] items-center gap-1.5 rounded-full bg-ink p-1.5 text-white shadow-[0_0_0_5px_rgb(10_10_10/0.06),0_20px_44px_-14px_rgb(10_10_10/0.6)] ring-1 ring-white/[0.14]">
           {added ? (
             <>
-              <Link to="/$shop" params={{ shop: shop.slug }} className="fade flex h-full flex-1 items-center justify-center rounded-full px-3 text-[14px] font-medium text-white/80 transition-colors active:bg-white/10">
+              <Link to="/$shop" params={{ shop: shop.slug }} className="fade flex h-full flex-1 items-center justify-center rounded-full px-3 text-14 font-medium text-white/80 transition-colors active:bg-white/10">
                 {t('Keep shopping')}
               </Link>
               <Link
                 to="/$shop/checkout"
                 params={{ shop: shop.slug }}
-                className="fade flex h-full flex-[1.4] items-center justify-center gap-2 rounded-full bg-white px-4 text-[15px] font-medium text-ink transition-transform active:scale-[0.97]"
+                className="fade flex h-full flex-[1.4] items-center justify-center gap-2 rounded-full bg-white px-4 text-15 font-medium text-ink transition-transform active:scale-[0.97]"
               >
-                {t('Checkout')} <span className="tnum text-[13px] text-ink-2">{tzs(bagTotal)}</span>
+                {t('Checkout')} <span className="tnum text-13 text-ink-2">{tzs(bagTotal)}</span>
               </Link>
             </>
           ) : (
             <>
               <div className="min-w-0 flex-1 pl-4">
-                <p className="tnum truncate text-[16px] font-semibold">{shown.from ? t('From {price}', { price: tzs(unit) }) : tzs(unit * qty)}</p>
-                <p className="truncate text-[12px] text-white/55">
+                <p className="tnum truncate text-15 font-semibold">{shown.from ? t('From {price}', { price: tzs(unit) }) : tzs(unit * qty)}</p>
+                <p className="truncate text-12 text-white/55">
                   {p.sizes && !chosen
                     ? soldOut
                       ? t('Sold out')
@@ -402,16 +402,16 @@ function ProductPage() {
                   type="button"
                   disabled={asked}
                   onClick={() => setNotify(true)}
-                  className="flex h-full shrink-0 items-center justify-center gap-2 rounded-full bg-white px-6 text-[15px] font-medium text-ink transition-transform active:scale-[0.97] disabled:opacity-60"
+                  className="flex h-full shrink-0 items-center justify-center gap-2 rounded-full bg-white px-6 text-15 font-medium text-ink transition-transform active:scale-[0.97] disabled:opacity-60"
                 >
-                  {asked ? <Check size={17} strokeWidth={2.25} /> : <Bell size={17} strokeWidth={1.75} />}
+                  {asked ? <Check size={18} strokeWidth={2.25} /> : <Bell size={18} strokeWidth={1.75} />}
                   {asked ? t('Asked') : t('Notify me')}
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={add}
-                  className="flex h-full shrink-0 items-center justify-center rounded-full bg-white px-7 text-[15px] font-medium text-ink transition-transform active:scale-[0.97]"
+                  className="flex h-full shrink-0 items-center justify-center rounded-full bg-white px-7 text-15 font-medium text-ink transition-transform active:scale-[0.97]"
                 >
                   {soldOut && !chosen ? t(kind.choose) : t('Add to bag')}
                 </button>
@@ -428,7 +428,7 @@ function ProductPage() {
 
 function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-6 border-b border-line py-3.5 text-[14px] last:border-0">
+    <div className="flex items-baseline justify-between gap-6 border-b border-line py-3.5 text-14 last:border-0">
       <dt className="shrink-0 text-muted">{label}</dt>
       <dd className="text-right">{children}</dd>
     </div>
@@ -442,7 +442,7 @@ function Qty({ qty, max, onChange, big = false }: { qty: number; max: number; on
       <button type="button" aria-label={t('Fewer')} disabled={qty <= 1} className={`flex h-full items-center justify-center text-ink-2 disabled:text-faint ${big ? 'w-12' : 'w-10'}`} onClick={() => onChange(Math.max(1, qty - 1))}>
         <Minus size={16} strokeWidth={1.75} />
       </button>
-      <span className="tnum w-6 text-center text-[15px] font-medium">{qty}</span>
+      <span className="tnum w-6 text-center text-15 font-medium">{qty}</span>
       <button type="button" aria-label={t('More')} disabled={qty >= max} className={`flex h-full items-center justify-center text-ink-2 disabled:text-faint ${big ? 'w-12' : 'w-10'}`} onClick={() => onChange(Math.min(max, qty + 1))}>
         <Plus size={16} strokeWidth={1.75} />
       </button>

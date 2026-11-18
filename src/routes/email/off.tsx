@@ -31,8 +31,8 @@ function Off() {
     <EmailPage>
       {done ? (
         <>
-          <h1 className="title text-[28px]">{remove ? t('Removed') : t('Stopped')}</h1>
-          <p className="mt-2 text-[15px] leading-6 text-ink-2">
+          <h1 className="title text-28">{remove ? t('Removed') : t('Stopped')}</h1>
+          <p className="mt-2 text-15 leading-6 text-ink-2">
             {remove
               ? t('This address is off the shop, and Shopi sends nothing more to it.')
               : t('{what} stops. Receipts and reminders about your plan still come. You can change this in Shop settings.', { what })}
@@ -45,8 +45,8 @@ function Off() {
         </>
       ) : (
         <>
-          <h1 className="title text-[28px]">{remove ? t('Remove this address?') : t('Stop this email?')}</h1>
-          <p className="mt-2 text-[15px] leading-6 text-ink-2">
+          <h1 className="title text-28">{remove ? t('Remove this address?') : t('Stop this email?')}</h1>
+          <p className="mt-2 text-15 leading-6 text-ink-2">
             {remove ? t('Someone added this email to a shop on Shopi. If it isn’t yours, remove it and Shopi won’t write to it again.') : what}
           </p>
           <div className="mt-5">

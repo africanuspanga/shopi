@@ -54,15 +54,15 @@ function ShopPage() {
 
   return (
     <>
-      <Link to="/admin" search={{ tab: 'shops', days: d.days === 30 ? undefined : d.days }} className="mt-4 inline-flex h-9 items-center gap-2 text-[14px] font-medium text-ink-2 hover:text-ink lg:mt-0">
-        <ArrowLeft size={16} strokeWidth={1.8} /> {t('Shops')}
+      <Link to="/admin" search={{ tab: 'shops', days: d.days === 30 ? undefined : d.days }} className="mt-4 inline-flex h-9 items-center gap-2 text-14 font-medium text-ink-2 hover:text-ink lg:mt-0">
+        <ArrowLeft size={16} strokeWidth={1.75} /> {t('Shops')}
       </Link>
       <header className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-4">
         <div className="flex min-w-0 flex-1 basis-[280px] items-center gap-4">
-          <ShopAvatar name={s.name} logo={s.logo_key} className="h-14 w-14 text-[18px]" />
+          <ShopAvatar name={s.name} logo={s.logo_key} className="h-14 w-14 text-17" />
           <div className="min-w-0">
-            <h1 className="title text-[24px] [overflow-wrap:anywhere] md:text-[30px]">{s.name}</h1>
-            <p className="mt-1 text-[14px] text-muted">
+            <h1 className="title text-24 [overflow-wrap:anywhere] md:text-28">{s.name}</h1>
+            <p className="mt-1 text-14 text-muted">
               {planText(s)} · {t(CATEGORIES.find((c) => c.id === s.category)?.label ?? s.category)}
               {d.dates.location ? ` · ${d.dates.location}` : ''}
             </p>
@@ -70,10 +70,10 @@ function ShopPage() {
         </div>
         <div className="flex w-full flex-wrap gap-2 md:w-auto">
           <a href={`/${s.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm h-10 flex-1 md:h-9 md:flex-none">
-            {t('View shop')} <ArrowUpRight size={14} strokeWidth={1.6} />
+            {t('View shop')} <ArrowUpRight size={14} strokeWidth={1.75} />
           </a>
           <a href={waLink(s.phone, '')} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm h-10 flex-1 md:h-9 md:flex-none" aria-label={t('Message {name} on WhatsApp', { name: s.owner })}>
-            <WhatsAppIcon size={15} /> {localPhone(s.phone)}
+            <WhatsAppIcon size={16} /> {localPhone(s.phone)}
           </a>
         </div>
       </header>
@@ -154,7 +154,7 @@ function ShopPage() {
               <ul className="divide-y divide-line">
                 {d.latest.map((o) => (
                   <li key={o.code} className="py-2.5">
-                    <div className="flex items-baseline justify-between gap-3 text-[14px]">
+                    <div className="flex items-baseline justify-between gap-3 text-14">
                       <span className="code min-w-0 truncate">{o.code}</span>
                       <Money value={o.total} className="shrink-0" cur="text-[0.8em] text-muted" />
                     </div>

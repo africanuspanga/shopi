@@ -73,17 +73,17 @@ function NewBag() {
       <div className="md:grid md:grid-cols-[minmax(0,1fr)_360px] md:items-start md:gap-10">
         <div className="space-y-8">
           <section>
-            <h2 className="text-[17px] font-semibold">{t('What goes in the bag')}</h2>
-            <p className="mt-1 text-[14px] text-muted">{t('Change a price if you agreed a different one. Products hidden from your shop can go in too.')}</p>
+            <h2 className="text-17 font-semibold">{t('What goes in the bag')}</h2>
+            <p className="mt-1 text-14 text-muted">{t('Change a price if you agreed a different one. Products hidden from your shop can go in too.')}</p>
             {lines.length === 0 ? (
               <div className="mt-3">
                 <Empty
-                  icon={<ShoppingBag size={20} strokeWidth={1.5} />}
+                  icon={<ShoppingBag size={20} strokeWidth={1.75} />}
                   title={t('The bag is empty')}
                   body={t('Add the products you agreed with the buyer.')}
                   action={
                     <button type="button" className="btn btn-sm" onClick={() => setPicking(true)} disabled={!products.length}>
-                      <PackagePlus size={15} strokeWidth={1.75} /> {t('Add from your products')}
+                      <PackagePlus size={16} strokeWidth={1.75} /> {t('Add from your products')}
                     </button>
                   }
                 />
@@ -98,8 +98,8 @@ function NewBag() {
                     return (
                       <div key={l.key} className="space-y-3 p-4">
                         <div className="flex items-center gap-3">
-                          <Img size="thumb" k={l.product.images[0]} alt={l.product.name} className="h-12 w-10 shrink-0 rounded-[8px]" />
-                          <p className="min-w-0 flex-1 truncate text-[15px] font-medium">{l.product.name}</p>
+                          <Img size="thumb" k={l.product.images[0]} alt={l.product.name} className="h-12 w-10 shrink-0 rounded-8" />
+                          <p className="min-w-0 flex-1 truncate text-15 font-medium">{l.product.name}</p>
                           <button type="button" className="icon-btn shrink-0" aria-label={t('Remove')} onClick={() => setLines(lines.filter((x) => x.key !== l.key))}>
                             <X size={16} strokeWidth={1.75} />
                           </button>
@@ -123,7 +123,7 @@ function NewBag() {
                                 }
                               >
                                 {s.label}
-                                {s.stock != null && s.stock > 0 && <span className="text-[12px] opacity-60">{s.stock}</span>}
+                                {s.stock != null && s.stock > 0 && <span className="text-12 opacity-60">{s.stock}</span>}
                               </button>
                             ))}
                           </div>
@@ -131,9 +131,9 @@ function NewBag() {
                         <div className="flex items-start gap-3">
                           <div className="flex h-11 shrink-0 items-center rounded-full shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
                             <button type="button" className="flex h-11 w-11 items-center justify-center disabled:text-faint" aria-label={t('Fewer')} disabled={l.qty <= 1} onClick={() => update(l.key, { qty: l.qty - 1 })}>
-                              <Minus size={15} strokeWidth={2} />
+                              <Minus size={16} strokeWidth={2.25} />
                             </button>
-                            <span className="tnum w-6 text-center text-[15px]">{l.qty}</span>
+                            <span className="tnum w-6 text-center text-15">{l.qty}</span>
                             <button
                               type="button"
                               className="flex h-11 w-11 items-center justify-center disabled:text-faint"
@@ -141,12 +141,12 @@ function NewBag() {
                               disabled={l.qty >= 99 || (left != null && l.qty >= left)}
                               onClick={() => update(l.key, { qty: l.qty + 1 })}
                             >
-                              <Plus size={15} strokeWidth={2} />
+                              <Plus size={16} strokeWidth={2.25} />
                             </button>
                           </div>
                           <div className="min-w-0 flex-1">
                             <label className="input flex h-11 items-center gap-1.5 px-3">
-                              <span className="text-[13px] text-muted">TSh</span>
+                              <span className="text-13 text-muted">TSh</span>
                               <input
                                 className="tnum min-w-0 flex-1 bg-transparent text-right outline-none"
                                 inputMode="numeric"
@@ -156,7 +156,7 @@ function NewBag() {
                                 onChange={(e) => update(l.key, { price: digits(e.target.value) })}
                               />
                             </label>
-                            {changed && <p className="mt-1.5 text-right text-[12px] text-muted">{t('Shop price {price}', { price: tzs(shopPrice) })}</p>}
+                            {changed && <p className="mt-1.5 text-right text-12 text-muted">{t('Shop price {price}', { price: tzs(shopPrice) })}</p>}
                           </div>
                         </div>
                       </div>
@@ -164,7 +164,7 @@ function NewBag() {
                   })}
                 </div>
                 <button type="button" className="btn btn-quiet btn-sm mt-3" onClick={() => setPicking(true)}>
-                  <Plus size={15} strokeWidth={2} /> {t('Add another product')}
+                  <Plus size={16} strokeWidth={2.25} /> {t('Add another product')}
                 </button>
               </>
             )}
@@ -172,8 +172,8 @@ function NewBag() {
 
           <section className="space-y-4">
             <div>
-              <h2 className="text-[17px] font-semibold">{t('For whom')}</h2>
-              <p className="mt-1 text-[14px] text-muted">{t('Optional. Their name and number fill in the checkout for them.')}</p>
+              <h2 className="text-17 font-semibold">{t('For whom')}</h2>
+              <p className="mt-1 text-14 text-muted">{t('Optional. Their name and number fill in the checkout for them.')}</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('Buyer’s name')} aside={t('Optional')}>
@@ -191,7 +191,7 @@ function NewBag() {
 
         <aside className="mt-8 md:sticky md:top-6 md:mt-10">
           <div className="receipt px-5 pt-5 pb-6">
-            <div className="space-y-2 text-[14px]">
+            <div className="space-y-2 text-14">
               {lines.length === 0 && <p className="text-muted">{t('Nothing in the bag yet')}</p>}
               {lines.map((l) => (
                 <div key={l.key} className="flex items-baseline justify-between gap-4">
@@ -199,20 +199,20 @@ function NewBag() {
                     {l.qty} × {l.product.name}
                     {l.size ? ` · ${l.size}` : ''}
                   </span>
-                  <span className="font-mono text-[13px]">{tzs((Number(l.price) || 0) * l.qty)}</span>
+                  <span className="font-mono text-13">{tzs((Number(l.price) || 0) * l.qty)}</span>
                 </div>
               ))}
             </div>
             <div className="receipt-rule mt-4 flex items-baseline justify-between pt-4">
-              <span className="text-[15px] font-medium">{t(count === 1 ? 'Total, {n} item' : 'Total, {n} items', { n: count })}</span>
-              <span className="font-mono text-[20px] font-medium tracking-tight">{tzs(total)}</span>
+              <span className="text-15 font-medium">{t(count === 1 ? 'Total, {n} item' : 'Total, {n} items', { n: count })}</span>
+              <span className="font-mono text-20 font-medium tracking-tight">{tzs(total)}</span>
             </div>
           </div>
           <ErrorText>{error}</ErrorText>
           <button type="button" className="btn btn-lg mt-4 w-full" disabled={busy || !lines.length} onClick={make}>
             {busy ? t('Making the link') : t('Make the link')}
           </button>
-          <p className="mt-3 text-center text-[13px] leading-5 text-muted">{t('The link works once and ends after 7 days. Delivery is agreed on WhatsApp, as always.')}</p>
+          <p className="mt-3 text-center text-13 leading-5 text-muted">{t('The link works once and ends after 7 days. Delivery is agreed on WhatsApp, as always.')}</p>
         </aside>
       </div>
 

@@ -74,14 +74,14 @@ function ShopSettings() {
         <Group title={t('Profile')} sub={t('Your name, logo and story at the top of your shop.')}>
           <div className="flex items-center gap-5">
             <button type="button" className="group relative shrink-0" onClick={() => logoRef.current?.click()} aria-label={t('Change logo')}>
-              <ShopAvatar name={s.name} logo={s.logo_key} className="h-20 w-20 text-[24px]" />
+              <ShopAvatar name={s.name} logo={s.logo_key} className="h-20 w-20 text-24" />
               <span className="absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white ring-4 ring-card transition-transform group-active:scale-95">
-                <Camera size={15} strokeWidth={1.75} />
+                <Camera size={16} strokeWidth={1.75} />
               </span>
             </button>
             <div className="min-w-0">
-              <p className="text-[15px] font-medium">{t('Shop logo')}</p>
-              <p className="mt-0.5 text-[13px] leading-5 text-muted">{t('A square photo works best. Without one, buyers see your initials.')}</p>
+              <p className="text-15 font-medium">{t('Shop logo')}</p>
+              <p className="mt-0.5 text-13 leading-5 text-muted">{t('A square photo works best. Without one, buyers see your initials.')}</p>
             </div>
             <input
               ref={logoRef}
@@ -106,10 +106,10 @@ function ShopSettings() {
             </Field>
             <Field label={t('Shop link')} hint={t('Your link stays the same so the ones you already shared keep working.')}>
               <div className="input flex items-center justify-between gap-3 bg-page">
-                <span className="code truncate text-[15px] text-ink-2">shopi.tz/{s.slug}</span>
+                <span className="code truncate text-15 text-ink-2">shopi.tz/{s.slug}</span>
                 <button
                   type="button"
-                  className="-my-2 -mr-2 flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2.5 text-[13px] font-medium transition-colors hover:bg-well"
+                  className="-my-2 -mr-2 flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2.5 text-13 font-medium transition-colors hover:bg-well"
                   onClick={async () => {
                     try {
                       await navigator.clipboard.writeText(`https://shopi.tz/${s.slug}`)
@@ -120,7 +120,7 @@ function ShopSettings() {
                     }
                   }}
                 >
-                  {copied ? <Check size={15} strokeWidth={2.25} /> : <Copy size={15} strokeWidth={1.6} />}
+                  {copied ? <Check size={16} strokeWidth={2.25} /> : <Copy size={16} strokeWidth={1.75} />}
                   {copied ? t('Copied') : t('Copy')}
                 </button>
               </div>
@@ -181,24 +181,24 @@ function ShopSettings() {
         <Group title={t('Shop look')} sub={t('Your colour, the style of your name, and a cover photo.')}>
           <div className="flex flex-wrap items-center gap-4">
             <span className="h-10 w-10 shrink-0 rounded-full shadow-[inset_0_0_0_1px_rgb(10_10_10/0.1)]" style={{ background: cleanHex(s.theme_color) ?? MOTO }} />
-            <p className="min-w-0 flex-1 text-[14px] text-ink-2">
+            <p className="min-w-0 flex-1 text-14 text-ink-2">
               {t(FONTS.find((f) => f.id === asFont(s.theme_font))!.name)} · {s.cover_key ? t('With a cover photo') : t('No cover photo')}
             </p>
             <Link to="/app/look" className="btn btn-ghost">
-              <Palette size={16} strokeWidth={1.6} /> {t('Change the look')} <ChevronRight size={16} strokeWidth={1.6} />
+              <Palette size={16} strokeWidth={1.75} /> {t('Change the look')} <ChevronRight size={16} strokeWidth={1.75} />
             </Link>
           </div>
         </Group>
 
         <Group title={t('Your own domain')} sub={t('Your shop at your own address, like www.yourshop.co.tz.')}>
           <Link to="/app/domain" className="btn btn-ghost">
-            <Globe size={16} strokeWidth={1.6} /> {t('Your own domain')} <ChevronRight size={16} strokeWidth={1.6} />
+            <Globe size={16} strokeWidth={1.75} /> {t('Your own domain')} <ChevronRight size={16} strokeWidth={1.75} />
           </Link>
         </Group>
 
         <Group title={t('QR code')} sub={t('Your shop’s code to print or post. Buyers scan it with their camera and your shop opens.')}>
           <button type="button" className="btn btn-ghost" onClick={() => setQrOpen(true)}>
-            <QrCodeIcon size={16} strokeWidth={1.6} /> {t('Show my QR code')} <ChevronRight size={16} strokeWidth={1.6} />
+            <QrCodeIcon size={16} strokeWidth={1.75} /> {t('Show my QR code')} <ChevronRight size={16} strokeWidth={1.75} />
           </button>
           <QrSheet open={qrOpen} onClose={() => setQrOpen(false)} />
         </Group>
@@ -221,7 +221,7 @@ function ShopSettings() {
             <Field label={t('Name on payments')} hint={t('Exactly as it shows on the payment SMS. We use it to check buyers’ proof.')}>
               <input className="input" value={s.lipa_name} onChange={set('lipa_name')} placeholder={t('e.g. ZEES STORE')} />
             </Field>
-            <div className="space-y-4 rounded-[16px] bg-page p-4">
+            <div className="space-y-4 rounded-16 bg-page p-4">
               <Switch
                 label={t('This is a personal number')}
                 sub={t('You check every payment yourself before confirming')}
@@ -260,15 +260,15 @@ function ShopSettings() {
             ))}
           </div>
           <button type="button" className="btn btn-quiet btn-sm mt-3" onClick={() => setAreas([...areas, { name: '', fee: '' }])}>
-            <Plus size={15} strokeWidth={2} /> {t('Add an area')}
+            <Plus size={16} strokeWidth={2.25} /> {t('Add an area')}
           </button>
           {unused.length > 0 && (
             <div className="mt-6">
-              <p className="text-[13px] text-muted">{t('Quick add in Dar es Salaam')}</p>
+              <p className="text-13 text-muted">{t('Quick add in Dar es Salaam')}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {unused.map((name) => (
-                  <button key={name} type="button" className="chip h-8 px-3 text-[13px]" onClick={() => setAreas([...areas.filter((a) => a.name.trim()), { name, fee: '' }])}>
-                    <Plus size={13} strokeWidth={2} /> {name}
+                  <button key={name} type="button" className="chip h-8 px-3 text-13" onClick={() => setAreas([...areas.filter((a) => a.name.trim()), { name, fee: '' }])}>
+                    <Plus size={14} strokeWidth={2.25} /> {name}
                   </button>
                 ))}
               </div>
@@ -310,12 +310,12 @@ function ShopSettings() {
 
         <Group title={t('Discount codes')} sub={t('Codes buyers type at checkout for money off, like EID10. Share them in your status.')}>
           <Link to="/app/discounts" className="btn btn-ghost">
-            <TicketPercent size={16} strokeWidth={1.6} /> {t('Discount codes')} <ChevronRight size={16} strokeWidth={1.6} />
+            <TicketPercent size={16} strokeWidth={1.75} /> {t('Discount codes')} <ChevronRight size={16} strokeWidth={1.75} />
           </Link>
         </Group>
 
         <Group title={t('Plan')} sub={t('Free, or Tembo once a year. See what Tembo adds.')}>
-          <div className="mb-3 rounded-[16px] bg-page p-4">
+          <div className="mb-3 rounded-16 bg-page p-4">
             <Switch
               label={t('Hide “Shop made with Shopi”')}
               sub={tembo ? t('The line at the end of your shop’s pages') : t('Part of Tembo')}
@@ -325,7 +325,7 @@ function ShopSettings() {
             />
           </div>
           <Link to="/app/plan" className="btn btn-ghost">
-            {t('See your plan')} <ChevronRight size={16} strokeWidth={1.6} />
+            {t('See your plan')} <ChevronRight size={16} strokeWidth={1.75} />
           </Link>
         </Group>
 
@@ -349,15 +349,15 @@ function ShopSettings() {
               router.navigate({ to: '/' })
             }}
           >
-            <LogOut size={16} strokeWidth={1.6} /> {t('Log out')}
+            <LogOut size={16} strokeWidth={1.75} /> {t('Log out')}
           </button>
         </Group>
       </div>
 
       {(dirty || error) && (
         <div className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(12px,env(safe-area-inset-bottom))] md:left-[248px] md:px-10 md:pb-6">
-          <div className="rise mx-auto flex max-w-[1160px] flex-col gap-3 rounded-[20px] bg-ink p-3 pl-5 text-white shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
-            <p className="flex-1 text-[14px]">{error ? <span className="text-[#ffb59c]">{error}</span> : t('You have unsaved changes')}</p>
+          <div className="rise mx-auto flex max-w-[1160px] flex-col gap-3 rounded-20 bg-ink p-3 pl-5 text-white shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
+            <p className="flex-1 text-14">{error ? <span className="text-bad-lit">{error}</span> : t('You have unsaved changes')}</p>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -392,8 +392,8 @@ function Group({ title, sub, children }: { title: string; sub: string; children:
   return (
     <section className="grid gap-5 py-8 first:pt-0 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-12 lg:py-10">
       <div>
-        <h2 className="text-[16px] font-semibold">{title}</h2>
-        <p className="mt-1 text-[14px] leading-5 text-muted">{sub}</p>
+        <h2 className="text-15 font-semibold">{title}</h2>
+        <p className="mt-1 text-14 leading-5 text-muted">{sub}</p>
       </div>
       <div className="card max-w-[720px] p-5 md:p-6">{children}</div>
     </section>

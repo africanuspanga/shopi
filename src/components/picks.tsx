@@ -81,10 +81,10 @@ export function TopPicksCard({ products }: { products: ProductRow[] }) {
   return (
     <section className="card mt-4 mb-4 p-4 md:mt-6 md:mb-6 md:flex md:items-center md:gap-8 md:p-5" aria-labelledby="top-picks-title">
       <div className="min-w-0 md:flex-1">
-        <h2 id="top-picks-title" className="text-[15px] font-semibold">
+        <h2 id="top-picks-title" className="text-15 font-semibold">
           {t('Top picks')}
         </h2>
-        <p className="mt-0.5 text-[13px] leading-5 text-muted">{note}</p>
+        <p className="mt-0.5 text-13 leading-5 text-muted">{note}</p>
       </div>
       <ol className="mt-3 grid grid-cols-4 gap-2 md:mt-0 md:w-[392px] md:shrink-0 md:gap-3">
         {Array.from({ length: SLOTS }, (_, i) => {
@@ -97,16 +97,16 @@ export function TopPicksCard({ products }: { products: ProductRow[] }) {
                   type="button"
                   onClick={() => setOpen(i)}
                   aria-label={`${t('Top pick {n}: {name}', { n: i + 1, name: p.name })}${off ? `, ${!p.active ? t('Hidden') : t('Sold out')}` : ''}`}
-                  className="relative block aspect-[4/5] w-full overflow-hidden rounded-[12px] bg-well transition-transform active:scale-[0.97]"
+                  className="relative block aspect-[4/5] w-full overflow-hidden rounded-12 bg-well transition-transform active:scale-[0.97]"
                 >
                   <Img size="thumb" k={p.images[0]} alt="" className={`h-full w-full ${off ? 'opacity-45' : ''}`} />
-                  <span className="tnum absolute top-1.5 left-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-card px-1.5 text-[12px] font-medium">
+                  <span className="tnum absolute top-1.5 left-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-card px-1.5 text-12 font-medium">
                     {i + 1}
                   </span>
                   {/* An icon, not a word: the slot is too narrow for "Sold out" or "Imefichwa"; the sheet says it in full. */}
                   {off && (
                     <span className="absolute right-1.5 bottom-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-card text-ink-2" aria-hidden="true">
-                      {!p.active ? <EyeOff size={13} strokeWidth={1.75} /> : <PackageX size={13} strokeWidth={1.75} />}
+                      {!p.active ? <EyeOff size={14} strokeWidth={1.75} /> : <PackageX size={14} strokeWidth={1.75} />}
                     </span>
                   )}
                 </button>
@@ -120,11 +120,11 @@ export function TopPicksCard({ products }: { products: ProductRow[] }) {
                 type="button"
                 onClick={() => setPicking('add')}
                 aria-label={t('Add a top pick')}
-                className="flex aspect-[4/5] w-full items-center justify-center rounded-[12px] border border-dashed border-line-strong text-faint transition-colors hover:border-ink hover:text-ink"
+                className="flex aspect-[4/5] w-full items-center justify-center rounded-12 border border-dashed border-line-strong text-faint transition-colors hover:border-ink hover:text-ink"
               >
                 {next ? (
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white">
-                    <Plus size={16} strokeWidth={2} />
+                    <Plus size={16} strokeWidth={2.25} />
                   </span>
                 ) : (
                   <Plus size={16} strokeWidth={1.75} />
@@ -139,12 +139,12 @@ export function TopPicksCard({ products }: { products: ProductRow[] }) {
         {current && open != null && (
           <>
             <div className="flex items-center gap-4">
-              <Img size="thumb" k={current.images[0]} alt={current.name} className="h-20 w-16 shrink-0 rounded-[10px]" />
+              <Img size="thumb" k={current.images[0]} alt={current.name} className="h-20 w-16 shrink-0 rounded-12" />
               <div className="min-w-0">
-                <p className="line-clamp-2 text-[15px] leading-5 font-medium">{current.name}</p>
-                <p className="tnum mt-0.5 text-[14px] text-ink-2">{tzs(current.price)}</p>
+                <p className="line-clamp-2 text-15 leading-5 font-medium">{current.name}</p>
+                <p className="tnum mt-0.5 text-14 text-ink-2">{tzs(current.price)}</p>
                 {!showable(current) && (
-                  <p className="mt-1 text-[13px] text-muted">
+                  <p className="mt-1 text-13 text-muted">
                     {!current.active ? t('Hidden from buyers, so it is out of Top picks too') : t('Sold out, so buyers don’t see it until it is back')}
                   </p>
                 )}
@@ -168,13 +168,13 @@ export function TopPicksCard({ products }: { products: ProductRow[] }) {
                   setOpen(null)
                 }}
               >
-                <RefreshCw size={15} strokeWidth={1.75} /> {t('Choose another product')}
+                <RefreshCw size={16} strokeWidth={1.75} /> {t('Choose another product')}
               </button>
               <button type="button" className="btn btn-ghost w-full" onClick={() => save(picks.filter((id) => id !== current.id))}>
                 <X size={16} strokeWidth={1.75} /> {t('Take out of Top picks')}
               </button>
             </div>
-            <Link to="/app/products/$id" params={{ id: current.id }} className="mt-4 block text-center text-[13px] text-muted underline decoration-line-strong underline-offset-4 hover:text-ink">
+            <Link to="/app/products/$id" params={{ id: current.id }} className="mt-4 block text-center text-13 text-muted underline decoration-line-strong underline-offset-4 hover:text-ink">
               {t('Edit this product')}
             </Link>
           </>

@@ -62,7 +62,7 @@ export function EmailForm({ initial = '', weekly: weeklyStart = true, onSaved }:
       >
         <input className="input" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="zee@gmail.com" />
       </Field>
-      <div className="rounded-[16px] bg-page p-4">
+      <div className="rounded-16 bg-page p-4">
         <Switch label={t('A summary each Monday')} sub={t('Last week’s visits, orders and sales.')} checked={weekly} onChange={setWeekly} />
       </div>
       <ErrorText>{error}</ErrorText>
@@ -88,7 +88,7 @@ export function EmailSettings() {
     setNote(text)
     setTimeout(() => setNote(''), 2600)
   }
-  if (!me) return <p className="text-[14px] text-muted">{t('Loading')}</p>
+  if (!me) return <p className="text-14 text-muted">{t('Loading')}</p>
 
   const prefs = async (p: { weekly?: boolean; news?: boolean }) => {
     setMe({ ...me, ...p })
@@ -113,7 +113,7 @@ export function EmailSettings() {
           }}
         />
         {editing && (
-          <button type="button" className="mt-3 text-[14px] font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink" onClick={() => setEditing(false)}>
+          <button type="button" className="mt-3 text-14 font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink" onClick={() => setEditing(false)}>
             {t('Keep {email}', { email: me.email ?? '' })}
           </button>
         )}
@@ -126,8 +126,8 @@ export function EmailSettings() {
       <div className="flex items-start gap-3">
         <Check size={18} strokeWidth={2.25} className="mt-0.5 shrink-0 text-ok" />
         <div className="min-w-0">
-          <p className="truncate text-[15px] font-medium">{me.email}</p>
-          <p className="mt-0.5 text-[14px] leading-5 text-muted">{t('Your Tembo receipts and reminders come here.')}</p>
+          <p className="truncate text-15 font-medium">{me.email}</p>
+          <p className="mt-0.5 text-14 leading-5 text-muted">{t('Your Tembo receipts and reminders come here.')}</p>
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -185,11 +185,11 @@ export function EmailRow({ state, className = '' }: { state: { open: boolean; em
     <>
       <section className={`${className} card relative flex items-center gap-4 py-4 pr-12 pl-5 md:pr-14`}>
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-page">
-          <Mail size={18} strokeWidth={1.6} />
+          <Mail size={18} strokeWidth={1.75} />
         </span>
         <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setOpen(true)}>
-          <span className="block text-[15px] font-medium">{t('Get your receipts by email')}</span>
-          <span className="block truncate text-[13px] text-muted">{t('Tembo receipts, reminders, and a summary each Monday if you like.')}</span>
+          <span className="block text-15 font-medium">{t('Get your receipts by email')}</span>
+          <span className="block truncate text-13 text-muted">{t('Tembo receipts, reminders, and a summary each Monday if you like.')}</span>
         </button>
         <button
           type="button"
@@ -204,11 +204,11 @@ export function EmailRow({ state, className = '' }: { state: { open: boolean; em
             setHidden(true)
           }}
         >
-          <X size={16} strokeWidth={1.6} />
+          <X size={16} strokeWidth={1.75} />
         </button>
       </section>
       <Sheet open={open} onClose={() => setOpen(false)} title={t('Get your receipts by email')}>
-        <p className="-mt-1 mb-5 text-[14px] leading-5 text-muted">{t('Tembo receipts, renewal reminders, and a summary each Monday if you like.')}</p>
+        <p className="-mt-1 mb-5 text-14 leading-5 text-muted">{t('Tembo receipts, renewal reminders, and a summary each Monday if you like.')}</p>
         <EmailForm
           onSaved={(email) => {
             setOpen(false)

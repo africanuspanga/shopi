@@ -91,15 +91,15 @@ export function PickSheet({ onRead }: { onRead: (rows: SheetRow[], name: string)
             setOver(false)
             read(e.dataTransfer.files[0])
           }}
-          className="group flex min-h-[260px] cursor-pointer flex-col items-center justify-center gap-4 rounded-[28px] border border-dashed border-line-strong bg-card px-6 py-10 text-center transition-colors hover:border-ink has-[:focus-visible]:border-ink data-[over=true]:border-ink data-[over=true]:bg-well md:min-h-[340px]"
+          className="group flex min-h-[260px] cursor-pointer flex-col items-center justify-center gap-4 rounded-28 border border-dashed border-line-strong bg-card px-6 py-10 text-center transition-colors hover:border-ink has-[:focus-visible]:border-ink data-[over=true]:border-ink data-[over=true]:bg-well md:min-h-[340px]"
         >
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white transition-transform group-active:scale-95">
-            {reading ? <Loader2 size={22} className="animate-spin" /> : <FileSpreadsheet size={22} strokeWidth={1.75} />}
+            {reading ? <Loader2 size={24} className="animate-spin" /> : <FileSpreadsheet size={24} strokeWidth={1.75} />}
           </span>
           <span>
-            <span className="block text-[17px] font-medium">{reading ? t('Reading your sheet') : t('Choose your sheet')}</span>
-            <span className="mt-1 block text-[14px] text-muted">{t('Excel (.xlsx) or CSV, up to 1,000 products')}</span>
-            <span className="mt-0.5 hidden text-[14px] text-muted md:block">{t('Or drop it here')}</span>
+            <span className="block text-17 font-medium">{reading ? t('Reading your sheet') : t('Choose your sheet')}</span>
+            <span className="mt-1 block text-14 text-muted">{t('Excel (.xlsx) or CSV, up to 1,000 products')}</span>
+            <span className="mt-0.5 hidden text-14 text-muted md:block">{t('Or drop it here')}</span>
           </span>
           <input
             type="file"
@@ -116,7 +116,7 @@ export function PickSheet({ onRead }: { onRead: (rows: SheetRow[], name: string)
         {pasting ? (
           <div className="card space-y-3 p-5">
             <Field label={t('Rows from your sheet')} hint={t('In Excel or Google Sheets, select the rows with the column names on top, copy them and paste here.')}>
-              <textarea className="input code min-h-40 text-[13px]" value={pasted} onChange={(e) => setPasted(e.target.value)} autoFocus />
+              <textarea className="input code min-h-40 text-13" value={pasted} onChange={(e) => setPasted(e.target.value)} autoFocus />
             </Field>
             <button
               type="button"
@@ -133,28 +133,28 @@ export function PickSheet({ onRead }: { onRead: (rows: SheetRow[], name: string)
           </div>
         ) : (
           <button type="button" className="btn btn-quiet btn-sm" onClick={() => setPasting(true)}>
-            <ClipboardPaste size={15} strokeWidth={1.75} /> {t('Paste rows instead')}
+            <ClipboardPaste size={16} strokeWidth={1.75} /> {t('Paste rows instead')}
           </button>
         )}
       </div>
 
       <aside className="card p-5 md:p-6">
-        <h2 className="title text-[19px]">{t('How your sheet should look')}</h2>
-        <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{t('One product per row. Only the name and the price are needed.')}</p>
+        <h2 className="title text-20">{t('How your sheet should look')}</h2>
+        <p className="mt-1.5 text-14 leading-relaxed text-muted">{t('One product per row. Only the name and the price are needed.')}</p>
         <dl className="mt-4 divide-y divide-line border-y border-line">
           {GUIDE.map(([label, example, hint]) => (
             <div key={label} className="flex items-baseline justify-between gap-4 py-2.5">
-              <dt className="shrink-0 text-[14px] font-medium">
+              <dt className="shrink-0 text-14 font-medium">
                 {t(label)}
-                {hint && <span className="block text-[12px] font-normal text-muted">{t(hint)}</span>}
+                {hint && <span className="block text-12 font-normal text-muted">{t(hint)}</span>}
               </dt>
-              <dd className="code min-w-0 truncate text-right text-[12px] text-ink-2">{example}</dd>
+              <dd className="code min-w-0 truncate text-right text-12 text-ink-2">{example}</dd>
             </div>
           ))}
         </dl>
-        <p className="mt-4 text-[13px] leading-relaxed text-muted">{t('Rows with the same name become one product with its sizes. A product export from Shopify works as it is.')}</p>
+        <p className="mt-4 text-13 leading-relaxed text-muted">{t('Rows with the same name become one product with its sizes. A product export from Shopify works as it is.')}</p>
         <button type="button" className="btn btn-ghost btn-sm mt-5 w-full" onClick={download}>
-          <Download size={15} strokeWidth={1.75} /> {t('Download the template')}
+          <Download size={16} strokeWidth={1.75} /> {t('Download the template')}
         </button>
       </aside>
     </div>
@@ -197,8 +197,8 @@ export function MatchColumns({
           return (
             <li key={col} className="grid gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_220px] sm:items-center">
               <div className={`min-w-0 ${f === 'skip' ? 'opacity-55' : ''}`}>
-                <p className="truncate text-[15px] font-medium">{name || t('Column {letter}', { letter: letter(col) })}</p>
-                <p className="code mt-1 truncate text-[12px] text-muted">{vals.length ? vals.join(' · ') : t('Empty')}</p>
+                <p className="truncate text-15 font-medium">{name || t('Column {letter}', { letter: letter(col) })}</p>
+                <p className="code mt-1 truncate text-12 text-muted">{vals.length ? vals.join(' · ') : t('Empty')}</p>
               </div>
               <div className="grid gap-2">
                 <select className="input h-11" aria-label={t('What this column holds')} value={f} onChange={(e) => onField(col, e.target.value as SheetField)}>
@@ -271,11 +271,11 @@ function Thumb({ src, file }: { src?: string; file?: File }) {
   }, [file])
   const shown = file ? local : src && isLink(src) && !broken ? previewPhotoLink(src) : null
   return (
-    <span className="flex h-[68px] w-[54px] shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-well">
+    <span className="flex h-[68px] w-[54px] shrink-0 items-center justify-center overflow-hidden rounded-12 bg-well">
       {shown ? (
         <img src={shown} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setBroken(true)} className="h-full w-full object-cover" />
       ) : (
-        <ImageIcon size={18} strokeWidth={1.5} className="text-faint" />
+        <ImageIcon size={18} strokeWidth={1.75} className="text-faint" />
       )}
     </span>
   )
@@ -322,15 +322,15 @@ export function DraftList({ drafts, files, kind }: { drafts: Draft[]; files: Pho
               <Thumb src={photo} file={photo && !isLink(photo) ? findFile(files, photo) : undefined} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-3">
-                  <p className="truncate text-[15px] font-medium">{d.name || t('No name')}</p>
+                  <p className="truncate text-15 font-medium">{d.name || t('No name')}</p>
                   {d.price > 0 && (
-                    <p className="tnum shrink-0 text-[14px]">
+                    <p className="tnum shrink-0 text-14">
                       {d.compare && <span className="mr-1.5 text-muted line-through">{tzs(d.compare)}</span>}
                       {tzs(d.price)}
                     </p>
                   )}
                 </div>
-                {details.length > 0 && <p className="mt-0.5 truncate text-[13px] text-muted">{details.join(' · ')}</p>}
+                {details.length > 0 && <p className="mt-0.5 truncate text-13 text-muted">{details.join(' · ')}</p>}
                 <p className="meta mt-1">
                   {t('Row {n}', { n: d.line })}
                   {d.issue && <span className={fixIssue(d.issue) ? 'text-bad' : ''}> · {issueText(t, d)}</span>}
@@ -339,7 +339,7 @@ export function DraftList({ drafts, files, kind }: { drafts: Draft[]; files: Pho
             </li>
           )
         })}
-        {list.length === 0 && <li className="px-4 py-8 text-center text-[14px] text-muted">{t('Nothing here')}</li>}
+        {list.length === 0 && <li className="px-4 py-8 text-center text-14 text-muted">{t('Nothing here')}</li>}
       </ul>
       {!more && list.length > SHOWN && (
         <button type="button" className="btn btn-ghost btn-sm mt-4" onClick={() => setMore(true)}>
@@ -358,18 +358,18 @@ export function PhotoFilesCard({ drafts, files, onFiles }: { drafts: Draft[]; fi
   if (!named.length) return null
   const missing = named.filter((n) => !findFile(files, n))
   return (
-    <div className="rounded-[16px] bg-page p-4">
-      <p className="text-[14px] font-medium">{t('Photos named in your sheet')}</p>
-      <p className="mt-0.5 text-[13px] leading-5 text-muted">
+    <div className="rounded-16 bg-page p-4">
+      <p className="text-14 font-medium">{t('Photos named in your sheet')}</p>
+      <p className="mt-0.5 text-13 leading-5 text-muted">
         {missing.length
           ? t('{found} of {n} chosen. Choose them all at once; we match them by file name.', { found: named.length - missing.length, n: named.length })
           : t('All {n} chosen.', { n: named.length })}
       </p>
       {missing.length > 0 && missing.length < named.length && (
-        <p className="code mt-1.5 line-clamp-2 text-[12px] text-muted">{t('Not found: {names}', { names: missing.slice(0, 6).join(', ') + (missing.length > 6 ? '…' : '') })}</p>
+        <p className="code mt-1.5 line-clamp-2 text-12 text-muted">{t('Not found: {names}', { names: missing.slice(0, 6).join(', ') + (missing.length > 6 ? '…' : '') })}</p>
       )}
       <button type="button" className="btn btn-ghost btn-sm mt-3" onClick={() => ref.current?.click()}>
-        <ImagePlus size={15} strokeWidth={1.75} /> {t('Choose photos')}
+        <ImagePlus size={16} strokeWidth={1.75} /> {t('Choose photos')}
       </button>
       <input
         ref={ref}
@@ -531,11 +531,11 @@ export function ProgressCard({ progress, onStop, stopping }: { progress: Progres
   const share = progress.total ? progress.done / progress.total : 0
   return (
     <div className="card p-6 md:p-8">
-      <p className="title tnum text-[30px] md:text-[36px]">{t('{done} of {n}', { done: progress.done, n: progress.total })}</p>
+      <p className="title tnum text-28 md:text-32">{t('{done} of {n}', { done: progress.done, n: progress.total })}</p>
       <div className="mt-5 h-2 overflow-hidden rounded-full bg-raised">
         <div className="h-full origin-left rounded-full bg-ink transition-transform duration-300 ease-[var(--ease-out)]" style={{ transform: `scaleX(${share})` }} />
       </div>
-      <p className="mt-4 truncate text-[14px] text-muted">
+      <p className="mt-4 truncate text-14 text-muted">
         {stopping ? t('Stopping after these products') : progress.now ? t('Photos for {name}', { name: progress.now }) : t('Saving')}
       </p>
       <button type="button" className="btn btn-ghost btn-sm mt-6" disabled={stopping} onClick={onStop}>
@@ -551,7 +551,7 @@ export function DoneCard({ outcome, children }: { outcome: Outcome; children: Re
   return (
     <div className="space-y-4">
       {(outcome.failed || outcome.stopped) && (
-        <p className="rounded-[14px] bg-well px-4 py-3 text-[14px] leading-relaxed text-ink-2">
+        <p className="rounded-14 bg-well px-4 py-3 text-14 leading-relaxed text-ink-2">
           {outcome.failed
             ? t('The connection dropped. Import the same sheet again: the products already added are left out, the rest come in.')
             : t('You stopped the import. Import the same sheet again to add the rest; the products already added are left out.')}
@@ -560,35 +560,35 @@ export function DoneCard({ outcome, children }: { outcome: Outcome; children: Re
       <div className="card divide-y divide-line">
         <Row
           ok
-          icon={<Check size={14} strokeWidth={2} />}
+          icon={<Check size={14} strokeWidth={2.25} />}
           title={outcome.added.length - hidden === 1 ? t('1 product in your shop') : t('{n} products in your shop', { n: outcome.added.length - hidden })}
         />
         {hidden > 0 && (
-          <Row icon={<EyeOff size={13} strokeWidth={1.75} />} title={t('{n} hidden until they have a photo', { n: hidden })} sub={t('Open each one, add a photo and turn on Show in my shop.')} />
+          <Row icon={<EyeOff size={14} strokeWidth={1.75} />} title={t('{n} hidden until they have a photo', { n: hidden })} sub={t('Open each one, add a photo and turn on Show in my shop.')} />
         )}
-        {outcome.collections.length > 0 && <Row icon={<Layers size={13} strokeWidth={1.75} />} title={t('New collections: {names}', { names: outcome.collections.join(', ') })} />}
+        {outcome.collections.length > 0 && <Row icon={<Layers size={14} strokeWidth={1.75} />} title={t('New collections: {names}', { names: outcome.collections.join(', ') })} />}
         {!!outcome.limited && (
           <Row
-            icon={<Layers size={13} strokeWidth={1.75} />}
+            icon={<Layers size={14} strokeWidth={1.75} />}
             title={t('{n} not added: a free shop holds up to 300 products. Tembo has no limit.', { n: outcome.limited })}
           />
         )}
       </div>
       {outcome.misses.length > 0 && (
         <section>
-          <h2 className="title mt-8 text-[19px]">{t('Photos that didn’t come in')}</h2>
+          <h2 className="title mt-8 text-20">{t('Photos that didn’t come in')}</h2>
           <ul className="card mt-3 divide-y divide-line">
             {outcome.misses.map((m, i) => (
               <li key={i} className="px-5 py-3.5">
                 {m.id ? (
-                  <Link to="/app/products/$id" params={{ id: m.id }} className="text-[15px] font-medium underline-offset-4 hover:underline">
+                  <Link to="/app/products/$id" params={{ id: m.id }} className="text-15 font-medium underline-offset-4 hover:underline">
                     {m.product}
                   </Link>
                 ) : (
-                  <p className="text-[15px] font-medium">{m.product}</p>
+                  <p className="text-15 font-medium">{m.product}</p>
                 )}
-                <p className="mt-0.5 text-[13px] text-bad">{photoWhy(t, m.why)}</p>
-                <p className="code mt-1 truncate text-[12px] text-muted">{m.src}</p>
+                <p className="mt-0.5 text-13 text-bad">{photoWhy(t, m.why)}</p>
+                <p className="code mt-1 truncate text-12 text-muted">{m.src}</p>
               </li>
             ))}
           </ul>
@@ -604,8 +604,8 @@ function Row({ icon, title, sub, ok = false }: { icon: ReactNode; title: string;
     <div className="flex items-start gap-3 px-5 py-4">
       <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${ok ? 'bg-ok/10 text-ok' : 'bg-well text-ink-2'}`}>{icon}</span>
       <div className="min-w-0">
-        <p className="text-[15px] font-medium">{title}</p>
-        {sub && <p className="mt-0.5 text-[13px] text-muted">{sub}</p>}
+        <p className="text-15 font-medium">{title}</p>
+        {sub && <p className="mt-0.5 text-13 text-muted">{sub}</p>}
       </div>
     </div>
   )

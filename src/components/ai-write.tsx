@@ -57,14 +57,14 @@ export function WriteItForMe({ name, notes, option, options, onText }: { name: s
 
   if (out)
     return (
-      <div className="mt-3 rounded-[16px] bg-page p-4">
+      <div className="mt-3 rounded-16 bg-page p-4">
         <div className="flex items-center gap-2">
           <TemboPill />
-          <p className="text-[14px] font-medium">{t('This month’s {n} AI descriptions are used', { n: FREE_AI_MONTH })}</p>
+          <p className="text-14 font-medium">{t('This month’s {n} AI descriptions are used', { n: FREE_AI_MONTH })}</p>
         </div>
-        <p className="mt-1 text-[13px] leading-5 text-ink-2">{t('More come on the 1st. Tembo writes as many as you need.')}</p>
-        <Link to="/app/plan" className="mt-2 inline-flex items-center gap-1 text-[13px] font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
-          {t('See what Tembo adds')} <ArrowRight size={13} strokeWidth={1.75} />
+        <p className="mt-1 text-13 leading-5 text-ink-2">{t('More come on the 1st. Tembo writes as many as you need.')}</p>
+        <Link to="/app/plan" className="mt-2 inline-flex items-center gap-1 text-13 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink">
+          {t('See what Tembo adds')} <ArrowRight size={14} strokeWidth={1.75} />
         </Link>
       </div>
     )
@@ -73,23 +73,23 @@ export function WriteItForMe({ name, notes, option, options, onText }: { name: s
     <div className="mt-3">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <button type="button" className="btn btn-sm btn-quiet" onClick={run} disabled={busy}>
-          <PenLine size={15} strokeWidth={1.6} /> {busy ? t('Writing') : notes.trim() ? t('Write it from my notes') : t('Write it for me')}
+          <PenLine size={16} strokeWidth={1.75} /> {busy ? t('Writing') : notes.trim() ? t('Write it from my notes') : t('Write it for me')}
         </button>
         {undo !== null && !busy && notes === written.current && (
           <button
             type="button"
-            className="inline-flex items-center gap-1 text-[13px] font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
+            className="inline-flex items-center gap-1 text-13 font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
             onClick={() => {
               onText(undo)
               setUndo(null)
             }}
           >
-            <Undo2 size={13} strokeWidth={1.75} /> {t('Undo')}
+            <Undo2 size={14} strokeWidth={1.75} /> {t('Undo')}
           </button>
         )}
         {allow.left !== null && <span className="meta ml-auto">{t(allow.left === 1 ? '1 left this month' : '{n} left this month', { n: allow.left })}</span>}
       </div>
-      <p className="mt-2 text-[13px] leading-5 text-muted">
+      <p className="mt-2 text-13 leading-5 text-muted">
         {error || t('Uses the name, the options and what you typed. Check it before you save: it only knows what you told it.')}
       </p>
     </div>
@@ -142,22 +142,22 @@ export function WriteBio({ notes, onText, ready }: { notes: string; onText: (tex
     <div className="mt-3">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <button type="button" className="btn btn-sm btn-quiet" onClick={run} disabled={busy}>
-          <PenLine size={15} strokeWidth={1.6} /> {busy ? t('Writing') : notes.trim() ? t('Write it from my notes') : t('Write it for me')}
+          <PenLine size={16} strokeWidth={1.75} /> {busy ? t('Writing') : notes.trim() ? t('Write it from my notes') : t('Write it for me')}
         </button>
         {undo !== null && !busy && notes === written.current && (
           <button
             type="button"
-            className="inline-flex items-center gap-1 text-[13px] font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
+            className="inline-flex items-center gap-1 text-13 font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
             onClick={() => {
               onText(undo)
               setUndo(null)
             }}
           >
-            <Undo2 size={13} strokeWidth={1.75} /> {t('Undo')}
+            <Undo2 size={14} strokeWidth={1.75} /> {t('Undo')}
           </button>
         )}
       </div>
-      <p className="mt-2 text-[13px] leading-5 text-muted">{error || t('Uses your shop’s name, what you sell, where you are and your products. Check it before you save.')}</p>
+      <p className="mt-2 text-13 leading-5 text-muted">{error || t('Uses your shop’s name, what you sell, where you are and your products. Check it before you save.')}</p>
     </div>
   )
 }

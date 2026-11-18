@@ -13,7 +13,7 @@ export function BagPill({ state }: { state: BagState }) {
   const t = useT()
   const s = STATE[state]
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[13px] whitespace-nowrap ${state === 'open' || state === 'used' ? 'text-ink-2' : 'text-muted'}`}>
+    <span className={`inline-flex items-center gap-1.5 text-13 whitespace-nowrap ${state === 'open' || state === 'used' ? 'text-ink-2' : 'text-muted'}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
       {t(s.label)}
     </span>

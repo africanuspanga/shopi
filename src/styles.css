@@ -106,10 +106,51 @@
   --color-ok: #15803d;
   --color-wait: #b45309;
   --color-bad: #d92d20;
+  /* An error on a black surface (the save bar): bad, lightened to read on ink. */
+  --color-bad-lit: #ffb59c;
 
   --radius-control: 14px;
   --radius-card: 20px;
   --radius-panel: 28px;
+
+  /*
+   * The scales (DESIGN.md). Screens use these names, never a typed value: text-15, not text-[15px]; rounded-20, not
+   * rounded-[20px]. `npm run check:design` fails on anything else. Font sizes set no line height of their own (as the
+   * typed values never did): use leading-* where a block needs one.
+   * Interface text: 11 tab labels and badges, 12 meta, 13 captions and hints, 14 labels and secondary text, 15 body,
+   * 17 lead paragraphs. Titles and headlines: 20 to 112, larger as the screen allows (text-28 md:text-40).
+   */
+  --text-11: 11px;
+  --text-12: 12px;
+  --text-13: 13px;
+  --text-14: 14px;
+  --text-15: 15px;
+  --text-17: 17px;
+  --text-20: 20px;
+  --text-24: 24px;
+  --text-28: 28px;
+  --text-32: 32px;
+  --text-40: 40px;
+  --text-48: 48px;
+  --text-56: 56px;
+  --text-64: 64px;
+  --text-72: 72px;
+  --text-80: 80px;
+  --text-112: 112px;
+
+  /* Corner radius: 2 and 4 for chart bars and marks, 8 small tags, 12 thumbnails, 14 inputs and inner rows, 16 product
+     photos and blocks inside a card, 20 cards, 28 sheets and panels, 32 and 40 the landing's large panels. Pills and
+     dots use rounded-full. */
+  --radius-2: 2px;
+  --radius-4: 4px;
+  --radius-8: 8px;
+  --radius-12: 12px;
+  --radius-14: 14px;
+  --radius-16: 16px;
+  --radius-20: 20px;
+  --radius-28: 28px;
+  --radius-32: 32px;
+  --radius-40: 40px;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --shadow-float: 0 1px 2px rgb(10 10 10 / 0.06), 0 12px 32px -8px rgb(10 10 10 / 0.18);
