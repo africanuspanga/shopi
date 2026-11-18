@@ -7,6 +7,8 @@ import { Money, ShopAvatar, StatusPill } from '#/components/ui'
 import { SHOP_FILTERS, asAdminDays, asAdminTab, shopMatches, type AdminDays, type AdminShop, type AdminTab, type ShopFilter } from '#/lib/admin'
 import { getOwnerDashboard, type OwnerSection } from '#/lib/api/admin'
 import { recheckTemboPayment } from '#/lib/api/billing'
+import { sendTestEmail } from '#/lib/api/email'
+import { EMAIL_KINDS, type EmailKind } from '#/lib/email'
 import { CATEGORIES, localPhone, timeAgo, waLink, type OrderStatus } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import { Ranges, useAdminTabs } from './route'
@@ -707,6 +709,10 @@ function Health({ d }: { d: OwnerSection<'health'> }) {
     'pay-push': t('Payment prompts sent again'),
     'pay-lipa': t('Lipa Namba numbers asked for'),
     'selcom-hook': t('Callbacks from Selcom'),
+    email: t('Emails sellers added or changed'),
+    'email-to': t('Emails added for one address'),
+    'email-all': t('Emails added across Shopi'),
+    'email-test': t('Test emails sent from here'),
   }
   const backupOld = d.backup ? d.at - d.backup.at > 8 * 86_400_000 : true
   const status: Record<string, string> = { active: t('Active'), pending: t('Waiting for DNS'), failed: t('Failed') }
@@ -755,6 +761,7 @@ function Health({ d }: { d: OwnerSection<'health'> }) {
           </div>
         </div>
       </Card>
+      <EmailCard e={d.email} days={d.days} className="lg:col-span-12" />
       <Card title={t('Own domains')} sub={t('Shops’ own addresses and where each one stands.')} className="lg:col-span-6">
         {d.domains.length ? (
           <ul className="divide-y divide-line">
@@ -859,5 +866,99 @@ function SetupCards({ d }: { d: OwnerSection<'shops'> }) {
         )}
       </Card>
     </>
+  )
+}
+
+/**
+ * Email (o-email): whether Resend is set up and email is open to sellers, what went out, and every kind of email to
+ * preview or send to an address the founder types, so they see each one land before sellers get it.
+ */
+function EmailCard({ e, days, className = '' }: { e: OwnerSection<'health'>['email']; days: number; className?: string }) {
+  const t = useT()
+  const lang = useLang()
+  const [to, setTo] = useState('')
+  const [kind, setKind] = useState<EmailKind>('added')
+  const [mailLang, setMailLang] = useState<'en' | 'sw'>(lang)
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState('')
+  const names: Record<EmailKind, string> = { added: t('Your email is set'), receipt: t('Tembo receipt'), renewal: t('Tembo ends in 7 days'), weekly: t('Weekly summary') }
+  const statusName: Record<string, string> = { sent: t('sent'), failed: t('failed'), held: t('held (not live)'), dry: t('not sent (no key)') }
+  const kindName = (k: string) => (k.startsWith('test-') ? `${t('Test')}: ${names[k.slice(5) as EmailKind] ?? k.slice(5)}` : (names[k as EmailKind] ?? k))
+  return (
+    <Card title={t('Email')} sub={t('Sent through Resend from hello@shopi.tz. Replies reach the founder’s inbox.')} className={className}>
+      <div className="grid gap-x-10 gap-y-6 lg:grid-cols-2">
+        <div>
+          <Row label={t('Resend key')} value={e.ready ? t('Saved') : t('Missing')} />
+          <Row label={t('Open to sellers')} value={e.live ? t('Yes') : t('Not yet: only admins get email')} />
+          <Row label={t('Sellers who added an email')} value={num(e.sellers.added)} />
+          <Row label={t('Get the weekly summary')} value={num(e.sellers.weekly)} />
+          {e.lastFailure && <Row label={t('Last failure')} value={`${kindName(e.lastFailure.kind)} · ${(e.lastFailure.error ?? '').slice(0, 60)}`} />}
+          <p className="mt-4 text-[13px] font-medium">{t('Last {n} days', { n: days })}</p>
+          {e.log.length ? e.log.map((r) => <Row key={`${r.kind}-${r.status}`} label={`${kindName(r.kind)} · ${statusName[r.status] ?? r.status}`} value={num(r.n)} />) : <div className="mt-2"><Nothing>{t('No email yet.')}</Nothing></div>}
+        </div>
+        <div>
+          <p className="text-[13px] font-medium">{t('See each email')}</p>
+          <ul className="mt-2 divide-y divide-line">
+            {EMAIL_KINDS.map((k) => (
+              <li key={k} className="flex items-center justify-between gap-3 py-2.5 text-[14px]">
+                <span className="min-w-0 truncate">{names[k]}</span>
+                <span className="flex shrink-0 gap-3 text-[13px]">
+                  <a className="underline decoration-line-strong underline-offset-4 hover:decoration-ink" href={`/api/admin-email-preview?kind=${k}&lang=en`} target="_blank" rel="noreferrer">English</a>
+                  <a className="underline decoration-line-strong underline-offset-4 hover:decoration-ink" href={`/api/admin-email-preview?kind=${k}&lang=sw`} target="_blank" rel="noreferrer">Kiswahili</a>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <form
+            className="mt-5 space-y-3 rounded-[16px] bg-page p-4"
+            onSubmit={async (ev) => {
+              ev.preventDefault()
+              setBusy(true)
+              setResult('')
+              try {
+                const r = await sendTestEmail({ data: { to, kind, lang: mailLang } })
+                if (!('status' in r))
+                  setResult(
+                    r.error === 'email' ? t('That email looks wrong. Example: zee@gmail.com') : r.error === 'limit' ? t('That is a lot of tests for one hour. Try again later.') : t('Something went wrong. Try again.'),
+                  )
+                else
+                  setResult(
+                    r.status === 'sent'
+                      ? t('Sent. Check that inbox, and its spam folder.')
+                      : r.status === 'dry'
+                        ? t('Not sent: there is no Resend key here.')
+                        : t('Resend refused it: {error}', { error: String((r as { error?: string }).error ?? '') }),
+                  )
+              } catch {
+                setResult(t('Something went wrong. Try again.'))
+              } finally {
+                setBusy(false)
+              }
+            }}
+          >
+            <p className="text-[14px] font-medium">{t('Send a test')}</p>
+            <input className="input" type="email" inputMode="email" autoCapitalize="none" spellCheck={false} placeholder={t('Your email')} value={to} onChange={(ev) => setTo(ev.target.value)} />
+            <div className="flex flex-wrap gap-2">
+              {EMAIL_KINDS.map((k) => (
+                <button key={k} type="button" className="chip h-9" aria-pressed={kind === k} onClick={() => setKind(k)}>
+                  {names[k]}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {(['en', 'sw'] as const).map((l) => (
+                <button key={l} type="button" className="chip h-9" aria-pressed={mailLang === l} onClick={() => setMailLang(l)}>
+                  {l === 'en' ? 'English' : 'Kiswahili'}
+                </button>
+              ))}
+              <button className="btn btn-sm ml-auto" disabled={busy || !to.trim()}>
+                {busy ? t('Sending') : t('Send the test')}
+              </button>
+            </div>
+            {result && <p className="text-[13px] leading-5 text-ink-2">{result}</p>}
+          </form>
+        </div>
+      </div>
+    </Card>
   )
 }

@@ -48,7 +48,7 @@ def main(path):
     unchecked_path.write_text(json.dumps(sorted(unchecked), ensure_ascii=False, indent=2) + '\n')
     print(f'{imported} rows imported from the sheet; src/locales/sw.json now holds {len(out)} (it held {kept})')
     if unchecked:
-        print(f'  {unchecked} of them are not marked Done yet (still the draft, or a question). Check them before switching Swahili on.')
+        print(f'  {len(unchecked)} strings are still not marked Done (still the draft, or a question). Check them before switching Swahili on.')
     for n, en, sw in bad:
         print(f'  row {n}: placeholders differ, skipped.\n    EN: {en}\n    SW: {sw}')
 

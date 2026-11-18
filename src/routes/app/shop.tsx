@@ -4,6 +4,8 @@ import { useRef, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
 import { WriteBio } from '#/components/ai-write'
 import { PhoneAppSettings } from '#/components/phone-app'
+import { EmailSettings } from '#/components/email'
+import { EMAIL_LIVE } from '#/lib/email'
 import { QrSheet } from '#/components/qr-sheet'
 import { useCan } from '#/components/tembo'
 import { ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoice, Switch, Toast, TopBar } from '#/components/ui'
@@ -26,6 +28,9 @@ function ShopSettings() {
   const initial = useRef({ shop: data.shop, areas: data.areas.map((a) => ({ name: a.name, fee: String(a.fee) })) })
   const [s, setS] = useState(initial.current.shop)
   const tembo = useCan('hideBadge')
+  // Email (o-email) shows once it is open to sellers; until then only to admins (src/lib/email.ts).
+  const { user } = Route.useRouteContext()
+  const emailOpen = EMAIL_LIVE || !!user.is_admin
   const [areas, setAreas] = useState(initial.current.areas)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -327,6 +332,12 @@ function ShopSettings() {
         <Group title={t('Notifications')} sub={t('New orders and payments to check, on this phone, even when Shopi is closed.')}>
           <PhoneAppSettings />
         </Group>
+
+        {emailOpen && (
+          <Group title={t('Email')} sub={t('Optional. Your Tembo receipts and reminders, and a summary each Monday if you like.')}>
+            <EmailSettings />
+          </Group>
+        )}
 
         <Group title={t('Account')} sub={t('You are logged in on this phone.')}>
           <button

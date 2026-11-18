@@ -46,6 +46,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/routes/app/look.tsx`, `src/components/look.tsx`, `src/lib/api/look.ts` | Shop look: cover, colour (logo suggestions, tested, own), style of the name, live preview; `saveShopLook` |
 | `src/components/auth.tsx` | `AuthLayout` (form left, dark product panel right), `StepBar` ("2 of 5"), `PasswordInput` |
 | `src/routes/onboard.tsx`, `src/components/setup.tsx`, `src/lib/setup.ts`, `src/lib/api/setup.ts`, `src/server/setup.ts` | The five-step setup: the route and step 1; steps 2 to 5 and the shop preview; which step to show; its server functions; `passStep` |
+| `src/lib/email.ts`, `src/server/email.ts`, `src/server/email-templates.ts`, `src/lib/api/email.ts`, `src/components/email.tsx`, `src/routes/email/`, `src/routes/api/email-off.ts`, `src/routes/api/admin-email-preview.ts` | Email to sellers through Resend: `EMAIL_LIVE` and the kinds; sending, confirm links, unsubscribe, receipts and the weekly summary; the templates; the seller's server functions; the Home row and Shop settings group; the stop/remove page; one-click unsubscribe; /admin previews |
 | `src/lib/score.ts`, `src/server/score.ts` | The shop score: the eight items, points and the next step (browser-safe); its facts as one SQL fragment for Home and `/admin` |
 | `src/components/showcase.tsx` | Coded product previews for the landing and auth pages (phone, mini store, order card, payment slip) |
 | `src/components/brand-icons.tsx` | One-colour social icons, plus `WhatsAppMark` (WhatsApp's green mark) |
@@ -310,7 +311,7 @@ domain are lowercase.
     and closes rows Selcom still calls unpaid after 2 hours as `abandoned_unpaid`. `/admin` Money lists the newest 20
     payments with Re-check (written to `admin_log`) and whether the proxy answers (`proxyHealth`).
   - **Reminders:** the nightly job notifies sellers 7 days before Tembo ends, the day before and on the day
-    (`remindRenewals`), only once `BILLING_LIVE` is on. Email joins with `o-email`.
+    (`remindRenewals`), only once `BILLING_LIVE` is on, by push and by email; the receipt is emailed after each payment.
   - Limits per shop: 8 starts an hour, 6 prompts again in 10 minutes, 10 new Lipa Namba orders an hour (`LIMITS.pay*`;
     showing a number that exists isn't counted).
   - Reviewed 18 Nov by a second agent against CV's code. Known and left as in CV: the cron takes the 50 oldest pending
@@ -430,6 +431,49 @@ domain are lowercase.
   "Write it for me" when AI is on), and "See all" for the eight items. A shop with orders gets it as one line that
   opens. Gone at 100%. **/admin:** the Shops table's Ready column, "How ready shops are" (bands and each item's
   count), a shop's page lists what it still misses; the CSV has "Ready (%)".
+- **Email to sellers** (roadmap `o-email`, decision n11; built 18 Nov 2026; migration `0027_email.sql`). Optional,
+  never at sign-up: a quiet row on Home (while there is no email and the shop has a product; "Not now" hides it 30
+  days) and an Email group in Shop settings. **No confirm step** (the founder, 18 Nov: most sellers rarely use email,
+  so nothing stands between them and their receipts): the seller types an address, chooses "A summary each Monday"
+  (shown on) and taps Save my email; it works at once (`users.email_ok` = when saved). Two light guards instead:
+  - a typo hint while typing (`suggestEmail`: gmial.com, yahoo.con, hotmial.com… offered as a one-tap fix);
+  - **"Your email is set"** (`added`) goes to the address at once, with "Not you, or not your shop? Remove this
+    address": `/email/off?w=remove`, one tap, no log-in, which takes the address off the shop and stops all email to
+    it. So a stranger whose address was typed can undo it, and Resend sees few complaints.
+  Each new address gets a new `email_key`, so links in mail to an old one stop working. Shop settings shows the
+  address with Change and Remove, and the two choices (the Monday summary, News from Shopi; news has no sender yet).
+  - **Sending** (`src/server/email.ts`): Resend's HTTP API (`POST https://api.resend.com/emails`, read from their docs
+    18 Nov: a `User-Agent` header is required and a Worker doesn't add one; `Idempotency-Key` kept 24 h; 10 requests a
+    second per team) from `Shopi <hello@shopi.tz>`, replies to hello@shopi.tz (forwards to the founder). Any saved
+    address gets mail. Sends run after the response (`later`, `waitUntil`) or in the nightly
+    job. `email_log` keeps kind, outcome and Resend's id per user, never the address or the body; about 13 months.
+  - **`EMAIL_LIVE`** (`src/lib/email.ts`) is false: only admins can add an email or get one; anything else is logged
+    `held`. Without `RESEND_API_KEY` (locally) nothing is sent: the email's links are printed (`[email] dry run`) and
+    logged `dry`, so a link in it can be followed by hand. Flip `EMAIL_LIVE` once the founder has received each kind
+    at their own address (inbox, not spam; DMARC on shopi.tz is p=reject) and in the release that tells sellers.
+  - **The emails** (`src/server/email-templates.ts`, plain HTML with inline styles and tables, and a text version; in
+    the seller's language, `users.email_lang`, the app's when they added it): "Your email is set"; the **Tembo receipt** after
+    `completePayment` (the receipt slip in mono: shop, plan, date, the number paid from masked as 0754 *** 456, Selcom's
+    reference, the order; "Paid to Driftmark Technologies Limited … It is not a TRA fiscal receipt"); **renewal**
+    reminders 7 days, 1 day and on the day (with the push ones in `remindRenewals`, so only once `BILLING_LIVE`); the
+    **weekly summary** on Mondays (Dar) for last Monday to Sunday: visits, orders, sales with the change from the week
+    before as rows, payments to check, the best seller; cancelled orders don't count; a week with no visit and no
+    order sends nothing. Each seller (and each renewal) runs in its own try, so one error never stops the rest. Every seller
+    value is escaped. The logo is `public/brand/shopi-wordmark-email.png` (from `design/brand/png`, 264 px wide).
+  - **Unsubscribe:** optional kinds (the weekly summary) carry a footer link to `/email/off` (one tap, no log-in; the
+    proof is `users.email_key`, random per user) and `List-Unsubscribe` / `List-Unsubscribe-Post` headers for the
+    one-click POST to `/api/email-off` (RFC 8058); a mail app that opens that address instead (GET) is sent to the stop
+    page. Receipts and reminders about the plan have none (essential), but "Your email is set" and Shop settings let the
+    address be removed.
+  - **/admin Health > Email:** whether the Resend key is saved and email is open, sellers with an address,
+    on the weekly summary, the last failure, sends in the range by kind and outcome; each kind to open in English and
+    Swahili (`/api/admin-email-preview?kind=added|receipt|renewal|weekly&lang=…`, `&text=1` for the text version); and **Send a test** of any
+    kind, with sample data and "[Test]" in the subject, to an address the founder types (works while EMAIL_LIVE is off).
+  - Limits on "Your email is set", counted before they are checked (`take` in `limits.ts`, so a burst can't slip
+    through together): 5 an hour per seller (`emailSend`), 3 to one address (`emailTo`, many accounts can't write to
+    one person), 200 across Shopi (`emailAll`); 20 tests an hour per admin (`emailTest`). The words
+    `email` and `brand` are reserved shop links; `/email/*` is one of Shopi's own pages on shops' domains.
+  - Privacy names Resend and says what is kept and for how long.
 - **"Write it for me" for the shop's line** (`writeBio` in `src/server/ai.ts`, `writeShopBio`, `WriteBio`): one
   sentence in the shop's language from its name, category, location and product names; what the seller typed is taken
   as facts; no delivery, price or quality claims. `BIO_MONTH` = 10 a month on any plan, counted in `ai_uses` as `bio`
@@ -614,7 +658,9 @@ Logs start with `[jobs]` (Workers Logs); a failed task fails the run, so it show
   Each purge also takes what would pass its limit before the next run.
 - **Every 5 minutes (`FREQUENT`):** Tembo payments still pending, asked of Selcom again (`reconcilePayments`, see Tembo
   billing). Per-payment errors are logged (`[billing]`), not thrown, so a Selcom blip doesn't fail the run.
-- **Nightly also:** Tembo renewal reminders (`remindRenewals`, only once `BILLING_LIVE` is on).
+- **Nightly also:** Tembo renewal reminders by push and email (`remindRenewals`, only once `BILLING_LIVE` is on); on
+  Mondays the weekly summary email (`weeklySummaries`); the email log past about 13 months and expired confirm links
+  (`purgeEmail`).
 - **Weekly, Sunday 03:30:** the whole database as gzipped SQL in the private bucket `shopi-backups`
   (`d1/shopi-YYYY-MM-DD.sql.gz`; no public URL, never bind it to `/img`). The newest 5 are kept (Privacy: "up to 5 weeks").
   D1 Time Travel covers the last 30 days on its own; this copy survives the database being deleted.

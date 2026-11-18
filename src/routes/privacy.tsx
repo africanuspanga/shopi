@@ -34,6 +34,7 @@ function Privacy() {
           <li>{t('Your products, photos, prices and stock, and the orders your shop receives.')}</li>
           <li>{t('Your plan and its payments: the mobile money number you paid from, the amount and the payment’s reference.')}</li>
           <li>{t('If you turn on notifications: the address your phone’s browser gives for sending them. It is deleted when you turn them off or it stops working.')}</li>
+          <li>{t('If you add your email: the address, the language to write to you in, and whether you chose the weekly summary and news from Shopi. Our first email to it says it was added, with a link to remove it if it isn’t yours.')}</li>
         </ul>
       </Section>
 
@@ -61,6 +62,7 @@ function Privacy() {
           <li>{t('To show sellers how their shop is doing (visits, sources, sales), in numbers that do not name buyers who did not order.')}</li>
           <li>{t('To keep Shopi safe: to stop fraud, such as a payment SMS used twice, and to keep bots out.')}</li>
           <li>{t('To bill sellers for their plan and to tell them about their account.')}</li>
+          <li>{t('To email sellers who added an address: receipts and reminders about their plan, and the weekly summary or news only if they chose them. Every optional email has a link that stops it.')}</li>
         </ul>
         <p>{t('We do not sell personal data, and we do not use it for advertising by others.')}</p>
       </Section>
@@ -70,7 +72,7 @@ function Privacy() {
           <li>{t('The seller you order from sees your order details. Other sellers do not.')}</li>
           <li>
             {t(
-              'Companies that run parts of Shopi for us, only for that purpose: Cloudflare (hosting, database, photo storage, and the check that keeps bots out of sign-up, checkout and back-in-stock requests), Selcom (sellers’ Tembo payments by mobile money), and, when you use them, Google (maps), Meta (WhatsApp and Instagram), OpenAI (writing a product description or a shop’s line when a seller asks; it gets the shop’s and product’s details, never buyers’), and your phone’s notification service (Google, Apple or Mozilla), which carries notifications it cannot read.',
+              'Companies that run parts of Shopi for us, only for that purpose: Cloudflare (hosting, database, photo storage, and the check that keeps bots out of sign-up, checkout and back-in-stock requests), Selcom (sellers’ Tembo payments by mobile money), and, when you use them, Google (maps), Meta (WhatsApp and Instagram), OpenAI (writing a product description or a shop’s line when a seller asks; it gets the shop’s and product’s details, never buyers’), Resend (email to sellers who added an address), and your phone’s notification service (Google, Apple or Mozilla), which carries notifications it cannot read.',
             )}
           </li>
           <li>{t('Authorities, when Tanzanian law requires it.')}</li>
@@ -103,6 +105,7 @@ function Privacy() {
           <li>{t('A delivery location (map point) on an order: 90 days, then it is deleted. The area and the note stay with the order.')}</li>
           <li>{t('Tembo payments: as long as the law requires for business records.')}</li>
           <li>{t('Backup copies of the database: up to 5 weeks, then they are deleted.')}</li>
+          <li>{t('Your email: until you remove it in Shop settings or close your account. A record of which emails we sent you, without what they said: about 13 months.')}</li>
         </ul>
       </Section>
 

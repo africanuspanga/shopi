@@ -13,6 +13,7 @@ import { withReadiness, type AlertRow } from '#/server/alerts'
 import { setPick } from '#/server/picks'
 import { scoreFacts, scoreSelect, type ScoreRow } from '#/server/score'
 import { aiReady } from '#/server/ai'
+import { EMAIL_LIVE } from '#/lib/email'
 
 const str = (v: unknown, max = 500) => String(v ?? '').trim().slice(0, max)
 const int = (v: unknown) => {
@@ -223,7 +224,7 @@ export const getNavCounts = createServerFn({ method: 'GET' }).handler(async () =
 })
 
 export const getDashboard = createServerFn({ method: 'GET' }).handler(async () => {
-  const { shop } = await requireShop()
+  const { shop, user } = await requireShop()
   const since = now() - 7 * 86400_000
   const before = since - 7 * 86400_000
   // Days are counted in Tanzania time (UTC+3).
@@ -352,6 +353,11 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
     score: scoreFacts(score!),
     /** Whether "Write it for me" exists here, for the next step's words. */
     ai: aiReady(),
+    /** The seller's email (o-email): Home asks for one while there is none, once email is open to them. */
+    email: await (async () => {
+      const u = await first<{ email: string | null }>('SELECT email FROM users WHERE id = ?', user.id)
+      return { open: EMAIL_LIVE || !!user.is_admin, email: u?.email ?? null }
+    })(),
   }
 })
 

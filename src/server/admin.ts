@@ -6,6 +6,8 @@ import { db, now } from '#/server/db'
 import { proxyHealth } from '#/server/selcom'
 import { scoreFacts, scoreSelect, type ScoreRow } from '#/server/score'
 import { shopScore } from '#/lib/score'
+import { emailReady } from '#/server/email'
+import { EMAIL_LIVE } from '#/lib/email'
 
 /**
  * Queries behind the owner dashboard (/admin). One D1 batch per section, so opening a section never pays for the others.
@@ -455,7 +457,7 @@ export async function useData(days: AdminDays) {
 
 export async function healthData(days: AdminDays) {
   const { t, from } = windowOf(days)
-  const [waiting, problems, limits, domains, counts, oldest] = await db().batch([
+  const [waiting, problems, limits, domains, counts, oldest, mails, emails, mailFail] = await db().batch([
     waitingProofs(t),
     problemProofs(from),
     // What the limits table saw in the last 24 hours, by kind (the part of the key before the first colon).
@@ -477,6 +479,12 @@ export async function healthData(days: AdminDays) {
       t,
     ),
     q(`SELECT (SELECT MIN(created_at) FROM events) events, (SELECT MIN(created_at) FROM stock_alerts) alerts`),
+    // Email (o-email): what was sent in the range, by kind and outcome; sellers' addresses; the last failure.
+    q(`SELECT kind, status, COUNT(*) n FROM email_log WHERE created_at >= ? GROUP BY kind, status ORDER BY kind`, from),
+    q(
+      `SELECT COALESCE(SUM(email IS NOT NULL), 0) added, COALESCE(SUM(email IS NOT NULL AND email_weekly = 1), 0) weekly FROM users WHERE is_admin = 0`,
+    ),
+    q(`SELECT kind, error, created_at FROM email_log WHERE status = 'failed' ORDER BY created_at DESC LIMIT 1`),
   ])
   // The weekly backup in the private bucket: the newest file's age is what matters.
   let backup: { key: string; size: number; at: number; kept: number } | null = null
@@ -499,6 +507,13 @@ export async function healthData(days: AdminDays) {
     dbBytes: (counts.meta as { size_after?: number }).size_after ?? null,
     backup,
     backupError,
+    email: {
+      ready: emailReady(),
+      live: EMAIL_LIVE,
+      log: rows<{ kind: string; status: string; n: number }>(mails),
+      sellers: one<{ added: number; weekly: number }>(emails),
+      lastFailure: rows<{ kind: string; error: string | null; created_at: number }>(mailFail)[0] ?? null,
+    },
   }
 }
 

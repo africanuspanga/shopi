@@ -29,6 +29,12 @@ export const LIMITS = {
   payLipa: { max: 10, window: 60 * MINUTE },
   // Selcom's callbacks, per IP. None is trusted (the outcome is asked from Selcom), so this only stops floods.
   selcomHook: { max: 120, window: 10 * MINUTE },
+  // Confirm links a seller asks for (each is an email from hello@shopi.tz), and an admin's test sends.
+  // Per seller, per address (many accounts can't all write to one person) and across Shopi.
+  emailSend: { max: 5, window: 60 * MINUTE },
+  emailTo: { max: 3, window: 60 * MINUTE },
+  emailAll: { max: 200, window: 60 * MINUTE },
+  emailTest: { max: 20, window: 60 * MINUTE },
 } as const
 
 /** The visitor's IP as Cloudflare saw it. */
@@ -43,6 +49,16 @@ export async function overLimit(key: string, limit: { max: number; window: numbe
 /** Counts one attempt for `key`. */
 export async function count(key: string) {
   await run('INSERT INTO limits (key, at) VALUES (?, ?)', key, now())
+}
+
+/**
+ * Counts one attempt and says whether it is allowed, in that order, so a burst of simultaneous requests can't all read
+ * the count before any of them writes it (overLimit then count can). Over-refuses rather than under-refuses.
+ */
+export async function take(key: string, limit: { max: number; window: number }) {
+  await count(key)
+  const row = await first<{ n: number }>('SELECT COUNT(*) n FROM limits WHERE key = ? AND at > ?', key, now() - limit.window)
+  return (row?.n ?? 0) <= limit.max
 }
 
 /** Forgets `key`'s attempts, e.g. a phone's failed logins once the right password is used. */

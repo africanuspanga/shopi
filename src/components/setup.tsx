@@ -467,8 +467,9 @@ export function LiveStep({ shop, products, ai, bar }: { shop: SetupShop; product
         <div className="mt-4">
           <ShareActions url={url} title={shop.name} text={t('My shop is open. You can order here:')} onShared={shared} />
         </div>
-        <button type="button" className="btn btn-ghost btn-sm mt-2 h-11 w-full" onClick={() => setQrOpen(true)}>
-          <QrCodeIcon size={16} strokeWidth={1.6} /> {t('QR code to print or post')}
+        {/* May wrap: in Swahili the label is long ("QR code ya kuchapisha au kuweka mtandaoni"). */}
+        <button type="button" className="btn btn-ghost btn-sm mt-2 h-auto min-h-11 w-full py-2 text-center leading-5 whitespace-normal" onClick={() => setQrOpen(true)}>
+          <QrCodeIcon size={16} strokeWidth={1.6} className="shrink-0" /> {t('QR code to print or post')}
         </button>
       </section>
 

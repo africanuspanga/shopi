@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { Delta, Empty, Img, LangSwitch, Money, Page, PhoneBar, Sheet, ShopAvatar, StatusPill, Toast, scrubIndex, useEntrance } from '#/components/ui'
 import { BioSteps } from '#/components/setup'
 import { PhoneAlertsCard } from '#/components/phone-app'
+import { EmailRow } from '#/components/email'
 import { QrSheet } from '#/components/qr-sheet'
 import { getDashboard } from '#/lib/api/merchant'
 import { shortDay, timeAgo, tzs } from '#/lib/format'
@@ -115,6 +116,7 @@ function Dashboard() {
           <ScoreCard facts={sharedNow ? { ...d.score, shared: true } : d.score} ai={d.ai} compact={hasOrders} onShare={share} onCopy={copyLink} copied={copied} className={`${rise} md:mt-8`} />
           <PlanRow plan={d.plan} />
           <PhoneAlertsCard />
+          <EmailRow state={d.email} className={`${rise} mt-6 md:mt-8`} />
         </>
       ) : (
         <>

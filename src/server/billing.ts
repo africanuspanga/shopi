@@ -3,6 +3,7 @@ import { notifySeller } from '#/server/push'
 import { LIMITS, count, overLimit } from '#/server/limits'
 import { BILLING_LIVE, DAY, TEMBO_PRICE } from '#/lib/plans'
 import { SHOPI_ORIGIN } from '#/lib/host'
+import { emailReceipt, later, sendTo } from '#/server/email'
 import {
   LIPA_USSD,
   ORDER_MINUTES,
@@ -126,6 +127,8 @@ export async function completePayment(id: string, p: { source: Source; amount?: 
     url: '/app/plan',
     tag: 'tembo',
   }))
+  // The receipt by email, to a confirmed address (src/server/email.ts), after the response.
+  later(emailReceipt(id))
   return { outcome: 'completed' as const, until: row.paid_until }
 }
 
@@ -446,15 +449,15 @@ export function longDate(ms: number, lang: 'sw' | 'en') {
 }
 
 /**
- * Nightly: a notification 7 days before Tembo ends, the day before and on the day (email joins once `o-email` exists).
+ * Nightly: a notification and an email 7 days before Tembo ends, the day before and on the day.
  * Only once billing is open, since the message asks the seller to pay.
  */
 export async function remindRenewals() {
   if (!BILLING_LIVE) return { skipped: 'billing not live' }
   const t = now()
   const today = darDay(t)
-  const shops = await all<{ id: string; paid_until: number }>(
-    `SELECT id, paid_until FROM shops WHERE status = 'active' AND plan = 'tembo' AND paid_until > ? AND paid_until <= ?`,
+  const shops = await all<{ id: string; name: string; owner_id: string; paid_until: number }>(
+    `SELECT id, name, owner_id, paid_until FROM shops WHERE status = 'active' AND plan = 'tembo' AND paid_until > ? AND paid_until <= ?`,
     t,
     t + 9 * DAY,
   )
@@ -469,6 +472,13 @@ export async function remindRenewals() {
       url: '/app/plan',
       tag: 'tembo-renew',
     }))
+    // And by email, to a confirmed address (once per shop and day, whatever reruns the job). An email error never
+    // stops the reminders of the shops after it.
+    try {
+      await sendTo(s.owner_id, 'renewal', { shop: s.name, left: left as 0 | 1 | 7, until: s.paid_until }, `renewal-${s.id}-${today}`)
+    } catch (e) {
+      console.error('[email] renewal failed', JSON.stringify({ shop: s.id, error: e instanceof Error ? e.message : String(e) }))
+    }
   }
   return { checked: shops.length, sent }
 }

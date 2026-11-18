@@ -25,8 +25,10 @@ import { Route as ShopIndexRouteImport } from './routes/$shop/index'
 import { Route as ShopProductRouteImport } from './routes/$shop/$product'
 import { Route as ShopCheckoutRouteImport } from './routes/$shop/checkout'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as ApiAdminEmailPreviewRouteImport } from './routes/api/admin-email-preview'
 import { Route as ApiAdminExportRouteImport } from './routes/api/admin-export'
 import { Route as ApiERouteImport } from './routes/api/e'
+import { Route as ApiEmailOffRouteImport } from './routes/api/email-off'
 import { Route as ApiExportRouteImport } from './routes/api/export'
 import { Route as ApiPhotoRouteImport } from './routes/api/photo'
 import { Route as ApiSelcomRouteImport } from './routes/api/selcom'
@@ -38,6 +40,7 @@ import { Route as AppDomainRouteImport } from './routes/app/domain'
 import { Route as AppLookRouteImport } from './routes/app/look'
 import { Route as AppPlanRouteImport } from './routes/app/plan'
 import { Route as AppShopRouteImport } from './routes/app/shop'
+import { Route as EmailOffRouteImport } from './routes/email/off'
 import { Route as ImgSplatRouteImport } from './routes/img/$'
 import { Route as OCodeRouteImport } from './routes/o/$code'
 import { Route as ShopBCodeRouteImport } from './routes/$shop/b.$code'
@@ -138,6 +141,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const ApiAdminEmailPreviewRoute = ApiAdminEmailPreviewRouteImport.update({
+  id: '/api/admin-email-preview',
+  path: '/api/admin-email-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminExportRoute = ApiAdminExportRouteImport.update({
   id: '/api/admin-export',
   path: '/api/admin-export',
@@ -146,6 +154,11 @@ const ApiAdminExportRoute = ApiAdminExportRouteImport.update({
 const ApiERoute = ApiERouteImport.update({
   id: '/api/e',
   path: '/api/e',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiEmailOffRoute = ApiEmailOffRouteImport.update({
+  id: '/api/email-off',
+  path: '/api/email-off',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiExportRoute = ApiExportRouteImport.update({
@@ -202,6 +215,11 @@ const AppShopRoute = AppShopRouteImport.update({
   id: '/shop',
   path: '/shop',
   getParentRoute: () => AppRouteRoute,
+} as any)
+const EmailOffRoute = EmailOffRouteImport.update({
+  id: '/email/off',
+  path: '/email/off',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ImgSplatRoute = ImgSplatRouteImport.update({
   id: '/img/$',
@@ -314,8 +332,10 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/$shop/$product': typeof ShopProductRoute
   '/$shop/checkout': typeof ShopCheckoutRoute
+  '/api/admin-email-preview': typeof ApiAdminEmailPreviewRoute
   '/api/admin-export': typeof ApiAdminExportRoute
   '/api/e': typeof ApiERoute
+  '/api/email-off': typeof ApiEmailOffRoute
   '/api/export': typeof ApiExportRoute
   '/api/photo': typeof ApiPhotoRoute
   '/api/selcom': typeof ApiSelcomRoute
@@ -326,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/app/look': typeof AppLookRoute
   '/app/plan': typeof AppPlanRoute
   '/app/shop': typeof AppShopRoute
+  '/email/off': typeof EmailOffRoute
   '/img/$': typeof ImgSplatRoute
   '/o/$code': typeof OCodeRoute
   '/$shop/': typeof ShopIndexRoute
@@ -361,8 +382,10 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/$shop/$product': typeof ShopProductRoute
   '/$shop/checkout': typeof ShopCheckoutRoute
+  '/api/admin-email-preview': typeof ApiAdminEmailPreviewRoute
   '/api/admin-export': typeof ApiAdminExportRoute
   '/api/e': typeof ApiERoute
+  '/api/email-off': typeof ApiEmailOffRoute
   '/api/export': typeof ApiExportRoute
   '/api/photo': typeof ApiPhotoRoute
   '/api/selcom': typeof ApiSelcomRoute
@@ -373,6 +396,7 @@ export interface FileRoutesByTo {
   '/app/look': typeof AppLookRoute
   '/app/plan': typeof AppPlanRoute
   '/app/shop': typeof AppShopRoute
+  '/email/off': typeof EmailOffRoute
   '/img/$': typeof ImgSplatRoute
   '/o/$code': typeof OCodeRoute
   '/$shop': typeof ShopIndexRoute
@@ -412,8 +436,10 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/$shop/$product': typeof ShopProductRoute
   '/$shop/checkout': typeof ShopCheckoutRoute
+  '/api/admin-email-preview': typeof ApiAdminEmailPreviewRoute
   '/api/admin-export': typeof ApiAdminExportRoute
   '/api/e': typeof ApiERoute
+  '/api/email-off': typeof ApiEmailOffRoute
   '/api/export': typeof ApiExportRoute
   '/api/photo': typeof ApiPhotoRoute
   '/api/selcom': typeof ApiSelcomRoute
@@ -424,6 +450,7 @@ export interface FileRoutesById {
   '/app/look': typeof AppLookRoute
   '/app/plan': typeof AppPlanRoute
   '/app/shop': typeof AppShopRoute
+  '/email/off': typeof EmailOffRoute
   '/img/$': typeof ImgSplatRoute
   '/o/$code': typeof OCodeRoute
   '/$shop/': typeof ShopIndexRoute
@@ -464,8 +491,10 @@ export interface FileRouteTypes {
     | '/terms'
     | '/$shop/$product'
     | '/$shop/checkout'
+    | '/api/admin-email-preview'
     | '/api/admin-export'
     | '/api/e'
+    | '/api/email-off'
     | '/api/export'
     | '/api/photo'
     | '/api/selcom'
@@ -476,6 +505,7 @@ export interface FileRouteTypes {
     | '/app/look'
     | '/app/plan'
     | '/app/shop'
+    | '/email/off'
     | '/img/$'
     | '/o/$code'
     | '/$shop/'
@@ -511,8 +541,10 @@ export interface FileRouteTypes {
     | '/terms'
     | '/$shop/$product'
     | '/$shop/checkout'
+    | '/api/admin-email-preview'
     | '/api/admin-export'
     | '/api/e'
+    | '/api/email-off'
     | '/api/export'
     | '/api/photo'
     | '/api/selcom'
@@ -523,6 +555,7 @@ export interface FileRouteTypes {
     | '/app/look'
     | '/app/plan'
     | '/app/shop'
+    | '/email/off'
     | '/img/$'
     | '/o/$code'
     | '/$shop'
@@ -561,8 +594,10 @@ export interface FileRouteTypes {
     | '/terms'
     | '/$shop/$product'
     | '/$shop/checkout'
+    | '/api/admin-email-preview'
     | '/api/admin-export'
     | '/api/e'
+    | '/api/email-off'
     | '/api/export'
     | '/api/photo'
     | '/api/selcom'
@@ -573,6 +608,7 @@ export interface FileRouteTypes {
     | '/app/look'
     | '/app/plan'
     | '/app/shop'
+    | '/email/off'
     | '/img/$'
     | '/o/$code'
     | '/$shop/'
@@ -610,12 +646,15 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  ApiAdminEmailPreviewRoute: typeof ApiAdminEmailPreviewRoute
   ApiAdminExportRoute: typeof ApiAdminExportRoute
   ApiERoute: typeof ApiERoute
+  ApiEmailOffRoute: typeof ApiEmailOffRoute
   ApiExportRoute: typeof ApiExportRoute
   ApiPhotoRoute: typeof ApiPhotoRoute
   ApiSelcomRoute: typeof ApiSelcomRoute
   ApiUploadRoute: typeof ApiUploadRoute
+  EmailOffRoute: typeof EmailOffRoute
   ImgSplatRoute: typeof ImgSplatRoute
   OCodeRoute: typeof OCodeRoute
 }
@@ -734,6 +773,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/api/admin-email-preview': {
+      id: '/api/admin-email-preview'
+      path: '/api/admin-email-preview'
+      fullPath: '/api/admin-email-preview'
+      preLoaderRoute: typeof ApiAdminEmailPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin-export': {
       id: '/api/admin-export'
       path: '/api/admin-export'
@@ -746,6 +792,13 @@ declare module '@tanstack/react-router' {
       path: '/api/e'
       fullPath: '/api/e'
       preLoaderRoute: typeof ApiERouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/email-off': {
+      id: '/api/email-off'
+      path: '/api/email-off'
+      fullPath: '/api/email-off'
+      preLoaderRoute: typeof ApiEmailOffRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/export': {
@@ -824,6 +877,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/shop'
       preLoaderRoute: typeof AppShopRouteImport
       parentRoute: typeof AppRouteRoute
+    }
+    '/email/off': {
+      id: '/email/off'
+      path: '/email/off'
+      fullPath: '/email/off'
+      preLoaderRoute: typeof EmailOffRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/img/$': {
       id: '/img/$'
@@ -1060,12 +1120,15 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  ApiAdminEmailPreviewRoute: ApiAdminEmailPreviewRoute,
   ApiAdminExportRoute: ApiAdminExportRoute,
   ApiERoute: ApiERoute,
+  ApiEmailOffRoute: ApiEmailOffRoute,
   ApiExportRoute: ApiExportRoute,
   ApiPhotoRoute: ApiPhotoRoute,
   ApiSelcomRoute: ApiSelcomRoute,
   ApiUploadRoute: ApiUploadRoute,
+  EmailOffRoute: EmailOffRoute,
   ImgSplatRoute: ImgSplatRoute,
   OCodeRoute: OCodeRoute,
 }

@@ -25,5 +25,10 @@ declare namespace Cloudflare {
     OPENAI_API_KEY?: string
     AI_BASE_URL?: string
     AI_MODEL?: string
+    /**
+     * Email to sellers (src/server/email.ts): a Resend API key for shopi.tz (domain verified 17 Nov 2026, sending as
+     * hello@shopi.tz). A Worker secret; not in .dev.vars, so local runs print emails instead of sending them.
+     */
+    RESEND_API_KEY?: string
   }
 }
