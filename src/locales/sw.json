@@ -1633,5 +1633,18 @@
   "{v} visits · {o} orders · {c} ordered": "Mara {v} za kutembelewa · oda {o} · {c} waliagiza",
   "{v} visits · {o} orders · {s}": "Kutembelewa {v} · oda {o} · {s}",
   "{w} on WhatsApp · {c} links copied": "{w} kwenye WhatsApp · link {c} zilinakiliwa",
-  "We sent a prompt to this number a moment ago. Pay that one, or send it again.": "Tumetuma ombi kwenye namba hii muda mfupi uliopita. Lipa hilo, au litume tena."
+  "We sent a prompt to this number a moment ago. Pay that one, or send it again.": "Tumetuma ombi kwenye namba hii muda mfupi uliopita. Lipa hilo, au litume tena.",
+  "Scan to shop": "Scan ununue",
+  "QR code": "QR code",
+  "Your shop’s QR code": "QR code ya duka lako",
+  "QR code for {shop}": "QR code ya {shop}",
+  "The QR code could not be made. Try again.": "QR code haikuweza kutengenezwa. Jaribu tena.",
+  "Making your QR code": "Tunatengeneza QR code yako",
+  "Print it for your packaging, your stall or your receipts, or post it. Buyers scan it with their phone camera and your shop opens.": "Ichapishe kwenye vifungashio, meza yako ya mauzo au risiti zako, au iweke mtandaoni. Wateja wanaiscan kwa kamera ya simu na duka lako linafunguka.",
+  "Download": "Pakua",
+  "Scans show in Analytics as the link tag “qr”.": "Scan zinaonekana kwenye Takwimu kwa lebo “qr”.",
+  "Show my QR code": "Onyesha QR code yangu",
+  "Your shop’s code to print or post. Buyers scan it with their camera and your shop opens.": "Code ya duka lako ya kuchapisha au kuweka mtandaoni. Wateja wanaiscan kwa kamera na duka lako linafunguka.",
+  "Open this shop on another phone": "Fungua duka hili kwenye simu nyingine",
+  "Point the phone’s camera at the code.": "Elekeza kamera ya simu kwenye code."
 }

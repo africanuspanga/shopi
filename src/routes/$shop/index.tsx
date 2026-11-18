@@ -3,6 +3,7 @@ import { MapPin, Share2, Store } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { BagButton, FactPills, MIN_PICKS, ProductGrid, ShopFacts, ShopFooter, ShopSearch, ShopTopBar, SocialLinks, TopPicks, matchesSearch, onSale, pickedProducts } from '#/components/shop'
+import { ShopQr } from '#/components/qr'
 import { ShopNav } from '#/components/shop-nav'
 import { WhatsAppHelp, useWhatsApp } from '#/components/whatsapp'
 import { Chips, Empty, Img, ShopAvatar, Toast, useEntrance } from '#/components/ui'
@@ -163,6 +164,7 @@ function Storefront() {
           {/* Under a cover the logo overlaps its edge, so both columns start at the top and the card keeps clear of it. */}
           <aside className={`${rise2} hidden rounded-[20px] bg-page p-6 md:block ${cover ? 'md:mt-8' : ''}`}>
             <ShopFacts shop={shop} areas={areas} />
+            <ShopQr slug={shop.slug} name={shop.name} className="mt-5 border-t border-line pt-5" plain />
           </aside>
         </section>
 

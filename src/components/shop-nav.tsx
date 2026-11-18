@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { WhatsAppIcon } from '#/components/brand-icons'
 import { FloatingNav, NavCenter, NavCount, NavTab } from '#/components/floating-nav'
 import { Price, ShopFacts, SocialLinks, onSale, Tag, discount, matchesSearch, shownPrice } from '#/components/shop'
+import { ShopQr } from '#/components/qr'
 import { openWhatsApp } from '#/components/whatsapp'
 import { Img, Sheet, ShopAvatar } from '#/components/ui'
 import { track } from '#/lib/analytics'
@@ -126,6 +127,7 @@ function InfoSheet({ open, onClose, shop, areas, onShare }: { open: boolean; onC
       <div className="mt-5 rounded-[16px] bg-page p-4">
         <ShopFacts shop={shop} areas={areas} short />
       </div>
+      <ShopQr slug={shop.slug} name={shop.name} className="mt-4" />
       {areas.length > 0 && (
         <div className="mt-6">
           <p className="text-[14px] font-medium">{t('Delivery areas')}</p>

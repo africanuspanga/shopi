@@ -160,6 +160,16 @@ export const getMyPlan = createServerFn({ method: 'GET' }).handler(async () => {
   return { plan: await shopPlan(shop.id), canPay: canPay(user), phone: user.phone }
 })
 
+/** What the shop's QR card shows (`src/lib/qr-card.ts`): the shop as buyers see it. */
+export const getMyQrCard = createServerFn({ method: 'GET' }).handler(async () => {
+  const { shop } = await requireShop()
+  const row = await first<{ id: string; name: string; slug: string; logo_key: string | null; theme_color: string | null; theme_font: string | null; location: string; lang: string }>(
+    'SELECT id, name, slug, logo_key, theme_color, theme_font, location, lang FROM shops WHERE id = ?',
+    shop.id,
+  )
+  return row!
+})
+
 export const getMyShop = createServerFn({ method: 'GET' }).handler(async () => {
   const { shop } = await requireShop()
   const full = await first<ShopRow>('SELECT * FROM shops WHERE id = ?', shop.id)

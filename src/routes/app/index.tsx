@@ -1,8 +1,9 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, FileSpreadsheet, Plus, ReceiptText, Share2 } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, FileSpreadsheet, Plus, QrCode as QrCodeIcon, ReceiptText, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Delta, Empty, Img, LangSwitch, Money, Page, PhoneBar, ShopAvatar, StatusPill, Toast, scrubIndex, useEntrance } from '#/components/ui'
 import { PhoneAlertsCard } from '#/components/phone-app'
+import { QrSheet } from '#/components/qr-sheet'
 import { getDashboard } from '#/lib/api/merchant'
 import { shortDay, timeAgo, tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
@@ -26,6 +27,7 @@ function Dashboard() {
   const d = Route.useLoaderData()
   const { shop } = Route.useRouteContext()
   const [copied, setCopied] = useState(false)
+  const [qrOpen, setQrOpen] = useState(false)
   const origin = useOrigin()
   const url = `${origin}/${shop.slug}`
   const conversion = d.visits.shop ? Math.round((d.counts.online / d.visits.shop) * 1000) / 10 : 0
@@ -175,14 +177,18 @@ function Dashboard() {
             <p className="code mt-4 truncate text-[17px]">shopi.tz/{shop.slug}</p>
             {d.visits.shop > 0 && <p className="meta mt-1">{t('{n} visits', { n: n(d.visits.shop) })} · {t('Last 7 days')}</p>}
           </div>
-          <div className="mt-5 flex gap-2 md:mt-0 md:w-[300px] md:shrink-0">
-            <button type="button" className="btn btn-quiet flex-1" onClick={copyLink}>
+          <div className="mt-5 flex gap-2 md:mt-0 md:w-[420px] md:shrink-0">
+            <button type="button" className="btn btn-quiet flex-1 px-3" onClick={copyLink}>
               <Copy size={16} strokeWidth={1.6} /> {t('Copy')}
             </button>
-            <button type="button" className="btn flex-1" onClick={share}>
+            <button type="button" className="btn btn-quiet flex-1 px-3" onClick={() => setQrOpen(true)}>
+              <QrCodeIcon size={16} strokeWidth={1.6} /> {t('QR code')}
+            </button>
+            <button type="button" className="btn flex-1 px-3" onClick={share}>
               <Share2 size={16} strokeWidth={1.6} /> {t('Share')}
             </button>
           </div>
+          <QrSheet open={qrOpen} onClose={() => setQrOpen(false)} />
         </section>
       )}
 

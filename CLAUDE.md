@@ -66,6 +66,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/components/phone-app.tsx` | The seller's phone: `PhoneAlertsCard` (Home) and `PhoneAppSettings` (Shop settings) for notifications and installing |
 | `src/lib/push.ts`, `src/server/push.ts`, `public/sw.js` | Web push: `usePhoneApp` and the install offer (browser), `notifySeller` (server), the service worker that shows them |
 | `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
+| `src/lib/qr.ts`, `src/lib/qr-card.ts`, `src/components/qr.tsx`, `src/components/qr-sheet.tsx` | The shop's QR code: the encoder (no library), the printable card drawn on a canvas, `QrCode`/`ShopQr` for buyers, `QrSheet` for sellers |
 | `src/server/selcom.ts`, `src/server/billing.ts`, `src/lib/api/billing.ts`, `src/components/pay-tembo.tsx`, `src/routes/api/selcom.ts` | Tembo billing through Selcom: the proxy client, payments (start, Lipa Namba, complete once, re-check, reminders), the seller's server functions, the payment sheet, Selcom's callback |
 | `src/server.ts` | The Worker entry: TanStack Start answers requests; `scheduled` runs the cron jobs in `src/server/jobs.ts` |
 | `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `push.ts` (notification subscriptions), `imports.ts` (bulk import), `picks.ts` (top picks), `session.ts` |
@@ -465,6 +466,20 @@ domain are lowercase.
   dashboard shows per shop and under Product use. There is no dark `theme_color`: the seller app has no dark theme.
   Testing in Playwright needs a persistent profile (`launchPersistentContext`; push is off in incognito) and a few
   seconds after launch before the first push arrives.
+- **QR code** (18 Nov 2026, the founder): every shop has one; it opens `shopi.tz/<shop>?s=qr` (`qrUrl`), the address
+  that never changes (not an own domain, which can lapse on a printed sticker), tagged so Analytics counts scans as `qr`.
+  - **The encoder** (`src/lib/qr.ts`): byte mode, versions 1 to 40, levels L/M/Q/H, after Nayuki's reference design; no
+    package (adding one was blocked). Checked by decoding with Apple Vision (a Swift script, `VNDetectBarcodesRequest`):
+    32 of 32 test codes, and every card. Re-check that way after touching it.
+  - **Sellers** (`QrSheet`, from Home's "ready for its first order" card and Shop settings > QR code): a 1200 x 1880
+    card drawn in the browser (`drawQrCard`): the shop's colour on top (ink when it has none) with its logo and its
+    name in its own Shop look font and spacing, its location; the code on a white card with rounded dots, the finder
+    eyes in the shop's colour (darkened to read), the logo in the middle (level H; a link long enough for version 7+
+    drops the logo and uses Q); "Scan to shop" in the shop's language (`shops.lang`), the link in mono, and the Shopi
+    wordmark (the page's own `Wordmark` SVG drawn as an image). Download as PNG, or Share where the phone can share
+    files. `seller_share` events `qr-download` and `qr-native`.
+  - **Buyers** (`ShopQr`): a plain code (level M) beside "Open this shop on another phone" in the Info sheet on phones
+    and under the facts card on desktop. `components/qr.tsx` imports only the encoder, so buyer pages stay light.
 - Sales recorded by hand are orders with `source = 'manual'` (payment `cash`, `lipa`, `mobile` or `bank`); they count in
   sales but stay out of visits, the funnel, conversion and buyers. `orders.stock_taken = 0` means cancelling returns nothing.
 - Buy on product cards (17 Nov, the founder: the bag-and-plus icon was unclear to buyers here): every card in the shop's

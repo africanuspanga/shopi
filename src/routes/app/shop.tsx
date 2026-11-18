@@ -1,8 +1,9 @@
 import { Link, createFileRoute, useBlocker, useRouter } from '@tanstack/react-router'
-import { Camera, Check, ChevronRight, Copy, Globe, LogOut, Palette, Plus, TicketPercent, X } from 'lucide-react'
+import { Camera, Check, ChevronRight, Copy, Globe, LogOut, Palette, Plus, QrCode as QrCodeIcon, TicketPercent, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
 import { PhoneAppSettings } from '#/components/phone-app'
+import { QrSheet } from '#/components/qr-sheet'
 import { useCan } from '#/components/tembo'
 import { ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoice, Switch, Toast, TopBar } from '#/components/ui'
 import { getMyShop, updateShop } from '#/lib/api/merchant'
@@ -28,6 +29,7 @@ function ShopSettings() {
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [qrOpen, setQrOpen] = useState(false)
   const [error, setError] = useState('')
   const logoRef = useRef<HTMLInputElement>(null)
   const set = (k: keyof typeof s) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setS({ ...s, [k]: e.target.value })
@@ -183,6 +185,13 @@ function ShopSettings() {
           <Link to="/app/domain" className="btn btn-ghost">
             <Globe size={16} strokeWidth={1.6} /> {t('Your own domain')} <ChevronRight size={16} strokeWidth={1.6} />
           </Link>
+        </Group>
+
+        <Group title={t('QR code')} sub={t('Your shop’s code to print or post. Buyers scan it with their camera and your shop opens.')}>
+          <button type="button" className="btn btn-ghost" onClick={() => setQrOpen(true)}>
+            <QrCodeIcon size={16} strokeWidth={1.6} /> {t('Show my QR code')} <ChevronRight size={16} strokeWidth={1.6} />
+          </button>
+          <QrSheet open={qrOpen} onClose={() => setQrOpen(false)} />
         </Group>
 
         <Group title={t('Payments')} sub={t('Buyers pay you directly. Shopi never holds your money.')}>

@@ -27,5 +27,18 @@
   "Your mobile money balance is not enough. Top up, then try again.",
   "Your own domain and shop fonts",
   "Your shop at shopi.tz/yourname",
-  "We sent a prompt to this number a moment ago. Pay that one, or send it again."
+  "We sent a prompt to this number a moment ago. Pay that one, or send it again.",
+  "Scan to shop",
+  "QR code",
+  "Your shop’s QR code",
+  "QR code for {shop}",
+  "The QR code could not be made. Try again.",
+  "Making your QR code",
+  "Print it for your packaging, your stall or your receipts, or post it. Buyers scan it with their phone camera and your shop opens.",
+  "Download",
+  "Scans show in Analytics as the link tag “qr”.",
+  "Show my QR code",
+  "Your shop’s code to print or post. Buyers scan it with their camera and your shop opens.",
+  "Open this shop on another phone",
+  "Point the phone’s camera at the code."
 ]
