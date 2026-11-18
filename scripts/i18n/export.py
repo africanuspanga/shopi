@@ -78,6 +78,9 @@ PATTERNS = [
     re.compile(r"\bt\(\s*" + LIT),                                   # t('Text'
     re.compile(r"\bmsg\(\s*" + LIT),                                  # msg('Text')
     re.compile(r"\bt\([^'()]*\?\s*" + LIT + r"\s*:\s*" + LIT),        # t(n === 1 ? 'one' : 'many'
+    # The same t() under another name: tt (a t kept in a ref), tr (server notifications), tRef.current.
+    re.compile(r"\b(?:tt|tr)\(\s*" + LIT),
+    re.compile(r"\btRef\.current\(\s*" + LIT),
 ]
 
 

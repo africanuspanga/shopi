@@ -158,7 +158,9 @@ function Flow({
         polls.current = 0
         renewals.current = 0
         setPeek(null)
-        setStep({ kind: 'waiting', ref: r.ref, phone: localPhone(normalizePhone(phone)) || phone })
+        // `again`: a prompt went to this number a moment ago; that one is still the one to pay.
+        setNotice('again' in r && r.again ? t('We sent a prompt to this number a moment ago. Pay that one, or send it again.') : '')
+        setStep({ kind: 'waiting', ref: String(r.ref), phone: localPhone(normalizePhone(phone)) || phone })
       } else {
         setError(failText(r.error))
         if ('ref' in r && r.ref && r.error !== 'number') {
@@ -218,7 +220,7 @@ function Flow({
       if (polls.current > (byHand ? LIPA_MAX_POLLS : MAX_POLLS)) {
         stop()
         prior.current = [pollRef, ...prior.current.filter((x) => x !== pollRef)].slice(0, 3)
-        setError(tRef.current("We didn't receive a payment. Send the prompt again or pay with Lipa Namba."))
+        setError(tRef.current('We didn’t receive a payment. Send the prompt again or pay with Lipa Namba.'))
         setLipaFor(pollRef)
         setStep({ kind: 'form' })
         return
@@ -294,6 +296,7 @@ function Flow({
   if (step.kind === 'waiting')
     return (
       <div>
+        {notice && <p className="mb-4 rounded-[14px] bg-moto-soft px-4 py-3 text-[14px] text-moto-ink">{notice}</p>}
         <div className="flex flex-col items-center px-2 pt-2 text-center">
           <span className="relative flex size-16 items-center justify-center rounded-full bg-well">
             <Smartphone size={26} strokeWidth={1.5} />

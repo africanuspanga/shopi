@@ -4,7 +4,7 @@ import { requireAdmin, requireShop } from '#/server/auth'
 import { first } from '#/server/db'
 import { LIMITS, count, overLimit } from '#/server/limits'
 import { shopPlan } from '#/server/plan'
-import { canPay, lipaNamba, paidMeanwhile, paymentById, paymentState, pushTemboAgain, recheckPayment, startTembo } from '#/server/billing'
+import { canPay, freshPrompt, lipaNamba, paidMeanwhile, paymentById, paymentState, pushTemboAgain, recheckPayment, startTembo } from '#/server/billing'
 import { selcomReady } from '#/server/selcom'
 import { normalizePhone } from '#/lib/format'
 
@@ -34,8 +34,12 @@ export const payTembo = createServerFn({ method: 'POST' })
     // A payment the seller moved away from may have been paid meanwhile: never start a second year by mistake.
     const paid = await paidMeanwhile(shop.id)
     if (paid) return { paid: true as const, ref: paid.ref, until: paid.until }
+    const msisdn = data.phone.slice(1)
+    // The prompt sent to this number a moment ago is still the one to pay: no second prompt.
+    const fresh = await freshPrompt(shop.id, msisdn)
+    if (fresh) return { ok: true as const, ref: fresh.id, again: true }
     await count(key)
-    return startTembo({ shopId: shop.id, slug: shop.slug, userId: user.id, name: user.name, msisdn: data.phone.slice(1), origin: getRequestUrl().origin })
+    return startTembo({ shopId: shop.id, slug: shop.slug, userId: user.id, name: user.name, msisdn, origin: getRequestUrl().origin })
   })
 
 /** Where a payment stands. The screen asks every 3 seconds; a pending one is asked of Selcom live. */

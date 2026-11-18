@@ -220,8 +220,10 @@ Write English as the key: every string goes through `t()` from `src/lib/i18n.tsx
 - **The sheet:** `python3 scripts/i18n/export.py` writes `../design/translations/Shopi-translations.xlsx`. Approved rows show
   Done; rows still to check show Check (the draft, or Swahili listed in `scripts/i18n/sw-unchecked.json`). The team
   corrects column D and marks rows Done; `python3 scripts/i18n/import.py <file>` writes `sw.json` from that sheet and
-  clears those rows from `sw-unchecked.json`. Always import a sheet exported after the latest code: import writes only the
-  rows the sheet has.
+  clears those rows from `sw-unchecked.json`. Import starts from `sw.json` and lets the sheet's rows win, so Swahili for
+  strings the sheet doesn't list is kept (since 18 Nov; before, it wrote only the sheet's rows). The export finds `t('…')`,
+  `msg('…')` (text kept in data, like the plan cards' lists) and the same t under another name (`tt(`, `tr(`,
+  `tRef.current(`); write apostrophes as ’ inside single quotes, or the export misses the string.
 - **A new string:** add its Swahili to `sw.json` and `sw-draft.json` in the same change (same `{placeholders}`, brands in
   English) and its English key to `sw-unchecked.json`, then export again for the team. Match the team's words: duka, oda,
   kapu (bag), bidhaa, delivery, share (not "shiriki"), taslimu (cash), lipa ukipokea (cash on delivery), pesa kwa simu

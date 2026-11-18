@@ -4,6 +4,8 @@
  * Selcom's fee, no VAT). No trial: the free shop is the trial, and it stays open for as long as the seller likes.
  */
 
+import { msg } from '#/lib/i18n'
+
 export const DAY = 86_400_000
 
 /**
@@ -28,32 +30,32 @@ export type PlanItem = { text: string; soon?: boolean }
 export const PLANS: { id: PlanId; name: string; price: number; lead: string; items: PlanItem[] }[] = [
   {
     id: 'free',
-    name: 'Free',
+    name: msg('Free'),
     price: 0,
-    lead: 'Everything you need to sell from one link.',
+    lead: msg('Everything you need to sell from one link.'),
     items: [
-      { text: 'Your shop at shopi.tz/yourname' },
-      { text: 'Up to 300 products, with bulk import' },
-      { text: 'Lipa Namba and cash on delivery' },
-      { text: 'Orders, sizes and stock' },
-      { text: 'Bag links, discount codes and collections' },
-      { text: 'Your colour and cover photo' },
-      { text: 'Analytics for 7 and 30 days' },
+      { text: msg('Your shop at shopi.tz/yourname') },
+      { text: msg('Up to 300 products, with bulk import') },
+      { text: msg('Lipa Namba and cash on delivery') },
+      { text: msg('Orders, sizes and stock') },
+      { text: msg('Bag links, discount codes and collections') },
+      { text: msg('Your colour and cover photo') },
+      { text: msg('Analytics for 7 and 30 days') },
     ],
   },
   {
     id: 'tembo',
-    name: 'Tembo',
+    name: msg('Tembo'),
     price: TEMBO_PRICE,
-    lead: 'For shops that sell every day.',
+    lead: msg('For shops that sell every day.'),
     items: [
-      { text: 'Everything in Free' },
-      { text: 'Unlimited products' },
-      { text: 'Your own domain and shop fonts' },
-      { text: 'No “Shop made with Shopi” line' },
-      { text: 'Full analytics: 90 days, channels, buyers and downloads' },
-      { text: '500 SMS a year to your buyers, many sent automatically', soon: true },
-      { text: 'Unlimited AI product descriptions', soon: true },
+      { text: msg('Everything in Free') },
+      { text: msg('Unlimited products') },
+      { text: msg('Your own domain and shop fonts') },
+      { text: msg('No “Shop made with Shopi” line') },
+      { text: msg('Full analytics: 90 days, channels, buyers and downloads') },
+      { text: msg('500 SMS a year to your buyers, many sent automatically'), soon: true },
+      { text: msg('Unlimited AI product descriptions'), soon: true },
     ],
   },
 ]

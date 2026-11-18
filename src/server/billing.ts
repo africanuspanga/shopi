@@ -191,6 +191,24 @@ export async function startTembo(p: { shopId: string; slug: string; userId: stri
   }
 }
 
+/** A prompt counts as still on the phone for this long. */
+export const PROMPT_FRESH = 2 * MINUTE
+
+/**
+ * A prompt sent to the same number in the last 2 minutes and not paid yet. Two prompts sent close together can both be
+ * paid (the founder's test on 18 Nov paid TSh 1,000 twice), so Shopi shows that payment again instead of sending
+ * another; "Send the prompt again" re-sends the same order.
+ */
+export function freshPrompt(shopId: string, msisdn: string) {
+  return first<PaymentRow>(
+    `SELECT * FROM payments WHERE shop_id = ? AND phone = ? AND status = 'pending' AND manual_for IS NULL AND created_at > ?
+     ORDER BY created_at DESC LIMIT 1`,
+    shopId,
+    msisdn,
+    now() - PROMPT_FRESH,
+  )
+}
+
 /**
  * Before a new payment starts: the shop's payments of the last 35 minutes that are still open, asked of Selcom. A PIN
  * entered late on the number the seller moved away from (or on a sheet they closed) must not lead to a second year paid
