@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Info, Search, Share2, ShoppingBag, Store } from 'lucide-react'
+import { CalendarPlus, Info, Search, Share2, ShoppingBag, Store } from 'lucide-react'
 import { useState } from 'react'
 import { WhatsAppIcon } from '#/components/brand-icons'
 import { FloatingNav, NavCenter, NavCount, NavTab } from '#/components/floating-nav'
@@ -9,6 +9,9 @@ import { openWhatsApp } from '#/components/whatsapp'
 import { Img, Sheet, ShopAvatar } from '#/components/ui'
 import { track } from '#/lib/analytics'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
+import type { PublicService } from '#/lib/api/booking'
+import { serviceMeta } from '#/components/booking'
+import { servicePrice } from '#/lib/booking'
 import { waLink } from '#/lib/format'
 import { useT } from '#/lib/i18n'
 
@@ -22,6 +25,7 @@ export function ShopNav({
   shop,
   areas,
   products,
+  services = [],
   count,
   onShare,
   away = false,
@@ -29,12 +33,15 @@ export function ShopNav({
   shop: PublicShop
   areas: Area[]
   products: PublicProduct[]
+  /** What clients can book here. A shop that shows services first gets Book in the middle instead of the bag. */
+  services?: PublicService[]
   count: number
   onShare: () => void
   away?: boolean
 }) {
   const t = useT()
   const [sheet, setSheet] = useState<'search' | 'info' | null>(null)
+  const booksFirst = !away && services.length > 0 && (shop.kind === 'services' || products.length === 0)
   return (
     <>
       <FloatingNav label={shop.name}>
@@ -44,7 +51,15 @@ export function ShopNav({
           <NavTab icon={Store} label={t('Shop')} active={!sheet} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
         )}
         <NavTab icon={Search} label={t('Search')} active={sheet === 'search'} onClick={() => setSheet('search')} />
-        <NavCenter icon={ShoppingBag} label={t('Bag')} to="/$shop/checkout" params={{ shop: shop.slug }} badge={<NavCount n={count} />} />
+        {booksFirst ? (
+          services.length === 1 ? (
+            <NavCenter icon={CalendarPlus} label={t('Book')} to="/$shop/book/$id" params={{ shop: shop.slug, id: services[0].id }} />
+          ) : (
+            <NavCenter icon={CalendarPlus} label={t('Book')} onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })} />
+          )
+        ) : (
+          <NavCenter icon={ShoppingBag} label={t('Bag')} to="/$shop/checkout" params={{ shop: shop.slug }} badge={<NavCount n={count} />} />
+        )}
         {shop.whatsapp ? (
           <NavTab
             icon={WhatsAppIcon}
@@ -60,17 +75,19 @@ export function ShopNav({
         )}
         <NavTab icon={Info} label={t('Info')} active={sheet === 'info'} onClick={() => setSheet('info')} />
       </FloatingNav>
-      <SearchSheet open={sheet === 'search'} onClose={() => setSheet(null)} shop={shop} products={products} />
+      <SearchSheet open={sheet === 'search'} onClose={() => setSheet(null)} shop={shop} products={products} services={services} />
       <InfoSheet open={sheet === 'info'} onClose={() => setSheet(null)} shop={shop} areas={areas} onShare={onShare} />
     </>
   )
 }
 
-function SearchSheet({ open, onClose, shop, products }: { open: boolean; onClose: () => void; shop: PublicShop; products: PublicProduct[] }) {
+function SearchSheet({ open, onClose, shop, products, services }: { open: boolean; onClose: () => void; shop: PublicShop; products: PublicProduct[]; services: PublicService[] }) {
   const t = useT()
   const [q, setQ] = useState('')
   const needle = q.trim()
   const results = needle ? products.filter((p) => matchesSearch(p, needle)) : products.slice(0, 6)
+  // Services answer the search too: by name, or all of them in a shop that sells nothing else.
+  const found = needle ? services.filter((v) => v.name.toLowerCase().includes(needle.toLowerCase())) : products.length ? [] : services.slice(0, 8)
   return (
     <Sheet open={open} onClose={onClose} title={t('Search {shop}', { shop: shop.name })}>
       <label className="input flex items-center gap-2 px-4">
@@ -83,12 +100,27 @@ function SearchSheet({ open, onClose, shop, products }: { open: boolean; onClose
           className="min-w-0 flex-1 bg-transparent outline-none"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder={t('Dress, colour, size')}
+          placeholder={products.length ? t('Dress, colour, size') : t('Search')}
           aria-label={t('Search')}
         />
       </label>
-      <p className="meta mt-4">{needle ? t(results.length === 1 ? '{n} product' : '{n} products', { n: results.length }) : t('Newest')}</p>
-      {results.length === 0 ? (
+      {found.length > 0 && (
+        <ul className="mt-3 divide-y divide-line">
+          {found.map((v) => (
+            <li key={v.id}>
+              <Link to="/$shop/book/$id" params={{ shop: shop.slug, id: v.id }} onClick={onClose} className="flex items-center gap-3 py-3">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-15">{v.name}</span>
+                  <span className="block truncate text-13 text-muted">{[serviceMeta(t, v), servicePrice(t, v)].filter(Boolean).join(' · ')}</span>
+                </span>
+                <span className="btn btn-shop btn-sm h-9 shrink-0 px-4 text-white">{t('Book')}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      {(products.length > 0 || found.length === 0) && <p className="meta mt-4">{needle ? t(results.length === 1 ? '{n} product' : '{n} products', { n: results.length }) : t('Newest')}</p>}
+      {results.length === 0 && found.length > 0 ? null : results.length === 0 ? (
         <p className="mt-3 rounded-14 bg-page px-4 py-6 text-center text-14 leading-relaxed text-muted">
           {t('Nothing matches "{q}". Try another word, or ask the seller on WhatsApp.', { q: q.trim() })}
         </p>

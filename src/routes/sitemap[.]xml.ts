@@ -19,7 +19,8 @@ export const Route = createFileRoute('/sitemap.xml')({
       GET: async () => {
         const [shops, products, collections] = await Promise.all([
           all<{ slug: string }>(
-            `SELECT s.slug FROM shops s WHERE s.status = 'active' AND EXISTS (SELECT 1 FROM products p WHERE p.shop_id = s.id AND p.active = 1) ORDER BY s.created_at`,
+            `SELECT s.slug FROM shops s WHERE s.status = 'active' AND (EXISTS (SELECT 1 FROM products p WHERE p.shop_id = s.id AND p.active = 1)
+               OR (s.book IS NOT NULL AND EXISTS (SELECT 1 FROM services v WHERE v.shop_id = s.id AND v.active = 1))) ORDER BY s.created_at`,
           ),
           all<{ shop: string; slug: string | null; id: string; images: string }>(
             `SELECT s.slug AS shop, p.slug, p.id, p.images FROM products p JOIN shops s ON s.id = p.shop_id

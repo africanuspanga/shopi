@@ -12,7 +12,8 @@ import { useLang, useT } from '#/lib/i18n'
 import type { PlanState } from '#/lib/plans'
 import { shareLink, useOrigin } from '#/lib/share'
 import { track } from '#/lib/analytics'
-import { productNeed, shopScore, SCORE_PRODUCTS, type ScoreFacts, type ScoreItem } from '#/lib/score'
+import { productNeed, scoreCount, shopScore, SCORE_PRODUCTS, type ScoreFacts, type ScoreItem } from '#/lib/score'
+import { minuteOf, timeText } from '#/lib/booking'
 import { inSetup } from '#/lib/setup'
 
 export const Route = createFileRoute('/app/')({
@@ -48,7 +49,10 @@ function Dashboard() {
 
   // A new shop sees one thing at a time (17 Nov): its first product, then the shop score's next step and its link. The
   // numbers, charts and the notifications offer wait for what makes them mean something: a product, then a first order.
-  const hasProducts = d.hasProducts
+  // A business that sells services (roadmap `v-services`) starts from its first service where a shop starts from its
+  // first product, and reads its diary first.
+  const serves = !!d.score.serves
+  const hasProducts = serves ? (d.score.services ?? 0) > 0 || d.hasProducts : d.hasProducts
   const hasOrders = d.recent.length > 0
   const vs7 = t('vs the 7 days before')
 
@@ -115,6 +119,7 @@ function Dashboard() {
 
       {/* What to do next, as one stack: the shop score (or the first product), then the quiet rows (Notice). */}
       <div className={`${rise} space-y-3`}>
+        {d.diary && hasProducts && <DiaryCard diary={d.diary} />}
         {hasProducts ? (
           <>
             <ScoreCard facts={sharedNow ? { ...d.score, shared: true } : d.score} ai={d.ai} compact={hasOrders} onShare={share} onCopy={copyLink} copied={copied} />
@@ -124,7 +129,7 @@ function Dashboard() {
           </>
         ) : (
           <>
-            <FirstProductCard score={shopScore(d.score).score} />
+            {serves ? <FirstServiceCard score={shopScore(d.score).score} /> : <FirstProductCard score={shopScore(d.score).score} />}
             <PlanRow plan={d.plan} />
           </>
         )}
@@ -463,6 +468,79 @@ function SalesChart({ days, total, className = '' }: { days: { day: number; tota
   )
 }
 
+type HomeDiary = NonNullable<Awaited<ReturnType<typeof getDashboard>>['diary']>
+
+/**
+ * Today's diary on Home, for a business that takes bookings: who is coming and when, the next client marked, and what
+ * waits for the business (requests to confirm, tomorrow's reminders). The whole diary is one tap away.
+ */
+function DiaryCard({ diary }: { diary: HomeDiary }) {
+  const t = useT()
+  const nowMin = minuteOf(Date.now())
+  const coming = diary.today.filter((b) => b.status === 'requested' || b.status === 'confirmed')
+  const next = coming.find((b) => b.end_min > nowMin)
+  const note = [
+    diary.toConfirm ? t('{n} to confirm', { n: diary.toConfirm }) : '',
+    diary.tomorrow ? t(diary.tomorrow === 1 ? '{n} client tomorrow' : '{n} clients tomorrow', { n: diary.tomorrow }) : '',
+  ].filter(Boolean)
+  return (
+    <section className="card overflow-hidden">
+      <div className="px-5 pt-5 md:px-6">
+        <CardHead
+          icon={diary.toConfirm > 0 ? <span className="signal" aria-hidden /> : undefined}
+          title={diary.today.length ? t(diary.today.length === 1 ? '{n} booking today' : '{n} bookings today', { n: diary.today.length }) : t('No bookings today')}
+          sub={note.length ? note.join(' · ') : diary.today.length ? undefined : t('Share your link so clients can book a time.')}
+          right={
+            <Link to="/app/bookings" className="text-13 text-muted transition-colors hover:text-ink">
+              {t('Open the diary')}
+            </Link>
+          }
+        />
+      </div>
+      {diary.today.length > 0 ? (
+        <ul className="mt-3 divide-y divide-line">
+          {diary.today.slice(0, 6).map((b) => (
+            <li key={b.id}>
+              <Link to="/app/bookings" className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-page md:px-6">
+                <span className={`tnum w-12 shrink-0 text-15 font-semibold ${b.end_min <= nowMin ? 'text-muted' : ''}`}>{timeText(b.start_min)}</span>
+                <span className="min-w-0 flex-1">
+                  <span className={`block truncate text-15 font-medium ${b.end_min <= nowMin ? 'text-muted' : ''}`}>{b.customer_name}</span>
+                  <span className="block truncate text-13 text-muted">{b.service_name}</span>
+                </span>
+                {b.id === next?.id && <span className="shrink-0 rounded-full bg-moto-soft px-2.5 py-1 text-12 font-medium text-moto-ink">{t('Next')}</span>}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="pb-5" />
+      )}
+      {diary.today.length > 6 && (
+        <Link to="/app/bookings" className="block border-t border-line px-5 py-3 text-14 text-muted transition-colors hover:text-ink md:px-6">
+          {t('{n} more', { n: diary.today.length - 6 })}
+        </Link>
+      )}
+    </section>
+  )
+}
+
+/** A business with no services yet: the one thing to do, large, before anything else on Home. */
+function FirstServiceCard({ className = '', score }: { className?: string; score: number }) {
+  const t = useT()
+  return (
+    <section className={`${className} card p-6 md:p-8`}>
+      <ScoreBar score={score} className="mb-5" />
+      <h2 className="title text-24 md:text-32">{t('Add your first service')}</h2>
+      <p className="mt-2 max-w-[44ch] text-15 leading-relaxed text-ink-2">{t('What clients book, how long it takes and the price. They pick a free time on your link.')}</p>
+      <div className="mt-6">
+        <Link to="/app/services" search={{ add: 1 }} className="btn btn-lg">
+          <Plus size={18} strokeWidth={2.25} /> {t('Add service')}
+        </Link>
+      </div>
+    </section>
+  )
+}
+
 /** A shop with no products yet: the one thing to do, large, before anything else on Home. */
 function FirstProductCard({ className = '', score }: { className?: string; score: number }) {
   const t = useT()
@@ -595,7 +673,7 @@ function ScoreCard({
                 {i.done && <Check size={12} strokeWidth={2.25} />}
               </span>
               <span className={`min-w-0 flex-1 ${i.done ? 'text-muted' : ''}`}>{t(i.label)}</span>
-              <span className="meta shrink-0">{i.key === 'products' && !i.done ? `${Math.min(SCORE_PRODUCTS, facts.complete)}/${SCORE_PRODUCTS}` : `${i.points}/${i.max}`}</span>
+              <span className="meta shrink-0">{i.key === 'products' && !i.done ? `${scoreCount(facts)}/${SCORE_PRODUCTS}` : `${i.points}/${i.max}`}</span>
             </li>
           ))}
         </ul>
@@ -614,6 +692,22 @@ function nextStep(item: ScoreItem, f: ScoreFacts, ai: boolean, t: ReturnType<typ
       {label} <ArrowRight size={16} strokeWidth={1.75} />
     </Link>
   )
+  if (f.serves && item.key === 'products') {
+    const left = SCORE_PRODUCTS - scoreCount(f)
+    return {
+      title: (f.services ?? 0) === 0 ? t('Add your first service') : t(left === 1 ? 'Add 1 more service' : 'Add {n} more services', { n: left }),
+      sub: t('Three services give clients something to choose from.'),
+      action: (
+        <Link to="/app/services" search={{ add: 1 }} className="btn btn-sm">
+          {t('Add service')} <ArrowRight size={16} strokeWidth={1.75} />
+        </Link>
+      ),
+    }
+  }
+  if (f.serves && item.key === 'payment')
+    return { title: t('Set your working hours'), sub: t('Clients can book once you say which days and hours you work.'), action: go('/app/hours', t('Set my hours')) }
+  if (f.serves && item.key === 'delivery')
+    return { title: t('Say where you are'), sub: t('Clients need to find you. Add your area and street in Shop settings, and a Google Maps link if you have one.'), action: go('/app/shop', t('Open Shop settings')) }
   switch (item.key) {
     case 'products': {
       const need = productNeed(f)

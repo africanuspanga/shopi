@@ -73,6 +73,9 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/server/ai.ts`, `src/lib/api/ai.ts`, `src/components/ai-write.tsx` | AI for sellers: the OpenAI-compatible client (Groq live), the allowance (`ai_uses`), "Write it for me" under a product's description |
 | `src/lib/qr.ts`, `src/lib/qr-card.ts`, `src/components/qr.tsx`, `src/components/qr-sheet.tsx` | The shop's QR code: the encoder (no library), the printable card drawn on a canvas, `QrCode`/`ShopQr` for buyers, `QrSheet` for sellers |
 | `src/server/selcom.ts`, `src/server/billing.ts`, `src/lib/api/billing.ts`, `src/components/pay-tembo.tsx`, `src/routes/api/selcom.ts` | Tembo billing through Selcom: the proxy client, payments (start, Lipa Namba, complete once, re-check, reminders), the seller's server functions, the payment sheet, Selcom's callback |
+| `src/lib/booking.ts`, `src/server/bookings.ts`, `src/lib/api/booking.ts`, `src/lib/api/services.ts` | Shopi for services: the rules (hours, free times, days and times in Tanzania time); the guarded insert and move; the public server functions (book, the client's page, cancel, move); the business's (services, hours, time off, the diary) |
+| `src/components/booking.tsx`, `src/components/hours.tsx`, `src/components/diary.tsx`, `src/components/setup-services.tsx` | `DayStrip`, `TimeGrid`, `ServiceList`, `ServiceForm`; the working-hours fields; the diary's sheets (a booking, add by hand, move, time off) and the WhatsApp messages; the setup's service and hours steps |
+| `src/routes/app/services.tsx`, `src/routes/app/hours.tsx`, `src/routes/app/bookings.tsx`, `src/routes/$shop/book.$id.tsx`, `src/routes/bk/$code.tsx` | Services, Working hours and the diary (seller); a service's booking page and the client's own booking page (buyer) |
 | `src/server.ts` | The Worker entry: TanStack Start answers requests; `scheduled` runs the cron jobs in `src/server/jobs.ts` |
 | `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `push.ts` (notification subscriptions), `imports.ts` (bulk import), `picks.ts` (top picks), `session.ts` |
 | `src/lib/seo.ts` | Search: `SITE`, `canonical()`, titles and descriptions per page, JSON-LD (`ld`, `storeSchema`, `productSchema`, `breadcrumbSchema`); `src/routes/sitemap[.]xml.ts` |
@@ -375,6 +378,60 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
     for a login that joined as an assistant, and the invite's claim none for a login that owns a shop; two accepts of
     one link at once make one login. Reviewed 18 Nov by a second agent: no access hole; its crash (a hook after an
     early return in Home's `ScoreCard`) and the rest were fixed and re-tested.
+- **Shopi for services** (roadmap `v-services`, the founder's answers of 19 Nov 2026; migration `0029_services.sql`). A
+  salon, barber, masseuse or consultant lists services; clients pick a free time on the shop's link; the business sees
+  every booking in a diary. Free on every plan (Tembo extras later). Rules in `src/lib/booking.ts`.
+  - **One shop, both kinds:** `shops.kind` is `products` or `services`, asked at setup ("What do you sell?"), and only
+    decides what comes first: the shop page's first section, the phone capsule (services: Home · Bookings · + ·
+    Services · Shop; the shop's capsule gets Book in the middle instead of the bag), the sidebar's order, Home's first
+    card, the setup's steps 2 and 3. A shop may hold both; Services > "What your link shows first" changes it. The
+    session carries `shop.kind`. Service categories are `SERVICE_CATEGORIES`; read a saved one with `ALL_CATEGORIES`.
+  - **A service** (`services`): name, minutes (`DURATIONS`, or any 5 to 480), price (0 = agreed with the client;
+    `price_from` reads "From TSh …"), optional description, who does it and one photo, on/off, order. Up to 100.
+  - **Working hours** (`shops.book`, JSON `BookSettings`; `/app/hours`, `manage`): each weekday's open and close, one
+    break for every working day, how far ahead (7, 14, 30, 60 days), `seats` (clients at once: three stylists, 3) and
+    `confirm` ("I confirm each booking myself"). **NULL until saved once: nothing shows to clients or can be booked
+    before that**, and Services and the diary say so. Time off (`book_blocks`): a whole day or part of one.
+  - **Time is Tanzania's** (UTC+3, no daylight saving): a booking keeps `day` (YYYY-MM-DD), `start_min`/`end_min`
+    (minutes from midnight) and `start_at` (ms). Times read on the 24-hour clock (`timeText`): "saa nne" and "10
+    o'clock" are different hours. Short Swahili day names are the team's (J2, J3…, `shortDay`).
+  - **Free times** (`freeTimes`, `whyNot`): starts every 30 minutes from opening (15 for a service that isn't a
+    multiple of 30) and again from the end of the break; inside the hours, off the break and time off, at least
+    `NOTICE_MIN` (60) minutes from now, within `ahead` days, and with a place free throughout (`hasPlace`: the count
+    of clients only rises when a booking starts, so those moments are checked). Clients get times back, never names.
+  - **No double booking:** the check and the write are one statement (`FREE` in `src/server/bookings.ts`, the same
+    rule in SQL), in `insertBooking` and `moveBookingTo`. A cancelled booking frees its time; `HOLDING` statuses hold it.
+  - **Booking** (`bookService`): **instant** by default (status `confirmed`); with `confirm` on it is `requested` and
+    holds its time until the business confirms or declines. Guards: the bot check (action `book`), `LIMITS.bookIp`,
+    and `BOOKINGS_PER_PHONE` = 2 upcoming online bookings per WhatsApp number per shop (in the insert too). Demo
+    shops refuse. The page (`/<shop>/book/<id>`; `book` and `services` are reserved product links) opens on the first
+    day that still has a free time and remembers the client's name and number (`shopi_buyer`).
+  - **The client's page** (`shopi.tz/bk/<code>`, 8 characters; `bk` serves as-is on shops' own domains; never
+    indexed): what and when, Message, Directions, **Change the time** and **Cancel** until it starts. The code is the
+    only key, so the page says to keep the link; `LIMITS.bookPageIp` slows guessing. A move at a business that
+    confirms goes back to `requested`.
+  - **Statuses:** `requested` → `confirmed` → `done` or `noshow`; `cancelled` (by `client` or `shop`). Done and
+    Didn't come can be swapped (a slip of the finger).
+  - **The diary** (`/app/bookings?day=&view=week`, `orders` area; a week is loaded at a time): Day (a strip of the
+    week with a dot on days with bookings, then the day in time order with time off between) and Week (seven columns
+    from `lg`, a list of days on phones); requests to confirm and "n clients tomorrow" on top. A booking's sheet:
+    WhatsApp with the right message for its state (`clientMessage`: reminder, confirmed, cancelled; in the shop's
+    language; sent from the business's own WhatsApp, no API), Call, Confirm/Decline, Done/Didn't come, Change the
+    time, Cancel, and the client's link to copy. **Add a booking** (a walk-in or a call: any time, in or out of the
+    hours; a full time asks once, then saves) and **Time off** keep the link honest. `?add=1` opens Add (the + sheet).
+  - **Areas** (`src/lib/staff.ts`): the diary and time off are `orders` work, services `products`, the hours `manage`.
+  - **Notifications** (`notifySeller`, `orders`): New booking / Booking to confirm, cancelled, moved; each opens the
+    diary on that day. The menu shows a Moto count for requests waiting (`getNavCounts`).
+  - **Elsewhere:** Home's `DiaryCard` (today's bookings, the next one marked) for any shop with services and
+    `FirstServiceCard`; the shop score reads services as products, the hours as the way to be paid and the location
+    as delivery (`serves` in `src/lib/score.ts`); a services-only shop's facts say "Book a time online · Pay at your
+    visit" and its hours, never delivery or cash on delivery (`shop.serves`); the setup's `ServiceStep` and
+    `HoursStep`; the sitemap lists shops with bookable services; `/admin` Product use counts four lines; events
+    `view_service` and `book`; Privacy says what a booking keeps and that it is deleted about 13 months after its day
+    (`purgeBookings`, nightly).
+  - **Not built** (after real businesses have used it): a deposit by Lipa Namba, home visits with a location, a
+    video-call link, choosing a stylist (today: clients at once, per business), Tembo extras, bookings in Analytics
+    and the weekly email, reminders sent by Shopi (needs the WhatsApp API or SMS), the landing page naming services.
 - **"Write it for me" for the shop's line** (`writeBio` in `src/server/ai.ts`, `writeShopBio`, `WriteBio`): one
   sentence in the shop's language from its name, category, location and product names; what the seller typed is taken
   as facts; no delivery, price or quality claims. `BIO_MONTH` = 10 a month on any plan, counted in `ai_uses` as `bio`

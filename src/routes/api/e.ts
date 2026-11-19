@@ -3,7 +3,7 @@ import { first, now, run } from '#/server/db'
 import { deviceOf, isBot } from '#/server/ua'
 
 /** Analytics events from shops, sent with sendBeacon by src/lib/analytics.ts. Always answers 202, so pages never wait or fail. */
-const TYPES = new Set(['view_shop', 'view_product', 'add_to_cart', 'checkout_start', 'whatsapp_click', 'social_click', 'share', 'seller_share'])
+const TYPES = new Set(['view_shop', 'view_product', 'add_to_cart', 'checkout_start', 'view_service', 'book', 'whatsapp_click', 'social_click', 'share', 'seller_share'])
 const isId = (v: unknown): v is string => typeof v === 'string' && /^[\w-]{8,64}$/.test(v)
 const word = (v: unknown, max = 40) =>
   typeof v === 'string'

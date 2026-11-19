@@ -38,6 +38,15 @@ export const LIMITS = {
   // Shop assistants (src/server/staff.ts): invite links a shop makes, and invite pages opened or accepted per IP.
   staffInvite: { max: 10, window: 60 * MINUTE },
   joinIp: { max: 60, window: 60 * MINUTE },
+  // Bookings (src/lib/api/booking.ts): times booked per IP (phones share carrier IPs, so this only stops floods; the
+  // real guard is two upcoming bookings per WhatsApp number), bookings the bot check couldn't vouch for per shop, and
+  // booking pages opened or changed per IP (the code in the link is the key, so guessing is slowed).
+  bookIp: { max: 30, window: 60 * MINUTE },
+  uncheckedBook: { max: 5, window: 60 * MINUTE },
+  bookPageIp: { max: 120, window: 10 * MINUTE },
+  // A backstop per shop (a busy salon takes far fewer), and moves of one booking (each one notifies the business).
+  bookShop: { max: 40, window: 60 * MINUTE },
+  bookMove: { max: 5, window: 60 * MINUTE },
 } as const
 
 /** The visitor's IP as Cloudflare saw it. */

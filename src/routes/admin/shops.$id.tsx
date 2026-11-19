@@ -5,7 +5,7 @@ import { WhatsAppIcon } from '#/components/brand-icons'
 import { Money, ShopAvatar, StatusPill } from '#/components/ui'
 import { asAdminDays, type AdminDays } from '#/lib/admin'
 import { getAdminShop } from '#/lib/api/admin'
-import { CATEGORIES, localPhone, timeAgo, waLink, type OrderStatus } from '#/lib/format'
+import { ALL_CATEGORIES, localPhone, timeAgo, waLink, type OrderStatus } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import { usePlanText } from './index'
 import { Ranges } from './route'
@@ -63,7 +63,7 @@ function ShopPage() {
           <div className="min-w-0">
             <h1 className="title text-24 [overflow-wrap:anywhere] md:text-28">{s.name}</h1>
             <p className="mt-1 text-14 text-muted">
-              {planText(s)} · {t(CATEGORIES.find((c) => c.id === s.category)?.label ?? s.category)}
+              {planText(s)} · {t(ALL_CATEGORIES.find((c) => c.id === s.category)?.label ?? s.category)}
               {d.dates.location ? ` · ${d.dates.location}` : ''}
             </p>
           </div>

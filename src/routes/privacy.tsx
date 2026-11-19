@@ -42,6 +42,7 @@ function Privacy() {
       <Section title={t('What we collect from buyers')}>
         <ul>
           <li>{t('When you order: your name, phone number, area, a note for the rider, any note for the seller, what you ordered, and how you pay. A payment SMS you paste is kept to check the payment.')}</li>
+          <li>{t('If you book a time with a business: your name, your WhatsApp number, what you booked and when, and any note you add. Only that business sees them. Other clients only ever see which times are free, never who booked.')}</li>
           <li>{t('If you tap Share my location or paste a location link at checkout: that map point, so the seller and their rider can find you. Only that seller sees it, and it is deleted from the order 90 days later.')}</li>
           <li>
             {t(
@@ -104,6 +105,7 @@ function Privacy() {
           <li>{t('Orders: as long as the seller’s account is open, so sellers keep their records, and as long as the law requires for business records.')}</li>
           <li>{t('Visit data: up to 13 months, then it is deleted or kept only as totals.')}</li>
           <li>{t('Back-in-stock requests: deleted once the seller has messaged you, and after 90 days at most.')}</li>
+          <li>{t('Bookings: about 13 months after the day of the booking, then they are deleted.')}</li>
           <li>{t('A delivery location (map point) on an order: 90 days, then it is deleted. The area and the note stay with the order.')}</li>
           <li>{t('Tembo payments: as long as the law requires for business records.')}</li>
           <li>{t('Backup copies of the database: up to 5 weeks, then they are deleted.')}</li>

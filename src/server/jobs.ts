@@ -6,6 +6,7 @@ import { refreshDomains } from '#/server/domains'
 import { reconcilePayments, remindRenewals } from '#/server/billing'
 import { purgeAiUses } from '#/server/ai'
 import { purgeEmail, weeklySummaries } from '#/server/email'
+import { purgeBookings } from '#/server/bookings'
 
 // Cron schedules, in UTC (Tanzania is UTC+3). They must match "triggers" in wrangler.jsonc.
 export const NIGHTLY = '0 0 * * *' // 03:00 in Dar
@@ -38,6 +39,8 @@ export async function runJob(cron: string) {
           ['weekly', weeklySummaries],
           // The email log (no bodies) after about 13 months.
           ['email', purgeEmail],
+          // Bookings and time off about 13 months after their day (Privacy page).
+          ['bookings', purgeBookings],
         ]
       : cron === WEEKLY
         ? [['backup', backupDatabase]]

@@ -36,17 +36,22 @@ import { Route as ApiSelcomRouteImport } from './routes/api/selcom'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppAnalyticsRouteImport } from './routes/app/analytics'
+import { Route as AppBookingsRouteImport } from './routes/app/bookings'
 import { Route as AppDiscountsRouteImport } from './routes/app/discounts'
 import { Route as AppDomainRouteImport } from './routes/app/domain'
+import { Route as AppHoursRouteImport } from './routes/app/hours'
 import { Route as AppLookRouteImport } from './routes/app/look'
 import { Route as AppPlanRouteImport } from './routes/app/plan'
+import { Route as AppServicesRouteImport } from './routes/app/services'
 import { Route as AppShopRouteImport } from './routes/app/shop'
 import { Route as AppStaffRouteImport } from './routes/app/staff'
+import { Route as BkCodeRouteImport } from './routes/bk/$code'
 import { Route as EmailOffRouteImport } from './routes/email/off'
 import { Route as ImgSplatRouteImport } from './routes/img/$'
 import { Route as JoinCodeRouteImport } from './routes/join/$code'
 import { Route as OCodeRouteImport } from './routes/o/$code'
 import { Route as ShopBCodeRouteImport } from './routes/$shop/b.$code'
+import { Route as ShopBookIdRouteImport } from './routes/$shop/book.$id'
 import { Route as ShopCSlugRouteImport } from './routes/$shop/c.$slug'
 import { Route as ShopPIdRouteImport } from './routes/$shop/p.$id'
 import { Route as AdminShopsIdRouteImport } from './routes/admin/shops.$id'
@@ -199,6 +204,11 @@ const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppBookingsRoute = AppBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppDiscountsRoute = AppDiscountsRouteImport.update({
   id: '/discounts',
   path: '/discounts',
@@ -207,6 +217,11 @@ const AppDiscountsRoute = AppDiscountsRouteImport.update({
 const AppDomainRoute = AppDomainRouteImport.update({
   id: '/domain',
   path: '/domain',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppHoursRoute = AppHoursRouteImport.update({
+  id: '/hours',
+  path: '/hours',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppLookRoute = AppLookRouteImport.update({
@@ -219,6 +234,11 @@ const AppPlanRoute = AppPlanRouteImport.update({
   path: '/plan',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppServicesRoute = AppServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppShopRoute = AppShopRouteImport.update({
   id: '/shop',
   path: '/shop',
@@ -228,6 +248,11 @@ const AppStaffRoute = AppStaffRouteImport.update({
   id: '/staff',
   path: '/staff',
   getParentRoute: () => AppRouteRoute,
+} as any)
+const BkCodeRoute = BkCodeRouteImport.update({
+  id: '/bk/$code',
+  path: '/bk/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const EmailOffRoute = EmailOffRouteImport.update({
   id: '/email/off',
@@ -252,6 +277,11 @@ const OCodeRoute = OCodeRouteImport.update({
 const ShopBCodeRoute = ShopBCodeRouteImport.update({
   id: '/b/$code',
   path: '/b/$code',
+  getParentRoute: () => ShopRouteRoute,
+} as any)
+const ShopBookIdRoute = ShopBookIdRouteImport.update({
+  id: '/book/$id',
+  path: '/book/$id',
   getParentRoute: () => ShopRouteRoute,
 } as any)
 const ShopCSlugRoute = ShopCSlugRouteImport.update({
@@ -360,12 +390,16 @@ export interface FileRoutesByFullPath {
   '/api/selcom': typeof ApiSelcomRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/bookings': typeof AppBookingsRoute
   '/app/discounts': typeof AppDiscountsRoute
   '/app/domain': typeof AppDomainRoute
+  '/app/hours': typeof AppHoursRoute
   '/app/look': typeof AppLookRoute
   '/app/plan': typeof AppPlanRoute
+  '/app/services': typeof AppServicesRoute
   '/app/shop': typeof AppShopRoute
   '/app/staff': typeof AppStaffRoute
+  '/bk/$code': typeof BkCodeRoute
   '/email/off': typeof EmailOffRoute
   '/img/$': typeof ImgSplatRoute
   '/join/$code': typeof JoinCodeRoute
@@ -374,6 +408,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/$shop/b/$code': typeof ShopBCodeRoute
+  '/$shop/book/$id': typeof ShopBookIdRoute
   '/$shop/c/$slug': typeof ShopCSlugRoute
   '/$shop/p/$id': typeof ShopPIdRoute
   '/admin/shops/$id': typeof AdminShopsIdRoute
@@ -413,12 +448,16 @@ export interface FileRoutesByTo {
   '/api/selcom': typeof ApiSelcomRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/bookings': typeof AppBookingsRoute
   '/app/discounts': typeof AppDiscountsRoute
   '/app/domain': typeof AppDomainRoute
+  '/app/hours': typeof AppHoursRoute
   '/app/look': typeof AppLookRoute
   '/app/plan': typeof AppPlanRoute
+  '/app/services': typeof AppServicesRoute
   '/app/shop': typeof AppShopRoute
   '/app/staff': typeof AppStaffRoute
+  '/bk/$code': typeof BkCodeRoute
   '/email/off': typeof EmailOffRoute
   '/img/$': typeof ImgSplatRoute
   '/join/$code': typeof JoinCodeRoute
@@ -427,6 +466,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/$shop/b/$code': typeof ShopBCodeRoute
+  '/$shop/book/$id': typeof ShopBookIdRoute
   '/$shop/c/$slug': typeof ShopCSlugRoute
   '/$shop/p/$id': typeof ShopPIdRoute
   '/admin/shops/$id': typeof AdminShopsIdRoute
@@ -470,12 +510,16 @@ export interface FileRoutesById {
   '/api/selcom': typeof ApiSelcomRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/bookings': typeof AppBookingsRoute
   '/app/discounts': typeof AppDiscountsRoute
   '/app/domain': typeof AppDomainRoute
+  '/app/hours': typeof AppHoursRoute
   '/app/look': typeof AppLookRoute
   '/app/plan': typeof AppPlanRoute
+  '/app/services': typeof AppServicesRoute
   '/app/shop': typeof AppShopRoute
   '/app/staff': typeof AppStaffRoute
+  '/bk/$code': typeof BkCodeRoute
   '/email/off': typeof EmailOffRoute
   '/img/$': typeof ImgSplatRoute
   '/join/$code': typeof JoinCodeRoute
@@ -484,6 +528,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/$shop/b/$code': typeof ShopBCodeRoute
+  '/$shop/book/$id': typeof ShopBookIdRoute
   '/$shop/c/$slug': typeof ShopCSlugRoute
   '/$shop/p/$id': typeof ShopPIdRoute
   '/admin/shops/$id': typeof AdminShopsIdRoute
@@ -528,12 +573,16 @@ export interface FileRouteTypes {
     | '/api/selcom'
     | '/api/upload'
     | '/app/analytics'
+    | '/app/bookings'
     | '/app/discounts'
     | '/app/domain'
+    | '/app/hours'
     | '/app/look'
     | '/app/plan'
+    | '/app/services'
     | '/app/shop'
     | '/app/staff'
+    | '/bk/$code'
     | '/email/off'
     | '/img/$'
     | '/join/$code'
@@ -542,6 +591,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/$shop/b/$code'
+    | '/$shop/book/$id'
     | '/$shop/c/$slug'
     | '/$shop/p/$id'
     | '/admin/shops/$id'
@@ -581,12 +631,16 @@ export interface FileRouteTypes {
     | '/api/selcom'
     | '/api/upload'
     | '/app/analytics'
+    | '/app/bookings'
     | '/app/discounts'
     | '/app/domain'
+    | '/app/hours'
     | '/app/look'
     | '/app/plan'
+    | '/app/services'
     | '/app/shop'
     | '/app/staff'
+    | '/bk/$code'
     | '/email/off'
     | '/img/$'
     | '/join/$code'
@@ -595,6 +649,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/$shop/b/$code'
+    | '/$shop/book/$id'
     | '/$shop/c/$slug'
     | '/$shop/p/$id'
     | '/admin/shops/$id'
@@ -637,12 +692,16 @@ export interface FileRouteTypes {
     | '/api/selcom'
     | '/api/upload'
     | '/app/analytics'
+    | '/app/bookings'
     | '/app/discounts'
     | '/app/domain'
+    | '/app/hours'
     | '/app/look'
     | '/app/plan'
+    | '/app/services'
     | '/app/shop'
     | '/app/staff'
+    | '/bk/$code'
     | '/email/off'
     | '/img/$'
     | '/join/$code'
@@ -651,6 +710,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/$shop/b/$code'
+    | '/$shop/book/$id'
     | '/$shop/c/$slug'
     | '/$shop/p/$id'
     | '/admin/shops/$id'
@@ -691,6 +751,7 @@ export interface RootRouteChildren {
   ApiPhotoRoute: typeof ApiPhotoRoute
   ApiSelcomRoute: typeof ApiSelcomRoute
   ApiUploadRoute: typeof ApiUploadRoute
+  BkCodeRoute: typeof BkCodeRoute
   EmailOffRoute: typeof EmailOffRoute
   ImgSplatRoute: typeof ImgSplatRoute
   JoinCodeRoute: typeof JoinCodeRoute
@@ -888,6 +949,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAnalyticsRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/bookings': {
+      id: '/app/bookings'
+      path: '/bookings'
+      fullPath: '/app/bookings'
+      preLoaderRoute: typeof AppBookingsRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/discounts': {
       id: '/app/discounts'
       path: '/discounts'
@@ -900,6 +968,13 @@ declare module '@tanstack/react-router' {
       path: '/domain'
       fullPath: '/app/domain'
       preLoaderRoute: typeof AppDomainRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/hours': {
+      id: '/app/hours'
+      path: '/hours'
+      fullPath: '/app/hours'
+      preLoaderRoute: typeof AppHoursRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/app/look': {
@@ -916,6 +991,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPlanRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/services': {
+      id: '/app/services'
+      path: '/services'
+      fullPath: '/app/services'
+      preLoaderRoute: typeof AppServicesRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/shop': {
       id: '/app/shop'
       path: '/shop'
@@ -929,6 +1011,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/staff'
       preLoaderRoute: typeof AppStaffRouteImport
       parentRoute: typeof AppRouteRoute
+    }
+    '/bk/$code': {
+      id: '/bk/$code'
+      path: '/bk/$code'
+      fullPath: '/bk/$code'
+      preLoaderRoute: typeof BkCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/email/off': {
       id: '/email/off'
@@ -963,6 +1052,13 @@ declare module '@tanstack/react-router' {
       path: '/b/$code'
       fullPath: '/$shop/b/$code'
       preLoaderRoute: typeof ShopBCodeRouteImport
+      parentRoute: typeof ShopRouteRoute
+    }
+    '/$shop/book/$id': {
+      id: '/$shop/book/$id'
+      path: '/book/$id'
+      fullPath: '/$shop/book/$id'
+      preLoaderRoute: typeof ShopBookIdRouteImport
       parentRoute: typeof ShopRouteRoute
     }
     '/$shop/c/$slug': {
@@ -1085,6 +1181,7 @@ interface ShopRouteRouteChildren {
   ShopCheckoutRoute: typeof ShopCheckoutRoute
   ShopIndexRoute: typeof ShopIndexRoute
   ShopBCodeRoute: typeof ShopBCodeRoute
+  ShopBookIdRoute: typeof ShopBookIdRoute
   ShopCSlugRoute: typeof ShopCSlugRoute
   ShopPIdRoute: typeof ShopPIdRoute
 }
@@ -1094,6 +1191,7 @@ const ShopRouteRouteChildren: ShopRouteRouteChildren = {
   ShopCheckoutRoute: ShopCheckoutRoute,
   ShopIndexRoute: ShopIndexRoute,
   ShopBCodeRoute: ShopBCodeRoute,
+  ShopBookIdRoute: ShopBookIdRoute,
   ShopCSlugRoute: ShopCSlugRoute,
   ShopPIdRoute: ShopPIdRoute,
 }
@@ -1118,10 +1216,13 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 
 interface AppRouteRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppBookingsRoute: typeof AppBookingsRoute
   AppDiscountsRoute: typeof AppDiscountsRoute
   AppDomainRoute: typeof AppDomainRoute
+  AppHoursRoute: typeof AppHoursRoute
   AppLookRoute: typeof AppLookRoute
   AppPlanRoute: typeof AppPlanRoute
+  AppServicesRoute: typeof AppServicesRoute
   AppShopRoute: typeof AppShopRoute
   AppStaffRoute: typeof AppStaffRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -1142,10 +1243,13 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
+  AppBookingsRoute: AppBookingsRoute,
   AppDiscountsRoute: AppDiscountsRoute,
   AppDomainRoute: AppDomainRoute,
+  AppHoursRoute: AppHoursRoute,
   AppLookRoute: AppLookRoute,
   AppPlanRoute: AppPlanRoute,
+  AppServicesRoute: AppServicesRoute,
   AppShopRoute: AppShopRoute,
   AppStaffRoute: AppStaffRoute,
   AppIndexRoute: AppIndexRoute,
@@ -1190,6 +1294,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPhotoRoute: ApiPhotoRoute,
   ApiSelcomRoute: ApiSelcomRoute,
   ApiUploadRoute: ApiUploadRoute,
+  BkCodeRoute: BkCodeRoute,
   EmailOffRoute: EmailOffRoute,
   ImgSplatRoute: ImgSplatRoute,
   JoinCodeRoute: JoinCodeRoute,

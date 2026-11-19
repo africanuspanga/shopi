@@ -3,7 +3,7 @@ import { isShopDomain } from '#/server/domains'
 import { clientIp, count, overLimit } from '#/server/limits'
 
 /** What each form says it is, checked against the token so one form's token can't be spent on another. */
-export type HumanAction = 'signup' | 'order' | 'alert'
+export type HumanAction = 'signup' | 'order' | 'alert' | 'book'
 
 const HOST = 'shopi.tz'
 

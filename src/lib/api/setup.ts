@@ -5,6 +5,7 @@ import { passStep } from '#/server/setup'
 import { aiReady } from '#/server/ai'
 import { NETWORKS, normalizePhone } from '#/lib/format'
 import { SETUP_STEPS, nextSetupStep, type SetupOutcome } from '#/lib/setup'
+import { parseBook } from '#/lib/booking'
 
 /** The five-step setup's server side (src/lib/setup.ts, src/routes/onboard.tsx). */
 
@@ -23,19 +24,23 @@ export type SetupShop = {
   lipa_name: string
   cod_enabled: number
   setup_step: number | null
+  /** 'products' or 'services': what the business chose at step 1. */
+  kind: string
+  book: string | null
 }
 
 export type SetupProduct = { id: string; name: string; price: number; image: string | null }
+export type SetupService = { id: string; name: string; duration: number; price: number; price_from: number }
 
 /** Where the seller is in the setup, and what the preview shows. No shop yet means step 1. */
 export const getSetup = createServerFn({ method: 'GET' }).handler(async () => {
   const user = await requireUser()
   const shop = await first<SetupShop>(
-    `SELECT id, slug, name, category, logo_key, lang, whatsapp, bio, location, lipa_number, lipa_network, lipa_name, cod_enabled, setup_step
+    `SELECT id, slug, name, category, logo_key, lang, whatsapp, bio, location, lipa_number, lipa_network, lipa_name, cod_enabled, setup_step, kind, book
      FROM shops WHERE owner_id = ? LIMIT 1`,
     user.id,
   )
-  if (!shop) return { step: 1, shop: null, products: [] as SetupProduct[], ai: aiReady() }
+  if (!shop) return { step: 1, shop: null, products: [] as SetupProduct[], services: [] as SetupService[], ai: aiReady() }
   const rows = await all<{ id: string; name: string; price: number; images: string }>(
     'SELECT id, name, price, images FROM products WHERE shop_id = ? AND active = 1 ORDER BY created_at DESC LIMIT 4',
     shop.id,
@@ -43,10 +48,12 @@ export const getSetup = createServerFn({ method: 'GET' }).handler(async () => {
   // Products buyers can see: an import of rows without photos leaves them hidden, and step 2 still asks for one.
   const count = await first<{ n: number }>('SELECT COUNT(*) n FROM products WHERE shop_id = ? AND active = 1', shop.id)
   const products = rows.map((p) => ({ id: p.id, name: p.name, price: p.price, image: (JSON.parse(p.images) as string[])[0] ?? null }))
+  const services = await all<SetupService>('SELECT id, name, duration, price, price_from FROM services WHERE shop_id = ? AND active = 1 ORDER BY sort, created_at LIMIT 4', shop.id)
   return {
-    step: nextSetupStep({ setup: shop.setup_step, products: count?.n ?? 0, lipa: !!shop.lipa_number }),
+    step: nextSetupStep({ setup: shop.setup_step, products: count?.n ?? 0, lipa: !!shop.lipa_number, kind: shop.kind, services: services.length, hours: !!parseBook(shop.book) }),
     shop,
     products,
+    services,
     ai: aiReady(),
   }
 })

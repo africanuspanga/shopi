@@ -53,8 +53,9 @@ export function landing(role: Role | null | undefined): '/app' | '/app/orders' |
 export function areaOfPath(path: string): Area {
   const p = path.replace(/\/+$/, '') || '/'
   if (p === '/app') return 'manage'
-  if (/^\/app\/(orders|bags)(\/|$)/.test(p)) return 'orders'
-  if (/^\/app\/(products|collections)(\/|$)/.test(p)) return 'products'
+  // The diary is orders work, services are products work; the working hours (/app/hours) are the shop's settings.
+  if (/^\/app\/(orders|bags|bookings)(\/|$)/.test(p)) return 'orders'
+  if (/^\/app\/(products|collections|services)(\/|$)/.test(p)) return 'products'
   if (/^\/app\/(plan|domain|staff)(\/|$)/.test(p)) return 'owner'
   // Shop settings: a Manager gets the shop's settings, the others their own (notifications, language, log out).
   if (/^\/app\/shop(\/|$)/.test(p)) return 'any'

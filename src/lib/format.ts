@@ -118,12 +118,12 @@ export function freeSlug(base: string, taken: Set<string>, reserved: Set<string>
   for (let i = 2; ; i++) if (!taken.has(`${base}-${i}`)) return `${base}-${i}`
 }
 
-export const RESERVED_PRODUCT_SLUGS = new Set(['checkout', 'p', 'b', 'c', 'bag', 'cart', 'order', 'orders', 'about'])
+export const RESERVED_PRODUCT_SLUGS = new Set(['checkout', 'p', 'b', 'c', 'bag', 'cart', 'order', 'orders', 'about', 'book', 'services'])
 
 export const RESERVED_SLUGS = new Set([
   'app', 'admin', 'api', 'img', 'login', 'signup', 'logout', 'onboard', 'discover', 'creators', 'email', 'brand', 'join', 'paused',
   'top-products', 'help', 'about', 'terms', 'privacy', 'data-deletion', 'legal', 'pricing', 'shopi', 'shopitz', 'rizk', 'rizko', 'shop', 'shops',
-  'o', 'order', 'orders', 'static', 'assets', 'favicon.ico', 'robots.txt', 'sitemap.xml',
+  'o', 'bk', 'book', 'booking', 'bookings', 'services', 'order', 'orders', 'static', 'assets', 'favicon.ico', 'robots.txt', 'sitemap.xml',
 ])
 
 /** Every photo has a small copy (600 px) beside it for grids and thumbnails: s/<shop>/<id>.webp → t/<shop>/<id>.webp. */
@@ -156,6 +156,19 @@ export const CATEGORIES: { id: string; label: string }[] = [
   { id: 'ebooks', label: msg('Ebooks') },
   { id: 'other', label: msg('Other') },
 ]
+
+/** What a business that sells services is: asked at setup once it chose Services (roadmap `v-services`). */
+export const SERVICE_CATEGORIES: { id: string; label: string }[] = [
+  { id: 'salon', label: msg('Hair salon') },
+  { id: 'barber', label: msg('Barbershop') },
+  { id: 'beauty', label: msg('Beauty and skin care') },
+  { id: 'nails', label: msg('Nails') },
+  { id: 'massage', label: msg('Massage and spa') },
+  { id: 'consulting', label: msg('Consulting and coaching') },
+  { id: 'services', label: msg('Other services') },
+]
+/** Every category a shop can have, whatever it sells: for reading a saved one. */
+export const ALL_CATEGORIES = [...CATEGORIES, ...SERVICE_CATEGORIES]
 
 /** Tanzania is a multi-network mobile money market, so the copy says "mobile money" and never assumes one network. */
 export const NETWORKS = ['M-Pesa', 'Mixx by Yas', 'Airtel Money', 'HaloPesa', 'Bank Lipa Namba']

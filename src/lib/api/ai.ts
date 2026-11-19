@@ -3,7 +3,7 @@ import { requireShop } from '#/server/auth'
 import { all, first } from '#/server/db'
 import { shopPlan } from '#/server/plan'
 import { aiAllowance, aiReady, bioLeft, recordUse, writeBio, writeDescription } from '#/server/ai'
-import { CATEGORIES, OPTION_KINDS, optionKind } from '#/lib/format'
+import { ALL_CATEGORIES, OPTION_KINDS, optionKind } from '#/lib/format'
 import { asLang } from '#/lib/i18n'
 
 /** AI for the logged-in seller (src/server/ai.ts). */
@@ -32,7 +32,7 @@ export const writeProductDescription = createServerFn({ method: 'POST' })
     if (allowance.left === 0) return { error: 'limit' as const, left: 0 }
     if (allowance.busy) return { error: 'busy' as const }
     const s = await first<{ name: string; category: string; location: string; lang: string }>('SELECT name, category, location, lang FROM shops WHERE id = ?', shop.id)
-    const category = CATEGORIES.find((c) => c.id === s?.category)?.label ?? 'products'
+    const category = ALL_CATEGORIES.find((c) => c.id === s?.category)?.label ?? 'products'
     const option = optionKind(data.option)
     try {
       const out = await writeDescription({
@@ -66,7 +66,7 @@ export const writeShopBio = createServerFn({ method: 'POST' })
     // With nothing but a category, models invent who the shop is for and how cheap it is (18 Nov, in Swahili): ask
     // the seller for a few words, or a product, first.
     if (!products.length && !data.notes) return { error: 'facts' as const }
-    const category = CATEGORIES.find((c) => c.id === s?.category)?.label ?? 'products'
+    const category = ALL_CATEGORIES.find((c) => c.id === s?.category)?.label ?? 'products'
     try {
       const out = await writeBio({
         name: s?.name ?? shop.name,

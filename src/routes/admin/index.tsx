@@ -9,7 +9,7 @@ import { getOwnerDashboard, type OwnerSection } from '#/lib/api/admin'
 import { recheckTemboPayment } from '#/lib/api/billing'
 import { sendTestEmail } from '#/lib/api/email'
 import { EMAIL_KINDS, type EmailKind } from '#/lib/email'
-import { CATEGORIES, localPhone, timeAgo, waLink, type OrderStatus } from '#/lib/format'
+import { ALL_CATEGORIES, localPhone, timeAgo, waLink, type OrderStatus } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
 import { Ranges, useAdminTabs } from './route'
 import { SCORE_LABELS, type ScoreKey } from '#/lib/score'
@@ -353,7 +353,7 @@ function MoneyTab({ d }: { d: OwnerSection<'money'> }) {
   const lostBefore = pct(d.before.cancelled, all(d.before))
   const method: Record<string, string> = { lipa: 'Lipa Namba', cod: t('Cash on delivery'), manual: t('Recorded by hand'), cash: t('Cash'), mobile: t('Other mobile money'), bank: t('Bank') }
   const paid = d.methods.reduce((s, m) => s + m.sales, 0)
-  const cat = (id: string) => t(CATEGORIES.find((c) => c.id === id)?.label ?? id)
+  const cat = (id: string) => t(ALL_CATEGORIES.find((c) => c.id === id)?.label ?? id)
   return (
     <>
       <Kpis>
@@ -655,6 +655,10 @@ function Use({ d }: { d: OwnerSection<'use'> }) {
     ['domain', t('Own domain')],
     ['ai', t('AI descriptions written')],
     ['staff', t('A shop assistant who joined')],
+    ['serves', t('Opened as a services business')],
+    ['services', t('A service listed')],
+    ['booked', t('A booking made by a client')],
+    ['booked_manual', t('A booking added by hand')],
     ['qr', t('QR code downloaded or shared')],
     ['swahili', t('Shop in Kiswahili')],
     ['maps', t('Google Maps link')],

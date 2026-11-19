@@ -18,6 +18,8 @@ export type EventType =
   | 'view_product'
   | 'add_to_cart'
   | 'checkout_start'
+  | 'view_service'
+  | 'book'
   | 'whatsapp_click'
   | 'social_click'
   | 'share'

@@ -12,6 +12,8 @@ import { MAPS_HOSTS, MAPS_SHORT, asPin, pinFromUrl, readMapLink } from '#/lib/lo
 import { isHuman } from '#/server/turnstile'
 import { notifySeller, orderLine } from '#/server/push'
 import { namesMatch, parsePaymentSms, type PaymentCheck } from '#/lib/payment-sms'
+import { opensSomeDay, parseBook, type DayHours } from '#/lib/booking'
+import type { PublicService } from '#/lib/api/booking'
 
 export type PublicShop = {
   id: string
@@ -47,6 +49,12 @@ export type PublicShop = {
   /** Sends to other regions ("mikoani"), with an optional line on how. */
   ships_regions: number
   regions_note: string
+  /** What the shop shows first when it holds both: 'products' or 'services' (src/lib/booking.ts). */
+  kind: string
+  /** The working days and hours clients can book in (Sunday first), or null when nothing can be booked. */
+  open_days: DayHours[] | null
+  /** The shop sells only services: nothing is delivered, and clients pay at their visit. */
+  serves: boolean
 }
 export type PublicProduct = {
   id: string
@@ -69,7 +77,7 @@ export type PublicCollection = { id: string; slug: string; name: string; descrip
 
 const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram, tiktok, facebook, location, maps_url, tin, hours,
   lipa_number, lipa_name, lipa_network, cod_enabled, status, lang, theme_color, theme_font, cover_key, hide_badge, plan, paid_until,
-  ships_regions, regions_note`
+  ships_regions, regions_note, kind, book`
 
 export const getStorefront = createServerFn({ method: 'GET' })
   .validator((d: { slug: string }) => ({ slug: String(d.slug).toLowerCase() }))
@@ -78,7 +86,7 @@ export const getStorefront = createServerFn({ method: 'GET' })
     // Every query finds the shop by its slug itself instead of waiting for the shop's row.
     const shopId = `(SELECT id FROM shops WHERE slug = ?1 AND status IN ('active', 'demo'))`
     const q = (sql: string, ...params: unknown[]) => db().prepare(sql).bind(data.slug, ...params)
-    const [shopRows, productRows, areaRows, discountRows, collectionRows, memberRows] = await db().batch([
+    const [shopRows, productRows, areaRows, discountRows, collectionRows, memberRows, serviceRows] = await db().batch([
       q(`SELECT ${SHOP_COLS} FROM shops WHERE slug = ?1 AND status IN ('active', 'demo')`),
       q(
         `SELECT id, slug, name, description, price, compare_price, stock, sizes, option_name, images, created_at, pick_rank FROM products
@@ -91,11 +99,16 @@ export const getStorefront = createServerFn({ method: 'GET' })
         `SELECT cp.collection_id, cp.product_id FROM collection_products cp JOIN collections c ON c.id = cp.collection_id
          WHERE c.shop_id = ${shopId} ORDER BY cp.sort`,
       ),
+      q(`SELECT id, name, description, duration, price, price_from, by_name, images FROM services WHERE shop_id = ${shopId} AND active = 1 ORDER BY sort, created_at`),
     ])
-    const row = shopRows.results[0] as (Omit<PublicShop, 'badge'> & { hide_badge: number; plan: string; paid_until: number | null }) | undefined
+    const row = shopRows.results[0] as (Omit<PublicShop, 'badge' | 'open_days' | 'serves'> & { hide_badge: number; plan: string; paid_until: number | null; book: string | null }) | undefined
     if (!row) return null
-    const { hide_badge, plan, paid_until, ...rest } = row
-    const shop: PublicShop = { ...rest, badge: !(hide_badge && can(planState({ status: rest.status, plan, paid_until }), 'hideBadge')) }
+    const { hide_badge, plan, paid_until, book, ...rest } = row
+    // Services show once the business has set its working hours: before that no time could be booked.
+    const settings = parseBook(book)
+    const bookable = opensSomeDay(settings)
+    const services = bookable ? (serviceRows.results as (Omit<PublicService, 'images'> & { images: string })[]) : []
+    const shop: PublicShop = { ...rest, open_days: bookable && services.length ? settings!.days : null, serves: services.length > 0 && productRows.results.length === 0, badge: !(hide_badge && can(planState({ status: rest.status, plan, paid_until }), 'hideBadge')) }
     const products = productRows.results as (Omit<PublicProduct, 'images' | 'sizes'> & { images: string; sizes: string | null; pick_rank: number | null })[]
     const areas = areaRows.results as { id: string; name: string; fee: number }[]
     const discount = discountRows.results[0]
@@ -116,6 +129,8 @@ export const getStorefront = createServerFn({ method: 'GET' })
         .filter((p) => p.pick_rank != null)
         .sort((a, b) => a.pick_rank! - b.pick_rank!)
         .map((p) => p.id),
+      /** What clients can book, in the business's order (roadmap `v-services`). */
+      services: services.map((v): PublicService => ({ ...v, images: JSON.parse(v.images) as string[] })),
       products: products.map(({ pick_rank: _rank, ...p }): PublicProduct => ({ ...p, images: JSON.parse(p.images) as string[], sizes: parseSizes(p.sizes) })),
       // Link previews (WhatsApp, Instagram) need absolute image URLs.
       origin: getRequestUrl().origin,

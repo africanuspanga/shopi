@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute, redirect, useLocation, useRouter } from '@tanstack/react-router'
-import { ArrowUpRight, ChartColumn, FileSpreadsheet, House, Layers, Package, PenLine, Plus, ReceiptText, ShoppingBag, Store, TicketPercent, UserRound, type LucideIcon } from 'lucide-react'
+import { ArrowUpRight, CalendarDays, CalendarPlus, ChartColumn, FileSpreadsheet, House, Layers, Package, PenLine, Plus, ReceiptText, Scissors, ShoppingBag, Store, TicketPercent, UserRound, type LucideIcon } from 'lucide-react'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import { getNavCounts } from '#/lib/api/merchant'
@@ -23,6 +23,15 @@ export const Route = createFileRoute('/app')({
   loader: () => getNavCounts(),
   component: AppLayout,
 })
+
+/** The diary and the services, for a business that takes bookings (roadmap `v-services`). */
+function useBookingTabs() {
+  const t = useT()
+  return {
+    bookings: { to: '/app/bookings', icon: CalendarDays, label: t('Bookings'), match: (p: string) => p.startsWith('/app/bookings') },
+    services: { to: '/app/services', icon: Scissors, label: t('Services'), match: (p: string) => p.startsWith('/app/services') || p.startsWith('/app/hours') },
+  } satisfies Record<string, Tab>
+}
 
 function useTabs() {
   const t = useT()
@@ -82,15 +91,33 @@ function OrdersBadge({ dot = false }: { dot?: boolean }) {
   return null
 }
 
+/** Bookings waiting for the business to confirm (it chose to confirm each one): the same orange count as payments. */
+function BookingsBadge({ dot = false }: { dot?: boolean }) {
+  const { toConfirm, today } = Route.useLoaderData()
+  if (dot) return toConfirm > 0 ? <span className="absolute -top-1 -right-1.5 h-2.5 w-2.5 rounded-full bg-moto ring-2 ring-ink" /> : null
+  if (toConfirm > 0)
+    return <span className="tnum ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-moto px-1.5 text-12 font-medium text-ink">{toConfirm}</span>
+  if (today > 0) return <span className="tnum ml-auto text-13 text-muted">{today}</span>
+  return null
+}
+
 function Sidebar() {
   const t = useT()
   const [home, orders, products, shopTab] = useTabs()
   const canOpen = useCanOpen()
+  const { bookings, services } = useBookingTabs()
+  const counts = Route.useLoaderData()
+  const { shop: mine } = Route.useRouteContext()
+  const books = mine.kind === 'services' || counts.services > 0
+  // A business that sells services reads its diary first; a shop that sells products keeps orders first.
   const tabs = [
     home,
+    ...(books && mine.kind === 'services' ? [bookings, services] : []),
     orders,
+    ...(books && mine.kind !== 'services' ? [bookings] : []),
     { to: '/app/analytics', icon: ChartColumn, label: t('Analytics'), match: (p: string) => p.startsWith('/app/analytics') },
     { ...products, match: (p: string) => p.startsWith('/app/products') },
+    ...(mine.kind !== 'services' ? [services] : []),
     { to: '/app/collections', icon: Layers, label: t('Collections'), match: (p: string) => p.startsWith('/app/collections') },
     { to: '/app/discounts', icon: TicketPercent, label: t('Discount codes'), match: (p: string) => p.startsWith('/app/discounts') },
     { ...shopTab, match: (p: string) => p.startsWith('/app/shop') },
@@ -130,19 +157,25 @@ function Sidebar() {
               <tab.icon size={18} strokeWidth={on ? 2 : 1.6} className="shrink-0" />
               {tab.label}
               {tab.to === '/app/orders' && <OrdersBadge />}
+              {tab.to === '/app/bookings' && <BookingsBadge />}
             </Link>
           )
         })}
       </nav>
 
       <div className="mt-6 space-y-2">
+        {books && canOpen('/app/bookings') && (
+          <Link to="/app/bookings" search={{ add: 1 }} className="btn btn-sm h-10 w-full">
+            <CalendarPlus size={16} strokeWidth={1.75} /> {t('Add a booking')}
+          </Link>
+        )}
         {canOpen('/app/products/new') && (
-          <Link to="/app/products/new" className="btn btn-sm h-10 w-full">
+          <Link to="/app/products/new" className={`btn btn-sm h-10 w-full ${books && canOpen('/app/bookings') ? 'btn-ghost' : ''}`}>
             <Plus size={16} strokeWidth={2.25} /> {t('Add product')}
           </Link>
         )}
         {canOpen('/app/bags/new') && (
-          <Link to="/app/bags/new" className={`btn btn-sm h-10 w-full ${canOpen('/app/products/new') ? 'btn-ghost' : ''}`}>
+          <Link to="/app/bags/new" className={`btn btn-sm h-10 w-full ${canOpen('/app/products/new') || books ? 'btn-ghost' : ''}`}>
             <ShoppingBag size={16} strokeWidth={1.75} /> {t('Send a bag link')}
           </Link>
         )}
@@ -168,10 +201,25 @@ function BottomNav() {
   const canOpen = useCanOpen()
   const path = useLocation({ select: (l) => l.pathname })
   // An assistant's capsule holds only their part: Orders or Products, +, Settings.
-  const left = [home, orders].filter((x) => canOpen(x.to))
-  const right = [products, shopTab].filter((x) => canOpen(x.to))
+  const { bookings, services } = useBookingTabs()
+  const counts = Route.useLoaderData()
+  const { shop } = Route.useRouteContext()
+  const serves = shop.kind === 'services'
+  const books = serves || counts.services > 0
+  // A business that sells services gets its diary and its services in the capsule; orders and products stay one tap
+  // away (Home, and the Services page).
+  const left = [home, serves ? bookings : orders].filter((x) => canOpen(x.to))
+  const right = [serves ? services : products, shopTab].filter((x) => canOpen(x.to))
   const tab = (x: Tab) => (
-    <NavTab key={x.to} to={x.to} icon={x.icon} label={x.label} active={x.match(path)} badge={x.to === '/app/orders' && !x.match(path) ? <OrdersBadge dot /> : undefined} />
+    <NavTab
+      key={x.to}
+      to={x.to}
+      icon={x.icon}
+      label={x.label}
+      active={x.match(path)}
+      // A services-first capsule has no Orders tab: payments to check show their dot on Home, which lists them.
+      badge={x.match(path) ? undefined : x.to === '/app/orders' || (serves && x.to === '/app') ? <OrdersBadge dot /> : x.to === '/app/bookings' ? <BookingsBadge dot /> : undefined}
+    />
   )
   return (
     <>
@@ -193,12 +241,20 @@ function BottomNav() {
       <Sheet open={adding} onClose={() => setAdding(false)} title={t('Add')}>
         <div className="grid gap-2">
           {[
+            ...(books
+              ? [
+                  { to: '/app/bookings', search: { add: 1 as const }, icon: CalendarPlus, title: t('Add a booking'), sub: t('A walk-in, a call or a chat, so that time is taken') },
+                ]
+              : []),
+            ...(serves ? [{ to: '/app/services', search: { add: 1 as const }, icon: Scissors, title: t('Add service'), sub: t('What clients book, how long it takes, the price') }] : []),
             { to: '/app/products/new', icon: Package, title: t('Add product'), sub: t('Photos, price, sizes and stock') },
+            // A shop that sells products reaches services from here on phones (the sidebar lists them on desktop).
+            ...(!serves ? [{ to: '/app/services', search: { add: 1 as const }, icon: Scissors, title: t('Add service'), sub: t('What clients book, how long it takes, the price') }] : []),
             { to: '/app/bags/new', icon: ShoppingBag, title: t('Send a bag link'), sub: t('Build a bag for a buyer; they add delivery and pay') },
             { to: '/app/orders/new', icon: PenLine, title: t('Record a sale'), sub: t('A sale in person, on a call or in a chat') },
             { to: '/app/products/import', icon: FileSpreadsheet, title: t('Import products'), sub: t('Many at once, from Excel or Google Sheets') },
           ].filter((x) => canOpen(x.to)).map((x) => (
-            <Link key={x.to} to={x.to} onClick={() => setAdding(false)} className="flex items-center gap-4 rounded-16 bg-page px-4 py-4 transition-colors hover:bg-well">
+            <Link key={x.to} to={x.to} search={'search' in x ? x.search : undefined} onClick={() => setAdding(false)} className="flex items-center gap-4 rounded-16 bg-page px-4 py-4 transition-colors hover:bg-well">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-white">
                 <x.icon size={20} strokeWidth={1.75} />
               </span>

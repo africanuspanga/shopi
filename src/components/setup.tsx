@@ -11,7 +11,8 @@ import { ErrorText, Field, FieldGroup, Img, Sheet, ShopAvatar, Toast } from '#/c
 import { saveProduct } from '#/lib/api/merchant'
 import { passSetupStep, saveSetupPayment, saveShopBio, type SetupProduct, type SetupShop } from '#/lib/api/setup'
 import { track } from '#/lib/analytics'
-import { CATEGORIES, NETWORKS, SIZE_PRESETS, tzs } from '#/lib/format'
+import { ALL_CATEGORIES, NETWORKS, SIZE_PRESETS, tzs } from '#/lib/format'
+import { durationText, servicePrice } from '#/lib/booking'
 import { useT } from '#/lib/i18n'
 import { usePhoneApp } from '#/lib/push'
 import { useOrigin } from '#/lib/share'
@@ -47,20 +48,39 @@ export function usePass(step: number) {
 
 export type PreviewShop = { name: string; slug: string; logo: string | null; category: string; bio?: string }
 export type PreviewProduct = { name: string; price: number; image: string | null; uploading?: boolean }
+/** A service in the preview of a business that takes bookings (roadmap `v-services`). */
+export type PreviewService = { name: string; duration: number; price: number; price_from: number | boolean }
 
 export const previewShop = (s: SetupShop): PreviewShop => ({ name: s.name, slug: s.slug, logo: s.logo_key, category: s.category, bio: s.bio })
 
 /** The shop as buyers will see it, taking shape as the seller works: name, line, products, how to pay. */
-export function ShopCard({ shop, products, payment, bio, note }: { shop: PreviewShop; products: PreviewProduct[]; payment?: string; bio?: ReactNode; note?: string }) {
+export function ShopCard({
+  shop,
+  products,
+  services,
+  payment,
+  bio,
+  note,
+}: {
+  shop: PreviewShop
+  products: PreviewProduct[]
+  /** Given for a business that sells services: its services show as rows with Book, where products show as a grid. */
+  services?: PreviewService[]
+  payment?: string
+  bio?: ReactNode
+  note?: string
+}) {
   const t = useT()
-  const category = t(CATEGORIES.find((c) => c.id === shop.category)?.label ?? 'Other')
+  const category = t(ALL_CATEGORIES.find((c) => c.id === shop.category)?.label ?? 'Other')
   return (
     <div className="w-full rounded-28 bg-card p-5 text-ink sm:p-6">
       <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
         <p className="code min-w-0 truncate text-13 text-muted">shopi.tz/{shop.slug || 'yourshop'}</p>
-        <span className="flex h-8 shrink-0 items-center gap-1.5 rounded-full pr-1 pl-3 text-12 font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
-          {t('Bag')} <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-ink text-12 text-white">0</span>
-        </span>
+        {!services && (
+          <span className="flex h-8 shrink-0 items-center gap-1.5 rounded-full pr-1 pl-3 text-12 font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
+            {t('Bag')} <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-ink text-12 text-white">0</span>
+          </span>
+        )}
       </div>
       <div className="pt-5">
         <ShopAvatar name={shop.name || 'S'} logo={shop.logo} className="h-14 w-14 text-17" />
@@ -68,7 +88,20 @@ export function ShopCard({ shop, products, payment, bio, note }: { shop: Preview
         {bio ?? (shop.bio ? <p className="mt-2 text-14 leading-relaxed text-ink-2">{shop.bio}</p> : null)}
         <span className="mt-3 inline-flex h-8 items-center rounded-full bg-page px-3 text-13 text-ink-2">{category}</span>
       </div>
-      <div className="mt-5 grid grid-cols-3 gap-2">
+      {services && (
+        <ul className="mt-5 space-y-2">
+          {(services.length ? services : [{ name: '', duration: 0, price: 0, price_from: 0 }]).slice(0, 3).map((v, i) => (
+            <li key={i} className="flex items-center gap-3 rounded-14 bg-page px-3 py-3">
+              <span className="min-w-0 flex-1">
+                <span className={`block truncate text-14 font-medium ${v.name ? '' : 'text-faint'}`}>{v.name || t('Service name')}</span>
+                <span className="block truncate text-12 text-muted">{[v.duration ? durationText(t, v.duration) : '', servicePrice(t, v)].filter(Boolean).join(' · ') || '—'}</span>
+              </span>
+              <span className="flex h-8 shrink-0 items-center rounded-full bg-ink px-3 text-12 font-medium text-white">{t('Book')}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className={`mt-5 grid grid-cols-3 gap-2 ${services ? 'hidden' : ''}`}>
         {[0, 1, 2].map((i) => {
           const p = products[i]
           return p ? (
@@ -424,7 +457,7 @@ export function PaymentStep({ shop, bar, onDraft }: { shop: SetupShop; bar: Reac
 
 /* ---------- Step 4: the shop is live ---------- */
 
-export function LiveStep({ shop, products, ai, bar }: { shop: SetupShop; products: SetupProduct[]; ai: boolean; bar: ReactNode }) {
+export function LiveStep({ shop, products, services, ai, bar }: { shop: SetupShop; products: SetupProduct[]; services?: PreviewService[]; ai: boolean; bar: ReactNode }) {
   const t = useT()
   const pass = usePass(4)
   const origin = useOrigin()
@@ -453,9 +486,15 @@ export function LiveStep({ shop, products, ai, bar }: { shop: SetupShop; product
         bar={bar}
         title={t('Your shop is live')}
         sub={
-          products.length
-            ? t('Send your link and buyers can order. Put it in your Instagram bio so every visitor finds it.')
-            : t('Your link works now. Add your first product from Home, then share it so buyers have something to order.')
+          services
+            ? services.length && !shop.book
+              ? t('Your link works now. Set your working hours from Home so clients can book, then share it.')
+              : services.length
+              ? t('Send your link and clients can book. Put it in your Instagram bio so every visitor finds it.')
+              : t('Your link works now. Add your first service, then share it so clients have something to book.')
+            : products.length
+              ? t('Send your link and buyers can order. Put it in your Instagram bio so every visitor finds it.')
+              : t('Your link works now. Add your first product from Home, then share it so buyers have something to order.')
         }
       />
 
@@ -463,7 +502,7 @@ export function LiveStep({ shop, products, ai, bar }: { shop: SetupShop; product
         <p className="text-13 text-muted">{t('Your shop link')}</p>
         <p className="code mt-1 truncate text-17">shopi.tz/{shop.slug}</p>
         <div className="mt-4">
-          <ShareActions url={url} title={shop.name} text={t('My shop is open. You can order here:')} onShared={shared} />
+          <ShareActions url={url} title={shop.name} text={services ? t('You can now book with us here:') : t('My shop is open. You can order here:')} onShared={shared} />
         </div>
         {/* May wrap: in Swahili the label is long ("QR code ya kuchapisha au kuweka mtandaoni"). */}
         <button type="button" className="btn btn-ghost btn-sm mt-2 h-auto min-h-11 w-full py-2 text-center leading-5 whitespace-normal" onClick={() => setQrOpen(true)}>
@@ -473,7 +512,7 @@ export function LiveStep({ shop, products, ai, bar }: { shop: SetupShop; product
 
       <div className="mt-4 lg:hidden">
         <div className="rounded-28 shadow-[inset_0_0_0_1px_var(--color-line)]">
-          <LiveCard shop={shop} products={products} ai={ai} />
+          <LiveCard shop={shop} products={products} services={services} ai={ai} />
         </div>
       </div>
 
@@ -542,7 +581,7 @@ export function BioSteps({ onCopy, copied }: { onCopy: () => void; copied: boole
 }
 
 /** The live shop card with its line about the shop: the seller can add or change it here, with the AI's help. */
-export function LiveCard({ shop, products, ai }: { shop: SetupShop; products: SetupProduct[]; ai: boolean }) {
+export function LiveCard({ shop, products, services, ai }: { shop: SetupShop; products: SetupProduct[]; services?: PreviewService[]; ai: boolean }) {
   const t = useT()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -562,7 +601,7 @@ export function LiveCard({ shop, products, ai }: { shop: SetupShop; products: Se
   )
   return (
     <>
-      <ShopCard shop={previewShop(shop)} products={products} bio={slot} />
+      <ShopCard shop={previewShop(shop)} products={products} services={services} bio={slot} />
       <Sheet open={open} onClose={() => setOpen(false)} title={t('A line about your shop')}>
         <form
           onSubmit={async (e) => {
@@ -599,11 +638,11 @@ export function LiveCard({ shop, products, ai }: { shop: SetupShop; products: Se
 }
 
 /** Desktop: the live shop in a phone, as buyers open it. */
-export function LivePhone({ shop, products, ai }: { shop: SetupShop; products: SetupProduct[]; ai: boolean }) {
+export function LivePhone({ shop, products, services, ai }: { shop: SetupShop; products: SetupProduct[]; services?: PreviewService[]; ai: boolean }) {
   return (
     <Phone className="mx-auto h-[600px] w-[300px] xl:h-[640px] xl:w-[316px]">
       <div className="hide-scroll h-full overflow-y-auto px-2 pt-12 pb-4">
-        <LiveCard shop={shop} products={products} ai={ai} />
+        <LiveCard shop={shop} products={products} services={services} ai={ai} />
       </div>
     </Phone>
   )
@@ -612,7 +651,7 @@ export function LivePhone({ shop, products, ai }: { shop: SetupShop; products: S
 /* ---------- Step 5: orders on this phone ---------- */
 
 /** What a new order looks like on the seller's phone, with the shop's own first product. */
-export function OrderNotice({ shop, product, className = '' }: { shop: SetupShop; product: SetupProduct | null; className?: string }) {
+export function OrderNotice({ shop, product, service, className = '' }: { shop: SetupShop; product: SetupProduct | null; /** A business that takes bookings: the notice shows a new booking. */ service?: PreviewService | null; className?: string }) {
   const t = useT()
   return (
     <div className={`w-full max-w-[340px] rounded-20 bg-card p-4 text-ink shadow-[var(--shadow-float)] ring-1 ring-line ${className}`}>
@@ -624,19 +663,20 @@ export function OrderNotice({ shop, product, className = '' }: { shop: SetupShop
         <p className="meta shrink-0">{t('now')}</p>
       </div>
       <div className="mt-3 flex items-center gap-3">
-        {product?.image && <Img size="thumb" k={product.image} alt="" className="h-[52px] w-[42px] shrink-0 rounded-8" />}
+        {service === undefined && product?.image && <Img size="thumb" k={product.image} alt="" className="h-[52px] w-[42px] shrink-0 rounded-8" />}
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 text-14 font-medium">
-            <span className="signal shrink-0" /> {product ? t('New order: {total}', { total: tzs(product.price) }) : t('New order')}
+            <span className="signal shrink-0" />{' '}
+            {service !== undefined ? t('New booking: {name}', { name: 'Neema' }) : product ? t('New order: {total}', { total: tzs(product.price) }) : t('New order')}
           </p>
-          <p className="truncate text-12 text-muted">{product?.name ?? shop.name}</p>
+          <p className="truncate text-12 text-muted">{service !== undefined ? [service?.name, t('Tomorrow'), '10:00'].filter(Boolean).join(' · ') : (product?.name ?? shop.name)}</p>
         </div>
       </div>
     </div>
   )
 }
 
-export function PhoneStep({ shop, product, bar }: { shop: SetupShop; product: SetupProduct | null; bar: ReactNode }) {
+export function PhoneStep({ shop, product, service, bar }: { shop: SetupShop; product: SetupProduct | null; service?: PreviewService | null; bar: ReactNode }) {
   const t = useT()
   const router = useRouter()
   const pass = usePass(5)
@@ -675,9 +715,13 @@ export function PhoneStep({ shop, product, bar }: { shop: SetupShop; product: Se
 
   return (
     <>
-      <StepHead bar={bar} title={t('Orders on your phone')} sub={t('A notification the moment a buyer orders, even when Shopi is closed. And Shopi on your Home Screen, one tap from your orders.')} />
+      {service !== undefined ? (
+        <StepHead bar={bar} title={t('Bookings on your phone')} sub={t('A notification the moment a client books, even when Shopi is closed. And Shopi on your Home Screen, one tap from your diary.')} />
+      ) : (
+        <StepHead bar={bar} title={t('Orders on your phone')} sub={t('A notification the moment a buyer orders, even when Shopi is closed. And Shopi on your Home Screen, one tap from your orders.')} />
+      )}
       <div className="mt-6 flex justify-center rounded-20 bg-well px-4 py-6 lg:hidden">
-        <OrderNotice shop={shop} product={product} />
+        <OrderNotice shop={shop} product={product} service={service} />
       </div>
       {status && (
         <p className="mt-6 flex items-start gap-2.5 text-15 leading-6">

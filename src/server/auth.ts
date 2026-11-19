@@ -90,6 +90,8 @@ export type MyShop = OwnShop & {
   plan: string
   paid_until: number | null
   setup_step: number | null
+  /** What the shop shows first: 'products' or 'services' (src/lib/booking.ts). */
+  kind: string
   owner_id: string
   role: Role
   /** An assistant whose shop is no longer on Tembo: kept, but can't help run it until it renews (src/lib/staff.ts). */
@@ -102,10 +104,10 @@ export type MyShop = OwnShop & {
  */
 export async function myShop(userId: string): Promise<MyShop | null> {
   const row = await first<Omit<MyShop, 'paused'> & { rank: number }>(
-    `SELECT id, slug, name, logo_key, status, plan, paid_until, setup_step, owner_id, 'owner' role, 0 rank
+    `SELECT id, slug, name, logo_key, status, plan, paid_until, setup_step, kind, owner_id, 'owner' role, 0 rank
        FROM shops WHERE owner_id = ?1
      UNION ALL
-     SELECT s.id, s.slug, s.name, s.logo_key, s.status, s.plan, s.paid_until, s.setup_step, s.owner_id, st.role, 1 rank
+     SELECT s.id, s.slug, s.name, s.logo_key, s.status, s.plan, s.paid_until, s.setup_step, s.kind, s.owner_id, st.role, 1 rank
        FROM shop_staff st JOIN shops s ON s.id = st.shop_id
        WHERE st.user_id = ?1 AND s.status IN ('active', 'demo')
      ORDER BY rank LIMIT 1`,

@@ -26,6 +26,16 @@ export type ScoreFacts = {
   shared: boolean
   /** A buyer's visit came from Instagram or TikTok, or through a link tagged `bio`: the link is in a bio. */
   bioLink: boolean
+  /**
+   * A business that sells services (roadmap `v-services`): its services count where products do, its working hours
+   * where a way to be paid does (clients pay at the visit), and where it is where delivery areas do.
+   */
+  serves?: boolean
+  /** Services clients can book. */
+  services?: number
+  /** The working hours are set, so clients can book. */
+  hours?: boolean
+  location?: boolean
 }
 
 /** Products that count towards the score. */
@@ -46,24 +56,35 @@ export const SCORE_LABELS: Record<ScoreKey, string> = {
   bio: msg('Your link in your Instagram or TikTok bio'),
 }
 
+/** The three items a business that sells services reads differently. */
+export const SERVICE_SCORE_LABELS: Partial<Record<ScoreKey, string>> = {
+  products: msg('3 services clients can book'),
+  payment: msg('Your working hours'),
+  delivery: msg('Where clients find you'),
+}
+
+/** Products and services that count towards the 3 (a business that sells services counts both). */
+export const scoreCount = (f: ScoreFacts) => Math.min(SCORE_PRODUCTS, f.serves ? (f.services ?? 0) + f.complete : f.complete)
+
 /** The items in the order a seller should do them; the first one not done is the next step. */
 export function shopScore(f: ScoreFacts) {
-  const item = (key: ScoreKey, max: number, points: number) => ({ key, label: SCORE_LABELS[key], max, points })
+  const item = (key: ScoreKey, max: number, points: number) => ({ key, label: (f.serves && SERVICE_SCORE_LABELS[key]) || SCORE_LABELS[key], max, points })
   const items: Omit<ScoreItem, 'done'>[] = [
     item('name', 10, 10),
-    // A first product before anything else: a shop with nothing to buy has nothing to share.
-    item('products', 30, Math.min(SCORE_PRODUCTS, f.complete) * 10),
-    item('payment', 10, f.payment ? 10 : 0),
+    // A first product (or service) before anything else: a shop with nothing to buy has nothing to share.
+    item('products', 30, scoreCount(f) * 10),
+    item('payment', 10, (f.serves ? f.hours : f.payment) ? 10 : 0),
     item('whatsapp', 10, f.whatsapp ? 10 : 0),
     item('logo', 10, f.logo ? 10 : 0),
-    item('delivery', 10, f.delivery ? 10 : 0),
+    item('delivery', 10, (f.serves ? f.location : f.delivery) ? 10 : 0),
     item('share', 10, f.shared ? 10 : 0),
     item('bio', 10, f.bioLink ? 10 : 0),
   ]
   const all = items.map((i) => ({ ...i, done: i.points >= i.max }))
   const score = all.reduce((s, i) => s + i.points, 0)
   // Products wait for the first one only: once there is one, the Lipa Namba comes before the second and third.
-  const order: ScoreKey[] = f.products === 0 ? ['products', 'payment'] : ['payment', 'products']
+  const none = f.serves ? (f.services ?? 0) + f.products === 0 : f.products === 0
+  const order: ScoreKey[] = none ? ['products', 'payment'] : ['payment', 'products']
   const next = [...order.map((k) => all.find((i) => i.key === k)!), ...all.filter((i) => !order.includes(i.key))].find((i) => !i.done) ?? null
   return { score, items: all, next }
 }

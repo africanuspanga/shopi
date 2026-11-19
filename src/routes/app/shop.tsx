@@ -11,7 +11,7 @@ import { TemboPill, useCan } from '#/components/tembo'
 import { CardHead, ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoice, Switch, Toast, TopBar } from '#/components/ui'
 import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
-import { CATEGORIES, DAR_AREAS, NETWORKS, mapsLink, tinDigits } from '#/lib/format'
+import { ALL_CATEGORIES, DAR_AREAS, NETWORKS, mapsLink, tinDigits } from '#/lib/format'
 import { asLang, useT } from '#/lib/i18n'
 import { FONTS, MOTO, asFont, cleanHex } from '#/lib/theme'
 import { uploadImage } from '#/lib/upload'
@@ -148,7 +148,7 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('What you sell')}>
                 <select className="input" value={s.category} onChange={set('category')}>
-                  {CATEGORIES.map((c) => (
+                  {ALL_CATEGORIES.map((c) => (
                     <option key={c.id} value={c.id}>
                       {t(c.label)}
                     </option>

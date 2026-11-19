@@ -1,6 +1,6 @@
 import type React from 'react'
 import type { PublicCollection, PublicProduct, PublicShop } from '#/lib/api/store'
-import { CATEGORIES, OPTION_KINDS, imgUrl, optionKind, priceSpan, tzs } from '#/lib/format'
+import { ALL_CATEGORIES, OPTION_KINDS, imgUrl, optionKind, priceSpan, tzs } from '#/lib/format'
 import { asLang, translate } from '#/lib/i18n'
 
 /**
@@ -57,7 +57,7 @@ const placeOf = (shop: Pick<PublicShop, 'location'>) => shop.location.trim()
 
 /** What the shop sells, in words: "Cosmetics", or "Shop" when the seller chose Other. */
 function kindOf(shop: Pick<PublicShop, 'category'>, t: T) {
-  const c = CATEGORIES.find((x) => x.id === shop.category)
+  const c = ALL_CATEGORIES.find((x) => x.id === shop.category)
   return t(c && c.id !== 'other' ? c.label : 'Shop')
 }
 

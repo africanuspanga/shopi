@@ -2,6 +2,7 @@ import { Link, useRouter } from '@tanstack/react-router'
 import { ArrowLeft, ChevronRight, ImageIcon, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { STATUS_LABEL, imgUrl, type OrderStatus } from '#/lib/format'
+import { BOOKING_LABEL, type BookingStatus } from '#/lib/booking'
 import { LANGUAGES, SWAHILI_ENABLED, useLang, useT, type Lang } from '#/lib/i18n'
 import { setLang } from '#/lib/api/session'
 
@@ -224,8 +225,16 @@ const DOT: Record<string, string> = { wait: 'bg-wait', act: 'bg-moto', ok: 'bg-o
 
 /** Order status: a quiet dot and label. Only "check payment" asks for attention, in the signal colour. */
 export function StatusPill({ status }: { status: OrderStatus }) {
+  return <Pill s={STATUS_LABEL[status]} quiet={status === 'cancelled'} />
+}
+
+/** A booking's status, drawn like an order's: only a request waiting for the business asks for attention. */
+export function BookingPill({ status }: { status: BookingStatus }) {
+  return <Pill s={BOOKING_LABEL[status]} quiet={status === 'cancelled' || status === 'noshow'} />
+}
+
+function Pill({ s, quiet }: { s: { label: string; tone: string }; quiet: boolean }) {
   const t = useT()
-  const s = STATUS_LABEL[status]
   if (s.tone === 'act') {
     return (
       <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-moto-soft px-2.5 text-12 font-medium whitespace-nowrap text-moto-ink">
@@ -235,7 +244,7 @@ export function StatusPill({ status }: { status: OrderStatus }) {
     )
   }
   return (
-    <span className={`inline-flex items-center gap-1.5 text-13 whitespace-nowrap ${status === 'cancelled' ? 'text-muted' : 'text-ink-2'}`}>
+    <span className={`inline-flex items-center gap-1.5 text-13 whitespace-nowrap ${quiet ? 'text-muted' : 'text-ink-2'}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${DOT[s.tone]}`} />
       {t(s.label)}
     </span>

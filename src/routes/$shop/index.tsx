@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { BagButton, FactPills, MIN_PICKS, ProductGrid, ShopFacts, ShopFooter, ShopSearch, ShopTopBar, SocialLinks, TopPicks, matchesSearch, onSale, pickedProducts } from '#/components/shop'
 import { ShopQr } from '#/components/qr'
+import { ServiceList } from '#/components/booking'
 import { ShopNav } from '#/components/shop-nav'
 import { WhatsAppHelp, useWhatsApp } from '#/components/whatsapp'
 import { Chips, Empty, Img, ShopAvatar, Toast, useEntrance } from '#/components/ui'
@@ -41,7 +42,7 @@ function Storefront() {
   const rise = useEntrance()
   const rise2 = useEntrance('rise-2')
   const t = useT()
-  const { shop, products, areas, collections, picks } = parent.useLoaderData()
+  const { shop, products, areas, collections, picks, services } = parent.useLoaderData()
   const cart = useCart(shop.id)
   // 'all', 'new', 'sale', or a collection's id.
   const [filter, setFilter] = useState('all')
@@ -93,19 +94,89 @@ function Storefront() {
     track('share', { shopId: shop.id, detail: how === 'copied' ? 'copy' : 'native' })
   }
 
+  // A shop may hold services (booked by time) and products (ordered): the one its seller chose comes first, and a
+  // shop with only services shows no empty product grid.
+  const servicesFirst = services.length > 0 && (shop.kind === 'services' || products.length === 0)
+  const showProducts = products.length > 0 || services.length === 0
+  const servicesBlock = services.length > 0 && (
+    <section id="services" className={`scroll-mt-24 border-t border-line pt-5 md:pt-6 ${servicesFirst ? 'pb-10 md:pb-14' : 'mt-12 md:mt-16'}`}>
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="title text-17">{t('Book a time')}</h2>
+        <p className="meta">{t(services.length === 1 ? '{n} service' : '{n} services', { n: services.length })}</p>
+      </div>
+      <div className="mt-4 md:mt-5">
+        <ServiceList shopSlug={shop.slug} services={services} />
+      </div>
+    </section>
+  )
+  const productsBlock = (
+    <>
+        <div className="border-t border-line pt-5 md:pt-6">
+          {searchable && <ShopSearch value={q} onChange={search} shopName={shop.name} className="mb-4 md:hidden" />}
+          {searching && showFilters && <p className="meta -mt-1 mb-3 md:hidden">{found}</p>}
+          <div className="flex items-center justify-between gap-4">
+            {showFilters ? (
+              <Chips
+                value={searching ? '' : filter}
+                onChange={(f) => {
+                  setFilter(f)
+                  setQ('')
+                }}
+                options={[
+                  { id: 'all', label: t('All'), count: products.length },
+                  ...groups.map((c) => ({ id: c.id, label: c.name, count: c.productIds.length })),
+                  ...(counts.new > 0 && counts.new < products.length ? [{ id: 'new', label: t('New in'), count: counts.new }] : []),
+                  ...(counts.sale > 0 ? [{ id: 'sale', label: t('On sale'), count: counts.sale }] : []),
+                ]}
+              />
+            ) : (
+              <h2 className="title text-17">{searching ? found : t('All products')}</h2>
+            )}
+            <div className="hidden shrink-0 items-center gap-4 md:flex">
+              {products.length > 0 && <p className="meta">{found}</p>}
+              {searchable && <ShopSearch value={q} onChange={search} shopName={shop.name} className="w-64 lg:w-72" />}
+            </div>
+          </div>
+        </div>
+
+        {products.length === 0 ? (
+          <div className="mt-6">
+            <Empty
+              icon={<Store size={20} strokeWidth={1.75} />}
+              title={t('New products are on the way')}
+              body={t('This shop is adding its first products. Message the seller on WhatsApp to ask what is in stock.')}
+            />
+          </div>
+        ) : (
+          <>
+            {!searching && group?.description && <p className="fade pt-5 text-15 leading-relaxed text-ink-2 md:pt-6">{group.description}</p>}
+            {searching && shown.length === 0 ? (
+              <p className="mt-6 rounded-20 bg-page px-5 py-10 text-center text-15 leading-relaxed text-muted">
+                {t('Nothing matches "{q}". Try another word, or ask the seller on WhatsApp.', { q: q.trim() })}
+              </p>
+            ) : (
+              <ProductGrid shop={shop} products={shown} cart={cart} eager={showPicks ? 0 : 4} />
+            )}
+          </>
+        )}
+    </>
+  )
+
   return (
     <div className="min-h-dvh bg-card pb-28 md:pb-0" data-font={fontAttr(shop.theme_font)}>
       <ShopTopBar
         shop={shop}
-        bagCount={cart.count}
+        bagCount={products.length > 0 ? cart.count : undefined}
         right={
           <>
             <button type="button" className="icon-btn hidden sm:inline-flex" aria-label={t('Share shop')} onClick={share}>
               <Share2 size={18} strokeWidth={1.75} />
             </button>
-            <span className="hidden md:block">
-              <BagButton shopSlug={shop.slug} count={cart.count} />
-            </span>
+            {products.length > 0 && (
+              <span className="hidden md:block">
+                <BagButton shopSlug={shop.slug} count={cart.count} />
+              </span>
+            )}
           </>
         }
       />
@@ -168,60 +239,14 @@ function Storefront() {
           </aside>
         </section>
 
+        {servicesFirst && servicesBlock}
         {showPicks && <TopPicks shop={shop} products={topPicks} cart={cart} />}
-
-        <div className="border-t border-line pt-5 md:pt-6">
-          {searchable && <ShopSearch value={q} onChange={search} shopName={shop.name} className="mb-4 md:hidden" />}
-          {searching && showFilters && <p className="meta -mt-1 mb-3 md:hidden">{found}</p>}
-          <div className="flex items-center justify-between gap-4">
-            {showFilters ? (
-              <Chips
-                value={searching ? '' : filter}
-                onChange={(f) => {
-                  setFilter(f)
-                  setQ('')
-                }}
-                options={[
-                  { id: 'all', label: t('All'), count: products.length },
-                  ...groups.map((c) => ({ id: c.id, label: c.name, count: c.productIds.length })),
-                  ...(counts.new > 0 && counts.new < products.length ? [{ id: 'new', label: t('New in'), count: counts.new }] : []),
-                  ...(counts.sale > 0 ? [{ id: 'sale', label: t('On sale'), count: counts.sale }] : []),
-                ]}
-              />
-            ) : (
-              <h2 className="title text-17">{searching ? found : t('All products')}</h2>
-            )}
-            <div className="hidden shrink-0 items-center gap-4 md:flex">
-              {products.length > 0 && <p className="meta">{found}</p>}
-              {searchable && <ShopSearch value={q} onChange={search} shopName={shop.name} className="w-64 lg:w-72" />}
-            </div>
-          </div>
-        </div>
-
-        {products.length === 0 ? (
-          <div className="mt-6">
-            <Empty
-              icon={<Store size={20} strokeWidth={1.75} />}
-              title={t('New products are on the way')}
-              body={t('This shop is adding its first products. Message the seller on WhatsApp to ask what is in stock.')}
-            />
-          </div>
-        ) : (
-          <>
-            {!searching && group?.description && <p className="fade pt-5 text-15 leading-relaxed text-ink-2 md:pt-6">{group.description}</p>}
-            {searching && shown.length === 0 ? (
-              <p className="mt-6 rounded-20 bg-page px-5 py-10 text-center text-15 leading-relaxed text-muted">
-                {t('Nothing matches "{q}". Try another word, or ask the seller on WhatsApp.', { q: q.trim() })}
-              </p>
-            ) : (
-              <ProductGrid shop={shop} products={shown} cart={cart} eager={showPicks ? 0 : 4} />
-            )}
-          </>
-        )}
+        {showProducts && productsBlock}
+        {!servicesFirst && servicesBlock}
       </main>
 
       <ShopFooter shop={shop} />
-      <ShopNav shop={shop} areas={areas} products={products} count={cart.count} onShare={share} />
+      <ShopNav shop={shop} areas={areas} products={products} services={services} count={cart.count} onShare={share} />
       <Toast show={copied}>{t('Link copied')}</Toast>
     </div>
   )

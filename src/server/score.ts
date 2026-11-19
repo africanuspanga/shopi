@@ -21,7 +21,11 @@ export const scoreSelect = `
   (s.ships_regions = 1 OR EXISTS (SELECT 1 FROM delivery_areas a WHERE a.shop_id = s.id)) sc_delivery,
   EXISTS (SELECT 1 FROM events e WHERE e.shop_id = s.id AND e.type = 'seller_share') sc_shared,
   EXISTS (SELECT 1 FROM events e WHERE e.shop_id = s.id AND e.type IN ('view_shop', 'view_product')
-     AND (e.source IN ('instagram', 'tiktok') OR e.link_tag = 'bio')) sc_bio`
+     AND (e.source IN ('instagram', 'tiktok') OR e.link_tag = 'bio')) sc_bio,
+  (s.kind = 'services') sc_serves,
+  (SELECT COUNT(*) FROM services v WHERE v.shop_id = s.id AND v.active = 1) sc_services,
+  (s.book IS NOT NULL) sc_hours,
+  (TRIM(s.location) != '') sc_location`
 
 export type ScoreRow = {
   sc_products: number
@@ -35,6 +39,10 @@ export type ScoreRow = {
   sc_delivery: number
   sc_shared: number
   sc_bio: number
+  sc_serves: number
+  sc_services: number
+  sc_hours: number
+  sc_location: number
 }
 
 export const scoreFacts = (r: ScoreRow): ScoreFacts => ({
@@ -49,4 +57,8 @@ export const scoreFacts = (r: ScoreRow): ScoreFacts => ({
   delivery: !!r.sc_delivery,
   shared: !!r.sc_shared,
   bioLink: !!r.sc_bio,
+  serves: !!r.sc_serves,
+  services: r.sc_services ?? 0,
+  hours: !!r.sc_hours,
+  location: !!r.sc_location,
 })

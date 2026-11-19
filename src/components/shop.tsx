@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, ArrowUpRight, Banknote, Bus, Clock, FileText, MapPin, Search, Smartphone, Truck, X } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, Banknote, Bus, CalendarCheck, Clock, FileText, MapPin, Search, Smartphone, Truck, X } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppMark } from '#/components/brand-icons'
 import { Img, Sheet, ShopAvatar, Wordmark } from '#/components/ui'
@@ -8,7 +8,8 @@ import { openedFrom, track } from '#/lib/analytics'
 import { lineKey, type Cart } from '#/lib/cart'
 import { OPTION_KINDS, imageOf, optionKind, optionText, priceOf, priceSpan, tzs, waLink, formatTin, type Size } from '#/lib/format'
 import { refLink } from '#/lib/host'
-import { useT, type T } from '#/lib/i18n'
+import { useLang, useT, type T } from '#/lib/i18n'
+import { hoursLine } from '#/lib/booking'
 
 type Priced = Pick<PublicProduct, 'price' | 'compare_price'> & { sizes?: Size[] | null }
 
@@ -359,15 +360,21 @@ export function placesText(t: T, names: string[], short = false) {
 /** What a buyer wants to know before ordering: delivery, how to pay, where, when. */
 function useShopFacts(shop: PublicShop, areas: { name: string; fee: number }[], short = false): Fact[] {
   const t = useT()
+  const lang = useLang()
   const facts: Fact[] = []
-  if (areas.length)
+  // A business that only takes bookings delivers nothing: it says when it works and that clients pay at the visit.
+  if (shop.serves) {
+    facts.push({ icon: <CalendarCheck size={18} strokeWidth={1.75} />, text: t('Book a time online'), sub: t('Pay at your visit') })
+    if (shop.open_days && !shop.hours) facts.push({ icon: <Clock size={18} strokeWidth={1.75} />, text: hoursLine(t, lang, shop.open_days) })
+  }
+  if (areas.length && !shop.serves)
     facts.push({
       icon: <Truck size={18} strokeWidth={1.75} />,
       text: placesText(t, areas.map((a) => a.name), short),
       sub: t('Fee agreed on WhatsApp'),
     })
   // Buyers ask "mikoani mnatuma?" before anything else.
-  if (shop.ships_regions)
+  if (shop.ships_regions && !shop.serves)
     facts.push({ icon: <Bus size={18} strokeWidth={1.75} />, text: t('Sends to other regions'), sub: shop.regions_note || t('Ask the seller how on WhatsApp') })
   if (shop.lipa_number)
     facts.push({
@@ -375,7 +382,7 @@ function useShopFacts(shop: PublicShop, areas: { name: string; fee: number }[], 
       text: t('Mobile money'),
       sub: shop.lipa_network ? t('{network} Lipa Namba', { network: shop.lipa_network }) : t('Lipa Namba'),
     })
-  if (shop.cod_enabled) facts.push({ icon: <Banknote size={18} strokeWidth={1.75} />, text: t('Cash on delivery'), sub: t('Pay when it arrives') })
+  if (shop.cod_enabled && !shop.serves) facts.push({ icon: <Banknote size={18} strokeWidth={1.75} />, text: t('Cash on delivery'), sub: t('Pay when it arrives') })
   if (shop.location || shop.maps_url)
     facts.push({ icon: <MapPin size={18} strokeWidth={1.75} />, text: shop.location || t('Directions'), href: shop.maps_url || undefined })
   if (shop.hours) facts.push({ icon: <Clock size={18} strokeWidth={1.75} />, text: shop.hours })

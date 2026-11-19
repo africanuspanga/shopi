@@ -2,11 +2,12 @@ import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { Check, Link2, Loader2, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { AuthLayout, StepBar } from '#/components/auth'
-import { LivePhone, OrderNotice, PaymentStep, PhoneStep, PreviewAside, ProductStep, ShopCard, LiveStep, StepHead, previewShop, useStepClock, type PreviewProduct } from '#/components/setup'
+import { LivePhone, OrderNotice, PaymentStep, PhoneStep, PreviewAside, ProductStep, ShopCard, LiveStep, StepHead, previewShop, useStepClock, type PreviewProduct, type PreviewService } from '#/components/setup'
 import { ErrorText, Field, FieldGroup, ShopAvatar, ShopLangChoice } from '#/components/ui'
 import { checkSlug, createShop, expandSocialLink } from '#/lib/api/merchant'
 import { getSetup } from '#/lib/api/setup'
-import { CATEGORIES, localPhone, normalizePhone, slugify } from '#/lib/format'
+import { ALL_CATEGORIES, CATEGORIES, SERVICE_CATEGORIES, localPhone, normalizePhone, slugify } from '#/lib/format'
+import { HoursStep, ServiceStep } from '#/components/setup-services'
 import { LANGUAGES, useLang, useT, type Lang } from '#/lib/i18n'
 import { logout, setLang } from '#/lib/api/session'
 import { catchInstallPrompt } from '#/lib/push'
@@ -37,6 +38,8 @@ function Onboard() {
   const [draft, setDraft] = useState<PreviewProduct | null>(null)
   const [payLine, setPayLine] = useState('')
   const onDraft = useCallback((p: PreviewProduct) => setDraft(p), [])
+  const [serviceDraft, setServiceDraft] = useState<PreviewService | null>(null)
+  const onServiceDraft = useCallback((v: PreviewService) => setServiceDraft(v), [])
   // Chrome offers to install Shopi once per visit: keep the offer for step 5's Install button.
   useEffect(() => catchInstallPrompt(), [])
   // Finished between loads (another tab): Home.
@@ -68,28 +71,32 @@ function Onboard() {
   const shop = data.shop
   const first = data.products[0] ?? null
   const asShop = previewShop(shop)
-  const label = t('Your shop, as buyers will see it')
+  // A business that sells services (roadmap `v-services`): its first service and its hours instead of a product and
+  // a Lipa Namba, and bookings where a shop has orders.
+  const serves = shop.kind === 'services'
+  const services: PreviewService[] | undefined = serves ? data.services : undefined
+  const label = serves ? t('Your page, as clients will see it') : t('Your shop, as buyers will see it')
   const aside =
     step === 2 ? (
       <PreviewAside label={label}>
-        <ShopCard shop={asShop} products={draft ? [draft] : []} note={t('Your products go here.')} />
+        {serves ? <ShopCard shop={asShop} products={[]} services={serviceDraft ? [serviceDraft] : []} /> : <ShopCard shop={asShop} products={draft ? [draft] : []} note={t('Your products go here.')} />}
       </PreviewAside>
     ) : step === 3 ? (
       <PreviewAside label={label}>
-        <ShopCard shop={asShop} products={data.products} payment={payLine} />
+        <ShopCard shop={asShop} products={data.products} services={services} payment={serves ? undefined : payLine} />
       </PreviewAside>
     ) : step === 4 ? (
       <>
         <p className="text-15 text-white/60">{t('Open now at shopi.tz/{slug}', { slug: shop.slug })}</p>
         <div className="mt-auto mb-auto self-center">
-          <LivePhone shop={shop} products={data.products} ai={data.ai} />
+          <LivePhone shop={shop} products={data.products} services={services} ai={data.ai} />
         </div>
       </>
     ) : (
       <>
-        <p className="text-15 text-white/60">{t('What a new order looks like')}</p>
+        <p className="text-15 text-white/60">{serves ? t('What a new booking looks like') : t('What a new order looks like')}</p>
         <div className="mt-auto mb-auto flex w-full justify-center self-center">
-          <OrderNotice shop={shop} product={first} className="scale-[1.15]" />
+          <OrderNotice shop={shop} product={first} service={serves ? (data.services[0] ?? null) : undefined} className="scale-[1.15]" />
         </div>
       </>
     )
@@ -98,13 +105,13 @@ function Onboard() {
     <AuthLayout topRight={leave} aside={aside}>
       <div key={step} className={step === opened ? '' : 'rise'}>
         {step === 2 ? (
-          <ProductStep shop={shop} ai={data.ai} bar={bar} onDraft={onDraft} />
+          serves ? <ServiceStep shop={shop} bar={bar} onDraft={onServiceDraft} /> : <ProductStep shop={shop} ai={data.ai} bar={bar} onDraft={onDraft} />
         ) : step === 3 ? (
-          <PaymentStep shop={shop} bar={bar} onDraft={setPayLine} />
+          serves ? <HoursStep shop={shop} bar={bar} services={data.services} /> : <PaymentStep shop={shop} bar={bar} onDraft={setPayLine} />
         ) : step === 4 ? (
-          <LiveStep shop={shop} products={data.products} ai={data.ai} bar={bar} />
+          <LiveStep shop={shop} products={data.products} services={services} ai={data.ai} bar={bar} />
         ) : (
-          <PhoneStep shop={shop} product={first} bar={bar} />
+          <PhoneStep shop={shop} product={first} service={serves ? (data.services[0] ?? null) : undefined} bar={bar} />
         )}
       </div>
     </AuthLayout>
@@ -125,6 +132,13 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
   const [slug, setSlug] = useState('')
   const [slugTouched, setSlugTouched] = useState(false)
   const [category, setCategory] = useState('fashion')
+  // Products (ordered and delivered) or services (booked by time): it decides the next two steps and what the link
+  // shows first. A shop can add the other later.
+  const [kind, setKind] = useState<'products' | 'services'>('products')
+  const chooseKind = (next: 'products' | 'services') => {
+    setKind(next)
+    setCategory(next === 'services' ? 'salon' : 'fashion')
+  }
   const [whatsapp, setWhatsapp] = useState(session.user?.phone ?? '')
   const [free, setFree] = useState<boolean | null>(null)
   const [checking, setChecking] = useState(false)
@@ -213,14 +227,14 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
   }
 
   const langName = LANGUAGES.find(([id]) => id === shopLang)?.[1] ?? 'Kiswahili'
-  const categoryLabel = t(CATEGORIES.find((c) => c.id === category)?.label ?? 'Other')
+  const categoryLabel = t(ALL_CATEGORIES.find((c) => c.id === category)?.label ?? 'Other')
 
   return (
     <AuthLayout
       topRight={leave}
       aside={
         <PreviewAside label={t('Your shop, as buyers will see it')}>
-          <ShopCard shop={{ name, slug, logo: null, category }} products={[]} note={t('Your products go here. You add them next.')} />
+          <ShopCard shop={{ name, slug, logo: null, category }} products={[]} services={kind === 'services' ? [] : undefined} note={kind === 'services' ? t('Your services go here. You add them next.') : t('Your products go here. You add them next.')} />
         </PreviewAside>
       }
     >
@@ -246,7 +260,7 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
           setBusy(true)
           setError('')
           try {
-            const res = await createShop({ data: { name, slug, category, whatsapp, lang: shopLang, ...socials, seconds: clock() } })
+            const res = await createShop({ data: { name, slug, category, kind, whatsapp, lang: shopLang, ...socials, seconds: clock() } })
             if ('error' in res) {
               setBusy(false)
               if (res.error === 'staff') return setError(t('This number helps run another shop on Shopi. To open your own shop, sign up with another number.'))
@@ -315,9 +329,31 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
             />
           </span>
         </Field>
-        <FieldGroup label={t('What do you sell?')}>
+        <FieldGroup label={t('What do you sell?')} radio>
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                ['products', t('Products'), t('Buyers order, you deliver')],
+                ['services', t('Services'), t('Clients book a time with you')],
+              ] as const
+            ).map(([id, title, sub]) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={kind === id}
+                onClick={() => chooseKind(id)}
+                className={`rounded-16 px-4 py-3 text-left transition-colors ${kind === id ? 'bg-ink text-white' : 'bg-card shadow-[inset_0_0_0_1px_var(--color-line-strong)] hover:bg-well'}`}
+              >
+                <span className="block text-15 font-medium">{title}</span>
+                <span className={`mt-0.5 block text-13 leading-5 ${kind === id ? 'text-white/70' : 'text-muted'}`}>{sub}</span>
+              </button>
+            ))}
+          </div>
+        </FieldGroup>
+        <FieldGroup label={kind === 'services' ? t('What kind of business?') : t('What kind of products?')}>
           <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((c) => (
+            {(kind === 'services' ? SERVICE_CATEGORIES : CATEGORIES).map((c) => (
               <button key={c.id} type="button" className="chip" aria-pressed={category === c.id} onClick={() => setCategory(c.id)}>
                 {t(c.label)}
               </button>
