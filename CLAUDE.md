@@ -299,10 +299,10 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
     second per team) from `Shopi <hello@shopi.tz>`, replies to hello@shopi.tz (forwards to the founder). Any saved
     address gets mail. Sends run after the response (`later`, `waitUntil`) or in the nightly
     job. `email_log` keeps kind, outcome and Resend's id per user, never the address or the body; about 13 months.
-  - **`EMAIL_LIVE`** (`src/lib/email.ts`) is false: only admins can add an email or get one; anything else is logged
-    `held`. Without `RESEND_API_KEY` (locally) nothing is sent: the email's links are printed (`[email] dry run`) and
-    logged `dry`, so a link in it can be followed by hand. Flip `EMAIL_LIVE` once the founder has received each kind
-    at their own address (inbox, not spam; DMARC on shopi.tz is p=reject) and in the release that tells sellers.
+  - **`EMAIL_LIVE`** (`src/lib/email.ts`) is **on since 19 Nov 2026** (the founder's OK, after the 8 test emails landed
+    in Primary): every seller sees Home's email row and Shop settings' Email group. Off, only admins can add an email
+    or get one, and anything else is logged `held`. Without `RESEND_API_KEY` (locally) nothing is sent: the email's
+    links are printed (`[email] dry run`) and logged `dry`, so a link in it can be followed by hand.
   - **The emails** (`src/server/email-templates.ts`, plain HTML with inline styles and tables, and a text version; in
     the seller's language, `users.email_lang`, the app's when they added it): "Your email is set"; the **Tembo receipt** after
     `completePayment` (the receipt slip in mono: shop, plan, date, the number paid from masked as 0754 *** 456, Selcom's

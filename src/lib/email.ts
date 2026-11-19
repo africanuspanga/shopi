@@ -5,11 +5,11 @@
  * and their receipts): an address works the moment it is saved. Two light guards instead: a typo hint while typing
  * (`suggestEmail`), and one short "Your email is set" email at once, with a one-tap "Not you? Remove this address".
  *
- * EMAIL_LIVE stays false until the founder has received each kind of email at their own address and is happy with how
- * it lands (inbox, not spam; DMARC on shopi.tz is p=reject). Until then only admins can add an email or receive one,
- * and /admin can send any kind as a test. Flip it in the same release that tells sellers about it.
+ * EMAIL_LIVE: on since 19 Nov 2026 (the founder: "switch on email for sellers approved"), after the 8 test emails of
+ * 18 Nov landed in Primary in the founder's Gmail. Off, only admins could add an email or receive one; /admin can
+ * send any kind as a test either way.
  */
-export const EMAIL_LIVE = false
+export const EMAIL_LIVE = true
 
 /** Kinds of email. Essential ones (the address set, money, the plan ending) carry no unsubscribe link. */
 export const EMAIL_KINDS = ['added', 'receipt', 'renewal', 'weekly'] as const

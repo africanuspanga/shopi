@@ -555,14 +555,17 @@ body[data-hide-nav] [data-floating-nav] * {
     opacity: 1;
   }
 }
+/* `backwards`, not `both`: an animation still filling `transform` makes its element hold every `fixed` descendant, so
+   a Sheet opened from a card that had risen sat under the cards after it (Home's email row, 19 Nov). Once it ends, the
+   element is left with no transform at all. */
 .rise {
-  animation: rise 420ms var(--ease-out) both;
+  animation: rise 420ms var(--ease-out) backwards;
 }
 .rise-2 {
-  animation: rise 420ms var(--ease-out) 60ms both;
+  animation: rise 420ms var(--ease-out) 60ms backwards;
 }
 .rise-3 {
-  animation: rise 420ms var(--ease-out) 120ms both;
+  animation: rise 420ms var(--ease-out) 120ms backwards;
 }
 .fade {
   animation: fade 200ms var(--ease-out) both;
