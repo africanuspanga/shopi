@@ -442,7 +442,7 @@ function Faq() {
     [
       t('What does Shopi cost?'),
       [
-        t('Your shop is free: products, orders and payments, for as long as you like. Tembo, TSh 99,000 a year (about TSh 8,250 a month), adds your own domain, shop fonts, full analytics, unlimited products and up to 2 shop assistants. SMS to your buyers and unlimited AI descriptions are coming. We take no commission on your sales.'),
+        t('Your shop is free: products, orders and payments, for as long as you like. Tembo, TSh 99,000 a year (about TSh 8,250 a month), adds your own domain, shop fonts, full analytics, unlimited products, unlimited AI product descriptions and up to 2 shop assistants. SMS to your buyers is coming. We take no commission on your sales.'),
         BILLING_LIVE ? '' : t('Paying for Tembo opens soon.'),
       ]
         .filter(Boolean)

@@ -474,8 +474,8 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
     copied its "knee-length" into a maxi dress. `cleanText` also strips markdown, "!" and a few hype words.
   - **Allowance** (the founder, 18 Nov): Free `FREE_AI_MONTH` = 10 a calendar month in Dar; Tembo and demo unlimited
     with a quiet `TEMBO_AI_DAY` = 50 a day. `ai_uses` keeps a row per use (no text), deleted after about 13 months.
-    A free shop that used its 10 sees a Tembo note instead of the button. Plan cards still say "Soon" for AI until
-    the live key exists.
+    A free shop that used its 10 sees a Tembo note instead of the button. Since 19 Nov (AI live) Tembo's plan card and
+    the landing's cost answer list unlimited AI descriptions without "Soon"; only SMS is still coming.
   - **The form:** "Write it for me" (or "Write it from my notes" when the field has text) replaces the description;
     Undo puts the seller's words back while the AI text is untouched; "{n} left this month" for free shops.
   - `/admin` Product use counts shops that used it, and shops that downloaded or shared their QR code.

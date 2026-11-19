@@ -59,8 +59,8 @@ export const PLANS: { id: PlanId; name: string; price: number; lead: string; ite
       { text: msg('No “Shop made with Shopi” line') },
       { text: msg('Full analytics: 90 days, channels, buyers and downloads') },
       { text: msg('Up to 2 shop assistants, each with their own login') },
+      { text: msg('Unlimited AI product descriptions') },
       { text: msg('500 SMS a year to your buyers, many sent automatically'), soon: true },
-      { text: msg('Unlimited AI product descriptions'), soon: true },
     ],
   },
 ]
