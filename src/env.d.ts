@@ -18,8 +18,8 @@ declare namespace Cloudflare {
     SELCOM_PROXY_TOKEN?: string
     /**
      * AI for sellers (src/server/ai.ts), any OpenAI-compatible API: the key, and optionally its base URL and model.
-     * Live: the founder's OpenAI key as a secret (OPENAI_API_KEY or AI_API_KEY). Locally `.dev.vars` holds a Groq test
-     * key with AI_BASE_URL. Without a key the AI buttons stay hidden.
+     * Live: Groq (19 Nov 2026), AI_BASE_URL and AI_MODEL in wrangler.jsonc, the key as the secret AI_API_KEY. Locally
+     * `.dev.vars` holds a Groq test key. Without a key the AI buttons stay hidden.
      */
     AI_API_KEY?: string
     OPENAI_API_KEY?: string

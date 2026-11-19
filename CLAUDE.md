@@ -70,7 +70,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/components/phone-app.tsx` | The seller's phone: `PhoneAlertsCard` (Home) and `PhoneAppSettings` (Shop settings) for notifications and installing |
 | `src/lib/push.ts`, `src/server/push.ts`, `public/sw.js` | Web push: `usePhoneApp` and the install offer (browser), `notifySeller` (server), the service worker that shows them |
 | `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
-| `src/server/ai.ts`, `src/lib/api/ai.ts`, `src/components/ai-write.tsx` | AI for sellers: the OpenAI-compatible client, the allowance (`ai_uses`), "Write it for me" under a product's description |
+| `src/server/ai.ts`, `src/lib/api/ai.ts`, `src/components/ai-write.tsx` | AI for sellers: the OpenAI-compatible client (Groq live), the allowance (`ai_uses`), "Write it for me" under a product's description |
 | `src/lib/qr.ts`, `src/lib/qr-card.ts`, `src/components/qr.tsx`, `src/components/qr-sheet.tsx` | The shop's QR code: the encoder (no library), the printable card drawn on a canvas, `QrCode`/`ShopQr` for buyers, `QrSheet` for sellers |
 | `src/server/selcom.ts`, `src/server/billing.ts`, `src/lib/api/billing.ts`, `src/components/pay-tembo.tsx`, `src/routes/api/selcom.ts` | Tembo billing through Selcom: the proxy client, payments (start, Lipa Namba, complete once, re-check, reminders), the seller's server functions, the payment sheet, Selcom's callback |
 | `src/server.ts` | The Worker entry: TanStack Start answers requests; `scheduled` runs the cron jobs in `src/server/jobs.ts` |
@@ -378,7 +378,7 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
 - **"Write it for me" for the shop's line** (`writeBio` in `src/server/ai.ts`, `writeShopBio`, `WriteBio`): one
   sentence in the shop's language from its name, category, location and product names; what the seller typed is taken
   as facts; no delivery, price or quality claims. `BIO_MONTH` = 10 a month on any plan, counted in `ai_uses` as `bio`
-  (not against the 10 descriptions). In setup step 4 and under Shop settings' Short bio. Privacy names OpenAI.
+  (not against the 10 descriptions). In setup step 4 and under Shop settings' Short bio. Privacy names Groq.
 - Setup's "Your Instagram, TikTok or WhatsApp link" (`src/lib/social.ts`, `readSocialLink`): a pasted profile link fills
   a first shop name and link (`nameFromHandle`), that social handle (saved by `createShop`; Shop settings shows it), or
   the WhatsApp number (shown under the field; the quiet line opens to change it). Nothing is fetched from Meta; only a TikTok short link (vm.tiktok.com) is opened on the server
@@ -452,11 +452,23 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
   seconds after launch before the first push arrives.
 - **"Write it for me"** (roadmap `ai-desc`, 18 Nov 2026; migration `0025_ai_uses.sql`): under a product's description,
   the AI writes one in the shop's language from the name, the options and what the seller typed (taken as facts).
-  - **Provider** (`src/server/ai.ts`): any OpenAI-compatible chat API. Live: OpenAI with the founder's key as a secret
-    (`OPENAI_API_KEY` or `AI_API_KEY`; model `gpt-6-luna` unless `AI_MODEL`). Locally: a Groq test key in `.dev.vars`
-    (`AI_BASE_URL`), model `qwen/qwen3.8-27b`: side by side it kept to the facts, while `gpt-oss-120b` added
-    "elegant"/"kifahari" whatever the rules said. Without a key `aiReady()` is false and the button never shows.
-    **Before switching AI on live, run the same comparison on OpenAI** (an English and a Swahili dress).
+  - **Provider** (`src/server/ai.ts`): any OpenAI-compatible chat API. **Live: Groq** (the founder, 19 Nov 2026),
+    `AI_BASE_URL` and `AI_MODEL` (`qwen/qwen3.8-27b`) in `wrangler.jsonc` vars, the key as the secret `AI_API_KEY`.
+    Locally: a Groq test key in `.dev.vars`. Side by side (18 and 19 Nov) Qwen kept to the seller's facts, while
+    `gpt-oss-120b` added "elegant", "kifahari", "timeless look" whatever the rules said. Without a key `aiReady()` is
+    false and the buttons never show. Qwen thinks unseen (`reasoning_format: hidden`; with thinking off it invented
+    more), and its thinking counts against `max_completion_tokens`, so keep caps at 900.
+  - **Groq's limits:** the free plan allows about 7,000 input tokens a minute and 1,000 requests a day for the whole
+    organisation (a write takes about 600 to 800 tokens: some 10 writes a minute across Shopi, local tests included).
+    `complete()` waits once when Groq answers 429 with a `retry-after` of 10 s or less, and asks once more when the answer
+    is empty. Cost on 19 Nov: $0.80 in, $4.00 out per million tokens, about $0.001 (TSh 2 to 3) a write.
+  - **Quirks found 19 Nov** (re-test after changing a prompt; the 22-case run is in the 19 Nov chat): a second, very short
+    worked example as a conversation turn made Qwen end before its first word (5 of 5), so the shop line's short example
+    sits in the rules; "when to wear or use it" in the rules made it invent occasions in broken Swahili ("majira ya
+    kuzindua"), so occasions and who it is for are now forbidden unless the seller said them; with no notes it now
+    writes one honest line ("Raba za Air Force 1, sizes 39 hadi 42"). Temperature 0.2. Qwen rewrote the seller's "nguo"
+    as "ngao" about 1 in 4 at any temperature: `sellerSpelling` puts the seller's spelling back for a word one letter
+    off in the middle (same length, first two letters and last letter), on Swahili shops only.
   - **Prompt:** the rules (only the seller's facts, no invented qualities, no hype words, no price or name at the start,
     no markdown) plus one worked example per language, deliberately a body cream: with a clothing example the model
     copied its "knee-length" into a maxi dress. `cleanText` also strips markdown, "!" and a few hype words.
