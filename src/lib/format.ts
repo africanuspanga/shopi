@@ -167,8 +167,24 @@ export const SERVICE_CATEGORIES: { id: string; label: string }[] = [
   { id: 'consulting', label: msg('Consulting and coaching') },
   { id: 'services', label: msg('Other services') },
 ]
+/** What a business that sends invoices does (roadmap `v-invoices`): freelancers, creatives, agents, consultants. */
+export const INVOICE_CATEGORIES: { id: string; label: string }[] = [
+  { id: 'freelance', label: msg('Freelance and creative work') },
+  { id: 'photo', label: msg('Photography and video') },
+  { id: 'clearing', label: msg('Clearing and forwarding') },
+  { id: 'advisory', label: msg('Consulting and professional services') },
+  { id: 'trade', label: msg('Supplies and wholesale') },
+  { id: 'billing', label: msg('Other business') },
+]
 /** Every category a shop can have, whatever it sells: for reading a saved one. */
-export const ALL_CATEGORIES = [...CATEGORIES, ...SERVICE_CATEGORIES]
+export const ALL_CATEGORIES = [...CATEGORIES, ...SERVICE_CATEGORIES, ...INVOICE_CATEGORIES]
+
+/**
+ * What a business chose at setup ("What do you sell?"): products (ordered), services (booked by time, roadmap
+ * `v-services`) or invoices (billed, roadmap `v-invoices`). It decides what comes first; any business can use all three.
+ */
+export type ShopKind = 'products' | 'services' | 'invoices'
+export const asShopKind = (v: unknown): ShopKind => (v === 'services' || v === 'invoices' ? v : 'products')
 
 /** Tanzania is a multi-network mobile money market, so the copy says "mobile money" and never assumes one network. */
 export const NETWORKS = ['M-Pesa', 'Mixx by Yas', 'Airtel Money', 'HaloPesa', 'Bank Lipa Namba']

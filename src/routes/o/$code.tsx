@@ -1,10 +1,10 @@
 import { createFileRoute, notFound, useRouter } from '@tanstack/react-router'
-import { Check, Copy, ImageDown, MapPin, Printer, Share2 } from 'lucide-react'
+import { Check, ImageDown, MapPin, Printer, Share2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { MadeWithShopi, ShopTopBar } from '#/components/shop'
 import { WhatsAppHelp, useWhatsApp } from '#/components/whatsapp'
-import { CardHead, ErrorText, Img, useEntrance } from '#/components/ui'
+import { CardHead, CopyRow, ErrorText, Img, useEntrance } from '#/components/ui'
 import { getTrackedOrder, submitPaymentSms } from '#/lib/api/store'
 import { optionText, timeAgo, tzs, waLink, type OrderStatus, formatTin } from '#/lib/format'
 import { LangProvider, asLang, useLang, useT } from '#/lib/i18n'
@@ -357,24 +357,6 @@ function Line({ label, value }: { label: string; value: ReactNode }) {
     <div className="flex items-baseline justify-between gap-4">
       <span className="text-ink-2">{label}</span>
       <span className="font-mono text-13">{value}</span>
-    </div>
-  )
-}
-
-function CopyRow({ label, value, onCopy, copied, big = false }: { label: string; value: string; onCopy?: () => void; copied?: boolean; big?: boolean }) {
-  const t = useT()
-  return (
-    <div className="flex items-center justify-between gap-4 py-4">
-      <div className="min-w-0">
-        <p className="text-13 text-muted">{label}</p>
-        <p className={`mt-1 truncate font-mono font-medium ${big ? 'text-24 tracking-[0.04em]' : 'text-17'}`}>{value}</p>
-      </div>
-      {onCopy && (
-        <button type="button" className={`btn btn-sm shrink-0 ${copied ? '' : 'btn-ghost'}`} onClick={onCopy}>
-          {copied ? <Check size={16} strokeWidth={2.25} /> : <Copy size={16} strokeWidth={1.75} />}
-          {copied ? t('Copied') : t('Copy')}
-        </button>
-      )}
     </div>
   )
 }

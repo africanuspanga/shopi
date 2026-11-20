@@ -8,6 +8,7 @@ import { normalizePhone } from '#/lib/format'
 import { REF_COOKIE } from '#/lib/host'
 import { asLang, type Lang } from '#/lib/i18n'
 import { planState } from '#/lib/plans'
+import { asShopKind } from '#/lib/format'
 
 export const getSession = createServerFn({ method: 'GET' }).handler(async () => {
   const lang: Lang = asLang(getCookie('shopi_lang'))
@@ -15,10 +16,10 @@ export const getSession = createServerFn({ method: 'GET' }).handler(async () => 
   const row = user ? await myShop(user.id) : null
   // The plan (Free, Tembo, demo) rides with the session, so seller screens ask can() without another request.
   // setup: the furthest setup step passed (src/lib/setup.ts); null for shops opened before the five-step setup.
-  // kind: what the shop shows first, products or services (src/lib/booking.ts).
+  // kind: what the shop shows first: products, services (src/lib/booking.ts) or invoices (src/lib/invoice.ts).
   // role: owner, or the assistant's role (src/lib/staff.ts); paused: an assistant whose shop is no longer on Tembo.
   const shop = row
-    ? { id: row.id, slug: row.slug, name: row.name, logo_key: row.logo_key, plan: planState(row), setup: row.setup_step, role: row.role, paused: row.paused, kind: row.kind === 'services' ? ('services' as const) : ('products' as const) }
+    ? { id: row.id, slug: row.slug, name: row.name, logo_key: row.logo_key, plan: planState(row), setup: row.setup_step, role: row.role, paused: row.paused, kind: asShopKind(row.kind) }
     : null
   return { lang, user, shop }
 })

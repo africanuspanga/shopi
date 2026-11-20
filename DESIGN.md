@@ -66,6 +66,9 @@ local function named like a part); a genuine exception says why on its line or t
 | A group of choices (chips, colours, photos) | `FieldGroup` (`radio` for one-of-several) | The same label and hint as `Field`, named for screen readers |
 | A label for an input that sits beside a button | `Label` (`htmlFor`) | |
 | A yes/no setting | `Switch` | |
+| An invoice's or quote's state | `InvoicePill` (`state`, `check`) | A quiet dot and label like an order's; a payment to check or an accepted quote waiting for its invoice in the signal colour |
+| What Shopi read from a payment SMS | `CheckRow` | A check, warning or question mark and one line (orders and invoices) |
+| A value to copy | `CopyRow` (`label`, `value`, `onCopy`, `big`) | Label 13 muted, the value in mono, Copy at the right (Lipa Namba, amount) |
 
 A paragraph that *is* a card's content (the instructions on an order's status card) stays body text, 14 muted with
 `leading-relaxed`, under the `CardHead`; only a short description goes in `sub`.

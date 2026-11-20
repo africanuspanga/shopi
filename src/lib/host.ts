@@ -40,7 +40,7 @@ export function hostShop(host: string): string | null {
 }
 
 /** Paths a shop's domain serves as they are: the order page, a client's booking page, photos, the API, files. */
-const AS_IS = /^\/(o|bk|img|api|_serverFn|assets|fonts|images|icons)(\/|$)|^\/[^/]+\.(js|json|xml|txt|png|ico|svg|webmanifest|woff2)$/
+const AS_IS = /^\/(o|bk|i|img|api|_serverFn|assets|fonts|images|icons)(\/|$)|^\/[^/]+\.(js|json|xml|txt|png|ico|svg|webmanifest|woff2)$/
 /** Shopi's own pages: on a shop's domain they send the visitor to shopi.tz. */
 export const SHOPI_PAGES = /^\/(app|admin|login|signup|onboard|privacy|terms|data-deletion|email|join|paused)(\/|$)/
 

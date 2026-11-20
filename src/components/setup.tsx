@@ -651,7 +651,21 @@ export function LivePhone({ shop, products, services, ai }: { shop: SetupShop; p
 /* ---------- Step 5: orders on this phone ---------- */
 
 /** What a new order looks like on the seller's phone, with the shop's own first product. */
-export function OrderNotice({ shop, product, service, className = '' }: { shop: SetupShop; product: SetupProduct | null; /** A business that takes bookings: the notice shows a new booking. */ service?: PreviewService | null; className?: string }) {
+export function OrderNotice({
+  shop,
+  product,
+  service,
+  bills = false,
+  className = '',
+}: {
+  shop: SetupShop
+  product: SetupProduct | null
+  /** A business that takes bookings: the notice shows a new booking. */
+  service?: PreviewService | null
+  /** A business that sends invoices: the notice shows a payment to check. */
+  bills?: boolean
+  className?: string
+}) {
   const t = useT()
   return (
     <div className={`w-full max-w-[340px] rounded-20 bg-card p-4 text-ink shadow-[var(--shadow-float)] ring-1 ring-line ${className}`}>
@@ -667,16 +681,28 @@ export function OrderNotice({ shop, product, service, className = '' }: { shop: 
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 text-14 font-medium">
             <span className="signal shrink-0" />{' '}
-            {service !== undefined ? t('New booking: {name}', { name: 'Neema' }) : product ? t('New order: {total}', { total: tzs(product.price) }) : t('New order')}
+            {bills
+              ? t('Check a payment: {amount}', { amount: tzs(250_000) })
+              : service !== undefined
+                ? t('New booking: {name}', { name: 'Neema' })
+                : product
+                  ? t('New order: {total}', { total: tzs(product.price) })
+                  : t('New order')}
           </p>
-          <p className="truncate text-12 text-muted">{service !== undefined ? [service?.name, t('Tomorrow'), '10:00'].filter(Boolean).join(' · ') : (product?.name ?? shop.name)}</p>
+          <p className="truncate text-12 text-muted">
+            {bills
+              ? t('{client} sent the payment SMS for {number}.', { client: 'Bahari Logistics', number: 'INV-0001' })
+              : service !== undefined
+                ? [service?.name, t('Tomorrow'), '10:00'].filter(Boolean).join(' · ')
+                : (product?.name ?? shop.name)}
+          </p>
         </div>
       </div>
     </div>
   )
 }
 
-export function PhoneStep({ shop, product, service, bar }: { shop: SetupShop; product: SetupProduct | null; service?: PreviewService | null; bar: ReactNode }) {
+export function PhoneStep({ shop, product, service, bills = false, bar }: { shop: SetupShop; product: SetupProduct | null; service?: PreviewService | null; bills?: boolean; bar: ReactNode }) {
   const t = useT()
   const router = useRouter()
   const pass = usePass(5)
@@ -715,13 +741,15 @@ export function PhoneStep({ shop, product, service, bar }: { shop: SetupShop; pr
 
   return (
     <>
-      {service !== undefined ? (
+      {bills ? (
+        <StepHead bar={bar} title={t('Payments on your phone')} sub={t('A notification when a client opens your invoice or sends the payment SMS, even when Shopi is closed. And Shopi on your Home Screen, one tap from your invoices.')} />
+      ) : service !== undefined ? (
         <StepHead bar={bar} title={t('Bookings on your phone')} sub={t('A notification the moment a client books, even when Shopi is closed. And Shopi on your Home Screen, one tap from your diary.')} />
       ) : (
         <StepHead bar={bar} title={t('Orders on your phone')} sub={t('A notification the moment a buyer orders, even when Shopi is closed. And Shopi on your Home Screen, one tap from your orders.')} />
       )}
       <div className="mt-6 flex justify-center rounded-20 bg-well px-4 py-6 lg:hidden">
-        <OrderNotice shop={shop} product={product} service={service} />
+        <OrderNotice shop={shop} product={product} service={service} bills={bills} />
       </div>
       {status && (
         <p className="mt-6 flex items-start gap-2.5 text-15 leading-6">

@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute, redirect, useLocation, useRouter } from '@tanstack/react-router'
-import { ArrowUpRight, CalendarDays, CalendarPlus, ChartColumn, FileSpreadsheet, House, Layers, Package, PenLine, Plus, ReceiptText, Scissors, ShoppingBag, Store, TicketPercent, UserRound, type LucideIcon } from 'lucide-react'
+import { ArrowUpRight, BookUser, CalendarDays, CalendarPlus, ChartColumn, FilePlus2, FileSpreadsheet, FileText, House, Layers, Package, PenLine, Plus, ReceiptText, Scissors, ShoppingBag, Store, TicketPercent, UserRound, type LucideIcon } from 'lucide-react'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
 import { Sheet, ShopAvatar, Wordmark } from '#/components/ui'
 import { getNavCounts } from '#/lib/api/merchant'
@@ -30,6 +30,15 @@ function useBookingTabs() {
   return {
     bookings: { to: '/app/bookings', icon: CalendarDays, label: t('Bookings'), match: (p: string) => p.startsWith('/app/bookings') },
     services: { to: '/app/services', icon: Scissors, label: t('Services'), match: (p: string) => p.startsWith('/app/services') || p.startsWith('/app/hours') },
+  } satisfies Record<string, Tab>
+}
+
+/** Invoices and the clients they go to (roadmap `v-invoices`). */
+function useInvoiceTabs() {
+  const t = useT()
+  return {
+    invoices: { to: '/app/invoices', icon: FileText, label: t('Invoices'), match: (p: string) => p.startsWith('/app/invoices') },
+    clients: { to: '/app/clients', icon: BookUser, label: t('Clients'), match: (p: string) => p.startsWith('/app/clients') },
   } satisfies Record<string, Tab>
 }
 
@@ -101,20 +110,34 @@ function BookingsBadge({ dot = false }: { dot?: boolean }) {
   return null
 }
 
+/** Payment SMS sent from invoice links, waiting for the business: the same orange count as an order's payment. */
+function InvoicesBadge({ dot = false }: { dot?: boolean }) {
+  const { invoiceChecks } = Route.useLoaderData()
+  if (dot) return invoiceChecks > 0 ? <span className="absolute -top-1 -right-1.5 h-2.5 w-2.5 rounded-full bg-moto ring-2 ring-ink" /> : null
+  if (invoiceChecks > 0)
+    return <span className="tnum ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-moto px-1.5 text-12 font-medium text-ink">{invoiceChecks}</span>
+  return null
+}
+
 function Sidebar() {
   const t = useT()
   const [home, orders, products, shopTab] = useTabs()
   const canOpen = useCanOpen()
   const { bookings, services } = useBookingTabs()
+  const { invoices, clients } = useInvoiceTabs()
   const counts = Route.useLoaderData()
   const { shop: mine } = Route.useRouteContext()
   const books = mine.kind === 'services' || counts.services > 0
-  // A business that sells services reads its diary first; a shop that sells products keeps orders first.
+  const bills = mine.kind === 'invoices'
+  // A business that sells services reads its diary first, one that sends invoices its invoices; a shop that sells
+  // products keeps orders first. Every shop can send invoices.
   const tabs = [
     home,
+    ...(bills ? [invoices, clients] : []),
     ...(books && mine.kind === 'services' ? [bookings, services] : []),
     orders,
     ...(books && mine.kind !== 'services' ? [bookings] : []),
+    ...(!bills ? [invoices] : []),
     { to: '/app/analytics', icon: ChartColumn, label: t('Analytics'), match: (p: string) => p.startsWith('/app/analytics') },
     { ...products, match: (p: string) => p.startsWith('/app/products') },
     ...(mine.kind !== 'services' ? [services] : []),
@@ -158,19 +181,25 @@ function Sidebar() {
               {tab.label}
               {tab.to === '/app/orders' && <OrdersBadge />}
               {tab.to === '/app/bookings' && <BookingsBadge />}
+              {tab.to === '/app/invoices' && <InvoicesBadge />}
             </Link>
           )
         })}
       </nav>
 
       <div className="mt-6 space-y-2">
+        {bills && canOpen('/app/invoices/new') && (
+          <Link to="/app/invoices/new" className="btn btn-sm h-10 w-full">
+            <FilePlus2 size={16} strokeWidth={1.75} /> {t('New invoice')}
+          </Link>
+        )}
         {books && canOpen('/app/bookings') && (
-          <Link to="/app/bookings" search={{ add: 1 }} className="btn btn-sm h-10 w-full">
+          <Link to="/app/bookings" search={{ add: 1 }} className={`btn btn-sm h-10 w-full ${bills ? 'btn-ghost' : ''}`}>
             <CalendarPlus size={16} strokeWidth={1.75} /> {t('Add a booking')}
           </Link>
         )}
         {canOpen('/app/products/new') && (
-          <Link to="/app/products/new" className={`btn btn-sm h-10 w-full ${books && canOpen('/app/bookings') ? 'btn-ghost' : ''}`}>
+          <Link to="/app/products/new" className={`btn btn-sm h-10 w-full ${(books && canOpen('/app/bookings')) || bills ? 'btn-ghost' : ''}`}>
             <Plus size={16} strokeWidth={2.25} /> {t('Add product')}
           </Link>
         )}
@@ -204,12 +233,14 @@ function BottomNav() {
   const { bookings, services } = useBookingTabs()
   const counts = Route.useLoaderData()
   const { shop } = Route.useRouteContext()
+  const { invoices, clients } = useInvoiceTabs()
   const serves = shop.kind === 'services'
+  const bills = shop.kind === 'invoices'
   const books = serves || counts.services > 0
-  // A business that sells services gets its diary and its services in the capsule; orders and products stay one tap
-  // away (Home, and the Services page).
-  const left = [home, serves ? bookings : orders].filter((x) => canOpen(x.to))
-  const right = [serves ? services : products, shopTab].filter((x) => canOpen(x.to))
+  // A business that sells services gets its diary and its services in the capsule, one that sends invoices its
+  // invoices and clients; orders and products stay one tap away (Home, the + sheet, the sidebar on desktop).
+  const left = [home, serves ? bookings : bills ? invoices : orders].filter((x) => canOpen(x.to))
+  const right = [serves ? services : bills ? clients : products, shopTab].filter((x) => canOpen(x.to))
   const tab = (x: Tab) => (
     <NavTab
       key={x.to}
@@ -218,7 +249,17 @@ function BottomNav() {
       label={x.label}
       active={x.match(path)}
       // A services-first capsule has no Orders tab: payments to check show their dot on Home, which lists them.
-      badge={x.match(path) ? undefined : x.to === '/app/orders' || (serves && x.to === '/app') ? <OrdersBadge dot /> : x.to === '/app/bookings' ? <BookingsBadge dot /> : undefined}
+      badge={
+        x.match(path)
+          ? undefined
+          : x.to === '/app/orders' || ((serves || bills) && x.to === '/app')
+            ? <OrdersBadge dot />
+            : x.to === '/app/bookings'
+              ? <BookingsBadge dot />
+              : x.to === '/app/invoices'
+                ? <InvoicesBadge dot />
+                : undefined
+      }
     />
   )
   return (
@@ -241,6 +282,12 @@ function BottomNav() {
       <Sheet open={adding} onClose={() => setAdding(false)} title={t('Add')}>
         <div className="grid gap-2">
           {[
+            ...(bills
+              ? [
+                  { to: '/app/invoices/new', icon: FilePlus2, title: t('New invoice'), sub: t('Bill a client; they pay from the link') },
+                  { to: '/app/invoices/new', search: { kind: 'quote' as const }, icon: FileText, title: t('New quote'), sub: t('A price for a client to accept') },
+                ]
+              : []),
             ...(books
               ? [
                   { to: '/app/bookings', search: { add: 1 as const }, icon: CalendarPlus, title: t('Add a booking'), sub: t('A walk-in, a call or a chat, so that time is taken') },
@@ -252,9 +299,10 @@ function BottomNav() {
             ...(!serves ? [{ to: '/app/services', search: { add: 1 as const }, icon: Scissors, title: t('Add service'), sub: t('What clients book, how long it takes, the price') }] : []),
             { to: '/app/bags/new', icon: ShoppingBag, title: t('Send a bag link'), sub: t('Build a bag for a buyer; they add delivery and pay') },
             { to: '/app/orders/new', icon: PenLine, title: t('Record a sale'), sub: t('A sale in person, on a call or in a chat') },
+            ...(!bills ? [{ to: '/app/invoices/new', icon: FilePlus2, title: t('New invoice'), sub: t('Bill a client; they pay from the link') }] : []),
             { to: '/app/products/import', icon: FileSpreadsheet, title: t('Import products'), sub: t('Many at once, from Excel or Google Sheets') },
           ].filter((x) => canOpen(x.to)).map((x) => (
-            <Link key={x.to} to={x.to} search={'search' in x ? x.search : undefined} onClick={() => setAdding(false)} className="flex items-center gap-4 rounded-16 bg-page px-4 py-4 transition-colors hover:bg-well">
+            <Link key={x.title} to={x.to} search={'search' in x ? x.search : undefined} onClick={() => setAdding(false)} className="flex items-center gap-4 rounded-16 bg-page px-4 py-4 transition-colors hover:bg-well">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-white">
                 <x.icon size={20} strokeWidth={1.75} />
               </span>

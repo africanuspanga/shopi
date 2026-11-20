@@ -47,6 +47,11 @@ export const LIMITS = {
   // A backstop per shop (a busy salon takes far fewer), and moves of one booking (each one notifies the business).
   bookShop: { max: 40, window: 60 * MINUTE },
   bookMove: { max: 5, window: 60 * MINUTE },
+  // Invoices (src/lib/api/invoice-public.ts): invoice pages opened per IP (the code in the link is the key, so guessing
+  // is slowed), payment proofs sent per IP, and per invoice (each one notifies the business).
+  invoicePageIp: { max: 120, window: 10 * MINUTE },
+  invoiceProofIp: { max: 20, window: 60 * MINUTE },
+  invoiceProofDoc: { max: 5, window: 60 * MINUTE },
 } as const
 
 /** The visitor's IP as Cloudflare saw it. */

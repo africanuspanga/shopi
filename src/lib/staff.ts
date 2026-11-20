@@ -54,7 +54,10 @@ export function areaOfPath(path: string): Area {
   const p = path.replace(/\/+$/, '') || '/'
   if (p === '/app') return 'manage'
   // The diary is orders work, services are products work; the working hours (/app/hours) are the shop's settings.
-  if (/^\/app\/(orders|bags|bookings)(\/|$)/.test(p)) return 'orders'
+  // Invoice settings say where clients' money goes (bank details): the owner's, like the Lipa Namba.
+  if (/^\/app\/invoices\/settings(\/|$)/.test(p)) return 'owner'
+  // Invoices, their payments and the clients are orders work (roadmap `v-invoices`).
+  if (/^\/app\/(orders|bags|bookings|invoices|clients)(\/|$)/.test(p)) return 'orders'
   if (/^\/app\/(products|collections|services)(\/|$)/.test(p)) return 'products'
   if (/^\/app\/(plan|domain|staff)(\/|$)/.test(p)) return 'owner'
   // Shop settings: a Manager gets the shop's settings, the others their own (notifications, language, log out).

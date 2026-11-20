@@ -30,7 +30,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | Path | What lives there |
 | --- | --- |
 | `src/styles.css` | The design system: tokens (`@theme`) and component classes. Read it first. |
-| `src/components/ui.tsx` | App-wide parts (DESIGN.md "The shared parts"): `Page`, `TopBar`, `PhoneBar`, `PageHead`, `Card`, `CardHead`, `Notice`, `Stat`, `Nothing`, `Field`, `FieldGroup`, `Label`, `BackButton`, `Chips`, `StatusPill`, `Img`, `ShopAvatar`, `Money`, `Delta`, `Sheet`, `Field`, `Switch`, `Empty`, `Toast`, `TextLink`, `ErrorText`, `LangSwitch`, `Wordmark` |
+| `src/components/ui.tsx` | App-wide parts (DESIGN.md "The shared parts"): `Page`, `TopBar`, `PhoneBar`, `PageHead`, `Card`, `CardHead`, `Notice`, `Stat`, `Nothing`, `Field`, `FieldGroup`, `Label`, `BackButton`, `Chips`, `StatusPill`, `InvoicePill`, `CheckRow`, `CopyRow`, `Img`, `ShopAvatar`, `Money`, `Delta`, `Sheet`, `Field`, `Switch`, `Empty`, `Toast`, `TextLink`, `ErrorText`, `LangSwitch`, `Wordmark` |
 | `src/components/shop.tsx` | Storefront parts: `ProductGrid` (the grid with quick add and its toast), `TopPicks` (the band above it) and `pickedProducts`, `ProductCard` (with its Buy pill), `QuickAddSheet`, `Price`, `Tag`, `BagButton`, `ShopTopBar`, `ShopFacts`, `FactPills`, `SocialLinks`, `ShopFooter`, `MadeWithShopi` |
 | `src/components/floating-nav.tsx` | The phone capsule: `FloatingNav`, `NavTab`, `NavCenter`, `NavCount`, `useHideFloatingNav` |
 | `src/components/shop-nav.tsx` | The storefront's capsule with its search and info sheets |
@@ -75,6 +75,9 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/server/selcom.ts`, `src/server/billing.ts`, `src/lib/api/billing.ts`, `src/components/pay-tembo.tsx`, `src/routes/api/selcom.ts` | Tembo billing through Selcom: the proxy client, payments (start, Lipa Namba, complete once, re-check, reminders), the seller's server functions, the payment sheet, Selcom's callback |
 | `src/lib/booking.ts`, `src/server/bookings.ts`, `src/lib/api/booking.ts`, `src/lib/api/services.ts` | Shopi for services: the rules (hours, free times, days and times in Tanzania time); the guarded insert and move; the public server functions (book, the client's page, cancel, move); the business's (services, hours, time off, the diary) |
 | `src/components/booking.tsx`, `src/components/hours.tsx`, `src/components/diary.tsx`, `src/components/setup-services.tsx` | `DayStrip`, `TimeGrid`, `ServiceList`, `ServiceForm`; the working-hours fields; the diary's sheets (a booking, add by hand, move, time off) and the WhatsApp messages; the setup's service and hours steps |
+| `src/lib/invoice.ts`, `src/server/invoices.ts`, `src/lib/api/invoices.ts`, `src/lib/api/invoice-public.ts` | Shopi Invoices: the shared rules (kinds, money in cents, `computeTotals`, `invoiceState`, settings, WhatsApp messages and reminders, `DocData`); reading, numbering, `recalcPaid`, `keepClient`, `invoiceShop`, Home's `homeInvoices`; the business's server functions; the client's (the link, the payment SMS, accepting a quote) |
+| `src/components/invoice.tsx`, `src/components/invoice-form.tsx`, `src/lib/invoice-pdf.tsx`, `src/components/setup-invoices.tsx` | `InvoiceDocument` (the document as a page) and `usePdf`/`PdfButton`; the editor (`InvoiceForm`, `AmountInput`); the A4 PDF (@react-pdf/renderer, browser only); the setup's steps 2 to 4 for a business that bills |
+| `src/routes/app/invoices/`, `src/routes/app/clients.tsx`, `src/routes/i/$code.tsx` | Invoices (list, `new`, `edit/$id`, `$id`, `settings`), Clients, and the client's invoice page |
 | `src/routes/app/services.tsx`, `src/routes/app/hours.tsx`, `src/routes/app/bookings.tsx`, `src/routes/$shop/book.$id.tsx`, `src/routes/bk/$code.tsx` | Services, Working hours and the diary (seller); a service's booking page and the client's own booking page (buyer) |
 | `src/server.ts` | The Worker entry: TanStack Start answers requests; `scheduled` runs the cron jobs in `src/server/jobs.ts` |
 | `src/lib/api/` | Server functions: `store.ts` (public), `merchant.ts` (seller), `analytics.ts` (seller analytics, tagged links), `bags.ts` (bag links), `discounts.ts`, `collections.ts`, `alerts.ts` (back in stock), `push.ts` (notification subscriptions), `imports.ts` (bulk import), `picks.ts` (top picks), `session.ts` |
@@ -432,6 +435,83 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
   - **Not built** (after real businesses have used it): a deposit by Lipa Namba, home visits with a location, a
     video-call link, choosing a stylist (today: clients at once, per business), Tembo extras, bookings in Analytics
     and the weekly email, reminders sent by Shopi (needs the WhatsApp API or SMS), the landing page naming services.
+- **Shopi Invoices** (roadmap `v-invoices`, the founder's answers of 20 Nov 2026; migration `0030_invoices.sql`). Taken
+  over from Ankara (the founder's invoice app at `/Users/admin/Ankara`, closing): invoices and quotes for anyone who
+  bills first and is paid later (freelancers, photographers, clearing and forwarding agents, consultants) and for every
+  shop. Rules in `src/lib/invoice.ts`.
+  - **A third kind of business:** `shops.kind` = `invoices` ("I send invoices" at setup; `asShopKind`, `ShopKind` in
+    `lib/format.ts`; categories `INVOICE_CATEGORIES`). It only decides what comes first: Home leads with "Owed to you"
+    (`OwedCard`, `homeInvoices`) instead of the shop score, the capsule is Home · Invoices · + · Clients · Shop, the
+    sidebar lists Invoices and Clients first, the + sheet offers New invoice and New quote. Every other shop has
+    Invoices in the sidebar and New invoice in the + sheet; an order and a booking each have **Make an invoice**
+    (`?order=`, `?booking=` prefill the lines and the client; an order's discount comes as TSh off, and both start in
+    TSh whatever the settings' currency, so the invoice's total is the order's). Such a business starts with cash on
+    delivery off; its shop page with no products asks for a quote on WhatsApp instead of an empty grid. Services'
+    "What your link shows first" isn't offered to it (`asShopKind` keeps `invoices`).
+  - **The setup** for `invoices` (`nextSetupStep`): 2 How you look on invoices (address, email, TIN, VAT and VRN;
+    skipped once `shops.bill` exists), 3 How clients pay you (Lipa Namba and/or bank details, days to pay; skipped with a
+    Lipa Namba or bank details), 4 Your first invoice (client, what for, amount; then Send on WhatsApp / Copy link;
+    skipped once an invoice exists), 5 Payments on your phone. The preview is the invoice itself (`sampleDoc`).
+  - **Money is stored in cents** of the document's currency (`toCents`; TSh prints with no cents, USD with two). Lines
+    are JSON with `price` in units and `tax` a percent; the server works the totals out again (`totalsCents`), never
+    from the browser. Ankara's `computeTotals`: the discount comes off the subtotal, VAT per line on its share of the
+    discounted base. `VAT` = 18, one tap per line; a business that set "I am registered for VAT" starts lines with it.
+    **Every figure is rounded to the currency** (`computeTotals(…, currency)`, `lineTotal(l, currency)`,
+    `roundMoney`): whole shillings for TSh, cents for USD. Before the 20 Nov review fix, TSh 12,345 + VAT stored
+    14,567.10 and paying 14,567 left it part paid for ever. Payments are rounded the same way (`paymentCents`).
+  - **Numbers** INV-0001 / QUO-0001 per shop and kind, taken in the same INSERT that writes the row (a unique index
+    guards it; `insertInvoice` retries). The link is `shopi.tz/i/<code>` (10 random characters, never the number);
+    `/i/` serves as-is on own domains (`AS_IS` in `lib/host.ts`). Pages opened per IP are limited (`invoicePageIp`).
+  - **Status stored:** draft, sent, cancelled; a quote also accepted, declined. **Worked out when read**
+    (`invoiceState`): viewed (opened by someone other than the business: `markInvoiceViewed` checks the login),
+    part, paid, overdue (due day before today in Dar), expired (a quote), invoiced (a quote an invoice was made from).
+    Draft → sent when the business sends it (WhatsApp, Copy link, the PDF), records a payment, or the client opens it.
+    Only a draft never sent, with no payment and no invoice made from it, can be deleted; anything else is cancelled
+    and can be reopened.
+  - **Payments** (`invoice_payments`): the business records one (mobile, bank, cash, other; confirmed at once; more
+    than twice the balance is refused as a typo), or the client pastes the confirmation SMS on the link
+    (`sendInvoiceProof`: claimed, read with `parsePaymentSms`/`namesMatch` as on orders, one transaction pays one
+    invoice once (partial unique index), `invoiceProofIp`/`invoiceProofDoc` limits). The business confirms (with the
+    amount it really got) or says Not received; `paid` is always the sum of confirmed payments (`recalcPaid`), also
+    after an edit changes the total. A confirmed payment can be taken back. The menu's orange count includes proofs
+    waiting on invoices that aren't cancelled (`getNavCounts().invoiceChecks`); cancelling an invoice answers its
+    waiting proofs as not received. **The currency is fixed once a payment exists** (sent or confirmed): the form
+    locks the chips and says why (`held` from `getInvoiceEditor`), and `saveInvoice` refuses (`currency`), checked
+    again in the UPDATE itself.
+  - **Quotes:** no bank details on the document; the client can **Accept this quote** on the link (not once expired);
+    the business makes the invoice (`invoiceFromQuote`: a new draft with `parent_id`, the quote accepted; a second tap
+    returns the same invoice). **One quote, one live invoice:** `insertInvoice` writes a child only while its quote
+    has no other live invoice (`INSERT … SELECT … WHERE NOT EXISTS`, so two taps at once make one); only a draft, sent
+    or accepted quote converts; reopening a cancelled invoice whose quote has another live one is refused (`twin`).
+  - **Clients** (`clients`): kept automatically when a document is saved (`keepClient`: the one picked, else the same
+    phone, else the same name and company); each document keeps its own copy (`invoices.client`), so editing or
+    removing a client never rewrites what was sent.
+  - **Settings** (`shops.bill`, JSON `BillSettings`; `/app/invoices/settings`, the owner's: it says where money goes):
+    address, email, VRN, VAT on new lines, bank details (free text: several accounts or one per currency, as WTL Africa
+    needed in Ankara), payment terms, days to pay (0, 7, 14, 30), currency, language. The TIN stays in `shops.tin`, the
+    Lipa Namba in `shops.lipa_*`. A new invoice copies the bank details and terms into its own fields.
+  - **The document** (`InvoiceDocument` on screen, `invoice-pdf.tsx` for A4; one `DocData`, `docOf`): written in the
+    document's own language (chosen per invoice, default the settings' or the shop's), the business's lines, Bill to,
+    the dates, lines (a table from md, stacked rows on phones), totals, Paid and Balance due, How to pay (Lipa Namba
+    and the bank text; not on a quote), payment terms, notes, terms, and last Ankara's statement in English ("THIS IS A
+    COMMERCIAL INVOICE." / "THIS IS A QUOTATION."): nothing is printed after it. The PDF is Helvetica (built into every
+    reader), made in the browser only when asked (`usePdf`: dynamic import, never on the server); react-pdf reads PNG and
+    JPEG, so the WebP logo is redrawn as a round PNG first. Free shops' PDFs say "Made with Shopi · shopi.tz".
+  - **WhatsApp:** `sendText` (the message with the link) and `reminderText` (four tones: Friendly, Professional, Firm,
+    Final notice; Ankara's), in the document's language, sent from the business's own WhatsApp (`whatsappTo`: the
+    client's number when there is one).
+  - **Plans:** invoices and quotes in TSh are free and unlimited (with the Shopi line); `usd` is Tembo (`can(plan,
+    'usd')`, checked on save for a new document or a new currency, so one already in dollars stays editable after
+    Tembo ends; the USD chip says so instead of being disabled). `hideBadge` hides the line on invoices
+    too. Recurring invoices, automatic reminders and more designs are listed as Soon.
+  - **Areas:** invoices, payments and clients are `orders` work (`areaOfPath`); invoice settings `owner`. **Where
+    clients' money goes is the owner's:** the form hides "How to pay" from assistants, and `saveInvoice` gives an
+    assistant's new document the settings' bank details and keeps an edit's stored ones, whatever the browser sends.
+    Only the owner's first invoice passes setup step 4. The client's page and its calls (`markInvoiceViewed`,
+    `acceptQuote`) count against `invoicePageIp`, and `getPublicInvoice` returns no ids.
+  - **Not built:** recurring invoices, automatic reminders, statements per client, proforma and credit notes (Ankara
+    had them), more PDF designs, TRA fiscal receipts (VFD), pay-through-Shopi (the Selcom and Azam Pesa proposals),
+    invoices in the weekly email and in Analytics, `/admin` counts (the founder stopped that edit on 20 Nov).
 - **"Write it for me" for the shop's line** (`writeBio` in `src/server/ai.ts`, `writeShopBio`, `WriteBio`): one
   sentence in the shop's language from its name, category, location and product names; what the seller typed is taken
   as facts; no delivery, price or quality claims. `BIO_MONTH` = 10 a month on any plan, counted in `ai_uses` as `bio`

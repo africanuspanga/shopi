@@ -37,6 +37,7 @@ import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppAnalyticsRouteImport } from './routes/app/analytics'
 import { Route as AppBookingsRouteImport } from './routes/app/bookings'
+import { Route as AppClientsRouteImport } from './routes/app/clients'
 import { Route as AppDiscountsRouteImport } from './routes/app/discounts'
 import { Route as AppDomainRouteImport } from './routes/app/domain'
 import { Route as AppHoursRouteImport } from './routes/app/hours'
@@ -47,6 +48,7 @@ import { Route as AppShopRouteImport } from './routes/app/shop'
 import { Route as AppStaffRouteImport } from './routes/app/staff'
 import { Route as BkCodeRouteImport } from './routes/bk/$code'
 import { Route as EmailOffRouteImport } from './routes/email/off'
+import { Route as ICodeRouteImport } from './routes/i/$code'
 import { Route as ImgSplatRouteImport } from './routes/img/$'
 import { Route as JoinCodeRouteImport } from './routes/join/$code'
 import { Route as OCodeRouteImport } from './routes/o/$code'
@@ -61,6 +63,10 @@ import { Route as AppBagsNewRouteImport } from './routes/app/bags/new'
 import { Route as AppCollectionsIndexRouteImport } from './routes/app/collections/index'
 import { Route as AppCollectionsIdRouteImport } from './routes/app/collections/$id'
 import { Route as AppCollectionsNewRouteImport } from './routes/app/collections/new'
+import { Route as AppInvoicesIndexRouteImport } from './routes/app/invoices/index'
+import { Route as AppInvoicesIdRouteImport } from './routes/app/invoices/$id'
+import { Route as AppInvoicesNewRouteImport } from './routes/app/invoices/new'
+import { Route as AppInvoicesSettingsRouteImport } from './routes/app/invoices/settings'
 import { Route as AppOrdersIndexRouteImport } from './routes/app/orders/index'
 import { Route as AppOrdersIdRouteImport } from './routes/app/orders/$id'
 import { Route as AppOrdersNewRouteImport } from './routes/app/orders/new'
@@ -68,6 +74,7 @@ import { Route as AppProductsIndexRouteImport } from './routes/app/products/inde
 import { Route as AppProductsIdRouteImport } from './routes/app/products/$id'
 import { Route as AppProductsImportRouteImport } from './routes/app/products/import'
 import { Route as AppProductsNewRouteImport } from './routes/app/products/new'
+import { Route as AppInvoicesEditIdRouteImport } from './routes/app/invoices/edit.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -209,6 +216,11 @@ const AppBookingsRoute = AppBookingsRouteImport.update({
   path: '/bookings',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppClientsRoute = AppClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppDiscountsRoute = AppDiscountsRouteImport.update({
   id: '/discounts',
   path: '/discounts',
@@ -257,6 +269,11 @@ const BkCodeRoute = BkCodeRouteImport.update({
 const EmailOffRoute = EmailOffRouteImport.update({
   id: '/email/off',
   path: '/email/off',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ICodeRoute = ICodeRouteImport.update({
+  id: '/i/$code',
+  path: '/i/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImgSplatRoute = ImgSplatRouteImport.update({
@@ -329,6 +346,26 @@ const AppCollectionsNewRoute = AppCollectionsNewRouteImport.update({
   path: '/collections/new',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppInvoicesIndexRoute = AppInvoicesIndexRouteImport.update({
+  id: '/invoices/',
+  path: '/invoices/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppInvoicesIdRoute = AppInvoicesIdRouteImport.update({
+  id: '/invoices/$id',
+  path: '/invoices/$id',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppInvoicesNewRoute = AppInvoicesNewRouteImport.update({
+  id: '/invoices/new',
+  path: '/invoices/new',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppInvoicesSettingsRoute = AppInvoicesSettingsRouteImport.update({
+  id: '/invoices/settings',
+  path: '/invoices/settings',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppOrdersIndexRoute = AppOrdersIndexRouteImport.update({
   id: '/orders/',
   path: '/orders/',
@@ -364,6 +401,11 @@ const AppProductsNewRoute = AppProductsNewRouteImport.update({
   path: '/products/new',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppInvoicesEditIdRoute = AppInvoicesEditIdRouteImport.update({
+  id: '/invoices/edit/$id',
+  path: '/invoices/edit/$id',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -391,6 +433,7 @@ export interface FileRoutesByFullPath {
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/bookings': typeof AppBookingsRoute
+  '/app/clients': typeof AppClientsRoute
   '/app/discounts': typeof AppDiscountsRoute
   '/app/domain': typeof AppDomainRoute
   '/app/hours': typeof AppHoursRoute
@@ -401,6 +444,7 @@ export interface FileRoutesByFullPath {
   '/app/staff': typeof AppStaffRoute
   '/bk/$code': typeof BkCodeRoute
   '/email/off': typeof EmailOffRoute
+  '/i/$code': typeof ICodeRoute
   '/img/$': typeof ImgSplatRoute
   '/join/$code': typeof JoinCodeRoute
   '/o/$code': typeof OCodeRoute
@@ -416,6 +460,9 @@ export interface FileRoutesByFullPath {
   '/app/bags/new': typeof AppBagsNewRoute
   '/app/collections/$id': typeof AppCollectionsIdRoute
   '/app/collections/new': typeof AppCollectionsNewRoute
+  '/app/invoices/$id': typeof AppInvoicesIdRoute
+  '/app/invoices/new': typeof AppInvoicesNewRoute
+  '/app/invoices/settings': typeof AppInvoicesSettingsRoute
   '/app/orders/$id': typeof AppOrdersIdRoute
   '/app/orders/new': typeof AppOrdersNewRoute
   '/app/products/$id': typeof AppProductsIdRoute
@@ -423,8 +470,10 @@ export interface FileRoutesByFullPath {
   '/app/products/new': typeof AppProductsNewRoute
   '/app/bags/': typeof AppBagsIndexRoute
   '/app/collections/': typeof AppCollectionsIndexRoute
+  '/app/invoices/': typeof AppInvoicesIndexRoute
   '/app/orders/': typeof AppOrdersIndexRoute
   '/app/products/': typeof AppProductsIndexRoute
+  '/app/invoices/edit/$id': typeof AppInvoicesEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -449,6 +498,7 @@ export interface FileRoutesByTo {
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/bookings': typeof AppBookingsRoute
+  '/app/clients': typeof AppClientsRoute
   '/app/discounts': typeof AppDiscountsRoute
   '/app/domain': typeof AppDomainRoute
   '/app/hours': typeof AppHoursRoute
@@ -459,6 +509,7 @@ export interface FileRoutesByTo {
   '/app/staff': typeof AppStaffRoute
   '/bk/$code': typeof BkCodeRoute
   '/email/off': typeof EmailOffRoute
+  '/i/$code': typeof ICodeRoute
   '/img/$': typeof ImgSplatRoute
   '/join/$code': typeof JoinCodeRoute
   '/o/$code': typeof OCodeRoute
@@ -474,6 +525,9 @@ export interface FileRoutesByTo {
   '/app/bags/new': typeof AppBagsNewRoute
   '/app/collections/$id': typeof AppCollectionsIdRoute
   '/app/collections/new': typeof AppCollectionsNewRoute
+  '/app/invoices/$id': typeof AppInvoicesIdRoute
+  '/app/invoices/new': typeof AppInvoicesNewRoute
+  '/app/invoices/settings': typeof AppInvoicesSettingsRoute
   '/app/orders/$id': typeof AppOrdersIdRoute
   '/app/orders/new': typeof AppOrdersNewRoute
   '/app/products/$id': typeof AppProductsIdRoute
@@ -481,8 +535,10 @@ export interface FileRoutesByTo {
   '/app/products/new': typeof AppProductsNewRoute
   '/app/bags': typeof AppBagsIndexRoute
   '/app/collections': typeof AppCollectionsIndexRoute
+  '/app/invoices': typeof AppInvoicesIndexRoute
   '/app/orders': typeof AppOrdersIndexRoute
   '/app/products': typeof AppProductsIndexRoute
+  '/app/invoices/edit/$id': typeof AppInvoicesEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -511,6 +567,7 @@ export interface FileRoutesById {
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/bookings': typeof AppBookingsRoute
+  '/app/clients': typeof AppClientsRoute
   '/app/discounts': typeof AppDiscountsRoute
   '/app/domain': typeof AppDomainRoute
   '/app/hours': typeof AppHoursRoute
@@ -521,6 +578,7 @@ export interface FileRoutesById {
   '/app/staff': typeof AppStaffRoute
   '/bk/$code': typeof BkCodeRoute
   '/email/off': typeof EmailOffRoute
+  '/i/$code': typeof ICodeRoute
   '/img/$': typeof ImgSplatRoute
   '/join/$code': typeof JoinCodeRoute
   '/o/$code': typeof OCodeRoute
@@ -536,6 +594,9 @@ export interface FileRoutesById {
   '/app/bags/new': typeof AppBagsNewRoute
   '/app/collections/$id': typeof AppCollectionsIdRoute
   '/app/collections/new': typeof AppCollectionsNewRoute
+  '/app/invoices/$id': typeof AppInvoicesIdRoute
+  '/app/invoices/new': typeof AppInvoicesNewRoute
+  '/app/invoices/settings': typeof AppInvoicesSettingsRoute
   '/app/orders/$id': typeof AppOrdersIdRoute
   '/app/orders/new': typeof AppOrdersNewRoute
   '/app/products/$id': typeof AppProductsIdRoute
@@ -543,8 +604,10 @@ export interface FileRoutesById {
   '/app/products/new': typeof AppProductsNewRoute
   '/app/bags/': typeof AppBagsIndexRoute
   '/app/collections/': typeof AppCollectionsIndexRoute
+  '/app/invoices/': typeof AppInvoicesIndexRoute
   '/app/orders/': typeof AppOrdersIndexRoute
   '/app/products/': typeof AppProductsIndexRoute
+  '/app/invoices/edit/$id': typeof AppInvoicesEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -574,6 +637,7 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/app/analytics'
     | '/app/bookings'
+    | '/app/clients'
     | '/app/discounts'
     | '/app/domain'
     | '/app/hours'
@@ -584,6 +648,7 @@ export interface FileRouteTypes {
     | '/app/staff'
     | '/bk/$code'
     | '/email/off'
+    | '/i/$code'
     | '/img/$'
     | '/join/$code'
     | '/o/$code'
@@ -599,6 +664,9 @@ export interface FileRouteTypes {
     | '/app/bags/new'
     | '/app/collections/$id'
     | '/app/collections/new'
+    | '/app/invoices/$id'
+    | '/app/invoices/new'
+    | '/app/invoices/settings'
     | '/app/orders/$id'
     | '/app/orders/new'
     | '/app/products/$id'
@@ -606,8 +674,10 @@ export interface FileRouteTypes {
     | '/app/products/new'
     | '/app/bags/'
     | '/app/collections/'
+    | '/app/invoices/'
     | '/app/orders/'
     | '/app/products/'
+    | '/app/invoices/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -632,6 +702,7 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/app/analytics'
     | '/app/bookings'
+    | '/app/clients'
     | '/app/discounts'
     | '/app/domain'
     | '/app/hours'
@@ -642,6 +713,7 @@ export interface FileRouteTypes {
     | '/app/staff'
     | '/bk/$code'
     | '/email/off'
+    | '/i/$code'
     | '/img/$'
     | '/join/$code'
     | '/o/$code'
@@ -657,6 +729,9 @@ export interface FileRouteTypes {
     | '/app/bags/new'
     | '/app/collections/$id'
     | '/app/collections/new'
+    | '/app/invoices/$id'
+    | '/app/invoices/new'
+    | '/app/invoices/settings'
     | '/app/orders/$id'
     | '/app/orders/new'
     | '/app/products/$id'
@@ -664,8 +739,10 @@ export interface FileRouteTypes {
     | '/app/products/new'
     | '/app/bags'
     | '/app/collections'
+    | '/app/invoices'
     | '/app/orders'
     | '/app/products'
+    | '/app/invoices/edit/$id'
   id:
     | '__root__'
     | '/'
@@ -693,6 +770,7 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/app/analytics'
     | '/app/bookings'
+    | '/app/clients'
     | '/app/discounts'
     | '/app/domain'
     | '/app/hours'
@@ -703,6 +781,7 @@ export interface FileRouteTypes {
     | '/app/staff'
     | '/bk/$code'
     | '/email/off'
+    | '/i/$code'
     | '/img/$'
     | '/join/$code'
     | '/o/$code'
@@ -718,6 +797,9 @@ export interface FileRouteTypes {
     | '/app/bags/new'
     | '/app/collections/$id'
     | '/app/collections/new'
+    | '/app/invoices/$id'
+    | '/app/invoices/new'
+    | '/app/invoices/settings'
     | '/app/orders/$id'
     | '/app/orders/new'
     | '/app/products/$id'
@@ -725,8 +807,10 @@ export interface FileRouteTypes {
     | '/app/products/new'
     | '/app/bags/'
     | '/app/collections/'
+    | '/app/invoices/'
     | '/app/orders/'
     | '/app/products/'
+    | '/app/invoices/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -753,6 +837,7 @@ export interface RootRouteChildren {
   ApiUploadRoute: typeof ApiUploadRoute
   BkCodeRoute: typeof BkCodeRoute
   EmailOffRoute: typeof EmailOffRoute
+  ICodeRoute: typeof ICodeRoute
   ImgSplatRoute: typeof ImgSplatRoute
   JoinCodeRoute: typeof JoinCodeRoute
   OCodeRoute: typeof OCodeRoute
@@ -956,6 +1041,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBookingsRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/clients': {
+      id: '/app/clients'
+      path: '/clients'
+      fullPath: '/app/clients'
+      preLoaderRoute: typeof AppClientsRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/discounts': {
       id: '/app/discounts'
       path: '/discounts'
@@ -1024,6 +1116,13 @@ declare module '@tanstack/react-router' {
       path: '/email/off'
       fullPath: '/email/off'
       preLoaderRoute: typeof EmailOffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/i/$code': {
+      id: '/i/$code'
+      path: '/i/$code'
+      fullPath: '/i/$code'
+      preLoaderRoute: typeof ICodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/img/$': {
@@ -1124,6 +1223,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCollectionsNewRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/invoices/': {
+      id: '/app/invoices/'
+      path: '/invoices'
+      fullPath: '/app/invoices/'
+      preLoaderRoute: typeof AppInvoicesIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/invoices/$id': {
+      id: '/app/invoices/$id'
+      path: '/invoices/$id'
+      fullPath: '/app/invoices/$id'
+      preLoaderRoute: typeof AppInvoicesIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/invoices/new': {
+      id: '/app/invoices/new'
+      path: '/invoices/new'
+      fullPath: '/app/invoices/new'
+      preLoaderRoute: typeof AppInvoicesNewRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/invoices/settings': {
+      id: '/app/invoices/settings'
+      path: '/invoices/settings'
+      fullPath: '/app/invoices/settings'
+      preLoaderRoute: typeof AppInvoicesSettingsRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/orders/': {
       id: '/app/orders/'
       path: '/orders'
@@ -1173,6 +1300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProductsNewRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/invoices/edit/$id': {
+      id: '/app/invoices/edit/$id'
+      path: '/invoices/edit/$id'
+      fullPath: '/app/invoices/edit/$id'
+      preLoaderRoute: typeof AppInvoicesEditIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
   }
 }
 
@@ -1217,6 +1351,7 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 interface AppRouteRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppBookingsRoute: typeof AppBookingsRoute
+  AppClientsRoute: typeof AppClientsRoute
   AppDiscountsRoute: typeof AppDiscountsRoute
   AppDomainRoute: typeof AppDomainRoute
   AppHoursRoute: typeof AppHoursRoute
@@ -1230,6 +1365,9 @@ interface AppRouteRouteChildren {
   AppBagsNewRoute: typeof AppBagsNewRoute
   AppCollectionsIdRoute: typeof AppCollectionsIdRoute
   AppCollectionsNewRoute: typeof AppCollectionsNewRoute
+  AppInvoicesIdRoute: typeof AppInvoicesIdRoute
+  AppInvoicesNewRoute: typeof AppInvoicesNewRoute
+  AppInvoicesSettingsRoute: typeof AppInvoicesSettingsRoute
   AppOrdersIdRoute: typeof AppOrdersIdRoute
   AppOrdersNewRoute: typeof AppOrdersNewRoute
   AppProductsIdRoute: typeof AppProductsIdRoute
@@ -1237,13 +1375,16 @@ interface AppRouteRouteChildren {
   AppProductsNewRoute: typeof AppProductsNewRoute
   AppBagsIndexRoute: typeof AppBagsIndexRoute
   AppCollectionsIndexRoute: typeof AppCollectionsIndexRoute
+  AppInvoicesIndexRoute: typeof AppInvoicesIndexRoute
   AppOrdersIndexRoute: typeof AppOrdersIndexRoute
   AppProductsIndexRoute: typeof AppProductsIndexRoute
+  AppInvoicesEditIdRoute: typeof AppInvoicesEditIdRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppBookingsRoute: AppBookingsRoute,
+  AppClientsRoute: AppClientsRoute,
   AppDiscountsRoute: AppDiscountsRoute,
   AppDomainRoute: AppDomainRoute,
   AppHoursRoute: AppHoursRoute,
@@ -1257,6 +1398,9 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppBagsNewRoute: AppBagsNewRoute,
   AppCollectionsIdRoute: AppCollectionsIdRoute,
   AppCollectionsNewRoute: AppCollectionsNewRoute,
+  AppInvoicesIdRoute: AppInvoicesIdRoute,
+  AppInvoicesNewRoute: AppInvoicesNewRoute,
+  AppInvoicesSettingsRoute: AppInvoicesSettingsRoute,
   AppOrdersIdRoute: AppOrdersIdRoute,
   AppOrdersNewRoute: AppOrdersNewRoute,
   AppProductsIdRoute: AppProductsIdRoute,
@@ -1264,8 +1408,10 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppProductsNewRoute: AppProductsNewRoute,
   AppBagsIndexRoute: AppBagsIndexRoute,
   AppCollectionsIndexRoute: AppCollectionsIndexRoute,
+  AppInvoicesIndexRoute: AppInvoicesIndexRoute,
   AppOrdersIndexRoute: AppOrdersIndexRoute,
   AppProductsIndexRoute: AppProductsIndexRoute,
+  AppInvoicesEditIdRoute: AppInvoicesEditIdRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
@@ -1296,6 +1442,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUploadRoute: ApiUploadRoute,
   BkCodeRoute: BkCodeRoute,
   EmailOffRoute: EmailOffRoute,
+  ICodeRoute: ICodeRoute,
   ImgSplatRoute: ImgSplatRoute,
   JoinCodeRoute: JoinCodeRoute,
   OCodeRoute: OCodeRoute,

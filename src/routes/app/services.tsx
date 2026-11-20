@@ -116,7 +116,8 @@ function Services() {
             </ul>
           </section>
 
-          {manages && <FirstPage kind={kind} onChange={() => router.invalidate()} />}
+          {/* A business that sends invoices leads with them; its link's order isn't a products-or-services choice. */}
+          {manages && kind !== 'invoices' && <FirstPage kind={kind} onChange={() => router.invalidate()} />}
         </div>
       )}
 

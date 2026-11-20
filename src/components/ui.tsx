@@ -1,8 +1,9 @@
 import { Link, useRouter } from '@tanstack/react-router'
-import { ArrowLeft, ChevronRight, ImageIcon, X } from 'lucide-react'
+import { ArrowLeft, Check, ChevronRight, CircleCheck, CircleHelp, Copy, ImageIcon, TriangleAlert, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { STATUS_LABEL, imgUrl, type OrderStatus } from '#/lib/format'
 import { BOOKING_LABEL, type BookingStatus } from '#/lib/booking'
+import { STATE_LABEL, type InvoiceState } from '#/lib/invoice'
 import { LANGUAGES, SWAHILI_ENABLED, useLang, useT, type Lang } from '#/lib/i18n'
 import { setLang } from '#/lib/api/session'
 
@@ -231,6 +232,17 @@ export function StatusPill({ status }: { status: OrderStatus }) {
 /** A booking's status, drawn like an order's: only a request waiting for the business asks for attention. */
 export function BookingPill({ status }: { status: BookingStatus }) {
   return <Pill s={BOOKING_LABEL[status]} quiet={status === 'cancelled' || status === 'noshow'} />
+}
+
+/**
+ * An invoice's or quote's state (src/lib/invoice.ts). What needs the business asks for attention, in the signal colour:
+ * a payment SMS from the client to check (`check`), or an accepted quote waiting for its invoice.
+ */
+export function InvoicePill({ state, check = false }: { state: InvoiceState; check?: boolean }) {
+  if (check) return <Pill s={{ label: 'Check payment', tone: 'act' }} quiet={false} />
+  const s = STATE_LABEL[state]
+  const tone = s.tone === 'hot' ? 'act' : s.tone === 'quiet' ? 'done' : s.tone
+  return <Pill s={{ label: s.label, tone }} quiet={s.tone === 'quiet'} />
 }
 
 function Pill({ s, quiet }: { s: { label: string; tone: string }; quiet: boolean }) {
@@ -650,5 +662,36 @@ export function Wordmark({
       <path transform="translate(379.01 0)" d="M0 100V25.93H26.75V100Z" />
       <circle cx="392.38" cy="8.5" r="13.38" fill={dot} />
     </svg>
+  )
+}
+
+/** One line of what Shopi read from a payment SMS: a check, a warning or a question mark (orders and invoices). */
+export function CheckRow({ state, children }: { state: 'ok' | 'bad' | 'unknown'; children: ReactNode }) {
+  const Icon = state === 'ok' ? CircleCheck : state === 'bad' ? TriangleAlert : CircleHelp
+  const color = state === 'ok' ? 'text-ok' : state === 'bad' ? 'text-bad' : 'text-faint'
+  return (
+    <li className="flex items-start gap-2.5">
+      <Icon size={18} strokeWidth={1.75} className={`mt-px shrink-0 ${color}`} />
+      <span className="min-w-0">{children}</span>
+    </li>
+  )
+}
+
+/** A value to copy, with its label: a Lipa Namba, an amount (the order page and the invoice page). */
+export function CopyRow({ label, value, onCopy, copied, big = false }: { label: string; value: string; onCopy?: () => void; copied?: boolean; big?: boolean }) {
+  const t = useT()
+  return (
+    <div className="flex items-center justify-between gap-4 py-4">
+      <div className="min-w-0">
+        <p className="text-13 text-muted">{label}</p>
+        <p className={`mt-1 truncate font-mono font-medium ${big ? 'text-24 tracking-[0.04em]' : 'text-17'}`}>{value}</p>
+      </div>
+      {onCopy && (
+        <button type="button" className={`btn btn-sm shrink-0 ${copied ? '' : 'btn-ghost'}`} onClick={onCopy}>
+          {copied ? <Check size={16} strokeWidth={2.25} /> : <Copy size={16} strokeWidth={1.75} />}
+          {copied ? t('Copied') : t('Copy')}
+        </button>
+      )}
+    </div>
   )
 }

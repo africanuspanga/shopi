@@ -1,8 +1,8 @@
 import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
-import { ArrowUpRight, Bike, ChevronRight, CircleCheck, CircleHelp, MapPin, Phone, ShoppingBag, TriangleAlert } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { ArrowUpRight, Bike, ChevronRight, FileText, MapPin, Phone, ShoppingBag } from 'lucide-react'
+import { useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
-import { CardHead, Img, Page, StatusPill, TopBar } from '#/components/ui'
+import { CardHead, CheckRow, Img, Page, StatusPill, TopBar } from '#/components/ui'
 import { getOrder, setOrderStatus } from '#/lib/api/merchant'
 import { localPhone, optionText, timeAgo, tzs, waLink, type OrderStatus, PAYMENT_LABEL } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
@@ -197,6 +197,10 @@ function OrderDetail() {
                   <Bike size={16} strokeWidth={1.75} /> {t('Send to rider on WhatsApp')}
                 </a>
               )}
+              {/* A buyer who pays later, or a company that needs paperwork (roadmap `v-invoices`). */}
+              <Link to="/app/invoices/new" search={{ order: o.id }} className="btn btn-quiet btn-sm col-span-2 h-11">
+                <FileText size={16} strokeWidth={1.75} /> {t('Make an invoice')}
+              </Link>
             </div>
           </section>
           )}
@@ -265,13 +269,3 @@ function Line({ label, value }: { label: string; value: string }) {
   )
 }
 
-function CheckRow({ state, children }: { state: 'ok' | 'bad' | 'unknown'; children: ReactNode }) {
-  const Icon = state === 'ok' ? CircleCheck : state === 'bad' ? TriangleAlert : CircleHelp
-  const color = state === 'ok' ? 'text-ok' : state === 'bad' ? 'text-bad' : 'text-faint'
-  return (
-    <li className="flex items-start gap-2.5">
-      <Icon size={18} strokeWidth={1.75} className={`mt-px shrink-0 ${color}`} />
-      <span className="min-w-0">{children}</span>
-    </li>
-  )
-}

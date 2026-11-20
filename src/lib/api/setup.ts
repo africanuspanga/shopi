@@ -6,6 +6,7 @@ import { aiReady } from '#/server/ai'
 import { NETWORKS, normalizePhone } from '#/lib/format'
 import { SETUP_STEPS, nextSetupStep, type SetupOutcome } from '#/lib/setup'
 import { parseBook } from '#/lib/booking'
+import { parseBill } from '#/lib/invoice'
 
 /** The five-step setup's server side (src/lib/setup.ts, src/routes/onboard.tsx). */
 
@@ -24,9 +25,12 @@ export type SetupShop = {
   lipa_name: string
   cod_enabled: number
   setup_step: number | null
-  /** 'products' or 'services': what the business chose at step 1. */
+  /** 'products', 'services' or 'invoices': what the business chose at step 1. */
   kind: string
   book: string | null
+  /** Invoice settings (src/lib/invoice.ts, `BillSettings`) and the TIN, for a business that sends invoices. */
+  bill: string | null
+  tin: string
 }
 
 export type SetupProduct = { id: string; name: string; price: number; image: string | null }
@@ -36,7 +40,7 @@ export type SetupService = { id: string; name: string; duration: number; price: 
 export const getSetup = createServerFn({ method: 'GET' }).handler(async () => {
   const user = await requireUser()
   const shop = await first<SetupShop>(
-    `SELECT id, slug, name, category, logo_key, lang, whatsapp, bio, location, lipa_number, lipa_network, lipa_name, cod_enabled, setup_step, kind, book
+    `SELECT id, slug, name, category, logo_key, lang, whatsapp, bio, location, lipa_number, lipa_network, lipa_name, cod_enabled, setup_step, kind, book, bill, tin
      FROM shops WHERE owner_id = ? LIMIT 1`,
     user.id,
   )
@@ -49,8 +53,13 @@ export const getSetup = createServerFn({ method: 'GET' }).handler(async () => {
   const count = await first<{ n: number }>('SELECT COUNT(*) n FROM products WHERE shop_id = ? AND active = 1', shop.id)
   const products = rows.map((p) => ({ id: p.id, name: p.name, price: p.price, image: (JSON.parse(p.images) as string[])[0] ?? null }))
   const services = await all<SetupService>('SELECT id, name, duration, price, price_from FROM services WHERE shop_id = ? AND active = 1 ORDER BY sort, created_at LIMIT 4', shop.id)
+  const invoices = (await first<{ n: number }>('SELECT COUNT(*) n FROM invoices WHERE shop_id = ?', shop.id))?.n ?? 0
+  const bill = parseBill(shop.bill)
   return {
-    step: nextSetupStep({ setup: shop.setup_step, products: count?.n ?? 0, lipa: !!shop.lipa_number, kind: shop.kind, services: services.length, hours: !!parseBook(shop.book) }),
+    step: nextSetupStep({
+      setup: shop.setup_step, products: count?.n ?? 0, lipa: !!shop.lipa_number, kind: shop.kind, services: services.length, hours: !!parseBook(shop.book),
+      bill: !!bill, bank: !!bill?.bank, invoices,
+    }),
     shop,
     products,
     services,

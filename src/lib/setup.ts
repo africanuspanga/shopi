@@ -14,14 +14,29 @@ export type SetupOutcome = 'done' | 'skip'
 /**
  * The step to show, or null when the shop has finished the setup or never had it. A business that sells services
  * (roadmap `v-services`) is asked for its first service at step 2 and its working hours at step 3, where a shop that
- * sells products is asked for a product and how buyers pay.
+ * sells products is asked for a product and how buyers pay. A business that sends invoices (roadmap `v-invoices`) is asked
+ * how it appears on invoices at step 2, how clients pay it at step 3, and sends its first invoice at step 4.
  */
-export function nextSetupStep(s: { setup: number | null; products: number; lipa: boolean; kind?: string; services?: number; hours?: boolean }): number | null {
+export function nextSetupStep(s: {
+  setup: number | null
+  products: number
+  lipa: boolean
+  kind?: string
+  services?: number
+  hours?: boolean
+  /** A business that sends invoices (roadmap `v-invoices`): its invoice settings saved, bank details given, invoices made. */
+  bill?: boolean
+  bank?: boolean
+  invoices?: number
+}): number | null {
   if (s.setup == null || s.setup >= SETUP_STEPS) return null
   const serves = s.kind === 'services'
+  const bills = s.kind === 'invoices'
   let next = Math.max(1, s.setup + 1)
-  if (next === 2 && (serves ? (s.services ?? 0) > 0 : s.products > 0)) next = 3
-  if (next === 3 && (serves ? !!s.hours : s.lipa)) next = 4
+  if (next === 2 && (bills ? !!s.bill : serves ? (s.services ?? 0) > 0 : s.products > 0)) next = 3
+  if (next === 3 && (bills ? s.lipa || !!s.bank : serves ? !!s.hours : s.lipa)) next = 4
+  // A business that sends invoices sends its first one at step 4 (where a shop sees its link go live).
+  if (next === 4 && bills && (s.invoices ?? 0) > 0) next = 5
   return next
 }
 

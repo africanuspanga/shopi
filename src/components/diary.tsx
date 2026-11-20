@@ -1,5 +1,5 @@
-import { useRouter } from '@tanstack/react-router'
-import { CalendarClock, Check, Copy, Phone } from 'lucide-react'
+import { Link, useRouter } from '@tanstack/react-router'
+import { CalendarClock, Check, Copy, FileText, Phone } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { TimeGrid } from '#/components/booking'
 import { WhatsAppMark } from '#/components/brand-icons'
@@ -475,6 +475,12 @@ function Booking({ b, shop, onClose }: { b: DiaryBooking; shop: DiaryShop; onClo
           <button type="button" className="btn btn-quiet w-full" disabled={busy} onClick={() => setMoving(true)}>
             <CalendarClock size={16} strokeWidth={1.75} /> {t('Change the time')}
           </button>
+        )}
+        {/* A client or company that wants paperwork, or pays after the visit (roadmap `v-invoices`). */}
+        {status !== 'cancelled' && (
+          <Link to="/app/invoices/new" search={{ booking: b.id }} className="btn btn-quiet w-full">
+            <FileText size={16} strokeWidth={1.75} /> {t('Make an invoice')}
+          </Link>
         )}
         {status === 'confirmed' && (
           <button

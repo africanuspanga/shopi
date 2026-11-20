@@ -1,11 +1,12 @@
 import { createServerFn } from '@tanstack/react-start'
 import { requireShop, requireUser } from '#/server/auth'
 import { allows } from '#/lib/staff'
+import { homeInvoices } from '#/server/invoices'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
 import { removePhotos } from '#/server/media'
 import { cleanProduct, uniqueProductSlug, type ProductInput } from '#/server/products'
 import { moveStock } from '#/server/stock'
-import { ALL_CATEGORIES, RESERVED_SLUGS, imageOf, normalizePhone, optionKind, parseSizes, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink, tinDigits } from '#/lib/format'
+import { ALL_CATEGORIES, RESERVED_SLUGS, asShopKind, imageOf, normalizePhone, optionKind, parseSizes, slugify, type OrderStatus, type PaymentMethod, type Size, mapsLink, tinDigits } from '#/lib/format'
 import { shopPlan } from '#/server/plan'
 import { canPay } from '#/server/billing'
 import { FREE_PRODUCTS, can } from '#/lib/plans'
@@ -69,8 +70,9 @@ export const checkSlug = createServerFn({ method: 'GET' })
 export const createShop = createServerFn({ method: 'POST' })
   .validator(
     (d: { name: string; slug: string; category: string; kind?: string; whatsapp: string; lang: string; instagram?: string; tiktok?: string; facebook?: string; seconds?: number }) => ({
-      // What the business sells: products (ordered) or services (booked by time). It may add the other later.
-      kind: d.kind === 'services' ? 'services' : 'products',
+      // What the business sells: products (ordered), services (booked by time) or invoices (billed). It may add the
+      // others later (asShopKind, src/lib/format.ts).
+      kind: asShopKind(d.kind),
       name: str(d.name, 60),
       slug: slugify(d.slug),
       category: ALL_CATEGORIES.some((c) => c.id === d.category) ? d.category : 'other',
@@ -100,10 +102,11 @@ export const createShop = createServerFn({ method: 'POST' })
       // One login, one shop: the shop isn't made if this login joined a shop as an assistant meanwhile.
       db()
         .prepare(
-          `INSERT INTO shops (id, owner_id, slug, name, category, whatsapp, lang, instagram, tiktok, facebook, created_at, setup_step, kind)
-           SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 1, ?12 WHERE NOT EXISTS (SELECT 1 FROM shop_staff WHERE user_id = ?2)`,
+          // A business that sends invoices doesn't deliver: cash on delivery starts off (Shop settings turns it on).
+          `INSERT INTO shops (id, owner_id, slug, name, category, whatsapp, lang, instagram, tiktok, facebook, created_at, setup_step, kind, cod_enabled)
+           SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 1, ?12, ?13 WHERE NOT EXISTS (SELECT 1 FROM shop_staff WHERE user_id = ?2)`,
         )
-        .bind(id, user.id, data.slug, data.name, data.category, data.whatsapp || user.phone, data.lang, data.instagram, data.tiktok, data.facebook, t, data.kind),
+        .bind(id, user.id, data.slug, data.name, data.category, data.whatsapp || user.phone, data.lang, data.instagram, data.tiktok, data.facebook, t, data.kind, data.kind === 'invoices' ? 0 : 1),
       db()
         .prepare('INSERT INTO setup_steps (shop_id, step, outcome, seconds, created_at) SELECT ?1, 1, ?2, ?3, ?4 WHERE EXISTS (SELECT 1 FROM shops WHERE id = ?1)')
         .bind(id, 'done', data.seconds, t),
@@ -238,16 +241,19 @@ export const updateShop = createServerFn({ method: 'POST' })
 
 /**
  * What the menu shows on every screen: payments to check and orders to send; for a business with services, how many
- * it lists (the menu shows Bookings once there is one), today's bookings and requests waiting to be confirmed.
+ * it lists (the menu shows Bookings once there is one), today's bookings and requests waiting to be confirmed; payment
+ * proofs on invoices waiting for the business (roadmap `v-invoices`).
  */
 export const getNavCounts = createServerFn({ method: 'GET' }).handler(async () => {
   const { shop, role } = await requireShop('any')
   const services = (await first<{ n: number }>('SELECT COUNT(*) n FROM services WHERE shop_id = ?', shop.id))?.n ?? 0
   // A Products assistant doesn't handle orders or the diary, so their menu counts none (src/lib/staff.ts).
-  if (!allows(role, 'orders')) return { toCheck: 0, toSend: 0, openBags: 0, services, toConfirm: 0, today: 0 }
+  if (!allows(role, 'orders')) return { toCheck: 0, toSend: 0, openBags: 0, services, toConfirm: 0, today: 0, invoiceChecks: 0 }
   const day = new Date(now() + 3 * 3600_000).toISOString().slice(0, 10)
-  const row = await first<{ to_check: number | null; to_send: number | null; open_bags: number | null; to_confirm: number; today: number }>(
+  const row = await first<{ to_check: number | null; to_send: number | null; open_bags: number | null; to_confirm: number; today: number; invoice_checks: number }>(
     `SELECT SUM(status = 'payment_claimed') to_check, SUM(status = 'confirmed') to_send,
+       (SELECT COUNT(*) FROM invoice_payments p JOIN invoices i ON i.id = p.invoice_id
+          WHERE p.shop_id = ?1 AND p.status = 'claimed' AND i.status != 'cancelled') invoice_checks,
        (SELECT COUNT(*) FROM bag_links WHERE shop_id = ?1 AND status = 'open' AND expires_at > ?2) open_bags,
        (SELECT COUNT(*) FROM bookings WHERE shop_id = ?1 AND status = 'requested' AND start_at > ?2) to_confirm,
        (SELECT COUNT(*) FROM bookings WHERE shop_id = ?1 AND day = ?3 AND status IN ('requested','confirmed')) today
@@ -256,7 +262,7 @@ export const getNavCounts = createServerFn({ method: 'GET' }).handler(async () =
     now(),
     day,
   )
-  return { toCheck: row?.to_check ?? 0, toSend: row?.to_send ?? 0, openBags: row?.open_bags ?? 0, services, toConfirm: row?.to_confirm ?? 0, today: row?.today ?? 0 }
+  return { toCheck: row?.to_check ?? 0, toSend: row?.to_send ?? 0, openBags: row?.open_bags ?? 0, services, toConfirm: row?.to_confirm ?? 0, today: row?.today ?? 0, invoiceChecks: row?.invoice_checks ?? 0 }
 })
 
 /** Home's diary card: today's bookings in time order, requests to confirm and tomorrow's count. */
@@ -413,6 +419,8 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
     score: scoreFacts(score!),
     /** Today's diary, for a business that takes bookings (roadmap `v-services`); null for a shop with no services. */
     diary: await homeDiary(shop.id),
+    /** What clients owe on invoices (roadmap `v-invoices`); null for a shop that never made one and doesn't bill first. */
+    invoices: await homeInvoices(shop.id, (await first<{ kind: string }>('SELECT kind FROM shops WHERE id = ?', shop.id))?.kind ?? 'products', new Date(now() + 3 * 3600_000).toISOString().slice(0, 10)),
     /** Whether "Write it for me" exists here, for the next step's words. */
     ai: aiReady(),
     /** The seller's email (o-email): Home asks for one while there is none, once email is open to them. */

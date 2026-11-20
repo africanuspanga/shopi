@@ -1,7 +1,8 @@
 import { Link, createFileRoute, redirect, useRouteContext } from '@tanstack/react-router'
-import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, FileSpreadsheet, Gem, Plus, QrCode as QrCodeIcon, ReceiptText, Share2 } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, FilePlus2, FileSpreadsheet, Gem, Plus, QrCode as QrCodeIcon, ReceiptText, Share2 } from 'lucide-react'
 import { useState } from 'react'
-import { CardHead, Delta, Empty, Img, LangSwitch, Money, Notice, Page, PageHead, PhoneBar, scrubIndex, Sheet, ShopAvatar, Stat, StatusPill, Toast, useEntrance } from '#/components/ui'
+import { CardHead, Delta, Empty, Img, InvoicePill, LangSwitch, Money, Notice, Page, PageHead, PhoneBar, scrubIndex, Sheet, ShopAvatar, Stat, StatusPill, Toast, useEntrance } from '#/components/ui'
+import { clientTitle, displayNumber, docDate, money } from '#/lib/invoice'
 import { BioSteps } from '#/components/setup'
 import { PhoneAlertsCard } from '#/components/phone-app'
 import { EmailRow } from '#/components/email'
@@ -52,6 +53,8 @@ function Dashboard() {
   // A business that sells services (roadmap `v-services`) starts from its first service where a shop starts from its
   // first product, and reads its diary first.
   const serves = !!d.score.serves
+  // A business that sends invoices (roadmap `v-invoices`): Home leads with what clients owe it, not a shop score.
+  const bills = shop.kind === 'invoices'
   const hasProducts = serves ? (d.score.services ?? 0) > 0 || d.hasProducts : d.hasProducts
   const hasOrders = d.recent.length > 0
   const vs7 = t('vs the 7 days before')
@@ -119,8 +122,16 @@ function Dashboard() {
 
       {/* What to do next, as one stack: the shop score (or the first product), then the quiet rows (Notice). */}
       <div className={`${rise} space-y-3`}>
+        {/* A business that sends invoices reads what it is owed first; any shop with unpaid invoices sees them too. */}
+        {d.invoices && (bills || d.invoices.owed.length > 0) && <OwedCard inv={d.invoices} />}
         {d.diary && hasProducts && <DiaryCard diary={d.diary} />}
-        {hasProducts ? (
+        {bills ? (
+          <>
+            <PlanRow plan={d.plan} />
+            <PhoneAlertsCard />
+            <EmailRow state={d.email} />
+          </>
+        ) : hasProducts ? (
           <>
             <ScoreCard facts={sharedNow ? { ...d.score, shared: true } : d.score} ai={d.ai} compact={hasOrders} onShare={share} onCopy={copyLink} copied={copied} />
             <PlanRow plan={d.plan} />
@@ -464,6 +475,84 @@ function SalesChart({ days, total, className = '' }: { days: { day: number; tota
         </div>
       </div>
       <p className="sr-only">{t('Total this week: {total}', { total: tzs(total) })}</p>
+    </section>
+  )
+}
+
+type HomeInvoices = NonNullable<Awaited<ReturnType<typeof getDashboard>>['invoices']>
+
+/**
+ * What clients owe the business on its invoices (roadmap `v-invoices`): the total per currency, what is overdue,
+ * payment proofs to check, and the oldest unpaid invoices first. With none sent yet, the way to the first one.
+ */
+function OwedCard({ inv }: { inv: HomeInvoices }) {
+  const t = useT()
+  const lang = useLang()
+  const note = [
+    inv.checks ? t(inv.checks === 1 ? '{n} payment to check' : '{n} payments to check', { n: inv.checks }) : '',
+    inv.overdue ? t('{n} overdue', { n: inv.overdue }) : '',
+    inv.drafts ? t(inv.drafts === 1 ? '{n} draft not sent yet' : '{n} drafts not sent yet', { n: inv.drafts }) : '',
+  ].filter(Boolean)
+  if (!inv.made) {
+    return (
+      <section className="card p-5 md:p-6">
+        <CardHead title={t('Send your first invoice')} sub={t('Write it in a minute and send it on WhatsApp. Your client pays from the link, and you see when they open it.')} />
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Link to="/app/invoices/new" className="btn btn-sm h-10">
+            <FilePlus2 size={16} strokeWidth={1.75} /> {t('New invoice')}
+          </Link>
+          <Link to="/app/invoices/new" search={{ kind: 'quote' }} className="btn btn-ghost btn-sm h-10">
+            {t('New quote')}
+          </Link>
+        </div>
+      </section>
+    )
+  }
+  return (
+    <section className="card overflow-hidden">
+      <div className="px-5 pt-5 md:px-6">
+        <CardHead
+          icon={inv.checks > 0 ? <span className="signal" aria-hidden /> : undefined}
+          title={t('Owed to you')}
+          sub={note.length ? note.join(' · ') : inv.owed.length ? t('Sent and waiting for payment') : t('Nothing owed right now')}
+          right={
+            <Link to="/app/invoices" className="text-13 text-muted transition-colors hover:text-ink">
+              {t('All invoices')}
+            </Link>
+          }
+        />
+        <p className="tnum mt-3 text-32 font-semibold tracking-tight">{inv.owed.length ? inv.owed.map((o) => money(o.cents, o.currency)).join(' + ') : money(0, 'TZS')}</p>
+      </div>
+      {inv.open.length > 0 ? (
+        <ul className="mt-3 divide-y divide-line">
+          {inv.open.map((i) => (
+            <li key={i.id}>
+              <Link to="/app/invoices/$id" params={{ id: i.id }} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-page md:px-6">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-15 font-medium">{clientTitle(i.client, t)}</span>
+                  <span className="flex items-center gap-2 text-13 text-muted">
+                    <InvoicePill state={i.state} check={i.checks > 0} />
+                    <span className="truncate">{i.due_day ? t('Due {date}', { date: docDate(i.due_day, lang) }) : displayNumber(i.kind, i.number)}</span>
+                  </span>
+                </span>
+                <span className="tnum shrink-0 text-15">{money(i.balance, i.currency)}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="pb-5" />
+      )}
+      <div className="flex flex-wrap gap-2 border-t border-line px-5 py-3 md:px-6">
+        <Link to="/app/invoices/new" className="btn btn-sm h-9">
+          <FilePlus2 size={16} strokeWidth={1.75} /> {t('New invoice')}
+        </Link>
+        {inv.more > 0 && (
+          <Link to="/app/invoices" search={{ show: 'owed' }} className="btn btn-ghost btn-sm h-9">
+            {t('{n} more', { n: inv.more })}
+          </Link>
+        )}
+      </div>
     </section>
   )
 }

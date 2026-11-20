@@ -4,7 +4,7 @@ import { all, db, first, newId, now, run } from '#/server/db'
 import { removePhotos } from '#/server/media'
 import { BOOKING_COLS, dayLoad, insertBooking, moveBookingTo, shopBook, type BookingRow, type ServiceRow } from '#/server/bookings'
 import { passStep } from '#/server/setup'
-import { normalizePhone } from '#/lib/format'
+import { asShopKind, normalizePhone } from '#/lib/format'
 import {
   AHEAD_CHOICES, DURATION_MAX, SEATS_MAX, SERVICES_MAX, addDays, dayOf, freeTimes, hasPlace, isDay, parseBook, weekdayOf,
   type BookSettings, type BookingStatus,
@@ -41,7 +41,7 @@ export const getMyServices = createServerFn({ method: 'GET' }).handler(async () 
   return {
     services: rows.map((r): MyService => ({ ...r, images: JSON.parse(r.images) as string[] })),
     book: parseBook(s?.book),
-    kind: s?.kind === 'services' ? ('services' as const) : ('products' as const),
+    kind: asShopKind(s?.kind),
   }
 })
 
@@ -125,7 +125,7 @@ export const getBookSettings = createServerFn({ method: 'GET' }).handler(async (
     all<DayOff>('SELECT id, day, start_min, end_min, note FROM book_blocks WHERE shop_id = ? AND day >= ? ORDER BY day, start_min', shop.id, dayOf(now())),
     first<{ kind: string }>('SELECT kind FROM shops WHERE id = ?', shop.id),
   ])
-  return { book, blocks, kind: kind?.kind === 'services' ? ('services' as const) : ('products' as const) }
+  return { book, blocks, kind: asShopKind(kind?.kind) }
 })
 
 export const saveBookSettings = createServerFn({ method: 'POST' })

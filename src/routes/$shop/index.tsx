@@ -1,5 +1,5 @@
 import { createFileRoute, getRouteApi } from '@tanstack/react-router'
-import { MapPin, Share2, Store } from 'lucide-react'
+import { FileText, MapPin, Share2, Store } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { BagButton, FactPills, MIN_PICKS, ProductGrid, ShopFacts, ShopFooter, ShopSearch, ShopTopBar, SocialLinks, TopPicks, matchesSearch, onSale, pickedProducts } from '#/components/shop'
@@ -109,9 +109,11 @@ function Storefront() {
       </div>
     </section>
   )
+  // A business that sends invoices and lists no products: its link asks for a quote, with no empty products header.
+  const quoteOnly = shop.kind === 'invoices' && products.length === 0
   const productsBlock = (
     <>
-        <div className="border-t border-line pt-5 md:pt-6">
+        <div className={`border-t border-line pt-5 md:pt-6 ${quoteOnly ? 'hidden' : ''}`}>
           {searchable && <ShopSearch value={q} onChange={search} shopName={shop.name} className="mb-4 md:hidden" />}
           {searching && showFilters && <p className="meta -mt-1 mb-3 md:hidden">{found}</p>}
           <div className="flex items-center justify-between gap-4">
@@ -141,11 +143,31 @@ function Storefront() {
 
         {products.length === 0 ? (
           <div className="mt-6">
-            <Empty
-              icon={<Store size={20} strokeWidth={1.75} />}
-              title={t('New products are on the way')}
-              body={t('This shop is adding its first products. Message the seller on WhatsApp to ask what is in stock.')}
-            />
+            {shop.kind === 'invoices' && shop.whatsapp ? (
+              // A business that bills (roadmap `v-invoices`) lists no products: its link asks for a quote instead.
+              <Empty
+                icon={<FileText size={20} strokeWidth={1.75} />}
+                title={t('Ask {shop} for a quote', { shop: shop.name })}
+                body={t('Say what you need on WhatsApp. {shop} sends you a quote or an invoice you can pay from a link.', { shop: shop.name })}
+                action={
+                  <a
+                    href={waLink(shop.whatsapp, t('Hello {shop}, I would like a quote for:', { shop: shop.name }))}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-sm h-10"
+                    onClick={() => track('whatsapp_click', { shopId: shop.id, detail: 'shop' })}
+                  >
+                    <WhatsAppMark size={18} /> {t('Ask for a quote')}
+                  </a>
+                }
+              />
+            ) : (
+              <Empty
+                icon={<Store size={20} strokeWidth={1.75} />}
+                title={t('New products are on the way')}
+                body={t('This shop is adding its first products. Message the seller on WhatsApp to ask what is in stock.')}
+              />
+            )}
           </div>
         ) : (
           <>

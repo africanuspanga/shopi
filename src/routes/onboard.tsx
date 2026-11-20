@@ -6,8 +6,11 @@ import { LivePhone, OrderNotice, PaymentStep, PhoneStep, PreviewAside, ProductSt
 import { ErrorText, Field, FieldGroup, ShopAvatar, ShopLangChoice } from '#/components/ui'
 import { checkSlug, createShop, expandSocialLink } from '#/lib/api/merchant'
 import { getSetup } from '#/lib/api/setup'
-import { ALL_CATEGORIES, CATEGORIES, SERVICE_CATEGORIES, localPhone, normalizePhone, slugify } from '#/lib/format'
+import { ALL_CATEGORIES, CATEGORIES, INVOICE_CATEGORIES, SERVICE_CATEGORIES, localPhone, normalizePhone, slugify, type ShopKind } from '#/lib/format'
 import { HoursStep, ServiceStep } from '#/components/setup-services'
+import { BillDetailsStep, BillPayStep, FirstInvoiceStep, sampleDoc } from '#/components/setup-invoices'
+import { InvoiceDocument } from '#/components/invoice'
+import type { DocData } from '#/lib/invoice'
 import { LANGUAGES, useLang, useT, type Lang } from '#/lib/i18n'
 import { logout, setLang } from '#/lib/api/session'
 import { catchInstallPrompt } from '#/lib/push'
@@ -40,6 +43,8 @@ function Onboard() {
   const onDraft = useCallback((p: PreviewProduct) => setDraft(p), [])
   const [serviceDraft, setServiceDraft] = useState<PreviewService | null>(null)
   const onServiceDraft = useCallback((v: PreviewService) => setServiceDraft(v), [])
+  const [invoiceDraft, setInvoiceDraft] = useState<DocData | null>(null)
+  const onDoc = useCallback((d: DocData) => setInvoiceDraft(d), [])
   // Chrome offers to install Shopi once per visit: keep the offer for step 5's Install button.
   useEffect(() => catchInstallPrompt(), [])
   // Finished between loads (another tab): Home.
@@ -74,10 +79,24 @@ function Onboard() {
   // A business that sells services (roadmap `v-services`): its first service and its hours instead of a product and
   // a Lipa Namba, and bookings where a shop has orders.
   const serves = shop.kind === 'services'
+  // A business that sends invoices (roadmap `v-invoices`): how it looks on invoices, how clients pay, its first invoice;
+  // the preview is the invoice itself.
+  const bills = shop.kind === 'invoices'
   const services: PreviewService[] | undefined = serves ? data.services : undefined
   const label = serves ? t('Your page, as clients will see it') : t('Your shop, as buyers will see it')
   const aside =
-    step === 2 ? (
+    bills && step >= 2 && step <= 4 ? (
+      <PreviewAside label={t('Your invoices, as clients will see them')}>
+        <InvoiceDocument doc={invoiceDraft ?? sampleDoc(shop, t)} className="max-h-[78vh] overflow-y-auto" />
+      </PreviewAside>
+    ) : bills && step === 5 ? (
+      <>
+        <p className="text-15 text-white/60">{t('What a payment looks like on your phone')}</p>
+        <div className="mt-auto mb-auto flex w-full justify-center self-center">
+          <OrderNotice shop={shop} product={null} bills className="scale-[1.15]" />
+        </div>
+      </>
+    ) : step === 2 ? (
       <PreviewAside label={label}>
         {serves ? <ShopCard shop={asShop} products={[]} services={serviceDraft ? [serviceDraft] : []} /> : <ShopCard shop={asShop} products={draft ? [draft] : []} note={t('Your products go here.')} />}
       </PreviewAside>
@@ -104,7 +123,15 @@ function Onboard() {
   return (
     <AuthLayout topRight={leave} aside={aside}>
       <div key={step} className={step === opened ? '' : 'rise'}>
-        {step === 2 ? (
+        {bills && step === 2 ? (
+          <BillDetailsStep shop={shop} bar={bar} onDoc={onDoc} />
+        ) : bills && step === 3 ? (
+          <BillPayStep shop={shop} bar={bar} onDoc={onDoc} />
+        ) : bills && step === 4 ? (
+          <FirstInvoiceStep shop={shop} bar={bar} onDoc={onDoc} />
+        ) : bills ? (
+          <PhoneStep shop={shop} product={null} bills bar={bar} />
+        ) : step === 2 ? (
           serves ? <ServiceStep shop={shop} bar={bar} onDraft={onServiceDraft} /> : <ProductStep shop={shop} ai={data.ai} bar={bar} onDraft={onDraft} />
         ) : step === 3 ? (
           serves ? <HoursStep shop={shop} bar={bar} services={data.services} /> : <PaymentStep shop={shop} bar={bar} onDraft={setPayLine} />
@@ -132,12 +159,12 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
   const [slug, setSlug] = useState('')
   const [slugTouched, setSlugTouched] = useState(false)
   const [category, setCategory] = useState('fashion')
-  // Products (ordered and delivered) or services (booked by time): it decides the next two steps and what the link
-  // shows first. A shop can add the other later.
-  const [kind, setKind] = useState<'products' | 'services'>('products')
-  const chooseKind = (next: 'products' | 'services') => {
+  // Products (ordered and delivered), services (booked by time) or invoices (billed, paid later): it decides the next
+  // steps and what the link shows first. A business can add the others later.
+  const [kind, setKind] = useState<ShopKind>('products')
+  const chooseKind = (next: ShopKind) => {
     setKind(next)
-    setCategory(next === 'services' ? 'salon' : 'fashion')
+    setCategory(next === 'services' ? 'salon' : next === 'invoices' ? 'freelance' : 'fashion')
   }
   const [whatsapp, setWhatsapp] = useState(session.user?.phone ?? '')
   const [free, setFree] = useState<boolean | null>(null)
@@ -330,11 +357,12 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
           </span>
         </Field>
         <FieldGroup label={t('What do you sell?')} radio>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-2 sm:grid-cols-3">
             {(
               [
                 ['products', t('Products'), t('Buyers order, you deliver')],
                 ['services', t('Services'), t('Clients book a time with you')],
+                ['invoices', t('Invoices'), t('You bill clients, they pay later')],
               ] as const
             ).map(([id, title, sub]) => (
               <button
@@ -351,9 +379,9 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
             ))}
           </div>
         </FieldGroup>
-        <FieldGroup label={kind === 'services' ? t('What kind of business?') : t('What kind of products?')}>
+        <FieldGroup label={kind === 'products' ? t('What kind of products?') : t('What kind of business?')}>
           <div className="flex flex-wrap gap-2">
-            {(kind === 'services' ? SERVICE_CATEGORIES : CATEGORIES).map((c) => (
+            {(kind === 'services' ? SERVICE_CATEGORIES : kind === 'invoices' ? INVOICE_CATEGORIES : CATEGORIES).map((c) => (
               <button key={c.id} type="button" className="chip" aria-pressed={category === c.id} onClick={() => setCategory(c.id)}>
                 {t(c.label)}
               </button>

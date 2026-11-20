@@ -45,6 +45,7 @@ export const PLANS: { id: PlanId; name: string; price: number; lead: string; ite
       { text: msg('Bag links, discount codes and collections') },
       { text: msg('Your colour and cover photo') },
       { text: msg('Analytics for 7 and 30 days') },
+      { text: msg('Invoices and quotes in TSh, sent on WhatsApp') },
     ],
   },
   {
@@ -60,6 +61,8 @@ export const PLANS: { id: PlanId; name: string; price: number; lead: string; ite
       { text: msg('Full analytics: 90 days, channels, buyers and downloads') },
       { text: msg('Up to 2 shop assistants, each with their own login') },
       { text: msg('Unlimited AI product descriptions') },
+      { text: msg('Invoices and quotes in US dollars') },
+      { text: msg('Recurring invoices and automatic reminders'), soon: true },
       { text: msg('500 SMS a year to your buyers, many sent automatically'), soon: true },
     ],
   },
@@ -80,8 +83,12 @@ export function planState(s: PlanInput, at = Date.now()): PlanState {
   return { kind: 'free' }
 }
 
-/** What Tembo adds. Bulk import, colour and cover are free (the founder, 17 Nov). `staff`: shop assistants (src/lib/staff.ts). */
-export type Feature = 'domain' | 'fonts' | 'hideBadge' | 'fullAnalytics' | 'unlimitedProducts' | 'staff'
+/**
+ * What Tembo adds. Bulk import, colour and cover are free (the founder, 17 Nov). `staff`: shop assistants
+ * (src/lib/staff.ts). `usd`: invoices and quotes in US dollars (src/lib/invoice.ts; the founder, 20 Nov: invoices in
+ * TSh are free, unlimited).
+ */
+export type Feature = 'domain' | 'fonts' | 'hideBadge' | 'fullAnalytics' | 'unlimitedProducts' | 'staff' | 'usd'
 
 /**
  * The one entitlement check, for the server functions and the UI. Demo shops show everything. `using`: the shop already
