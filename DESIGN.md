@@ -235,19 +235,30 @@ Write English as the key: every string goes through `t()` from `src/lib/i18n.tsx
   `msg('…')` (text kept in data, like the plan cards' lists) and the same t under another name (`tt(`, `tr(`,
   `tRef.current(`); write apostrophes as ’ inside single quotes, or the export misses the string.
 - **A new string:** add its Swahili to `sw.json` and `sw-draft.json` in the same change (same `{placeholders}`, brands in
-  English) and its English key to `sw-unchecked.json`, then export again for the team. Match the team's words: duka, oda,
-  kapu (bag), bidhaa, delivery, share (not "shiriki"), taslimu (cash), lipa ukipokea (cash on delivery), pesa kwa simu
-  (mobile money), ghairi (cancel), code ya punguzo (never "kodi", which means tax), kifurushi (plan), Mwanzo (Home),
-  Settings za duka (Shop settings; **settings, never "mipangilio"**: the founder, 23 Nov), Nunua (Buy), Weka notifications (Turn on notifications), Pakua Shopi app (Install
-  the app), booking and ku-book for bookings (Booking mpya, wateja wana-book, Book muda), **never "miadi"**
-  (the founder, 20 Nov: in Tanzania miadi reads as a date or a meeting agreed, not a booking), **invoice** and
-  **quotation** for invoices and quotes (Invoice mpya, invoice zako, Kubali quotation hii; **never "ankara", "nukuu" or
-  "makadirio ya bei"**: the founder, 23 Nov, after the team's review used them), and Copy on buttons, not Nakili (the founder, 17 Nov;
-  a sentence that tells someone to copy may say nakili). **Invoices and quotations are printed in English** (on screen and
-  in the PDF, `DOC_LANG` in `lib/invoice.ts`; the founder, 23 Nov): "Bill to", "Balance due" and the rest stay English
-  there, and a document's language only chooses the WhatsApp message and the client's page. The export notes each of
-  these words on its row (`KEEP_ENGLISH` in `scripts/i18n/export.py`). Short days: J2 (Sunday), J3, J4, J5, Alh, Ijm, Jmos
-  (`shortDay()` in `lib/format.ts`).
+  English) and its English key to `sw-unchecked.json`, then export again for the team.
+- **Context translation, not perfect Swahili** (the founder, 23 Nov 2026: "we are not doing perfect Swahili
+  translation, we are doing context translation"). Popular English words stay English, the way sellers say them, with
+  Swahili around them (N-class agreement: "password yako", "collection hii", "stock imeisha"; verbs with a hyphen:
+  ku-book, wa-book, ku-share, ume-share, ku-edit, ku-paste, ku-import, uta-log in). The founder chose each word:
+  - **Stay English:** booking (never miadi), invoice (never ankara), quotation (never nukuu or makadirio ya bei),
+    settings ("Settings za duka"; never mipangilio), code for discount codes (never kodi, which is tax), copy (never
+    nakili, also in sentences), share (never tuma or shiriki), password, notification(s) (never arifa; "Weka
+    notifications"), edit (never hariri), location (the buyer's pin; "mahali pa kukuletea", where to deliver, stays),
+    rider (never mpeleka bidhaa), paste (never bandika), collection (never kundi), stock, cash (never taslimu; "lipa
+    ukipokea" stays for cash on delivery), online (never mtandaoni), draft, tag, import, template, website (never
+    tovuti), dashboard, profile, email (never barua pepe), logo (never nembo), checkout, mobile money (never pesa kwa
+    simu), log in, log out and login (never ingia or toka), and delivery, link, status, app, bio, QR code.
+  - **Stay Swahili:** mteja/wateja, bidhaa, malipo, picha, kapu (bag), ujumbe, mauzo, ghairi, hifadhi, huduma,
+    thibitisha, kifurushi (plan), futa, taarifa, msaidizi, kutembelewa (visits), kutazamwa (views), ukumbusho, jisajili,
+    maelezo, punguzo, takwimu (analytics), imeisha (sold out), tafuta, ramani, ratiba (diary), Mwanzo (Home), pakua
+    (download, install: "Pakua Shopi app"), duka, oda, risiti, saizi, Nunua (Buy).
+  - **Tap is "bofya"** (Bofya, ukibofya, kwa kubofya mara moja), never gusa or bonyeza.
+  - **Invoices and quotations are printed in English** (on screen and in the PDF, `DOC_LANG` in `lib/invoice.ts`):
+    "Bill to", "Balance due" and the rest stay English there; a document's language only chooses the WhatsApp message
+    and the client's page.
+  - The team's review twice changed these back (20 and 23 Nov), so the export notes the words on each row
+    (`KEEP_ENGLISH` in `scripts/i18n/export.py`), and the founder confirms new words.
+- Short days: J2 (Sunday), J3, J4, J5, Alh, Ijm, Jmos (`shortDay()` in `lib/format.ts`).
 
 ### Logo
 "shopi" is Mona Sans ExtraBold at 120% width, lowercase, with the i's dot drawn as a perfect-circle Moto dot as wide as the
