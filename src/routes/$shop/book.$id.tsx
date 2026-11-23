@@ -15,7 +15,9 @@ import { useHumanCheck } from '#/lib/turnstile'
  * name and a WhatsApp number. Only free times are ever shown, never who else is booked.
  */
 export const Route = createFileRoute('/$shop/book/$id')({
-  loader: async ({ params }) => {
+  loader: async ({ params, parentMatchPromise }) => {
+    // The shop first: a link the shop no longer uses is sent on to its new one there (`$shop/route.tsx`).
+    await parentMatchPromise
     const data = await getBookPage({ data: { slug: params.shop, id: params.id } })
     if (!data) throw notFound()
     return data

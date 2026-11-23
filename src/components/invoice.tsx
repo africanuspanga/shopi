@@ -25,7 +25,7 @@ export function InvoiceDocument({ doc, className = '' }: { doc: DocData; classNa
   const clientLines = [c.company && c.name ? c.name : '', c.address, [c.phone ? phoneText(c.phone) : '', c.email].filter(Boolean).join(' · '), c.tin ? `${tr('TIN')} ${tinText(c.tin)}` : ''].filter(Boolean)
   const pays = doc.kind === 'invoice' && (b.lipa || doc.pay_details)
   return (
-    <article lang={DOC_LANG} className={`card min-w-0 overflow-hidden ${className}`}>
+    <article lang={DOC_LANG} className={`card min-w-0 overflow-hidden text-ink ${className}`}>
       <div className="p-5 md:p-8">
         <header className="flex flex-col-reverse gap-6 md:flex-row md:items-start md:justify-between">
           <div className="flex min-w-0 items-start gap-3">

@@ -51,7 +51,12 @@ export const signup = createServerFn({ method: 'POST' })
     const id = newId()
     // The shop whose "Open your own shop" link brought them, if any (src/lib/host.ts, refLink).
     const refSlug = String(getCookie(REF_COOKIE) ?? '')
-    const ref = /^[a-z0-9-]{3,40}$/.test(refSlug) ? await first<{ id: string }>(`SELECT id FROM shops WHERE slug = ? AND status IN ('active', 'demo')`, refSlug) : null
+    const ref = /^[a-z0-9-]{3,40}$/.test(refSlug) ? await first<{ id: string }>(
+          // The link the visitor saw may be one the shop has since changed (shop_links).
+          `SELECT id FROM shops WHERE status IN ('active', 'demo') AND (slug = ?1 OR id = (SELECT shop_id FROM shop_links WHERE slug = ?1)) LIMIT 1`,
+          refSlug,
+        )
+      : null
     await run(
       'INSERT INTO users (id, phone, name, pass_hash, created_at, ref_shop) VALUES (?, ?, ?, ?, ?, ?)',
       id,

@@ -42,3 +42,10 @@ export function nextSetupStep(s: {
 
 /** Whether the setup is still open for this shop: Home sends the seller back to it. */
 export const inSetup = (setup: number | null | undefined) => setup != null && setup < SETUP_STEPS
+
+/**
+ * A seller of products has a shop ("duka"); a salon and a business that sends invoices have a page ("ukurasa"), the
+ * founder's words of 23 Nov 2026. The setup's titles and buttons, and Home's first cards, follow it; the app's own
+ * menu still says Shop and Shop settings for everyone.
+ */
+export const hasPage = (kind: string | null | undefined) => kind === 'services' || kind === 'invoices'

@@ -149,10 +149,16 @@ export const CATEGORIES: { id: string; label: string }[] = [
   // No live shop had 'clothes'. The id stays 'fashion' so existing shops keep theirs.
   { id: 'fashion', label: msg('Clothes and fashion') },
   { id: 'shoes', label: msg('Shoes') },
-  { id: 'electronics', label: msg('Electronics') },
-  { id: 'food', label: msg('Food') },
+  // Added 23 Nov 2026 (the founder agreed): what sellers in Dar post most that had no chip of its own.
+  { id: 'bags', label: msg('Bags') },
+  { id: 'hair', label: msg('Hair and wigs') },
   { id: 'cosmetics', label: msg('Cosmetics') },
   { id: 'perfumes', label: msg('Perfumes') },
+  { id: 'phones', label: msg('Phones') },
+  { id: 'electronics', label: msg('Electronics') },
+  { id: 'home', label: msg('Home and kitchen') },
+  { id: 'kids', label: msg('Kids and babies') },
+  { id: 'food', label: msg('Food') },
   { id: 'ebooks', label: msg('Ebooks') },
   { id: 'other', label: msg('Other') },
 ]

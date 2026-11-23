@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Camera, Clock, Loader2, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ErrorText, Field, FieldGroup, Img, Switch } from '#/components/ui'
+import { ErrorText, Field, FieldGroup, Img, Switch, showFirstError } from '#/components/ui'
 import type { PublicService } from '#/lib/api/booking'
 import { deleteService, saveService, type MyService } from '#/lib/api/services'
 import { DURATIONS, DURATION_MAX, addDays, dayOf, durationText, monthText, servicePrice, timeText, weekdayName, weekdayOf } from '#/lib/booking'
@@ -189,6 +189,7 @@ export function ServiceForm({
   const [uploading, setUploading] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [noName, setNoName] = useState(false)
 
   useEffect(() => {
     onDraft?.({ name, duration, price: Number(price) || 0, price_from: from, image: images[0] ?? null })
@@ -211,12 +212,21 @@ export function ServiceForm({
   async function save(e: React.FormEvent) {
     e.preventDefault()
     if (busy || uploading) return
-    setBusy(true)
     setError('')
+    // Said on the box itself, instead of a greyed-out button that gives no reason.
+    if (!name.trim()) {
+      setNoName(true)
+      return showFirstError()
+    }
+    setBusy(true)
     try {
       const res = await saveService({ data: { id: service?.id, name, duration, price, price_from: from, description, by_name: by, images, active } })
       if ('error' in res) {
         setBusy(false)
+        if (res.error === 'name') {
+          setNoName(true)
+          return showFirstError()
+        }
         return setError(
           {
             name: t('Give the service a name.'),
@@ -242,8 +252,17 @@ export function ServiceForm({
 
   return (
     <form className="space-y-5" onSubmit={save}>
-      <Field label={t('Service')}>
-        <input className="input" placeholder={t('Haircut, braids, massage, consultation')} value={name} maxLength={80} onChange={(e) => setName(e.target.value)} />
+      <Field label={t('Service')} error={noName ? t('Give the service a name.') : undefined}>
+        <input
+          className="input"
+          placeholder={t('Haircut, braids, massage, consultation')}
+          value={name}
+          maxLength={80}
+          onChange={(e) => {
+            setName(e.target.value)
+            setNoName(false)
+          }}
+        />
       </Field>
       <FieldGroup label={t('How long it takes')} radio>
         <div className="flex flex-wrap gap-2">
@@ -334,7 +353,7 @@ export function ServiceForm({
         </div>
       )}
       <ErrorText>{error}</ErrorText>
-      <button className="btn btn-lg w-full" disabled={busy || uploading || !name.trim() || !duration}>
+      <button className="btn btn-lg w-full" disabled={busy || uploading || !duration}>
         {busy ? t('Saving') : (saveLabel ?? (service ? t('Save changes') : t('Add the service')))}
       </button>
       {!plain && service && (

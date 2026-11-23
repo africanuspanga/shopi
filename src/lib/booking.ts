@@ -122,11 +122,15 @@ export function readTime(v: unknown) {
 
 type T = (en: string, vars?: Record<string, string | number>) => string
 
-/** 45 → "45 min", 90 → "1 h 30 min", 120 → "2 h". */
+/**
+ * 45 → "45 min", 90 → "1 h 30 min", 120 → "2 h". One hour has its own strings, so Swahili can say "1 hour" and
+ * "2 hours" (the founder, 23 Nov 2026: "saa 1" reads as a clock time, seven o'clock).
+ */
 export function durationText(t: T, min: number) {
   const h = Math.floor(min / 60)
   const m = min % 60
   if (!h) return t('{n} min', { n: m })
+  if (h === 1) return m ? t('1 h {n} min', { n: m }) : t('1 h')
   return m ? t('{h} h {n} min', { h, n: m }) : t('{h} h', { h })
 }
 

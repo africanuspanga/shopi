@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { InvoiceDocument } from '#/components/invoice'
 import { AmountInput } from '#/components/invoice-form'
-import { StepHead, usePass, useStepClock } from '#/components/setup'
-import { ErrorText, Field, FieldGroup, Sheet, ShopAvatar, Switch } from '#/components/ui'
+import { PayNames, StepHead, usePass, useStepClock } from '#/components/setup'
+import { ErrorText, Field, FieldGroup, Sheet, ShopAvatar, Switch, showFirstError } from '#/components/ui'
 import { markInvoiceSent, saveBillSettings, saveInvoice } from '#/lib/api/invoices'
 import { saveSetupPayment, type SetupShop } from '#/lib/api/setup'
 import { dayOf } from '#/lib/booking'
@@ -152,7 +152,7 @@ export function BillDetailsStep({ shop, bar, onDoc }: { shop: SetupShop; bar: Re
 }
 
 /** Step 3: the Lipa Namba and the bank details clients pay to, and how many days they get. */
-export function BillPayStep({ shop, bar, onDoc }: { shop: SetupShop; bar: React.ReactNode; onDoc: (d: DocData) => void }) {
+export function BillPayStep({ shop, owner, bar, onDoc }: { shop: SetupShop; /** The owner's name from sign-up. */ owner: string; bar: React.ReactNode; onDoc: (d: DocData) => void }) {
   const t = useT()
   const router = useRouter()
   const clock = useStepClock()
@@ -164,20 +164,40 @@ export function BillPayStep({ shop, bar, onDoc }: { shop: SetupShop; bar: React.
   const [due, setDue] = useState(saved.due)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  // What is missing, said on its own box, every box at once.
+  const [missing, setMissing] = useState<{ network?: string; number?: string; name?: string }>({})
+  const gaps = {
+    network: t('Choose the network your number is on.'),
+    number: t('Enter your Lipa Namba or number.'),
+    name: t('Enter the name on payments.'),
+  }
   const doc = sampleDoc(shop, t, { bill: { ...saved, bank, due }, lipa: { network, number, name } })
   useEffect(() => onDoc(doc), [network, number, name, bank, due]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function save() {
     setError('')
     const lipa = number.replace(/\D/g, '')
-    if (!lipa && !bank.trim()) return setError(t('Add a Lipa Namba or bank details, or do this later.'))
+    if (!lipa && !bank.trim()) {
+      setMissing({})
+      return setError(t('Add a Lipa Namba or bank details, or do this later.'))
+    }
+    const found: typeof missing = {}
+    if (lipa) {
+      if (!network) found.network = gaps.network
+      if (lipa.length < 4) found.number = gaps.number
+      if (!name.trim()) found.name = gaps.name
+    }
+    setMissing(found)
+    if (Object.keys(found).length) return showFirstError()
     setBusy(true)
     try {
       if (lipa) {
         const res = await saveSetupPayment({ data: { network, number, name, seconds: clock() } })
         if ('error' in res) {
           setBusy(false)
-          return setError(res.error === 'network' ? t('Choose the network your number is on.') : res.error === 'number' ? t('Enter your Lipa Namba or number.') : t('Enter the name clients see when they pay.'))
+          const what = res.error ?? 'name'
+          setMissing({ [what]: gaps[what] })
+          return showFirstError()
         }
       }
       const res = await saveBillSettings({ data: { bank, due, seconds: clock(), setup: 3 } })
@@ -198,22 +218,59 @@ export function BillPayStep({ shop, bar, onDoc }: { shop: SetupShop; bar: React.
       <StepHead bar={bar} title={t('How clients pay you')} sub={t('Clients pay you directly; Shopi never holds your money. These go on every invoice.')} />
       <DocToggle shop={shop} doc={doc} />
       <div className="mt-6 space-y-5">
-        <FieldGroup label={t('Lipa Namba network')}>
+        <FieldGroup label={t('Lipa Namba network')} error={missing.network}>
           <div className="flex flex-wrap gap-2">
             {NETWORKS.map((n) => (
-              <button key={n} type="button" className="chip" aria-pressed={network === n} onClick={() => setNetwork(n)}>
+              <button
+                key={n}
+                type="button"
+                className="chip"
+                aria-pressed={network === n}
+                onClick={() => {
+                  setNetwork(n)
+                  setMissing((m) => ({ ...m, network: undefined }))
+                }}
+              >
                 {n}
               </button>
             ))}
           </div>
         </FieldGroup>
-        <Field label={t('Lipa Namba or number')}>
-          <input className="input code" inputMode="numeric" value={number} onChange={(e) => setNumber(e.target.value)} placeholder="5512345" />
+        <Field label={t('Lipa Namba or number')} error={missing.number}>
+          <input
+            className="input code"
+            inputMode="numeric"
+            value={number}
+            onChange={(e) => {
+              setNumber(e.target.value)
+              setMissing((m) => ({ ...m, number: undefined }))
+            }}
+            placeholder="5512345"
+          />
         </Field>
         {number.replace(/\D/g, '') && (
-          <Field label={t('Name on payments')} hint={t('Exactly as it shows on the payment SMS. We use it to check clients’ proof.')}>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={shop.name.toUpperCase()} />
-          </Field>
+          <div>
+            <Field label={t('Name on payments')} error={missing.name} hint={t('Exactly as it shows on the payment SMS. We use it to check clients’ proof.')}>
+              <input
+                className="input"
+                value={name}
+                autoCapitalize="characters"
+                onChange={(e) => {
+                  setName(e.target.value)
+                  setMissing((m) => ({ ...m, name: undefined }))
+                }}
+              />
+            </Field>
+            <PayNames
+              shop={shop.name}
+              owner={owner}
+              value={name}
+              onPick={(n) => {
+                setName(n)
+                setMissing((m) => ({ ...m, name: undefined }))
+              }}
+            />
+          </div>
         )}
         <Field label={t('Bank details')} aside={t('Optional')} hint={t('One account per line is fine, or one per currency.')}>
           <textarea className="input text-14" rows={3} value={bank} onChange={(e) => setBank(e.target.value)} placeholder={t('e.g. CRDB Bank · Account name · 0150 0123 4567 00')} />
@@ -253,6 +310,8 @@ export function FirstInvoiceStep({ shop, bar, onDoc }: { shop: SetupShop; bar: R
   const [error, setError] = useState('')
   const [made, setMade] = useState<{ id: string; code: string; number: number } | null>(null)
   const [copied, setCopied] = useState(false)
+  // What is missing, said on its own box, every box at once.
+  const [missing, setMissing] = useState<{ client?: string; what?: string; amount?: string }>({})
   const price = Number(amount || 0)
   const line: InvoiceLine = { name: what.trim() || t('Example: your work for the client'), description: '', qty: 1, unit: '', price: price || 250_000, tax: bill.vat ? VAT : 0 }
   const doc = sampleDoc(shop, t, { client: client.trim() || t('Your client'), line })
@@ -260,8 +319,12 @@ export function FirstInvoiceStep({ shop, bar, onDoc }: { shop: SetupShop; bar: R
 
   async function save() {
     setError('')
-    if (!client.trim()) return setError(t('Add who this is for.'))
-    if (!what.trim() || !price) return setError(t('Say what it is for and the amount.'))
+    const found: typeof missing = {}
+    if (!client.trim()) found.client = t('Add who this is for.')
+    if (!what.trim()) found.what = t('Say what it is for.')
+    if (!price) found.amount = t('Enter the amount.')
+    setMissing(found)
+    if (Object.keys(found).length) return showFirstError()
     setBusy(true)
     try {
       const res = await saveInvoice({
@@ -326,17 +389,41 @@ export function FirstInvoiceStep({ shop, bar, onDoc }: { shop: SetupShop; bar: R
       <StepHead bar={bar} title={t('Your first invoice')} sub={t('Who it’s for and what for. You add lines, VAT and terms later; this is enough to send.')} />
       <DocToggle shop={shop} doc={doc} />
       <div className="mt-6 space-y-5">
-        <Field label={t('Who it’s for')}>
-          <input className="input" value={client} onChange={(e) => setClient(e.target.value)} placeholder={t('e.g. Bahari Logistics Ltd')} />
+        <Field label={t('Who it’s for')} error={missing.client}>
+          <input
+            className="input"
+            value={client}
+            onChange={(e) => {
+              setClient(e.target.value)
+              setMissing((m) => ({ ...m, client: undefined }))
+            }}
+            placeholder={t('e.g. Bahari Logistics Ltd')}
+          />
         </Field>
         <Field label={t('Their WhatsApp number')} aside={t('Optional')}>
           <input className="input" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0754 123 456" />
         </Field>
-        <Field label={t('What it’s for')}>
-          <input className="input" value={what} onChange={(e) => setWhat(e.target.value)} placeholder={t('e.g. Wedding photography, full day')} />
+        <Field label={t('What it’s for')} error={missing.what}>
+          <input
+            className="input"
+            value={what}
+            onChange={(e) => {
+              setWhat(e.target.value)
+              setMissing((m) => ({ ...m, what: undefined }))
+            }}
+            placeholder={t('e.g. Wedding photography, full day')}
+          />
         </Field>
-        <Field label={t('Amount')}>
-          <AmountInput currency="TZS" value={amount} onValue={setAmount} label={t('Amount')} />
+        <Field label={t('Amount')} error={missing.amount}>
+          <AmountInput
+            currency="TZS"
+            value={amount}
+            onValue={(v) => {
+              setAmount(v)
+              setMissing((m) => ({ ...m, amount: undefined }))
+            }}
+            label={t('Amount')}
+          />
         </Field>
       </div>
       <div className="mt-6 flex flex-col gap-3">

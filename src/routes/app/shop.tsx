@@ -7,8 +7,9 @@ import { PhoneAppSettings } from '#/components/phone-app'
 import { EmailSettings } from '#/components/email'
 import { EMAIL_LIVE } from '#/lib/email'
 import { QrSheet } from '#/components/qr-sheet'
+import { ChangeLinkSheet } from '#/components/shop-link'
 import { TemboPill, useCan } from '#/components/tembo'
-import { CardHead, ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoice, Switch, Toast, TopBar } from '#/components/ui'
+import { CardHead, ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoice, Switch, Toast, TopBar, showFirstError } from '#/components/ui'
 import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
 import { ALL_CATEGORIES, DAR_AREAS, NETWORKS, mapsLink, tinDigits } from '#/lib/format'
@@ -45,6 +46,9 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
   const [saved, setSaved] = useState(false)
   const [copied, setCopied] = useState(false)
   const [qrOpen, setQrOpen] = useState(false)
+  const [lipaGaps, setLipaGaps] = useState({ network: false, name: false })
+  const [linkOpen, setLinkOpen] = useState(false)
+  const [linkChanged, setLinkChanged] = useState(false)
   const [error, setError] = useState('')
   const logoRef = useRef<HTMLInputElement>(null)
   const set = (k: keyof typeof s) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setS({ ...s, [k]: e.target.value })
@@ -61,9 +65,22 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
     const named = areas.filter((a) => a.name.trim())
     if (tinDigits(s.tin ?? '') === null) return setError(t('A TIN has 9 digits, like 123-456-789.'))
     if (mapsLink(s.maps_url ?? '') === null) return setError(t('That isn’t a Google Maps link. In Google Maps, find your shop, tap Share and copy the link.'))
+    // A Lipa Namba is only usable with its network and the name buyers see when they pay (the founder, 23 Nov 2026).
+    const gaps = owner && s.lipa_number.trim() ? { network: !s.lipa_network, name: !s.lipa_name.trim() } : { network: false, name: false }
+    setLipaGaps(gaps)
+    if (gaps.network || gaps.name) {
+      setError(t('Your Lipa Namba needs its network and the name on payments.'))
+      return showFirstError()
+    }
     setBusy(true)
     setError('')
-    await updateShop({ data: { ...s, areas: named.map((a) => ({ name: a.name.trim(), fee: 0 })) } })
+    const res = await updateShop({ data: { ...s, areas: named.map((a) => ({ name: a.name.trim(), fee: 0 })) } })
+    if ('error' in res) {
+      setBusy(false)
+      setLipaGaps({ network: !s.lipa_network, name: !s.lipa_name.trim() })
+      setError(t('Your Lipa Namba needs its network and the name on payments.'))
+      return showFirstError()
+    }
     initial.current = { shop: s, areas: named }
     setAreas(named)
     setBusy(false)
@@ -113,27 +130,34 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
             <Field label={t('Shop name')}>
               <input className="input" value={s.name} onChange={set('name')} />
             </Field>
-            <Field label={t('Shop link')} hint={t('Your link stays the same so the ones you already shared keep working.')}>
-              <div className="input flex items-center justify-between gap-3 bg-page">
-                <span className="code truncate text-15 text-ink-2">shopi.tz/{s.slug}</span>
-                <button
-                  type="button"
-                  className="-my-2 -mr-2 flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2.5 text-13 font-medium transition-colors hover:bg-well"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(`https://shopi.tz/${s.slug}`)
-                      setCopied(true)
-                      setTimeout(() => setCopied(false), 1600)
-                    } catch {
-                      /* ignore */
-                    }
-                  }}
-                >
-                  {copied ? <Check size={16} strokeWidth={2.25} /> : <Copy size={16} strokeWidth={1.75} />}
-                  {copied ? t('Copied') : t('Copy')}
+            <div>
+              <Field label={t('Shop link')} hint={owner ? t('You can change it. Your old link keeps working and takes buyers to the new one.') : t('Only the shop’s owner changes the link.')}>
+                <div className="input flex items-center justify-between gap-3 bg-page">
+                  <span className="code truncate text-15 text-ink-2">shopi.tz/{s.slug}</span>
+                  <button
+                    type="button"
+                    className="-my-2 -mr-2 flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2.5 text-13 font-medium transition-colors hover:bg-well"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(`https://shopi.tz/${s.slug}`)
+                        setCopied(true)
+                        setTimeout(() => setCopied(false), 1600)
+                      } catch {
+                        /* ignore */
+                      }
+                    }}
+                  >
+                    {copied ? <Check size={16} strokeWidth={2.25} /> : <Copy size={16} strokeWidth={1.75} />}
+                    {copied ? t('Copied') : t('Copy')}
+                  </button>
+                </div>
+              </Field>
+              {owner && (
+                <button type="button" className="btn btn-quiet btn-sm mt-3" onClick={() => setLinkOpen(true)}>
+                  {t('Change link')}
                 </button>
-              </div>
-            </Field>
+              )}
+            </div>
             <ShopLangChoice
               value={asLang(s.lang)}
               onChange={(lang) => setS({ ...s, lang })}
@@ -212,13 +236,28 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
             <QrCodeIcon size={16} strokeWidth={1.75} /> {t('Show my QR code')} <ChevronRight size={16} strokeWidth={1.75} />
           </button>
           <QrSheet open={qrOpen} onClose={() => setQrOpen(false)} />
+          <ChangeLinkSheet
+            open={linkOpen}
+            onClose={() => setLinkOpen(false)}
+            slug={s.slug}
+            onChanged={(slug) => {
+              // The link is saved already: it is not one of the page's unsaved changes.
+              initial.current = { ...initial.current, shop: { ...initial.current.shop, slug } }
+              setS((cur) => ({ ...cur, slug }))
+              setLinkOpen(false)
+              setLinkChanged(true)
+              setTimeout(() => setLinkChanged(false), 2400)
+              router.invalidate()
+            }}
+          />
+          <Toast show={linkChanged}>{t('Your link is now shopi.tz/{slug}', { slug: s.slug })}</Toast>
         </Group>
 
         {owner && (
         <Group title={t('Payments')} sub={t('Buyers pay you directly. Shopi never holds your money.')}>
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={t('Network')}>
+              <Field label={t('Network')} error={lipaGaps.network && !s.lipa_network ? t('Choose the network your number is on.') : undefined}>
                 <select className="input" value={s.lipa_network} onChange={set('lipa_network')}>
                   <option value="">{t('Choose')}</option>
                   {NETWORKS.map((n) => (
@@ -230,7 +269,11 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
                 <input className="input code" inputMode="numeric" value={s.lipa_number} onChange={set('lipa_number')} placeholder="5512345" />
               </Field>
             </div>
-            <Field label={t('Name on payments')} hint={t('Exactly as it shows on the payment SMS. We use it to check buyers’ proof.')}>
+            <Field
+              label={t('Name on payments')}
+              error={lipaGaps.name && !s.lipa_name.trim() ? t('Enter the name on payments.') : undefined}
+              hint={t('Exactly as it shows on the payment SMS. We use it to check buyers’ proof.')}
+            >
               <input className="input" value={s.lipa_name} onChange={set('lipa_name')} placeholder={t('e.g. ZEES STORE')} />
             </Field>
             <div className="space-y-4 rounded-16 bg-page p-4">
@@ -454,10 +497,11 @@ function AccountGroup() {
 function Group({ title, sub, children }: { title: string; sub: string; children: ReactNode }) {
   return (
     <section className="grid gap-5 py-8 first:pt-0 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-12 lg:py-10">
-      <div>
+      <div className="min-w-0">
         <CardHead title={title} sub={sub} />
       </div>
-      <div className="card max-w-[720px] p-5 md:p-6">{children}</div>
+      {/* min-w-0: a long shop link (it never wraps) must be cut short in its row, not widen the whole page on a phone. */}
+      <div className="card max-w-[720px] min-w-0 p-5 md:p-6">{children}</div>
     </section>
   )
 }

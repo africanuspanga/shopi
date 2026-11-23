@@ -2,7 +2,7 @@ import { useRouter } from '@tanstack/react-router'
 import { useCallback, useState } from 'react'
 import { ServiceForm } from '#/components/booking'
 import { BreakHours, SeatsField, WeekHours } from '#/components/hours'
-import { PreviewToggle, ShopCard, StepHead, previewShop, usePass, useStepClock, type PreviewService } from '#/components/setup'
+import { LaterLink, PreviewToggle, ShopCard, StepHead, previewShop, usePass, useStepClock, type PreviewService } from '#/components/setup'
 import { ErrorText } from '#/components/ui'
 import type { SetupShop } from '#/lib/api/setup'
 import { saveBookSettings } from '#/lib/api/services'
@@ -16,7 +16,18 @@ import { useT } from '#/lib/i18n'
  */
 
 /** Step 2: the first service. A name, how long it takes and a price are enough; clients book it once the hours are set. */
-export function ServiceStep({ shop, bar, onDraft }: { shop: SetupShop; bar: React.ReactNode; onDraft: (v: PreviewService) => void }) {
+export function ServiceStep({
+  shop,
+  bar,
+  onDraft,
+  onLater,
+}: {
+  shop: SetupShop
+  bar: React.ReactNode
+  onDraft: (v: PreviewService) => void
+  /** Opened again from "Your page is live" by a business that skipped it: "later" goes back there. */
+  onLater?: () => void
+}) {
   const t = useT()
   const router = useRouter()
   const pass = usePass(2)
@@ -33,6 +44,7 @@ export function ServiceStep({ shop, bar, onDraft }: { shop: SetupShop; bar: Reac
   )
 
   async function skip() {
+    if (onLater) return onLater()
     setBusy(true)
     setError('')
     if (!(await pass('skip'))) {
@@ -44,7 +56,7 @@ export function ServiceStep({ shop, bar, onDraft }: { shop: SetupShop; bar: Reac
   return (
     <>
       <StepHead bar={bar} title={t('Your first service')} sub={t('What clients book, how long it takes and the price. You add the rest after setup.')} />
-      <PreviewToggle shop={previewShop(shop)}>
+      <PreviewToggle shop={previewShop(shop)} title={t('Your page, as clients will see it')}>
         <ShopCard shop={previewShop(shop)} products={[]} services={[draft]} />
       </PreviewToggle>
       <div className="mt-6">
@@ -60,9 +72,10 @@ export function ServiceStep({ shop, bar, onDraft }: { shop: SetupShop; bar: Reac
           }}
         />
         <ErrorText>{error}</ErrorText>
-        <button type="button" className="btn btn-lg btn-ghost mt-3 w-full" disabled={busy} onClick={skip}>
-          {t('I’ll do this later')}
-        </button>
+        {/* A link, not a second button: the first service is what clients come to book. */}
+        <div className="mt-2">
+          <LaterLink onClick={skip} disabled={busy} />
+        </div>
       </div>
     </>
   )
@@ -72,7 +85,6 @@ export function ServiceStep({ shop, bar, onDraft }: { shop: SetupShop; bar: Reac
 export function HoursStep({ shop, bar, services }: { shop: SetupShop; bar: React.ReactNode; services: PreviewService[] }) {
   const t = useT()
   const router = useRouter()
-  const pass = usePass(3)
   const clock = useStepClock()
   const [book, setBook] = useState<BookSettings>(DEFAULT_BOOK)
   const [busy, setBusy] = useState(false)
@@ -101,19 +113,12 @@ export function HoursStep({ shop, bar, services }: { shop: SetupShop; bar: React
     }
   }
 
-  async function skip() {
-    setBusy(true)
-    setError('')
-    if (!(await pass('skip'))) {
-      setBusy(false)
-      setError(t('Something went wrong. Try again.'))
-    }
-  }
-
+  // No "I'll do this later" here (the founder, 23 Nov 2026): without saved hours no client can book, and the hours
+  // shown are already a working week, so saving them is the one tap that passes this step.
   return (
     <>
       <StepHead bar={bar} title={t('When you work')} sub={t('Clients only see free times inside these hours. Switch off the days you are closed.')} />
-      <PreviewToggle shop={previewShop(shop)}>
+      <PreviewToggle shop={previewShop(shop)} title={t('Your page, as clients will see it')}>
         <ShopCard shop={previewShop(shop)} products={[]} services={services} />
       </PreviewToggle>
       <div className="mt-4">
@@ -129,9 +134,6 @@ export function HoursStep({ shop, bar, services }: { shop: SetupShop; bar: React
         <ErrorText>{error}</ErrorText>
         <button type="button" className="btn btn-lg w-full" disabled={busy} onClick={save}>
           {busy ? t('Saving') : t('Save and continue')}
-        </button>
-        <button type="button" className="btn btn-lg btn-ghost w-full" disabled={busy} onClick={skip}>
-          {t('I’ll do this later')}
         </button>
       </div>
     </>

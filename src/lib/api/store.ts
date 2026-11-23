@@ -2,6 +2,7 @@ import { can, planState } from '#/lib/plans'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequestUrl } from '@tanstack/react-start/server'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
+import { isShopiHost } from '#/lib/host'
 import { imageOf, normalizePhone, optionKind, parseSizes, priceOf, tzs, type OrderStatus, type Size } from '#/lib/format'
 import { moveStock } from '#/server/stock'
 import { openBag } from '#/server/bags'
@@ -78,6 +79,23 @@ export type PublicCollection = { id: string; slug: string; name: string; descrip
 const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram, tiktok, facebook, location, maps_url, tin, hours,
   lipa_number, lipa_name, lipa_network, cod_enabled, status, lang, theme_color, theme_font, cover_key, hide_badge, plan, paid_until,
   ships_regions, regions_note, kind, book`
+
+/**
+ * A shop that changed its link (`shop_links`, migration 0031): where an old link leads today, or null. The `$shop`
+ * route asks only when no shop answers to the link, and sends the visitor on to the same page under the new one.
+ */
+export const movedShopLink = createServerFn({ method: 'GET' })
+  .validator((d: { slug: string }) => ({ slug: String(d?.slug ?? '').toLowerCase().slice(0, 80) }))
+  .handler(async ({ data }) => {
+    // Only on Shopi's own address. A shop's own domain has no shop link in its addresses; it finds its shop by the
+    // host (shopForHost, remembered for a minute), and sending it on from here could bounce during that minute.
+    if (!isShopiHost(getRequestUrl().hostname)) return { slug: null }
+    const row = await first<{ slug: string }>(
+      `SELECT s.slug FROM shop_links l JOIN shops s ON s.id = l.shop_id WHERE l.slug = ? AND s.status IN ('active', 'demo')`,
+      data.slug,
+    )
+    return { slug: row?.slug ?? null }
+  })
 
 export const getStorefront = createServerFn({ method: 'GET' })
   .validator((d: { slug: string }) => ({ slug: String(d.slug).toLowerCase() }))

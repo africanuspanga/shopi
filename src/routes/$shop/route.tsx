@@ -1,8 +1,8 @@
-import { Outlet, createFileRoute, notFound } from '@tanstack/react-router'
+import { Outlet, createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { DemoBanner } from '#/components/shop'
 import { ignoreShop } from '#/lib/analytics'
-import { getStorefront } from '#/lib/api/store'
+import { getStorefront, movedShopLink } from '#/lib/api/store'
 import { cleanCode, codeKey } from '#/lib/discounts'
 import { imgUrl } from '#/lib/format'
 import { LangProvider, asLang } from '#/lib/i18n'
@@ -10,9 +10,19 @@ import { shopDescription, shopTitle } from '#/lib/seo'
 import { themeStyle } from '#/lib/theme'
 
 export const Route = createFileRoute('/$shop')({
-  loader: async ({ params }) => {
+  loader: async ({ params, location }) => {
     const data = await getStorefront({ data: { slug: params.shop } })
-    if (!data) throw notFound()
+    if (!data) {
+      // A shop that changed its link: the old one sends buyers on to the same page under the new one, so links in
+      // bios, old messages and printed QR codes keep working. 302, never 301: a shop may go back to a link it had, and
+      // a browser that remembered "old goes to new" for good would then bounce between the two.
+      const moved = await movedShopLink({ data: { slug: params.shop } })
+      if (moved.slug) {
+        const rest = location.pathname.split('/').slice(2).join('/')
+        throw redirect({ href: `/${moved.slug}${rest ? `/${rest}` : ''}${location.searchStr}`, statusCode: 302 })
+      }
+      throw notFound()
+    }
     return data
   },
   head: ({ loaderData }) => {

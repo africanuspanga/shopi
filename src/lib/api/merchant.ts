@@ -3,6 +3,7 @@ import { requireShop, requireUser } from '#/server/auth'
 import { allows } from '#/lib/staff'
 import { homeInvoices } from '#/server/invoices'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
+import { LIMITS, take } from '#/server/limits'
 import { removePhotos } from '#/server/media'
 import { cleanProduct, uniqueProductSlug, type ProductInput } from '#/server/products'
 import { moveStock } from '#/server/stock'
@@ -63,8 +64,62 @@ export const checkSlug = createServerFn({ method: 'GET' })
   .validator((d: { slug: string }) => ({ slug: slugify(d.slug) }))
   .handler(async ({ data }) => {
     if (data.slug.length < 3 || RESERVED_SLUGS.has(data.slug)) return { slug: data.slug, free: false }
-    const taken = await first('SELECT 1 FROM shops WHERE slug = ?', data.slug)
+    const taken = await first(LINK_TAKEN, data.slug)
     return { slug: data.slug, free: !taken }
+  })
+
+/**
+ * A shop may change its link (the founder, 23 Nov 2026; migration `0031_shop_links.sql`). Its former links stay in
+ * `shop_links`: each sends buyers on to the link of today (the `$shop` route, `movedShopLink`), and is never given to
+ * another shop, so a link in a bio or on a printed QR code never lands in someone else's shop.
+ */
+const LINK_TAKEN = 'SELECT 1 FROM shops WHERE slug = ?1 UNION ALL SELECT 1 FROM shop_links WHERE slug = ?1 LIMIT 1'
+/** Former links a shop may hold. Past it the seller writes to us: each kept link is one nobody else can open a shop on. */
+const FORMER_LINKS_MAX = 5
+
+/** What a link would be for this shop: its own of today, free to take (its own former ones included), or not. */
+async function linkFor(shopId: string, slug: string): Promise<'same' | 'free' | 'short' | 'taken'> {
+  if (slug.length < 3 || RESERVED_SLUGS.has(slug)) return 'short'
+  const used = await first<{ id: string }>('SELECT id FROM shops WHERE slug = ?', slug)
+  if (used) return used.id === shopId ? 'same' : 'taken'
+  return (await first('SELECT 1 FROM shop_links WHERE slug = ? AND shop_id != ?', slug, shopId)) ? 'taken' : 'free'
+}
+
+/** Shop settings, "Change your shop link": whether the link being typed can be taken. The owner's alone. */
+export const checkShopLink = createServerFn({ method: 'GET' })
+  .validator((d: { slug: string }) => ({ slug: slugify(d.slug) }))
+  .handler(async ({ data }) => {
+    const { shop } = await requireShop()
+    return { slug: data.slug, state: await linkFor(shop.id, data.slug) }
+  })
+
+/**
+ * Changes the shop's link. The link of today joins the shop's former links and the shop moves, in one batch, and only
+ * while the new link is still free (a link another shop took a moment ago fails the batch on the unique index).
+ */
+export const changeShopLink = createServerFn({ method: 'POST' })
+  .validator((d: { slug: string }) => ({ slug: slugify(d.slug) }))
+  .handler(async ({ data }) => {
+    const { shop } = await requireShop()
+    const state = await linkFor(shop.id, data.slug)
+    if (state === 'same') return { ok: true as const, slug: data.slug }
+    if (state !== 'free') return { error: state }
+    const kept = await first<{ n: number }>('SELECT COUNT(*) n FROM shop_links WHERE shop_id = ? AND slug != ?', shop.id, data.slug)
+    if ((kept?.n ?? 0) >= FORMER_LINKS_MAX) return { error: 'many' as const }
+    if (!(await take(`link:${shop.id}`, LIMITS.shopLink))) return { error: 'limit' as const }
+    const free = `NOT EXISTS (SELECT 1 FROM shops WHERE slug = ?2) AND NOT EXISTS (SELECT 1 FROM shop_links WHERE slug = ?2 AND shop_id != ?1)`
+    try {
+      const [, moved] = await db().batch([
+        db().prepare(`INSERT OR IGNORE INTO shop_links (slug, shop_id, created_at) SELECT slug, id, ?3 FROM shops WHERE id = ?1 AND slug != ?2 AND ${free}`).bind(shop.id, data.slug, now()),
+        db().prepare(`UPDATE shops SET slug = ?2 WHERE id = ?1 AND slug != ?2 AND ${free}`).bind(shop.id, data.slug),
+        // Back to a link it had before: that one is its link of today again, not a former one.
+        db().prepare('DELETE FROM shop_links WHERE slug = ?2 AND shop_id = ?1 AND EXISTS (SELECT 1 FROM shops WHERE id = ?1 AND slug = ?2)').bind(shop.id, data.slug),
+      ])
+      if (!moved.meta.changes) return { error: 'taken' as const }
+    } catch {
+      return { error: 'taken' as const }
+    }
+    return { ok: true as const, slug: data.slug }
   })
 
 export const createShop = createServerFn({ method: 'POST' })
@@ -94,7 +149,7 @@ export const createShop = createServerFn({ method: 'POST' })
     if (await first('SELECT 1 FROM shop_staff WHERE user_id = ?', user.id)) return { error: 'staff' as const }
     if (!data.name) return { error: 'name' as const }
     if (data.slug.length < 3 || RESERVED_SLUGS.has(data.slug)) return { error: 'slug' as const }
-    if (await first('SELECT 1 FROM shops WHERE slug = ?', data.slug)) return { error: 'slug_taken' as const }
+    if (await first(LINK_TAKEN, data.slug)) return { error: 'slug_taken' as const }
     // setup_step 1: the five-step setup goes on from here (src/lib/setup.ts). The shop and its first setup row together.
     const id = newId()
     const t = now()
@@ -104,14 +159,15 @@ export const createShop = createServerFn({ method: 'POST' })
         .prepare(
           // A business that sends invoices doesn't deliver: cash on delivery starts off (Shop settings turns it on).
           `INSERT INTO shops (id, owner_id, slug, name, category, whatsapp, lang, instagram, tiktok, facebook, created_at, setup_step, kind, cod_enabled)
-           SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 1, ?12, ?13 WHERE NOT EXISTS (SELECT 1 FROM shop_staff WHERE user_id = ?2)`,
+           SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 1, ?12, ?13 WHERE NOT EXISTS (SELECT 1 FROM shop_staff WHERE user_id = ?2)
+             AND NOT EXISTS (SELECT 1 FROM shop_links WHERE slug = ?3)`,
         )
         .bind(id, user.id, data.slug, data.name, data.category, data.whatsapp || user.phone, data.lang, data.instagram, data.tiktok, data.facebook, t, data.kind, data.kind === 'invoices' ? 0 : 1),
       db()
         .prepare('INSERT INTO setup_steps (shop_id, step, outcome, seconds, created_at) SELECT ?1, 1, ?2, ?3, ?4 WHERE EXISTS (SELECT 1 FROM shops WHERE id = ?1)')
         .bind(id, 'done', data.seconds, t),
     ])
-    if (!(await first('SELECT 1 FROM shops WHERE id = ?', id))) return { error: 'staff' as const }
+    if (!(await first('SELECT 1 FROM shops WHERE id = ?', id))) return (await first('SELECT 1 FROM shop_staff WHERE user_id = ?', user.id)) ? { error: 'staff' as const } : { error: 'slug_taken' as const }
     return { ok: true as const, slug: data.slug }
   })
 
@@ -191,6 +247,11 @@ export const updateShop = createServerFn({ method: 'POST' })
         hide_badge: before.hide_badge,
       }
     }
+    // A Lipa Namba is only usable with its network and the name on payments (the founder, 23 Nov 2026): buyers are
+    // told the name to look for, and payment proofs are checked against it. Only a number being set or changed is
+    // held to it, so a shop saved before this rule can still save its other settings.
+    const lipaNumber = str(data.lipa_number, 20).replace(/\s+/g, '')
+    if (role === 'owner' && lipaNumber && lipaNumber !== (before?.lipa_number ?? '') && (!str(data.lipa_name, 80) || !str(data.lipa_network, 30))) return { error: 'lipa' as const }
     const logo = data.logo_key ? str(data.logo_key, 100) : null
     await run(
       `UPDATE shops SET name = ?, bio = ?, category = ?, logo_key = ?, whatsapp = ?, instagram = ?, tiktok = ?,
@@ -330,7 +391,7 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
       shop.id,
     ),
     first<{ n: number }>('SELECT COUNT(*) n FROM products WHERE shop_id = ?', shop.id),
-    // The shop score's facts (src/lib/score.ts): Home's "Your shop is 60% ready" and its next step.
+    // The shop score's facts (src/lib/score.ts): Home's "Your shop is 60% set up" and its next step.
     first<ScoreRow>(`SELECT ${scoreSelect} FROM shops s WHERE s.id = ?`, shop.id),
     first<{ total: number; orders: number; online: number; visits: number }>(
       `SELECT

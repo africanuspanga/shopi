@@ -48,6 +48,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/routes/onboard.tsx`, `src/components/setup.tsx`, `src/lib/setup.ts`, `src/lib/api/setup.ts`, `src/server/setup.ts` | The five-step setup: the route and step 1; steps 2 to 5 and the shop preview; which step to show; its server functions; `passStep` |
 | `src/lib/email.ts`, `src/server/email.ts`, `src/server/email-templates.ts`, `src/lib/api/email.ts`, `src/components/email.tsx`, `src/routes/email/`, `src/routes/api/email-off.ts`, `src/routes/api/admin-email-preview.ts` | Email to sellers through Resend: `EMAIL_LIVE` and the kinds; sending, confirm links, unsubscribe, receipts and the weekly summary; the templates; the seller's server functions; the Home row and Shop settings group; the stop/remove page; one-click unsubscribe; /admin previews |
 | `src/lib/staff.ts`, `src/server/staff.ts`, `src/lib/api/staff.ts`, `src/routes/app/staff.tsx`, `src/routes/join/$code.tsx`, `src/routes/paused.tsx` | Shop assistants: roles and areas (`allows`, `landing`, `areaOfPath`); invite codes and the list; the owner's and the invite page's server functions; the owner's page; the invite page; the paused page |
+| `src/components/shop-link.tsx` | `ChangeLinkSheet`: Shop settings' "Change your shop link" (see "A shop's link can change") |
 | `src/lib/score.ts`, `src/server/score.ts` | The shop score: the eight items, points and the next step (browser-safe); its facts as one SQL fragment for Home and `/admin` |
 | `src/components/showcase.tsx` | Coded product previews for the landing and auth pages (phone, mini store, order card, payment slip) |
 | `src/components/brand-icons.tsx` | One-colour social icons, plus `WhatsAppMark` (WhatsApp's green mark) |
@@ -175,6 +176,9 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
   `node scripts/seed-zee-history.mjs --rising` first, so its changes point up) at 1440x900 x4/3 and 390x844 x2, in English and Swahili
   (`public/images/shopi-seller-dashboard-{desktop,phone}[-sw].webp`); phones get the phone picture. Retake them
   when Home changes. The top bar has the language switch. Long Swahili labels on the plan buttons wrap.
+- Product kinds (`CATEGORIES` in `lib/format.ts`; the chips at setup and "What you sell" in Shop settings): since
+  23 Nov 2026 also Bags, Hair and wigs, Phones, Home and kitchen, Kids and babies (the founder agreed; what sellers in
+  Dar post most). Ids never change (`fashion`, `bags`, `hair`…), so `/admin`'s sales by category keeps its history.
 - Optional shop fields: `maps_url` (Google Maps links only, `mapsLink()`) gives buyers Directions; `tin` (9 digits, `tinDigits()`,
   shown as `formatTin()` 123-456-789) appears in `ShopFacts`, the Info sheet and on receipts, not in the phone pills.
 - Delivery fees are not in Shopi: buyer and seller agree them on WhatsApp. Shops list delivery areas by name only, as
@@ -277,6 +281,27 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
   - Desktop: the dark panel shows the shop taking shape (`ShopCard`: name, category, the product being typed, the
     payment line), the live shop in a phone at step 4, and a sample order notification at step 5 (`OrderNotice`).
     Phones get the same preview as a small card that opens it (`PreviewToggle`), and step 4 shows the card inline.
+  - **Rules since the onboarding review of 23 Nov 2026** (the founder's answers; `../design/notes/fable-onboarding-review-23nov.md`):
+    - **A form says what is missing on the box itself, every box at once.** `Field` and `FieldGroup` take `error`
+      (red line under the box, red outline; `showFirstError()` scrolls to the first). No setup button is greyed out
+      for a missing answer: the tap answers. `ErrorText` above the button is only for what belongs to no box (the
+      connection, a plan limit). Steps 1, 2 (product and service), 3 (payment, both kinds) and the first invoice do
+      it; `ServiceForm` does it everywhere it is used.
+    - **"Name on payments" is required with a Lipa Namba** (setup and Shop settings: `updateShop` answers
+      `error: 'lipa'` when a number is set or changed without its network or name; a shop saved before the rule can
+      still save its other settings). The box starts empty, never with a grey example (it read as filled in), and
+      `PayNames` offers the shop's name and the owner's own in capitals as one-tap answers.
+    - **The first product and the first service:** "I’ll do this later" is a text link under the form (`LaterLink`),
+      not a second button. A seller who skipped lands on "Your shop is live" with **Add my first product** (or
+      service) as the main button and Continue as the quiet one; it reopens step 2 (`again` in `onboard.tsx`; nothing
+      is stored, the shop's own step never goes back), and saving it or "later" returns to step 4.
+    - **Shop or page:** a seller of products has a shop ("duka"); a salon and a business that sends invoices have a
+      page ("ukurasa") (`hasPage()` in `src/lib/setup.ts`). It changes the setup's titles, labels and buttons ("Your
+      page", "Business name", "Page link", "Open my page", "Your page is live", "Go to Home"), Home's score ("Your
+      page is 40% set up") and a salon's first card ("ready for its first booking"). The seller app's own menu and
+      "Shop settings" still say Shop for everyone.
+    - **The invoice preview on the black panel** reads in ink: `InvoiceDocument` sets `text-ink` itself (the panel
+      sets white text, and the card printed its main lines white on white until 23 Nov).
 - **The shop score** (`src/lib/score.ts`, the founder: "every shop owner reaches a 100% set-up shop"): 100 points over
   eight items: name and link 10; three shown products with a photo, a price and a description 30 (10 each); a way to be
   paid 10 (a Lipa Namba, or cash on delivery on purpose: setup step 3 passed, or a shop older than the setup); WhatsApp
@@ -284,7 +309,8 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
   event: setup, Home's Copy/Share, a product's Send, the QR card) 10; the link in a bio (a visit with source
   `instagram` or `tiktok`, or tag `bio`) 10. The facts are one SQL fragment (`scoreSelect` in `src/server/score.ts`)
   shared by Home (`getDashboard().score`) and `/admin`. **Home:** no product yet, the large "Add your first product"
-  card with "Your shop is 30% ready" above it; then `ScoreCard`: the percentage, its bar, the one next step with its
+  card with "Your shop is 30% set up" above it (the founder left the words to Claude on 23 Nov 2026: "ready" clashed
+  with the "ready for its first order" card under it); then `ScoreCard`: the percentage, its bar, the one next step with its
   button (products first, then the Lipa Namba, then the rest in order; a product missing a description opens it with
   "Write it for me" when AI is on), and "See all" for the eight items. A shop with orders gets it as one line that
   opens. Gone at 100%. **/admin:** the Shops table's Ready column, "How ready shops are" (bands and each item's
@@ -397,7 +423,9 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
     before that**, and Services and the diary say so. Time off (`book_blocks`): a whole day or part of one.
   - **Time is Tanzania's** (UTC+3, no daylight saving): a booking keeps `day` (YYYY-MM-DD), `start_min`/`end_min`
     (minutes from midnight) and `start_at` (ms). Times read on the 24-hour clock (`timeText`): "saa nne" and "10
-    o'clock" are different hours. Short Swahili day names are the team's (J2, J3…, `shortDay`).
+    o'clock" are different hours. Short Swahili day names are the team's (J2, J3…, `shortDay`). A length of time reads
+    "1 h", "2 h 30 min" in English and "1 hour", "2 hours 30 min" in Swahili (`durationText`, with its own strings for
+    one hour; the founder, 23 Nov 2026: "saa 1" reads as seven o'clock); minutes alone stay "dak 15".
   - **Free times** (`freeTimes`, `whyNot`): starts every 30 minutes from opening (15 for a service that isn't a
     multiple of 30) and again from the end of the break; inside the hours, off the break and time off, at least
     `NOTICE_MIN` (60) minutes from now, within `ahead` days, and with a place free throughout (`hasPlace`: the count
@@ -429,7 +457,8 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
     `FirstServiceCard`; the shop score reads services as products, the hours as the way to be paid and the location
     as delivery (`serves` in `src/lib/score.ts`); a services-only shop's facts say "Book a time online · Pay at your
     visit" and its hours, never delivery or cash on delivery (`shop.serves`); the setup's `ServiceStep` and
-    `HoursStep`; the sitemap lists shops with bookable services; `/admin` Product use counts four lines; events
+    `HoursStep` (the hours step has no "I’ll do this later" since 23 Nov 2026, the founder's word: without saved hours
+    nobody can book, and saving the hours shown is one tap); the sitemap lists shops with bookable services; `/admin` Product use counts four lines; events
     `view_service` and `book`; Privacy says what a booking keeps and that it is deleted about 13 months after its day
     (`purgeBookings`, nightly).
   - **Not built** (after real businesses have used it): a deposit by Lipa Namba, home visits with a location, a
@@ -523,6 +552,27 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
   the WhatsApp number (shown under the field; the quiet line opens to change it). Nothing is fetched from Meta; only a TikTok short link (vm.tiktok.com) is opened on the server
   (`expandSocialLink`, TikTok hosts only, the redirect alone is read). A `wa.me/message/…` link hides the number, so the
   seller is asked to type it.
+- **A shop's link can change** (the founder, 23 Nov 2026: "why can't we allow them to change … as long as it's
+  available"; migration `0031_shop_links.sql`). Shop settings > Shop link > **Change link** (`ChangeLinkSheet`, the
+  owner's alone): the new link is checked as it is typed (`checkShopLink`) and saved by `changeShopLink`, one batch
+  that keeps the link of today in `shop_links` and moves the shop, only while the new link is still free.
+  - **Old links keep working:** when no shop answers to `/<link>`, the `$shop` route asks `movedShopLink` and sends
+    the visitor to the same page and query under the shop's link of today (bio links, old messages, printed QR
+    codes, bag links, product pages). **302, never 301:** a shop may go back to a link it had, and a browser that
+    remembered the move for good would bounce between the two. Canonical links name the new address.
+  - **A former link is never given to another shop** (`LINK_TAKEN` in `checkSlug` and `createShop`, and inside
+    `createShop`'s INSERT), so a link in someone's bio never lands in a stranger's shop. A shop may take its own back.
+  - **Limits:** `LIMITS.shopLink` 3 changes a day per shop; at most `FORMER_LINKS_MAX` = 5 former links kept, after
+    which the page says to write to hello@shopi.tz (each kept link is one nobody else can open a shop on).
+  - Sign-up still credits the shop whose old link sent the seller (`ref_shop` reads `shop_links` too).
+  - **Own domains:** addresses there carry no shop link, so nothing moves; `movedShopLink` answers only on Shopi's
+    own hosts. A shop on its own domain that changes its link can show "not here" there for up to a minute, until
+    `shopForHost`'s memory of the old link runs out. No live shop has an own domain yet; if one does, clear that
+    memory on a change.
+  - Step 1 of the setup says "You can change it later in Shop settings." Product links (`/<shop>/<slug>`) still never
+    change.
+  - Found while building it: a link over about 20 letters made Shop settings scroll sideways on a phone (the cards
+    grew with it); `Group` now holds its cards to the page (`min-w-0`).
 - Shop look (`/app/look`, from Shop settings; migration `0017_shop_look.sql`): `shops.theme_color` (#rrggbb, NULL = Shopi
   orange), `theme_font` (NULL = clean) and `cover_key` (uploaded at 1600 px with the 600 px copy; a replaced cover leaves
   storage). Colours: "From your logo" (`logoColors()`: up to 3 from the logo's pixels, leaving out white, black, greys and

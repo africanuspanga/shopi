@@ -62,8 +62,8 @@ local function named like a part); a genuine exception says why on its line or t
 | A number with its label | `Stat` (`size` sm/md/lg, `card`, `onClick`+`on`, `badge`, `foot`); `/admin` wraps it as `Kpi` with the change chip | Label 13 muted, figure in lining figures (lg 20 → 24 from md, md 20, sm 15), a change or note at 13 |
 | Nothing to show yet | `Nothing` (one line in a soft box); `Empty` (icon, title, text, action) for a whole empty page | |
 | A sheet | `Sheet` | Title at 20 (`.title`), close at the right |
-| One input | `Field` | Label 14 medium, hint 13 muted |
-| A group of choices (chips, colours, photos) | `FieldGroup` (`radio` for one-of-several) | The same label and hint as `Field`, named for screen readers |
+| One input | `Field` (`error`) | Label 14 medium, hint 13 muted. A missing or wrong answer is said under the box in `bad` at 13, with the box outlined in `bad` |
+| A group of choices (chips, colours, photos) | `FieldGroup` (`radio` for one-of-several, `error`) | The same label, hint and error line as `Field`, named for screen readers |
 | A label for an input that sits beside a button | `Label` (`htmlFor`) | |
 | A yes/no setting | `Switch` | |
 | An invoice's or quote's state | `InvoicePill` (`state`, `check`) | A quiet dot and label like an order's; a payment to check or an accepted quote waiting for its invoice in the signal colour |
@@ -215,6 +215,14 @@ and the shop page's LCP was 4.4 s). Things that appear after an action (toasts, 
 Animate only colour, opacity and transform. No looping animation except spinners while uploading.
 Presses scale to about 0.97. Respect `prefers-reduced-motion`.
 
+### Forms
+A form says what is missing **on the box itself, every box at once** (`error` on `Field` and `FieldGroup`), then
+`showFirstError()` brings the first one into view. A button is never greyed out for a missing answer, because a grey
+button gives no reason; it is disabled only while saving or uploading. `ErrorText` above the button is for what belongs
+to no box (the connection, a limit). An example inside a box starts with "e.g." ("Mf."); a box that asks about money
+or a name never shows an example that could pass for an answer (the grey shop name in "Name on payments" did, 23 Nov
+2026). The way past a step that matters is a text link under the form, never a second button the size of the main one.
+
 ### Copy
 Plain and specific, about this product. No exclamation marks, no greeting headlines (titles name the place or period),
 no hype words, no claims we cannot back. Changes say what they compare to ("↓ 19% vs the 7 days before").
@@ -247,11 +255,20 @@ Write English as the key: every string goes through `t()` from `src/lib/i18n.tsx
     rider (never mpeleka bidhaa), paste (never bandika), collection (never kundi), stock, cash (never taslimu; "lipa
     ukipokea" stays for cash on delivery), online (never mtandaoni), draft, tag, import, template, website (never
     tovuti), dashboard, profile, email (never barua pepe), logo (never nembo), checkout, mobile money (never pesa kwa
-    simu), log in, log out and login (never ingia or toka), and delivery, link, status, app, bio, QR code.
+    simu), log in, log out and login (never ingia or toka), and delivery, link, status, app, bio, QR code. Since
+    23 Nov (the founder's answers to the onboarding review): the kinds of business Clearing and forwarding and
+    Freelance, Wholesale beside its Swahili ("Wholesale / Jumla"), and hour and hours for a length of time ("1 hour",
+    "2 hours 30 min"; never "saa 1", which reads as a clock time; minutes alone stay "dak 15").
+  - **Characters in a password are "tarakimu au herufi"** ("Angalau tarakimu au herufi 6"), never vibambo.
+  - **Telling a seller to share their link is "Share link yako"**, also where the English says "Send your link"
+    (setup step 4), never "Tuma link yako". Sending one thing to one person stays tuma ("Tuma kwa WhatsApp").
   - **Stay Swahili:** mteja/wateja, bidhaa, malipo, picha, kapu (bag), ujumbe, mauzo, ghairi, hifadhi, huduma,
     thibitisha, kifurushi (plan), futa, taarifa, msaidizi, kutembelewa (visits), kutazamwa (views), ukumbusho, jisajili,
     maelezo, punguzo, takwimu (analytics), imeisha (sold out), tafuta, ramani, ratiba (diary), Mwanzo (Home), pakua
     (download, install: "Pakua Shopi app"), duka, oda, risiti, saizi, Nunua (Buy).
+  - **Shop or page:** a seller of products has a "duka" (shop); a salon and a business that sends invoices have an
+    "ukurasa" (page): "Ukurasa wako", "Fungua ukurasa wangu", "Link ya ukurasa", "Jina la biashara" (the founder, 23
+    Nov 2026; `hasPage()` in `src/lib/setup.ts`). The seller app's menu and "Settings za duka" say duka for everyone.
   - **Tap is "bofya"** (Bofya, ukibofya, kwa kubofya mara moja), never gusa or bonyeza.
   - **Invoices and quotations are printed in English** (on screen and in the PDF, `DOC_LANG` in `lib/invoice.ts`):
     "Bill to", "Balance due" and the rest stay English there; a document's language only chooses the WhatsApp message

@@ -2,7 +2,7 @@ import { msg } from '#/lib/i18n'
 
 /**
  * The shop score (roadmap `o-flow`, 18 Nov 2026; the founder: "every shop owner reaches a 100% set-up shop"). Eight
- * things a shop needs before buyers trust it, worth 100 points. Home says "Your shop is 60% ready" with the one next
+ * things a shop needs before buyers trust it, worth 100 points. Home says "Your shop is 60% set up" with the one next
  * step; /admin counts shops by score to see where sellers stop. The facts come from the server (`scoreSelect` in
  * src/server/score.ts); this file is safe in the browser.
  */

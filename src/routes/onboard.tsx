@@ -3,7 +3,7 @@ import { Check, Link2, Loader2, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { AuthLayout, StepBar } from '#/components/auth'
 import { LivePhone, OrderNotice, PaymentStep, PhoneStep, PreviewAside, ProductStep, ShopCard, LiveStep, StepHead, previewShop, useStepClock, type PreviewProduct, type PreviewService } from '#/components/setup'
-import { ErrorText, Field, FieldGroup, ShopAvatar, ShopLangChoice } from '#/components/ui'
+import { ErrorText, Field, FieldGroup, ShopAvatar, ShopLangChoice, showFirstError } from '#/components/ui'
 import { checkSlug, createShop, expandSocialLink } from '#/lib/api/merchant'
 import { getSetup } from '#/lib/api/setup'
 import { ALL_CATEGORIES, CATEGORIES, INVOICE_CATEGORIES, SERVICE_CATEGORIES, localPhone, normalizePhone, slugify, type ShopKind } from '#/lib/format'
@@ -14,7 +14,7 @@ import type { DocData } from '#/lib/invoice'
 import { LANGUAGES, useLang, useT, type Lang } from '#/lib/i18n'
 import { logout, setLang } from '#/lib/api/session'
 import { catchInstallPrompt } from '#/lib/push'
-import { SETUP_STEPS, inSetup } from '#/lib/setup'
+import { SETUP_STEPS, hasPage, inSetup } from '#/lib/setup'
 import { nameFromHandle, readSocialLink, type SocialFind } from '#/lib/social'
 
 /**
@@ -67,14 +67,26 @@ function Onboard() {
     </button>
   )
 
-  const step = data.shop ? (data.step ?? SETUP_STEPS) : 1
+  const at = data.shop ? (data.step ?? SETUP_STEPS) : 1
+  // A seller who skipped the first product (or service) can add it from "Your shop is live": step 2 opens again, and
+  // saving it, or "later", comes back. Nothing is stored: the shop's own step never goes back (src/lib/setup.ts).
+  const [again, setAgain] = useState(false)
+  const nothingYet = !!data.shop && data.shop.kind !== 'invoices' && (data.shop.kind === 'services' ? data.services.length === 0 : data.products.length === 0)
+  const redo = again && at === 4 && nothingYet
+  const step = redo ? 2 : at
   // The step the page opened on shows at once (it may be drawn by the server); the ones after it rise in.
   const [opened] = useState(step)
   const bar = <StepBar step={step} of={SETUP_STEPS} />
+  const { session } = Route.useRouteContext()
   if (!data.shop) return <ShopStep bar={bar} leave={leave} />
 
   const shop = data.shop
   const first = data.products[0] ?? null
+  const owner = session.user?.name ?? ''
+  const back = () => {
+    setAgain(false)
+    window.scrollTo(0, 0)
+  }
   const asShop = previewShop(shop)
   // A business that sells services (roadmap `v-services`): its first service and its hours instead of a product and
   // a Lipa Namba, and bookings where a shop has orders.
@@ -126,17 +138,31 @@ function Onboard() {
         {bills && step === 2 ? (
           <BillDetailsStep shop={shop} bar={bar} onDoc={onDoc} />
         ) : bills && step === 3 ? (
-          <BillPayStep shop={shop} bar={bar} onDoc={onDoc} />
+          <BillPayStep shop={shop} owner={owner} bar={bar} onDoc={onDoc} />
         ) : bills && step === 4 ? (
           <FirstInvoiceStep shop={shop} bar={bar} onDoc={onDoc} />
         ) : bills ? (
           <PhoneStep shop={shop} product={null} bills bar={bar} />
         ) : step === 2 ? (
-          serves ? <ServiceStep shop={shop} bar={bar} onDraft={onServiceDraft} /> : <ProductStep shop={shop} ai={data.ai} bar={bar} onDraft={onDraft} />
+          serves ? (
+            <ServiceStep shop={shop} bar={bar} onDraft={onServiceDraft} onLater={redo ? back : undefined} />
+          ) : (
+            <ProductStep shop={shop} ai={data.ai} bar={bar} onDraft={onDraft} onLater={redo ? back : undefined} />
+          )
         ) : step === 3 ? (
-          serves ? <HoursStep shop={shop} bar={bar} services={data.services} /> : <PaymentStep shop={shop} bar={bar} onDraft={setPayLine} />
+          serves ? <HoursStep shop={shop} bar={bar} services={data.services} /> : <PaymentStep shop={shop} owner={owner} bar={bar} onDraft={setPayLine} />
         ) : step === 4 ? (
-          <LiveStep shop={shop} products={data.products} services={services} ai={data.ai} bar={bar} />
+          <LiveStep
+            shop={shop}
+            products={data.products}
+            services={services}
+            ai={data.ai}
+            bar={bar}
+            onAddFirst={() => {
+              setAgain(true)
+              window.scrollTo(0, 0)
+            }}
+          />
         ) : (
           <PhoneStep shop={shop} product={first} service={serves ? (data.services[0] ?? null) : undefined} bar={bar} />
         )}
@@ -170,8 +196,12 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
   const [free, setFree] = useState<boolean | null>(null)
   const [checking, setChecking] = useState(false)
   const [error, setError] = useState('')
+  // What is missing, said on its own box.
+  const [missing, setMissing] = useState<{ name?: string; slug?: string }>({})
   const [busy, setBusy] = useState(false)
   const [details, setDetails] = useState(false)
+  // A salon and a business that sends invoices have a page; a seller of products has a shop (the founder, 23 Nov 2026).
+  const page = hasPage(kind)
   // A link the seller pasted from their Instagram, TikTok or WhatsApp (lib/social.ts) and what it filled in.
   const [link, setLink] = useState('')
   const [linkNote, setLinkNote] = useState<{ ok: boolean; text: string } | null>(null)
@@ -260,21 +290,29 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
     <AuthLayout
       topRight={leave}
       aside={
-        <PreviewAside label={t('Your shop, as buyers will see it')}>
+        <PreviewAside label={page ? t('Your page, as clients will see it') : t('Your shop, as buyers will see it')}>
           <ShopCard shop={{ name, slug, logo: null, category }} products={[]} services={kind === 'services' ? [] : undefined} note={kind === 'services' ? t('Your services go here. You add them next.') : t('Your products go here. You add them next.')} />
         </PreviewAside>
       }
     >
       <StepHead
         bar={bar}
-        title={t('Your shop')}
-        sub={firstName ? t('Welcome, {name}. A name and a link, and your shop is open.', { name: firstName }) : t('A name and a link, and your shop is open.')}
+        title={page ? t('Your page') : t('Your shop')}
+        sub={
+          page
+            ? firstName
+              ? t('Welcome, {name}. A name and a link, and your page is open.', { name: firstName })
+              : t('A name and a link, and your page is open.')
+            : firstName
+              ? t('Welcome, {name}. A name and a link, and your shop is open.', { name: firstName })
+              : t('A name and a link, and your shop is open.')
+        }
       />
 
       <div className="mt-6 flex items-center gap-3 rounded-16 bg-card p-3 shadow-[inset_0_0_0_1px_var(--color-line)] lg:hidden">
         <ShopAvatar name={name || 'S'} logo={null} className="h-11 w-11 text-15" />
         <div className="min-w-0">
-          <p className="truncate text-15 font-semibold">{name || t('Your shop')}</p>
+          <p className="truncate text-15 font-semibold">{name || (page ? t('Your business') : t('Your shop'))}</p>
           <p className="code truncate text-13 text-muted">shopi.tz/{slug || 'yourshop'}</p>
         </div>
         <span className="ml-auto hidden shrink-0 rounded-full bg-page px-2.5 py-1 text-12 text-ink-2 min-[400px]:inline">{categoryLabel}</span>
@@ -284,14 +322,23 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
         className="mt-6 space-y-5"
         onSubmit={async (e) => {
           e.preventDefault()
-          setBusy(true)
+          if (busy || checking) return
           setError('')
+          const noName = page ? t('Enter your business name.') : t('Enter a shop name.')
+          const gaps: typeof missing = {}
+          if (!name.trim()) gaps.name = noName
+          if (slug.length < 3) gaps.slug = t('At least 3 letters or numbers')
+          else if (free === false) gaps.slug = t('That link is taken. Try another.')
+          setMissing(gaps)
+          if (Object.keys(gaps).length) return showFirstError()
+          setBusy(true)
           try {
             const res = await createShop({ data: { name, slug, category, kind, whatsapp, lang: shopLang, ...socials, seconds: clock() } })
             if ('error' in res) {
               setBusy(false)
               if (res.error === 'staff') return setError(t('This number helps run another shop on Shopi. To open your own shop, sign up with another number.'))
-              return setError(res.error === 'name' ? t('Enter a shop name.') : t('That link is taken. Try another.'))
+              setMissing(res.error === 'name' ? { name: noName } : { slug: t('That link is taken. Try another.') })
+              return showFirstError()
             }
             await router.invalidate()
             window.scrollTo(0, 0)
@@ -329,15 +376,24 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
             />
           </span>
         </Field>
-        <Field label={t('Shop name')}>
-          <input className="input" placeholder="Zuri Fashion" value={name} onChange={(e) => setName(e.target.value)} />
+        <Field label={page ? t('Business name') : t('Shop name')} error={missing.name}>
+          <input
+            className="input"
+            placeholder="Zuri Fashion"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value)
+              setMissing({})
+            }}
+          />
         </Field>
         <Field
-          label={t('Shop link')}
+          label={page ? t('Page link') : t('Shop link')}
+          error={missing.slug}
           hint={
             <>
-              {status}
-              <span className="mt-1 block text-muted">{t('It stays the same, so the links you share keep working.')}</span>
+              {!missing.slug && status}
+              <span className="mt-1 block text-muted">{t('You can change it later in Shop settings.')}</span>
             </>
           }
         >
@@ -352,6 +408,7 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
               onChange={(e) => {
                 setSlugTouched(true)
                 setSlug(slugify(e.target.value, { typing: true }))
+                setMissing((m) => ({ ...m, slug: undefined }))
               }}
             />
           </span>
@@ -391,8 +448,12 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
 
         {details ? (
           <div className="fade space-y-5 rounded-16 bg-card p-4 shadow-[inset_0_0_0_1px_var(--color-line)]">
-            <ShopLangChoice value={shopLang} onChange={chooseLang} hint={t('Buyers see your shop in this language. You can change it later in Shop settings.')} />
-            <Field label={t('Shop WhatsApp')} hint={t('Buyers message you here about orders')}>
+            <ShopLangChoice
+              value={shopLang}
+              onChange={chooseLang}
+              hint={page ? t('Clients see your page in this language. You can change it later in Shop settings.') : t('Buyers see your shop in this language. You can change it later in Shop settings.')}
+            />
+            <Field label={page ? t('Business WhatsApp') : t('Shop WhatsApp')} hint={page ? t('Clients message you here') : t('Buyers message you here about orders')}>
               <input className="input" type="tel" inputMode="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
             </Field>
           </div>
@@ -400,7 +461,7 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
           <div className="flex items-start justify-between gap-4 rounded-16 bg-well/70 px-4 py-3">
             <p className="min-w-0 text-14 leading-5 text-ink-2">
               <span className="font-medium text-ink">{langName}</span> · <span className="code">{localPhone(normalizePhone(whatsapp) || whatsapp)}</span>
-              <span className="mt-0.5 block text-13 text-muted">{t('The language buyers see, and the WhatsApp they message.')}</span>
+              <span className="mt-0.5 block text-13 text-muted">{page ? t('The language clients see, and the WhatsApp they message.') : t('The language buyers see, and the WhatsApp they message.')}</span>
             </p>
             <button type="button" className="shrink-0 text-14 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink" onClick={() => setDetails(true)}>
               {t('Change')}
@@ -409,8 +470,9 @@ function ShopStep({ bar, leave }: { bar: React.ReactNode; leave: React.ReactNode
         )}
 
         <ErrorText>{error}</ErrorText>
-        <button className="btn btn-lg w-full" disabled={busy || free === false || checking || !name.trim()}>
-          {busy ? t('Opening your shop') : t('Open my shop')}
+        {/* Never greyed out: a tap says what is missing, on its own box. */}
+        <button className="btn btn-lg w-full" disabled={busy}>
+          {busy ? (page ? t('Opening your page') : t('Opening your shop')) : page ? t('Open my page') : t('Open my shop')}
         </button>
       </form>
     </AuthLayout>

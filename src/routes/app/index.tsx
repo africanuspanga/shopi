@@ -15,7 +15,7 @@ import { shareLink, useOrigin } from '#/lib/share'
 import { track } from '#/lib/analytics'
 import { productNeed, scoreCount, shopScore, SCORE_PRODUCTS, type ScoreFacts, type ScoreItem } from '#/lib/score'
 import { minuteOf, timeText } from '#/lib/booking'
-import { inSetup } from '#/lib/setup'
+import { hasPage, inSetup } from '#/lib/setup'
 
 export const Route = createFileRoute('/app/')({
   // A shop still in the five-step setup goes back to the step it stopped at (src/lib/setup.ts).
@@ -169,9 +169,11 @@ function Dashboard() {
       {hasProducts && !hasOrders && (
         <section className={`${rise2} card mt-6 p-6 md:mt-8 md:flex md:items-end md:justify-between md:gap-10 md:p-7`}>
           <div className="min-w-0">
-            <CardHead title={t('Your shop is ready for its first order')} />
+            <CardHead title={shop.kind === 'services' ? t('Your page is ready for its first booking') : t('Your shop is ready for its first order')} />
             <p className="mt-2 max-w-[52ch] text-14 leading-relaxed text-muted">
-              {t('Put your link in your Instagram bio and on your WhatsApp status. Your first order shows up here.')}
+              {shop.kind === 'services'
+                ? t('Put your link in your Instagram bio and on your WhatsApp status. Your first booking shows up here.')
+                : t('Put your link in your Instagram bio and on your WhatsApp status. Your first order shows up here.')}
             </p>
             <p className="code mt-4 truncate text-17">shopi.tz/{shop.slug}</p>
             {d.visits.shop > 0 && <p className="meta mt-1">{t('{n} visits', { n: n(d.visits.shop) })} · {t('Last 7 days')}</p>}
@@ -685,15 +687,22 @@ function PlanRow({ plan }: { plan: PlanState | null }) {
   )
 }
 
-/** "Your shop is 40% ready" with its bar. */
-function ScoreBar({ score, className = '' }: { score: number; className?: string }) {
+/** "Your shop is 40% set up", or "Your page is…" for a salon or a business that sends invoices (src/lib/setup.ts). */
+function useScoreTitle() {
   const t = useT()
+  const page = hasPage(useRouteContext({ from: '/app' }).shop.kind)
+  return (n: number) => (page ? t('Your page is {n}% set up', { n }) : t('Your shop is {n}% set up', { n }))
+}
+
+/** "Your shop is 40% set up" with its bar. */
+function ScoreBar({ score, className = '' }: { score: number; className?: string }) {
+  const title = useScoreTitle()
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <div className="h-1.5 max-w-[220px] flex-1 overflow-hidden rounded-full bg-well" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100} aria-label={t('Your shop is {n}% ready', { n: score })}>
+      <div className="h-1.5 max-w-[220px] flex-1 overflow-hidden rounded-full bg-well" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100} aria-label={title(score)}>
         <div className="h-full rounded-full bg-ink transition-[width] duration-500" style={{ width: `${score}%` }} />
       </div>
-      <span className="meta shrink-0">{t('Your shop is {n}% ready', { n: score })}</span>
+      <span className="meta shrink-0">{title(score)}</span>
     </div>
   )
 }
@@ -727,16 +736,17 @@ function ScoreCard({
   const [bioHelp, setBioHelp] = useState(false)
   // Every hook before the early return: a share that completes the last item would change the hook count.
   const owner = useRouteContext({ from: '/app' }).shop.role === 'owner'
+  const title = useScoreTitle()
   if (!next) return null
   const step = nextStep(next, facts, ai, t, { onShare, onBio: () => setBioHelp(true) }, owner)
 
   if (!open)
-    return <Notice className={className} icon={<span className="tnum">{score}%</span>} title={step.title} sub={t('Your shop is {n}% ready', { n: score })} onClick={() => setOpen(true)} />
+    return <Notice className={className} icon={<span className="tnum">{score}%</span>} title={step.title} sub={title(score)} onClick={() => setOpen(true)} />
 
   return (
     <section className={`${className} card p-5 md:p-6`}>
       <CardHead
-        title={t('Your shop is {n}% ready', { n: score })}
+        title={title(score)}
         right={
           <button type="button" className="-my-2 shrink-0 py-2 text-13 text-muted transition-colors hover:text-ink" aria-expanded={all} onClick={() => setAll(!all)}>
             {all ? t('Hide') : t('See all')}

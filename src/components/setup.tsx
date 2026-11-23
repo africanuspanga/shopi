@@ -7,7 +7,7 @@ import { PriceInput } from '#/components/product-form'
 import { QrSheet } from '#/components/qr-sheet'
 import { ShareActions } from '#/components/share'
 import { Phone } from '#/components/showcase'
-import { ErrorText, Field, FieldGroup, Img, Sheet, ShopAvatar, Toast } from '#/components/ui'
+import { ErrorText, Field, FieldGroup, Img, Sheet, ShopAvatar, Toast, showFirstError } from '#/components/ui'
 import { saveProduct } from '#/lib/api/merchant'
 import { passSetupStep, saveSetupPayment, saveShopBio, type SetupProduct, type SetupShop } from '#/lib/api/setup'
 import { track } from '#/lib/analytics'
@@ -16,7 +16,7 @@ import { durationText, servicePrice } from '#/lib/booking'
 import { useT } from '#/lib/i18n'
 import { usePhoneApp } from '#/lib/push'
 import { useOrigin } from '#/lib/share'
-import type { SetupOutcome } from '#/lib/setup'
+import { hasPage, type SetupOutcome } from '#/lib/setup'
 import { uploadImage } from '#/lib/upload'
 
 /*
@@ -141,7 +141,7 @@ export function PreviewAside({ label, children }: { label: string; children: Rea
 }
 
 /** Phones: the same preview as a small card that opens it. */
-export function PreviewToggle({ shop, children }: { shop: PreviewShop; children: ReactNode }) {
+export function PreviewToggle({ shop, children, title }: { shop: PreviewShop; children: ReactNode; title?: string }) {
   const t = useT()
   const [open, setOpen] = useState(false)
   return (
@@ -160,7 +160,7 @@ export function PreviewToggle({ shop, children }: { shop: PreviewShop; children:
           {t('Preview')} <ChevronRight size={16} strokeWidth={1.75} />
         </span>
       </button>
-      <Sheet open={open} onClose={() => setOpen(false)} title={t('Your shop, as buyers will see it')}>
+      <Sheet open={open} onClose={() => setOpen(false)} title={title ?? t('Your shop, as buyers will see it')}>
         <div className="rounded-28 shadow-[inset_0_0_0_1px_var(--color-line)]">{children}</div>
       </Sheet>
     </>
@@ -182,7 +182,30 @@ export function StepHead({ bar, title, sub }: { bar: ReactNode; title: string; s
 
 const MAX_PHOTOS = 6
 
-export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: boolean; bar: ReactNode; onDraft: (p: PreviewProduct) => void }) {
+/** The quiet way past a step that matters (the first product, the first service): a link under the button, not a button. */
+export function LaterLink({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+  const t = useT()
+  return (
+    <button type="button" className="mx-auto flex min-h-11 items-center px-4 text-14 font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink" disabled={disabled} onClick={onClick}>
+      {t('I’ll do this later')}
+    </button>
+  )
+}
+
+export function ProductStep({
+  shop,
+  ai,
+  bar,
+  onDraft,
+  onLater,
+}: {
+  shop: SetupShop
+  ai: boolean
+  bar: ReactNode
+  onDraft: (p: PreviewProduct) => void
+  /** Opened again from "Your shop is live" by a seller who skipped it: "later" goes back there instead of passing the step. */
+  onLater?: () => void
+}) {
   const t = useT()
   const pass = usePass(2)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -194,6 +217,8 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
   const [sizes, setSizes] = useState<string[] | null>(null)
   const [moreOpen, setMoreOpen] = useState(false)
   const [error, setError] = useState('')
+  // What is missing, said on its own box, every box at once.
+  const [missing, setMissing] = useState<{ photos?: string; name?: string; price?: string }>({})
   const [busy, setBusy] = useState(false)
 
   // The preview on the right (and in the phone's sheet) follows the form.
@@ -208,6 +233,7 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
       try {
         const key = await uploadImage(f)
         setImages((prev) => [...prev, key])
+        setMissing((m) => ({ ...m, photos: undefined }))
       } catch {
         setError(t('A photo failed to upload. Check your connection and try again.'))
       } finally {
@@ -219,9 +245,14 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
   async function save(e: React.FormEvent) {
     e.preventDefault()
     if (busy || uploading) return
-    if (!images.length) return setError(t('Add a photo of it. Buyers order what they can see.'))
-    setBusy(true)
     setError('')
+    const gaps: typeof missing = {}
+    if (!images.length) gaps.photos = t('Add a photo of it. Buyers order what they can see.')
+    if (!name.trim()) gaps.name = t('Give the product a name.')
+    if (!Number(price)) gaps.price = t('Enter a price.')
+    setMissing(gaps)
+    if (Object.keys(gaps).length) return showFirstError()
+    setBusy(true)
     try {
       const res = await saveProduct({
         data: {
@@ -236,7 +267,9 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
       })
       if ('error' in res) {
         setBusy(false)
-        return setError(res.error === 'name' ? t('Give the product a name.') : res.error === 'limit' ? t('A free shop holds up to 300 products. Tembo has no limit.') : t('Enter a price.'))
+        if (res.error === 'limit') return setError(t('A free shop holds up to 300 products. Tembo has no limit.'))
+        setMissing(res.error === 'name' ? { name: t('Give the product a name.') } : { price: t('Enter a price.') })
+        return showFirstError()
       }
     } catch {
       setBusy(false)
@@ -250,6 +283,7 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
   }
 
   async function skip() {
+    if (onLater) return onLater()
     setBusy(true)
     setError('')
     if (!(await pass('skip'))) {
@@ -265,7 +299,7 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
         <ShopCard shop={previewShop(shop)} products={[{ name, price: Number(price) || 0, image: images[0] ?? null, uploading: uploading > 0 && !images.length }]} />
       </PreviewToggle>
       <form className="mt-6 space-y-5" onSubmit={save}>
-        <FieldGroup label={t('Photos')}>
+        <FieldGroup label={t('Photos')} error={missing.photos}>
           <div className="hide-scroll -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
             {images.map((k, i) => (
               <div key={k} className="relative shrink-0">
@@ -310,11 +344,26 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
             />
           </div>
         </FieldGroup>
-        <Field label={t('Name')}>
-          <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('e.g. Kitenge maxi dress')} />
+        <Field label={t('Name')} error={missing.name}>
+          <input
+            className="input"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value)
+              setMissing((m) => ({ ...m, name: undefined }))
+            }}
+            placeholder={t('e.g. Kitenge maxi dress')}
+          />
         </Field>
-        <Field label={t('Price')}>
-          <PriceInput value={price} onValue={setPrice} placeholder="35,000" />
+        <Field label={t('Price')} error={missing.price}>
+          <PriceInput
+            value={price}
+            onValue={(v) => {
+              setPrice(v)
+              setMissing((m) => ({ ...m, price: undefined }))
+            }}
+            placeholder="35,000"
+          />
         </Field>
         <div>
           <Field label={t('Description')} aside={t('Optional')}>
@@ -348,9 +397,6 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
             {uploading > 0 && <Loader2 size={16} className="animate-spin" />}
             {uploading > 0 ? t('Waiting for photos to upload') : busy ? t('Saving') : t('Save and continue')}
           </button>
-          <button type="button" className="btn btn-lg btn-ghost w-full" disabled={busy} onClick={skip}>
-            {t('I’ll do this later')}
-          </button>
         </div>
         <p className="text-center text-14 text-muted">
           {t('Many products?')}{' '}
@@ -358,6 +404,8 @@ export function ProductStep({ shop, ai, bar, onDraft }: { shop: SetupShop; ai: b
             {t('Import them from a sheet')}
           </Link>
         </p>
+        {/* A link, not a button the size of the main one: the first product is what makes the shop worth sharing. */}
+        <LaterLink onClick={skip} disabled={busy} />
       </form>
     </>
   )
@@ -371,7 +419,29 @@ export function paymentLine(t: ReturnType<typeof useT>, p: { network: string; nu
   return p.cod ? t('Cash on delivery') : ''
 }
 
-export function PaymentStep({ shop, bar, onDraft }: { shop: SetupShop; bar: ReactNode; onDraft: (line: string) => void }) {
+/**
+ * One-tap answers under "Name on payments": the shop's name and the owner's own, in capitals as a payment SMS prints
+ * them. The box itself starts empty: a grey example there read as an answer already given (the founder, 23 Nov 2026).
+ */
+export function PayNames({ shop, owner, value, onPick }: { shop: string; owner: string; value: string; onPick: (name: string) => void }) {
+  const t = useT()
+  const names = [...new Set([shop, owner].map((n) => n.trim().toUpperCase()).filter(Boolean))]
+  if (!names.length) return null
+  return (
+    <div className="mt-3">
+      <p className="text-13 text-muted">{t('If it is one of these, tap it:')}</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {names.map((n) => (
+          <button key={n} type="button" className="chip" aria-pressed={value.trim().toUpperCase() === n} onClick={() => onPick(n)}>
+            {n}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function PaymentStep({ shop, owner, bar, onDraft }: { shop: SetupShop; /** The owner's name from sign-up. */ owner: string; bar: ReactNode; onDraft: (line: string) => void }) {
   const t = useT()
   const router = useRouter()
   const pass = usePass(3)
@@ -380,23 +450,36 @@ export function PaymentStep({ shop, bar, onDraft }: { shop: SetupShop; bar: Reac
   const [number, setNumber] = useState(shop.lipa_number)
   const [name, setName] = useState(shop.lipa_name)
   const [error, setError] = useState('')
+  // What is missing, said on its own box, every box at once.
+  const [missing, setMissing] = useState<{ network?: string; number?: string; name?: string }>({})
   const [busy, setBusy] = useState(false)
   const cod = !!shop.cod_enabled
+  const gaps = {
+    network: t('Choose the network your number is on.'),
+    number: t('Enter your Lipa Namba or number.'),
+    name: t('Enter the name on payments.'),
+  }
 
   useEffect(() => onDraft(paymentLine(t, { network, number, cod })), [network, number, cod, onDraft, t])
 
   async function save(e: React.FormEvent) {
     e.preventDefault()
     if (busy) return
-    setBusy(true)
     setError('')
+    const found: typeof missing = {}
+    if (!network) found.network = gaps.network
+    if (number.replace(/\D/g, '').length < 4) found.number = gaps.number
+    if (!name.trim()) found.name = gaps.name
+    setMissing(found)
+    if (Object.keys(found).length) return showFirstError()
+    setBusy(true)
     try {
       const res = await saveSetupPayment({ data: { network, number, name, seconds: clock() } })
       if ('error' in res) {
         setBusy(false)
-        return setError(
-          res.error === 'network' ? t('Choose the network your number is on.') : res.error === 'number' ? t('Enter your Lipa Namba or number.') : t('Enter the name buyers see when they pay.'),
-        )
+        const what = res.error ?? 'name'
+        setMissing({ [what]: gaps[what] })
+        return showFirstError()
       }
       await router.invalidate()
       window.scrollTo(0, 0)
@@ -426,21 +509,58 @@ export function PaymentStep({ shop, bar, onDraft }: { shop: SetupShop; bar: Reac
         <ShopCard shop={previewShop(shop)} products={[]} payment={paymentLine(t, { network, number, cod })} />
       </PreviewToggle>
       <form className="mt-6 space-y-5" onSubmit={save}>
-        <FieldGroup label={t('Network')}>
+        <FieldGroup label={t('Network')} error={missing.network}>
           <div className="flex flex-wrap gap-2">
             {NETWORKS.map((n) => (
-              <button key={n} type="button" className="chip" aria-pressed={network === n} onClick={() => setNetwork(n)}>
+              <button
+                key={n}
+                type="button"
+                className="chip"
+                aria-pressed={network === n}
+                onClick={() => {
+                  setNetwork(n)
+                  setMissing((m) => ({ ...m, network: undefined }))
+                }}
+              >
                 {n}
               </button>
             ))}
           </div>
         </FieldGroup>
-        <Field label={t('Lipa Namba or number')}>
-          <input className="input code" inputMode="numeric" value={number} onChange={(e) => setNumber(e.target.value)} placeholder="5512345" />
+        <Field label={t('Lipa Namba or number')} error={missing.number}>
+          <input
+            className="input code"
+            inputMode="numeric"
+            value={number}
+            onChange={(e) => {
+              setNumber(e.target.value)
+              setMissing((m) => ({ ...m, number: undefined }))
+            }}
+            placeholder="5512345"
+          />
         </Field>
-        <Field label={t('Name on payments')} hint={t('Exactly as it shows on the payment SMS. We use it to check buyers’ proof.')}>
-          <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={shop.name.toUpperCase()} />
-        </Field>
+        <div>
+          <Field label={t('Name on payments')} error={missing.name} hint={t('Exactly as it shows on the payment SMS. We use it to check buyers’ proof.')}>
+            <input
+              className="input"
+              value={name}
+              autoCapitalize="characters"
+              onChange={(e) => {
+                setName(e.target.value)
+                setMissing((m) => ({ ...m, name: undefined }))
+              }}
+            />
+          </Field>
+          <PayNames
+            shop={shop.name}
+            owner={owner}
+            value={name}
+            onPick={(n) => {
+              setName(n)
+              setMissing((m) => ({ ...m, name: undefined }))
+            }}
+          />
+        </div>
         <ErrorText>{error}</ErrorText>
         <div className="flex flex-col gap-3">
           <button className="btn btn-lg w-full" disabled={busy}>
@@ -457,9 +577,27 @@ export function PaymentStep({ shop, bar, onDraft }: { shop: SetupShop; bar: Reac
 
 /* ---------- Step 4: the shop is live ---------- */
 
-export function LiveStep({ shop, products, services, ai, bar }: { shop: SetupShop; products: SetupProduct[]; services?: PreviewService[]; ai: boolean; bar: ReactNode }) {
+export function LiveStep({
+  shop,
+  products,
+  services,
+  ai,
+  bar,
+  onAddFirst,
+}: {
+  shop: SetupShop
+  products: SetupProduct[]
+  services?: PreviewService[]
+  ai: boolean
+  bar: ReactNode
+  /** The seller skipped the first product (or service): the way back to add it, the main thing to do on this screen. */
+  onAddFirst?: () => void
+}) {
   const t = useT()
   const pass = usePass(4)
+  const page = hasPage(shop.kind)
+  // Nothing to order or book yet: adding it comes first, sharing after.
+  const empty = services ? services.length === 0 : products.length === 0
   const origin = useOrigin()
   const url = `${origin}/${shop.slug}`
   const [qrOpen, setQrOpen] = useState(false)
@@ -484,7 +622,7 @@ export function LiveStep({ shop, products, services, ai, bar }: { shop: SetupSho
     <>
       <StepHead
         bar={bar}
-        title={t('Your shop is live')}
+        title={page ? t('Your page is live') : t('Your shop is live')}
         sub={
           services
             ? services.length && !shop.book
@@ -494,12 +632,18 @@ export function LiveStep({ shop, products, services, ai, bar }: { shop: SetupSho
               : t('Your link works now. Add your first service, then share it so clients have something to book.')
             : products.length
               ? t('Send your link and buyers can order. Put it in your Instagram bio so every visitor finds it.')
-              : t('Your link works now. Add your first product from Home, then share it so buyers have something to order.')
+              : t('Your link works now. Add your first product, then share it so buyers have something to order.')
         }
       />
 
+      {empty && onAddFirst && (
+        <button type="button" className="btn btn-lg mt-6 w-full" onClick={onAddFirst}>
+          <Plus size={18} strokeWidth={2.25} /> {services ? t('Add my first service') : t('Add my first product')}
+        </button>
+      )}
+
       <section className="mt-6 rounded-20 bg-card p-5 shadow-[inset_0_0_0_1px_var(--color-line)]">
-        <p className="text-13 text-muted">{t('Your shop link')}</p>
+        <p className="text-13 text-muted">{page ? t('Your page link') : t('Your shop link')}</p>
         <p className="code mt-1 truncate text-17">shopi.tz/{shop.slug}</p>
         <div className="mt-4">
           <ShareActions url={url} title={shop.name} text={services ? t('You can now book with us here:') : t('My shop is open. You can order here:')} onShared={shared} />
@@ -538,7 +682,7 @@ export function LiveStep({ shop, products, services, ai, bar }: { shop: SetupSho
       )}
       <button
         type="button"
-        className="btn btn-lg mt-6 w-full"
+        className={`btn btn-lg mt-6 w-full ${empty && onAddFirst ? 'btn-ghost' : ''}`}
         disabled={busy}
         onClick={async () => {
           setBusy(true)
@@ -588,13 +732,14 @@ export function LiveCard({ shop, products, services, ai }: { shop: SetupShop; pr
   const [bio, setBio] = useState(shop.bio)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const page = hasPage(shop.kind)
   const slot = (
     <button type="button" onClick={() => setOpen(true)} className="group mt-2 block w-full text-left">
       {shop.bio ? (
         <span className="text-14 leading-relaxed text-ink-2 underline decoration-line-strong decoration-dashed underline-offset-4 group-hover:decoration-ink">{shop.bio}</span>
       ) : (
         <span className="flex items-center gap-2 rounded-12 border border-dashed border-line-strong px-3 py-2.5 text-13 font-medium text-ink-2 transition-colors group-hover:border-ink">
-          <Plus size={16} strokeWidth={2.25} /> {t('Add a line about your shop')}
+          <Plus size={16} strokeWidth={2.25} /> {page ? t('Add a line about your business') : t('Add a line about your shop')}
         </span>
       )}
     </button>
@@ -602,7 +747,7 @@ export function LiveCard({ shop, products, services, ai }: { shop: SetupShop; pr
   return (
     <>
       <ShopCard shop={previewShop(shop)} products={products} services={services} bio={slot} />
-      <Sheet open={open} onClose={() => setOpen(false)} title={t('A line about your shop')}>
+      <Sheet open={open} onClose={() => setOpen(false)} title={page ? t('A line about your business') : t('A line about your shop')}>
         <form
           onSubmit={async (e) => {
             e.preventDefault()
@@ -619,8 +764,14 @@ export function LiveCard({ shop, products, services, ai }: { shop: SetupShop; pr
             }
           }}
         >
-          <Field label={t('Short bio')} aside={`${bio.length}/300`} hint={t('Buyers read it under your shop’s name.')}>
-            <textarea className="input" maxLength={300} value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t('e.g. Kitenge outfits made in Sinza. Delivery across Dar the same day.')} />
+          <Field label={t('Short bio')} aside={`${bio.length}/300`} hint={page ? t('Clients read it under your name.') : t('Buyers read it under your shop’s name.')}>
+            <textarea
+              className="input"
+              maxLength={300}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder={page ? t('e.g. Braids and natural hair in Sinza. Open Monday to Saturday.') : t('e.g. Kitenge outfits made in Sinza. Delivery across Dar the same day.')}
+            />
           </Field>
           <WriteBio notes={bio} onText={setBio} ready={ai} />
           {error && (
@@ -726,6 +877,8 @@ export function PhoneStep({ shop, product, service, bills = false, bar }: { shop
     setError(t('Something went wrong. Try again.'))
   }
 
+  // A salon and a business that sends invoices have a page, not a shop, and this button opens Home either way.
+  const page = bills || service !== undefined
   // Something the seller could still do on this screen: turn notifications on, or (iPhone) install first.
   const waiting = app.state === 'off' || app.state === 'loading' || app.state === 'ios'
   const status =
@@ -771,7 +924,7 @@ export function PhoneStep({ shop, product, service, bills = false, bar }: { shop
         )}
         {/* Main once there is nothing left to turn on here (on, blocked, or a browser without notifications). */}
         <button type="button" className={`btn btn-lg w-full ${waiting ? 'btn-ghost' : ''}`} disabled={busy} onClick={finish}>
-          {waiting ? t('Not now, go to my shop') : t('Go to my shop')}
+          {waiting ? (page ? t('Not now, go to Home') : t('Not now, go to my shop')) : page ? t('Go to Home') : t('Go to my shop')}
         </button>
       </div>
       <InstallSheet open={guide} onClose={() => setGuide(false)} app={app} />

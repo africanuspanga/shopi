@@ -468,22 +468,26 @@ export function FieldGroup({
   htmlFor,
   radio = false,
   className = '',
+  error,
 }: {
   label: string
   children: ReactNode
   hint?: ReactNode
   aside?: ReactNode
+  /** What is missing in this group, said under it in red. */
+  error?: string
   htmlFor?: string
   /** One choice among several (role="radiogroup"); the buttons inside then carry role="radio" and aria-checked. */
   radio?: boolean
   className?: string
 }) {
   return (
-    <div className={`field ${className}`} {...(htmlFor ? {} : { role: radio ? 'radiogroup' : 'group', 'aria-label': label })}>
+    <div className={`field ${className}`} data-invalid={error ? '' : undefined} {...(htmlFor ? {} : { role: radio ? 'radiogroup' : 'group', 'aria-label': label })}>
       <Label htmlFor={htmlFor} aside={aside}>
         {label}
       </Label>
       {children}
+      <FieldError>{error}</FieldError>
       {hint && <small className="hint">{hint}</small>}
     </div>
   )
@@ -560,14 +564,43 @@ export function Nothing({ children }: { children: ReactNode }) {
   return <p className="rounded-14 bg-page px-4 py-6 text-center text-14 text-muted">{children}</p>
 }
 
-export function Field({ label, children, hint, aside }: { label: string; children: ReactNode; hint?: ReactNode; aside?: ReactNode }) {
+export function Field({
+  label,
+  children,
+  hint,
+  aside,
+  error,
+}: {
+  label: string
+  children: ReactNode
+  hint?: ReactNode
+  aside?: ReactNode
+  /** What is missing or wrong in this box: said under it in red, with the box outlined (see `showFirstError`). */
+  error?: string
+}) {
   return (
-    <label className="field">
+    <label className="field" data-invalid={error ? '' : undefined}>
       <Label aside={aside}>{label}</Label>
       {children}
+      <FieldError>{error}</FieldError>
       {hint && <small className="hint">{hint}</small>}
     </label>
   )
+}
+
+/** A field's own error, under its box: a form says what is missing where it is missing, every box at once. */
+function FieldError({ children }: { children?: string }) {
+  if (!children) return null
+  return (
+    <small role="alert" className="hint text-bad">
+      {children}
+    </small>
+  )
+}
+
+/** After a form marked its boxes (`error` on Field and FieldGroup): bring the first one into view. */
+export function showFirstError() {
+  requestAnimationFrame(() => document.querySelector('[data-invalid]')?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
 }
 
 /** A yes/no setting as a full row. */
