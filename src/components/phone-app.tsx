@@ -25,7 +25,7 @@ function useTurnOn(app: ReturnType<typeof usePhoneApp>) {
 }
 
 /** On Home: one card until notifications are on (and Shopi installed where the phone offers it), or "Not now". */
-export function PhoneAlertsCard() {
+export function PhoneAlertsCard({ kind = 'products' }: { /** What the business chose at setup: a salon hears of bookings, a business that sends invoices of payments. */ kind?: string }) {
   const t = useT()
   const app = usePhoneApp()
   const { on, error, done } = useTurnOn(app)
@@ -54,12 +54,16 @@ export function PhoneAlertsCard() {
     <>
       <Notice
         icon={<Bell size={18} strokeWidth={1.75} />}
-        title={t('Get new orders as notifications')}
+        title={kind === 'services' ? t('Get new bookings as notifications') : kind === 'invoices' ? t('Get payments as notifications') : t('Get new orders as notifications')}
         sub={
           error ? (
             <span className="text-bad">{error}</span>
           ) : app.ios ? (
             t('On iPhone, put Shopi on your Home Screen first. Then open it from there and turn on notifications.')
+          ) : kind === 'services' ? (
+            t('A notification the moment a client books, even when Shopi is closed.')
+          ) : kind === 'invoices' ? (
+            t('A notification when a client opens your invoice or sends the payment SMS.')
           ) : (
             t('A notification the moment a buyer orders, even when Shopi is closed.')
           )

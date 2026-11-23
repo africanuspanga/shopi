@@ -56,18 +56,19 @@ function ProductAside() {
 export function StepBar({ step, of, onBack }: { step: number; of: number; onBack?: () => void }) {
   const t = useT()
   return (
-    <div className="flex h-11 items-center gap-3">
+    <div className="flex h-11 min-w-0 items-center gap-3">
       {onBack && (
         <button type="button" className="-mr-1 -ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink transition-colors hover:bg-well" aria-label={t('Back')} onClick={onBack}>
           <ArrowLeft size={20} strokeWidth={1.75} />
         </button>
       )}
-      <div className="flex gap-1.5" aria-hidden>
+      {/* The bars give way when "Preview" shares the row on a phone; alone they are 28px each, as before. */}
+      <div className="flex max-w-[164px] min-w-0 flex-1 gap-1.5" aria-hidden>
         {Array.from({ length: of }).map((_, i) => (
-          <span key={i} className={`h-1 w-7 rounded-full transition-colors duration-500 ${i < step ? 'bg-ink' : 'bg-raised'}`} />
+          <span key={i} className={`h-1 min-w-2 flex-1 rounded-full transition-colors duration-500 ${i < step ? 'bg-ink' : 'bg-raised'}`} />
         ))}
       </div>
-      <span className="meta">{t('{n} of {total}', { n: step, total: of })}</span>
+      <span className="meta shrink-0 whitespace-nowrap">{t('{n} of {total}', { n: step, total: of })}</span>
     </div>
   )
 }

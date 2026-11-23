@@ -1,20 +1,23 @@
 import { Link, useRouter } from '@tanstack/react-router'
-import { ArrowUpRight, Bell, Check, ChevronDown, ChevronRight, Download, ImagePlus, Link2, Loader2, Plus, QrCode as QrCodeIcon, Share2, X } from 'lucide-react'
+import { ArrowUpRight, Banknote, Bell, CalendarPlus, Check, ChevronDown, Download, Eye, FileText, ImagePlus, Info, Link2, Loader2, Lock, Plus, QrCode as QrCodeIcon, Search, Share2, ShieldCheck, ShoppingBag, Store, X } from 'lucide-react'
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { WriteBio, WriteItForMe } from '#/components/ai-write'
 import { InstallSheet, UnblockSteps } from '#/components/phone-app'
 import { QrCode } from '#/components/qr'
 import { PriceInput } from '#/components/product-form'
 import { QrSheet } from '#/components/qr-sheet'
+import { ShopLinkCard } from '#/components/shop-link'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { Phone } from '#/components/showcase'
 import { ErrorText, Field, FieldGroup, Img, Sheet, ShopAvatar, Toast, showFirstError } from '#/components/ui'
 import { saveProduct } from '#/lib/api/merchant'
-import { passSetupStep, saveSetupPayment, saveShopBio, type SetupEdit, type SetupProduct, type SetupShop } from '#/lib/api/setup'
+import { passSetupStep, saveSetupPayment, saveShopBio, type SetupEdit, type SetupInvoice, type SetupProduct, type SetupShop } from '#/lib/api/setup'
 import { track } from '#/lib/analytics'
 import { ALL_CATEGORIES, NETWORKS, SIZE_PRESETS, localPhone, tzs } from '#/lib/format'
 import { durationText, servicePrice } from '#/lib/booking'
-import { eg, useT } from '#/lib/i18n'
+import { eg, useLang, useT } from '#/lib/i18n'
+import { displayNumber, money } from '#/lib/invoice'
 import { inAppBrowser, usePhoneApp } from '#/lib/push'
 import { useOrigin } from '#/lib/share'
 import { hasPage, type SetupOutcome } from '#/lib/setup'
@@ -70,105 +73,226 @@ export type PreviewService = { name: string; duration: number; price: number; pr
 
 export const previewShop = (s: SetupShop): PreviewShop => ({ name: s.name, slug: s.slug, logo: s.logo_key, category: s.category, bio: s.bio })
 
-/** The shop as buyers will see it, taking shape as the seller works: name, line, products, how to pay. */
-export function ShopCard({
+/**
+ * The shop as a buyer's phone shows it, taking shape as the seller works: the address, the bar with the logo and the
+ * name, the line about the shop, what it sells and how to pay. Drawn at a real phone's width with the app's own
+ * sizes; the laptop's phone (`SetupPhone`) scales it down, and on phones it opens from "Preview" and sits on "Your
+ * shop is live". Nothing here is a grey placeholder tile (the looks review of 23 Nov 2026): before the first photo
+ * there is one dashed tile that says what goes there.
+ */
+export function ShopScreen({
   shop,
+  kind = 'products',
   products,
   services,
   payment,
   bio,
   note,
   live = false,
+  frame = false,
+  bare = false,
 }: {
   shop: PreviewShop
-  /** The shop is open ("Your shop is live"): its products as the shop shows them, and no empty tiles for ones not added yet. */
+  /** What the business chose at step 1; a business that sends invoices shows "Ask for a quote" where a shop shows products. */
+  kind?: string
+  /** The shop is open ("Your shop is live"): only what buyers can order, and no tile for what isn't added yet. */
   live?: boolean
   products: PreviewProduct[]
-  /** Given for a business that sells services: its services show as rows with Book, where products show as a grid. */
+  /** Given for a business that sells services: its services show as rows with Book, where products show as cards. */
   services?: PreviewService[]
   payment?: string
   bio?: ReactNode
   note?: string
+  /** Inside the laptop's phone: fills its screen, scrolls inside it and ends on the shop's capsule. */
+  frame?: boolean
+  /** Only what is under the bar (the line, the facts, what it sells): for a screen that already shows the name and the link. */
+  bare?: boolean
 }) {
   const t = useT()
-  // Nothing is chosen for the seller at step 1, so until they tap a kind the card shows none.
+  // Nothing is chosen for the seller at step 1, so until they tap a kind the screen shows none.
   const category = shop.category ? t(ALL_CATEGORIES.find((c) => c.id === shop.category)?.label ?? 'Other') : ''
+  const bills = kind === 'invoices' && !services
+  const first = products[0]
+  // A service still without a name is not a row yet: the dashed row says what goes there.
+  const named = (services ?? []).filter((v) => v.name.trim())
+  const tile = 'flex aspect-[4/5] flex-col items-center justify-center gap-2 rounded-16 border border-dashed border-line-strong px-3 text-center text-13 font-medium text-ink-2'
+  const facts = (
+    <>
+      {bio ?? (shop.bio ? <p className="text-14 leading-relaxed text-ink-2">{shop.bio}</p> : null)}
+      {(category || payment) && (
+        <div className="mt-3 flex flex-wrap gap-2 first:mt-0">
+          {category && <span className="flex min-h-9 items-center rounded-full bg-page px-3.5 text-13 text-ink-2">{category}</span>}
+          {payment && (
+            <span className="flex min-h-9 items-center gap-2 rounded-16 bg-page px-3.5 py-2 text-13 leading-[18px] text-ink-2">
+              <Banknote size={16} strokeWidth={1.75} className="shrink-0" /> {payment}
+            </span>
+          )}
+        </div>
+      )}
+    </>
+  )
+  const items = services ? (
+    <ul className="space-y-2">
+      {named.slice(0, 4).map((v, i) => (
+        <li key={i} className="flex items-center gap-3 rounded-14 bg-page px-3.5 py-3">
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-15 font-medium">{v.name}</span>
+            <span className="block truncate text-13 text-muted">{[v.duration ? durationText(t, v.duration) : '', servicePrice(t, v)].filter(Boolean).join(' · ') || '—'}</span>
+          </span>
+          <span className="flex h-9 shrink-0 items-center rounded-full bg-ink px-4 text-13 font-medium text-white">{t('Book')}</span>
+        </li>
+      ))}
+      {!named.length && !live && <li className="flex min-h-16 items-center justify-center rounded-14 border border-dashed border-line-strong px-3 text-13 font-medium text-ink-2">{t('Your first service')}</li>}
+    </ul>
+  ) : bills ? (
+    <div className="flex flex-col items-center rounded-20 border border-dashed border-line-strong px-5 py-8 text-center">
+      <FileText size={24} strokeWidth={1.75} className="text-muted" />
+      {shop.name && <p className="mt-3 text-15 font-medium">{t('Ask {shop} for a quote', { shop: shop.name })}</p>}
+      <span className="mt-4 flex h-10 items-center gap-2 rounded-full bg-ink px-4 text-14 font-medium text-white">
+        <WhatsAppMark size={18} /> {t('Ask for a quote')}
+      </span>
+    </div>
+  ) : products.length > 1 ? (
+    // As on the shop's own page: two across, the photo at 4:5 with Buy on it, then the name and the price.
+    <div className="grid grid-cols-2 gap-x-3 gap-y-5">
+      {products.slice(0, 4).map((p, i) => (
+        <ProductTile key={i} p={p} />
+      ))}
+    </div>
+  ) : first && (first.image || first.uploading || first.name || first.price) ? (
+    // One product is shown larger: at half the width, half of the screen was empty white.
+    <div className="w-2/3">
+      {first.image ? (
+        <ProductTile p={first} />
+      ) : (
+        <>
+          <div className={tile}>
+            {first.uploading ? <Loader2 size={24} className="animate-spin" /> : <ImagePlus size={24} strokeWidth={1.75} />}
+            {first.uploading ? t('Uploading') : t('Add a photo')}
+          </div>
+          <p className={`mt-2.5 line-clamp-2 px-0.5 text-14 leading-5 ${first.name ? '' : 'text-faint'}`}>{first.name || t('Product name')}</p>
+          <p className="tnum mt-0.5 px-0.5 text-14 font-medium">{first.price ? tzs(first.price) : 'TSh —'}</p>
+        </>
+      )}
+    </div>
+  ) : live ? null : (
+    <div className={`${tile} w-2/3`}>
+      <ImagePlus size={24} strokeWidth={1.75} />
+      {t('Your first product')}
+    </div>
+  )
+  const body = (
+    <>
+      {facts}
+      {items && <div className="mt-5 first:mt-0">{items}</div>}
+      {note && <p className="mt-4 text-13 leading-5 text-muted">{note}</p>}
+    </>
+  )
+  if (bare) return <div className="text-ink">{body}</div>
   return (
-    <div className="w-full rounded-28 bg-card p-5 text-ink sm:p-6">
-      <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
-        <p className="code min-w-0 truncate text-13 text-muted">shopi.tz/{shop.slug || 'yourshop'}</p>
-        {!services && (
-          <span className="flex h-8 shrink-0 items-center gap-1.5 rounded-full pr-1 pl-3 text-12 font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
-            {t('Bag')} <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-ink text-12 text-white">0</span>
+    <div className={`relative flex flex-col bg-card text-ink ${frame ? 'h-full' : ''}`}>
+      {/* The address, as the buyer's browser shows it: the link being claimed, letter by letter. */}
+      <div className="shrink-0 px-4 pt-2 pb-2.5">
+        <p className="code flex h-9 items-center justify-center gap-2 rounded-full bg-well px-4 text-13 text-ink-2">
+          <Lock size={12} strokeWidth={1.75} className="shrink-0 text-muted" />
+          <span className="min-w-0 truncate">shopi.tz/{shop.slug || 'yourshop'}</span>
+        </p>
+      </div>
+      <div className="flex h-[72px] shrink-0 items-center gap-3 border-y border-line px-4">
+        <ShopAvatar name={shop.name || 'S'} logo={shop.logo} className="h-11 w-11 text-13" />
+        <span className={`title min-w-0 flex-1 truncate text-20 ${shop.name ? '' : 'text-faint'}`}>{shop.name || (kind === 'products' ? t('Your shop') : t('Your business'))}</span>
+        {!services && !bills && (
+          <span className="flex h-10 shrink-0 items-center gap-2 rounded-full pr-1 pl-3.5 text-14 font-medium shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
+            {t('Bag')} <span className="tnum flex h-8 min-w-8 items-center justify-center rounded-full bg-ink px-2 text-13 text-white">0</span>
           </span>
         )}
       </div>
-      <div className="pt-5">
-        <ShopAvatar name={shop.name || 'S'} logo={shop.logo} className="h-14 w-14 text-17" />
-        <p className={`display mt-4 text-28 break-words ${shop.name ? '' : 'text-faint'}`}>{shop.name || t('Your shop')}</p>
-        {bio ?? (shop.bio ? <p className="mt-2 text-14 leading-relaxed text-ink-2">{shop.bio}</p> : null)}
-        {category && <span className="mt-3 inline-flex h-8 items-center rounded-full bg-page px-3 text-13 text-ink-2">{category}</span>}
-      </div>
-      {services && (
-        <ul className="mt-5 space-y-2">
-          {(services.length || live ? services : [{ name: '', duration: 0, price: 0, price_from: 0 }]).slice(0, 3).map((v, i) => (
-            <li key={i} className="flex items-center gap-3 rounded-14 bg-page px-3 py-3">
-              <span className="min-w-0 flex-1">
-                <span className={`block truncate text-14 font-medium ${v.name ? '' : 'text-faint'}`}>{v.name || t('Service name')}</span>
-                <span className="block truncate text-12 text-muted">{[v.duration ? durationText(t, v.duration) : '', servicePrice(t, v)].filter(Boolean).join(' · ') || '—'}</span>
-              </span>
-              <span className="flex h-8 shrink-0 items-center rounded-full bg-ink px-3 text-12 font-medium text-white">{t('Book')}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {live && !services && products.length > 0 && (
-        // As on the shop's own page: two across, the photo at 4:5 with Buy on it, then the name and the price.
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          {products.slice(0, 4).map((p, i) => (
-            <div key={i} className="min-w-0">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-16 bg-well">
-                {p.image && <Img size="thumb" k={p.image} alt="" className="h-full w-full" />}
-                <span className="absolute right-2 bottom-2 flex h-8 items-center rounded-full bg-ink px-3.5 text-13 font-medium text-white shadow-[0_0_0_2px_rgb(255_255_255/0.85)]">{t('Buy')}</span>
-              </div>
-              <p className="mt-2.5 line-clamp-2 px-0.5 text-14 leading-5">{p.name}</p>
-              <p className="tnum mt-0.5 px-0.5 text-14 font-medium">{tzs(p.price)}</p>
-            </div>
-          ))}
-        </div>
-      )}
-      {!services && !live && (
-      <div className="mt-5 grid grid-cols-3 gap-2">
-        {[0, 1, 2].map((i) => {
-          const p = products[i]
-          return p ? (
-            <div key={i} className="min-w-0">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-12 bg-well">
-                {p.image ? <Img size="thumb" k={p.image} alt="" className="h-full w-full" /> : <span className="flex h-full items-center justify-center text-faint"><ImagePlus size={18} strokeWidth={1.75} /></span>}
-                {p.uploading && (
-                  <span className="absolute inset-0 flex items-center justify-center bg-card/60">
-                    <Loader2 size={18} className="animate-spin" />
-                  </span>
-                )}
-              </div>
-              <p className={`mt-1.5 truncate text-12 ${p.name ? '' : 'text-faint'}`}>{p.name || t('Product name')}</p>
-              <p className="tnum text-12 font-medium">{p.price ? tzs(p.price) : 'TSh —'}</p>
-            </div>
-          ) : (
-            <div key={i} className="flex aspect-[4/5] items-center justify-center rounded-12 bg-well text-faint">
-              <ImagePlus size={18} strokeWidth={1.75} />
-            </div>
-          )
-        })}
-      </div>
-      )}
-      {payment && <p className="mt-4 rounded-14 bg-page px-3 py-2.5 text-13 leading-5 text-ink-2">{payment}</p>}
-      {note && <p className="mt-4 text-13 text-muted">{note}</p>}
+      <div className={`px-4 pt-4 ${frame ? 'hide-scroll min-h-0 flex-1 overflow-y-auto pb-28' : 'pb-5'}`}>{body}</div>
+      {frame && <ScreenCapsule book={!!services} />}
     </div>
   )
 }
 
-/** Desktop: the preview on the dark panel, under a line saying what it is. */
+/** A product as the shop's grid shows it: the photo at 4:5 with Buy on it, the name, the price. */
+function ProductTile({ p }: { p: PreviewProduct }) {
+  const t = useT()
+  return (
+    <div className="min-w-0">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-16 bg-well">
+        {p.image && <Img size="thumb" k={p.image} alt="" className="h-full w-full" />}
+        <span className="absolute right-2 bottom-2 flex h-8 items-center rounded-full bg-ink px-3.5 text-13 font-medium text-white shadow-[0_0_0_2px_rgb(255_255_255/0.85)]">{t('Buy')}</span>
+      </div>
+      <p className={`mt-2.5 line-clamp-2 px-0.5 text-14 leading-5 ${p.name ? '' : 'text-faint'}`}>{p.name || t('Product name')}</p>
+      <p className="tnum mt-0.5 px-0.5 text-14 font-medium">{p.price ? tzs(p.price) : 'TSh —'}</p>
+    </div>
+  )
+}
+
+/** The shop's black capsule, drawn (it opens nothing here): Shop, Search, the bag or Book, Share, Info. */
+function ScreenCapsule({ book }: { book: boolean }) {
+  const t = useT()
+  const Center = book ? CalendarPlus : ShoppingBag
+  const tab = 'flex h-full min-w-0 flex-col items-center justify-center gap-1 rounded-full text-11 font-medium'
+  return (
+    <>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-card via-card/90 to-transparent" />
+      <div className="absolute inset-x-3 bottom-3 grid h-16 grid-cols-5 items-center gap-1 rounded-full bg-ink p-1.5 text-white shadow-[var(--shadow-float)]" aria-hidden>
+        <span className={`${tab} bg-white/[0.09]`}>
+          <Store size={20} strokeWidth={1.75} className="text-moto-lit" />
+          <span className="max-w-full truncate px-1">{t('Shop')}</span>
+        </span>
+        <span className={`${tab} text-white/55`}>
+          <Search size={20} strokeWidth={1.75} />
+          <span className="max-w-full truncate px-1">{t('Search')}</span>
+        </span>
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-ink">
+          <Center size={24} strokeWidth={2.25} />
+        </span>
+        <span className={`${tab} text-white/55`}>
+          <Share2 size={20} strokeWidth={1.75} />
+          <span className="max-w-full truncate px-1">{t('Share')}</span>
+        </span>
+        <span className={`${tab} text-white/55`}>
+          <Info size={20} strokeWidth={1.75} />
+          <span className="max-w-full truncate px-1">{t('Info')}</span>
+        </span>
+      </div>
+    </>
+  )
+}
+
+/**
+ * Desktop: one phone on the dark panel for all five steps (the looks review of 23 Nov 2026). It holds the shop as it
+ * takes shape, then the open shop, then the first notification on its lock screen: one object from step 1 to 5, where
+ * there were three small ones. What is inside is drawn at a real phone's width (390) and scaled to the frame
+ * (`.setup-phone` in styles.css sets the size by the window's height, and `--k`).
+ */
+export function SetupPhone({ children, lock = false }: { children: ReactNode; /** The lock screen: sand behind the clock too. */ lock?: boolean }) {
+  return (
+    <Phone className="setup-phone mx-auto">
+      {lock && <div className="absolute inset-0 bg-well" />}
+      <div className="absolute inset-x-0 top-12 bottom-0 overflow-hidden">
+        <div className="origin-top-left" style={{ width: 390, height: 'calc(100% / var(--k))', transform: 'scale(var(--k))' }}>
+          {children}
+        </div>
+      </div>
+    </Phone>
+  )
+}
+
+/** Desktop: the dark panel's content: a line saying what the phone shows, and the phone in the middle. */
+export function PhoneAside({ label, children, lock = false }: { label: string; children: ReactNode; lock?: boolean }) {
+  return (
+    <>
+      <p className="text-15 text-white/60">{label}</p>
+      <div className="mt-auto mb-auto self-center pt-4">
+        <SetupPhone lock={lock}>{children}</SetupPhone>
+      </div>
+    </>
+  )
+}
+
+/** Desktop, a business that sends invoices: its invoice on the dark panel, under a line saying what it is. */
 export function PreviewAside({ label, children }: { label: string; children: ReactNode }) {
   return (
     <>
@@ -178,38 +302,48 @@ export function PreviewAside({ label, children }: { label: string; children: Rea
   )
 }
 
-/** Phones: the same preview as a small card that opens it. */
-export function PreviewToggle({ shop, children, title }: { shop: PreviewShop; children: ReactNode; title?: string }) {
+/**
+ * Phones: "Preview" as a small pill at the right of the step bar's row; it opens what the laptop shows on its dark
+ * panel. Until 23 Nov 2026 it was a card under the title (logo, name, link) that showed nothing new after step 1 and
+ * pushed the first box to the middle of the screen.
+ */
+export function PreviewToggle({ children, title }: { children: ReactNode; title: string }) {
   const t = useT()
   const [open, setOpen] = useState(false)
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="mt-6 flex w-full items-center gap-3 rounded-16 bg-card p-3 text-left shadow-[inset_0_0_0_1px_var(--color-line)] transition-colors hover:bg-well lg:hidden"
-      >
-        <ShopAvatar name={shop.name || 'S'} logo={shop.logo} className="h-11 w-11 text-15" />
-        {/* The label on its own line: beside the name it cut both the name and the link short ("Zuri Fashion 8…"). */}
-        <span className="min-w-0 flex-1">
-          <span className="block text-12 text-muted">{t('Preview')}</span>
-          <span className="block truncate text-15 font-semibold">{shop.name}</span>
-          <span className="code block truncate text-13 text-muted">shopi.tz/{shop.slug}</span>
-        </span>
-        <ChevronRight size={16} strokeWidth={1.75} className="mr-1 shrink-0 text-muted" />
+      {/* 36px to look at; the ring around it takes the tap (44px). */}
+      <button type="button" onClick={() => setOpen(true)} className="btn btn-ghost btn-sm relative shrink-0 gap-1.5 px-3.5 after:absolute after:-inset-1 lg:hidden">
+        <Eye size={16} strokeWidth={1.75} className="shrink-0" /> {t('Preview')}
       </button>
-      <Sheet open={open} onClose={() => setOpen(false)} title={title ?? t('Your shop, as buyers will see it')}>
-        <div className="rounded-28 shadow-[inset_0_0_0_1px_var(--color-line)]">{children}</div>
+      <Sheet open={open} onClose={() => setOpen(false)} title={title}>
+        {children}
       </Sheet>
     </>
   )
 }
 
-/** The step's heading: the bar, the title and one line under it. */
-export function StepHead({ bar, title, sub }: { bar: ReactNode; title: string; sub: ReactNode }) {
+/** The shop inside the phone's Preview sheet: a soft frame around the screen. */
+export function PreviewFrame({ children }: { children: ReactNode }) {
+  return <div className="overflow-hidden rounded-20 border border-line">{children}</div>
+}
+
+/**
+ * The step's heading: the bar (with `aside` at its right: "Preview" on phones), the title and one line under it.
+ * The line stays within two rows on a phone, in Swahili too.
+ */
+export function StepHead({ bar, title, sub, aside }: { bar: ReactNode; title: string; sub: ReactNode; aside?: ReactNode }) {
   return (
     <>
-      {bar}
+      {aside ? (
+        <div className="flex items-center justify-between gap-2">
+          {/* The bar takes what "Preview" leaves; the wrapper gives way, never the bar itself (in a column it would lose its height). */}
+          <div className="min-w-0 flex-1">{bar}</div>
+          {aside}
+        </div>
+      ) : (
+        bar
+      )}
       <h1 className="title mt-6 text-32 md:text-40">{title}</h1>
       <p className="mt-2 text-15 leading-relaxed text-muted">{sub}</p>
     </>
@@ -341,10 +475,18 @@ export function ProductStep({
 
   return (
     <>
-      <StepHead bar={bar} title={t('Your first product')} sub={t('A photo, a name and a price. Buyers can order it the moment you save it.')} />
-      <PreviewToggle shop={previewShop(shop)}>
-        <ShopCard shop={previewShop(shop)} products={[{ name, price: Number(price) || 0, image: images[0] ?? null, uploading: uploading > 0 && !images.length }]} />
-      </PreviewToggle>
+      <StepHead
+        bar={bar}
+        title={t('Your first product')}
+        sub={t('A photo, a name and a price. Buyers can order it the moment you save it.')}
+        aside={
+          <PreviewToggle title={t('Your shop, as buyers will see it')}>
+            <PreviewFrame>
+              <ShopScreen shop={previewShop(shop)} products={[{ name, price: Number(price) || 0, image: images[0] ?? null, uploading: uploading > 0 && !images.length }]} />
+            </PreviewFrame>
+          </PreviewToggle>
+        }
+      />
       <form className="mt-6 space-y-5" onSubmit={save}>
         <FieldGroup label={t('Photos')} error={missing.photos}>
           <div className="hide-scroll -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
@@ -464,6 +606,16 @@ export function paymentLine(t: ReturnType<typeof useT>, p: { network: string; nu
   return p.cod ? t('Cash on delivery') : ''
 }
 
+/** "Shopi never holds your money", beside the box the money number goes in: a shield and one short line. */
+export function DirectNote({ children }: { children: ReactNode }) {
+  return (
+    <span className="flex items-start gap-1.5">
+      <ShieldCheck size={16} strokeWidth={1.75} className="mt-px shrink-0 text-ink-2" />
+      <span>{children}</span>
+    </span>
+  )
+}
+
 /**
  * One-tap answers under "Name on payments": the shop's name and the owner's own, in capitals as a payment SMS prints
  * them. The box itself starts empty: a grey example there read as an answer already given (the founder, 23 Nov 2026).
@@ -486,7 +638,21 @@ export function PayNames({ shop, owner, value, onPick }: { shop: string; owner: 
   )
 }
 
-export function PaymentStep({ shop, owner, bar, onDraft }: { shop: SetupShop; /** The owner's name from sign-up. */ owner: string; bar: ReactNode; onDraft: (line: string) => void }) {
+export function PaymentStep({
+  shop,
+  owner,
+  bar,
+  onDraft,
+  products = [],
+}: {
+  shop: SetupShop
+  /** The owner's name from sign-up. */
+  owner: string
+  bar: ReactNode
+  onDraft: (line: string) => void
+  /** What the shop sells so far, for the preview. */
+  products?: PreviewProduct[]
+}) {
   const t = useT()
   const moveOn = useMoveOn()
   const pass = usePass(3)
@@ -547,11 +713,15 @@ export function PaymentStep({ shop, owner, bar, onDraft }: { shop: SetupShop; /*
       <StepHead
         bar={bar}
         title={t('How buyers pay')}
-        sub={cod ? t('Buyers pay you directly; Shopi never holds your money. Cash on delivery is on. Add your Lipa Namba so buyers can also pay before you send.') : t('Buyers pay you directly; Shopi never holds your money. Add your Lipa Namba so buyers can pay before you send.')}
+        sub={cod ? t('Cash on delivery is on. Add your Lipa Namba so buyers can also pay before you send.') : t('Add your Lipa Namba so buyers can pay before you send.')}
+        aside={
+          <PreviewToggle title={t('Your shop, as buyers will see it')}>
+            <PreviewFrame>
+              <ShopScreen live shop={previewShop(shop)} products={products} payment={paymentLine(t, { network, number, cod })} />
+            </PreviewFrame>
+          </PreviewToggle>
+        }
       />
-      <PreviewToggle shop={previewShop(shop)}>
-        <ShopCard shop={previewShop(shop)} products={[]} payment={paymentLine(t, { network, number, cod })} />
-      </PreviewToggle>
       <form className="mt-6 space-y-5" onSubmit={save}>
         <FieldGroup label={t('Network')} error={missing.network}>
           <div className="flex flex-wrap gap-2">
@@ -571,7 +741,7 @@ export function PaymentStep({ shop, owner, bar, onDraft }: { shop: SetupShop; /*
             ))}
           </div>
         </FieldGroup>
-        <Field label={t('Lipa Namba or number')} error={missing.number}>
+        <Field label={t('Lipa Namba or number')} error={missing.number} hint={<DirectNote>{t('Buyers pay you directly. Shopi never holds your money.')}</DirectNote>}>
           <input
             className="input code"
             inputMode="numeric"
@@ -610,9 +780,14 @@ export function PaymentStep({ shop, owner, bar, onDraft }: { shop: SetupShop; /*
           <button className="btn btn-lg w-full" disabled={busy}>
             {busy ? t('Saving') : t('Save and continue')}
           </button>
-          <button type="button" className="btn btn-lg btn-ghost w-full" disabled={busy} onClick={cashOnly}>
-            {cod ? t('Only cash on delivery for now') : t('I’ll do this later')}
-          </button>
+          {/* Cash on delivery alone is an answer, so it is a button; with it off this is only the way past, a link. */}
+          {cod ? (
+            <button type="button" className="btn btn-lg btn-ghost w-full" disabled={busy} onClick={cashOnly}>
+              {t('Only cash on delivery for now')}
+            </button>
+          ) : (
+            <LaterLink onClick={cashOnly} disabled={busy} />
+          )}
         </div>
       </form>
     </>
@@ -680,13 +855,13 @@ export function LiveStep({
         sub={
           services
             ? services.length && !shop.book
-              ? t('Your link works now. Set your working hours from Home so clients can book, then share it.')
+              ? t('Set your working hours from Home so clients can book, then share your link.')
               : services.length
-              ? t('Send your link and clients can book. Put it in your Instagram bio so every visitor finds it.')
-              : t('Your link works now. Add your first service, then share it so clients have something to book.')
+                ? t('Share your link and clients can book.')
+                : t('Add your first service, then share your link.')
             : products.length
-              ? t('Send your link and buyers can order. Put it in your Instagram bio so every visitor finds it.')
-              : t('Your link works now. Add your first product, then share it so buyers have something to order.')
+              ? t('Share your link and buyers can order.')
+              : t('Add your first product, then share your link.')
         }
       />
 
@@ -696,37 +871,39 @@ export function LiveStep({
         </button>
       )}
 
-      <section className="mt-6 rounded-20 bg-card p-5 shadow-[inset_0_0_0_1px_var(--color-line)]">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-13 text-muted">{page ? t('Your page link') : t('Your shop link')}</p>
-          {/* The real shop, in a new tab: what a buyer who taps the link sees. */}
-          <a href={`/${shop.slug}`} target="_blank" rel="noreferrer" className="-my-3 flex min-h-11 shrink-0 items-center gap-1 text-14 font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink">
-            {page ? t('Open my page') : t('Open my shop')} <ArrowUpRight size={16} strokeWidth={1.75} className="shrink-0" />
+      {/* The moment: the shop's own sign on the app's one dark card. Home shows the same card until the first order. */}
+      <ShopLinkCard
+        className="mt-6"
+        shop={shop}
+        onQr={() => setQrOpen(true)}
+        top={
+          // The real shop, in a new tab: what a buyer who taps the link sees.
+          <a href={`/${shop.slug}`} target="_blank" rel="noreferrer" className="-my-3 flex min-h-11 shrink-0 items-center gap-1 text-13 font-medium whitespace-nowrap text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
+            {page ? t('Open my page') : t('Open my shop')} <ArrowUpRight size={14} strokeWidth={1.75} className="shrink-0" />
           </a>
-        </div>
-        {/* The whole link, on its own line: a link cut short can't be read out or checked. */}
-        <p className="code mt-1 text-17 break-all">shopi.tz/{shop.slug}</p>
+        }
+      >
         <a
           href={`https://wa.me/?text=${encodeURIComponent(message)}`}
           target="_blank"
           rel="noreferrer"
-          className={`btn btn-lg mt-4 w-full ${lead === 'share' ? '' : 'btn-ghost'}`}
+          className={`btn btn-lg w-full ${lead === 'share' ? 'bg-white text-ink hover:bg-white/90' : 'bg-white/10 hover:bg-white/15'}`}
           onClick={() => shared('whatsapp')}
         >
           <WhatsAppMark size={20} /> {t('Share on WhatsApp')}
         </a>
         <div className="mt-2 flex gap-2">
-          <button type="button" className="btn btn-ghost btn-sm h-11 min-w-0 flex-1 px-3" onClick={copy}>
+          <button type="button" className="btn btn-sm h-11 min-w-0 flex-1 bg-white/10 px-3 hover:bg-white/15" onClick={copy}>
             {copied ? <Check size={16} strokeWidth={2.25} className="shrink-0" /> : <Link2 size={16} strokeWidth={1.75} className="shrink-0" />}
             <span className="truncate">{copied ? t('Copied') : t('Copy link')}</span>
           </button>
-          <button type="button" className="btn btn-ghost btn-sm h-11 min-w-0 flex-1 px-3" onClick={() => setQrOpen(true)}>
+          <button type="button" className="btn btn-sm h-11 min-w-0 flex-1 bg-white/10 px-3 hover:bg-white/15" onClick={() => setQrOpen(true)}>
             <QrCodeIcon size={16} strokeWidth={1.75} className="shrink-0" /> <span className="truncate">{t('QR code')}</span>
           </button>
           {native && (
             <button
               type="button"
-              className="btn btn-ghost btn-sm h-11 w-11 shrink-0 px-0"
+              className="btn btn-sm h-11 w-11 shrink-0 bg-white/10 px-0 hover:bg-white/15"
               aria-label={t('More ways to share')}
               onClick={async () => {
                 try {
@@ -741,13 +918,14 @@ export function LiveStep({
             </button>
           )}
         </div>
-      </section>
+      </ShopLinkCard>
 
-      <div className="mt-4 lg:hidden">
-        <div className="rounded-28 shadow-[inset_0_0_0_1px_var(--color-line)]">
-          <LiveCard shop={shop} products={products} services={services} ai={ai} />
-        </div>
-      </div>
+      {/* Phones: what buyers find behind the link (the laptop shows the whole shop in its phone). The card above
+          already carries the logo, the name and the link, so this one starts at the line about the shop. */}
+      <section className="card mt-4 p-5 lg:hidden">
+        <p className="mb-3 text-13 text-muted">{services ? t('Your page, as clients will see it') : t('Your shop, as buyers will see it')}</p>
+        <LiveShop bare shop={shop} products={products} services={services} ai={ai} />
+      </section>
 
       <section className="mt-4 rounded-20 bg-card shadow-[inset_0_0_0_1px_var(--color-line)]">
         <button type="button" className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left" aria-expanded={igOpen} onClick={() => setIgOpen(!igOpen)}>
@@ -813,8 +991,12 @@ export function BioSteps({ onCopy, copied }: { onCopy: () => void; copied: boole
   )
 }
 
-/** The live shop card with its line about the shop: the seller can add or change it here, with the AI's help. */
-export function LiveCard({ shop, products, services, ai }: { shop: SetupShop; products: SetupProduct[]; services?: PreviewService[]; ai: boolean }) {
+/**
+ * The open shop with its line about the shop: the seller can add or change the line here, with the AI's help.
+ * `frame`: inside the laptop's phone; `bare`: under the dark card on a phone, without the bar. The sheet is drawn on
+ * the page's body, because the laptop's phone scales what is inside it and would hold the sheet inside too.
+ */
+export function LiveShop({ shop, products, services, ai, frame = false, bare = false }: { shop: SetupShop; products: SetupProduct[]; services?: PreviewService[]; ai: boolean; frame?: boolean; bare?: boolean }) {
   const t = useT()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -823,79 +1005,75 @@ export function LiveCard({ shop, products, services, ai }: { shop: SetupShop; pr
   const [error, setError] = useState('')
   const page = hasPage(shop.kind)
   const slot = (
-    <button type="button" onClick={() => setOpen(true)} className="group mt-2 block w-full text-left">
+    <button type="button" onClick={() => setOpen(true)} className="group block w-full text-left">
       {shop.bio ? (
         <span className="text-14 leading-relaxed text-ink-2 underline decoration-line-strong decoration-dashed underline-offset-4 group-hover:decoration-ink">{shop.bio}</span>
       ) : (
-        <span className="flex items-center gap-2 rounded-12 border border-dashed border-line-strong px-3 py-2.5 text-13 font-medium text-ink-2 transition-colors group-hover:border-ink">
+        <span className="flex min-h-11 items-center gap-2 rounded-12 border border-dashed border-line-strong px-3 py-2.5 text-13 font-medium text-ink-2 transition-colors group-hover:border-ink">
           <Plus size={16} strokeWidth={2.25} /> {page ? t('Add a line about your business') : t('Add a line about your shop')}
         </span>
       )}
     </button>
   )
+  const sheet = (
+    <Sheet open={open} onClose={() => setOpen(false)} title={page ? t('A line about your business') : t('A line about your shop')}>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault()
+          setBusy(true)
+          setError('')
+          try {
+            await saveShopBio({ data: { bio } })
+            await router.invalidate()
+            setOpen(false)
+          } catch {
+            setError(t('Something went wrong. Try again.'))
+          } finally {
+            setBusy(false)
+          }
+        }}
+      >
+        <Field label={t('Short bio')} aside={`${bio.length}/300`} hint={page ? t('Clients read it under your name.') : t('Buyers read it under your shop’s name.')}>
+          <textarea
+            className="input"
+            maxLength={300}
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            placeholder={page ? t('e.g. Braids and natural hair in Sinza. Open Monday to Saturday.') : t('e.g. Kitenge outfits made in Sinza. Delivery across Dar the same day.')}
+          />
+        </Field>
+        <WriteBio notes={bio} onText={setBio} ready={ai} />
+        {error && (
+          <div className="mt-4">
+            <ErrorText>{error}</ErrorText>
+          </div>
+        )}
+        <button className="btn btn-lg mt-5 w-full" disabled={busy}>
+          {busy ? t('Saving') : t('Save')}
+        </button>
+      </form>
+    </Sheet>
+  )
   return (
     <>
-      <ShopCard live shop={previewShop(shop)} products={products} services={services} bio={slot} />
-      <Sheet open={open} onClose={() => setOpen(false)} title={page ? t('A line about your business') : t('A line about your shop')}>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault()
-            setBusy(true)
-            setError('')
-            try {
-              await saveShopBio({ data: { bio } })
-              await router.invalidate()
-              setOpen(false)
-            } catch {
-              setError(t('Something went wrong. Try again.'))
-            } finally {
-              setBusy(false)
-            }
-          }}
-        >
-          <Field label={t('Short bio')} aside={`${bio.length}/300`} hint={page ? t('Clients read it under your name.') : t('Buyers read it under your shop’s name.')}>
-            <textarea
-              className="input"
-              maxLength={300}
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder={page ? t('e.g. Braids and natural hair in Sinza. Open Monday to Saturday.') : t('e.g. Kitenge outfits made in Sinza. Delivery across Dar the same day.')}
-            />
-          </Field>
-          <WriteBio notes={bio} onText={setBio} ready={ai} />
-          {error && (
-            <div className="mt-4">
-              <ErrorText>{error}</ErrorText>
-            </div>
-          )}
-          <button className="btn btn-lg mt-5 w-full" disabled={busy}>
-            {busy ? t('Saving') : t('Save')}
-          </button>
-        </form>
-      </Sheet>
+      <ShopScreen live frame={frame} bare={bare} kind={shop.kind} shop={previewShop(shop)} products={products} services={services} bio={slot} />
+      {open && createPortal(sheet, document.body)}
     </>
-  )
-}
-
-/** Desktop: the live shop in a phone, as buyers open it. */
-export function LivePhone({ shop, products, services, ai }: { shop: SetupShop; products: SetupProduct[]; services?: PreviewService[]; ai: boolean }) {
-  return (
-    <Phone className="mx-auto h-[600px] w-[300px] xl:h-[640px] xl:w-[316px]">
-      <div className="hide-scroll h-full overflow-y-auto px-2 pt-12 pb-4">
-        <LiveCard shop={shop} products={products} services={services} ai={ai} />
-      </div>
-    </Phone>
   )
 }
 
 /* ---------- Step 5: orders on this phone ---------- */
 
-/** What a new order looks like on the seller's phone, with the shop's own first product. */
+/**
+ * What the first notification looks like on the seller's phone, made of the shop's own things: its first product, its
+ * first service, or (a business that sends invoices) its own first invoice. Drawn at the size a phone shows one.
+ */
 export function OrderNotice({
   shop,
   product,
   service,
   bills = false,
+  invoice,
   className = '',
 }: {
   shop: SetupShop
@@ -904,11 +1082,13 @@ export function OrderNotice({
   service?: PreviewService | null
   /** A business that sends invoices: the notice shows a payment to check. */
   bills?: boolean
+  /** Its first invoice, when it made one in the setup: the notice names that client, number and amount. */
+  invoice?: SetupInvoice | null
   className?: string
 }) {
   const t = useT()
   return (
-    <div className={`w-full max-w-[340px] rounded-20 bg-card p-4 text-ink shadow-[var(--shadow-float)] ring-1 ring-line ${className}`}>
+    <div className={`w-full rounded-20 bg-card p-4 text-ink shadow-[var(--shadow-float)] ring-1 ring-line ${className}`}>
       <div className="flex items-center justify-between gap-3">
         <p className="flex min-w-0 items-center gap-2 text-13 font-semibold">
           <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-6 w-6 text-11" />
@@ -917,21 +1097,22 @@ export function OrderNotice({
         <p className="meta shrink-0">{t('now')}</p>
       </div>
       <div className="mt-3 flex items-center gap-3">
-        {service === undefined && product?.image && <Img size="thumb" k={product.image} alt="" className="h-[52px] w-[42px] shrink-0 rounded-8" />}
+        {service === undefined && product?.image && <Img size="thumb" k={product.image} alt="" className="h-14 w-11 shrink-0 rounded-8" />}
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-2 text-14 font-medium">
+          <p className="flex items-center gap-2 text-15 font-medium">
             <span className="signal shrink-0" />{' '}
             {bills
-              ? t('Check a payment: {amount}', { amount: tzs(250_000) })
+              ? t('Check a payment: {amount}', { amount: invoice ? money(invoice.total, invoice.currency) : tzs(250_000) })
               : service !== undefined
                 ? t('New booking: {name}', { name: 'Neema' })
                 : product
                   ? t('New order: {total}', { total: tzs(product.price) })
                   : t('New order')}
           </p>
-          <p className="truncate text-12 text-muted">
+          {/* Two rows at most, as a phone shows a notification: a client's name and an invoice number are long. */}
+          <p className="mt-0.5 line-clamp-2 text-13 leading-[18px] text-muted">
             {bills
-              ? t('{client} sent the payment SMS for {number}.', { client: 'Bahari Logistics', number: 'INV-0001' })
+              ? t('{client} sent the payment SMS for {number}.', { client: invoice?.client || t('Your client'), number: displayNumber('invoice', invoice?.number ?? 1) })
               : service !== undefined
                 ? [service?.name, t('Tomorrow'), '10:00'].filter(Boolean).join(' · ')
                 : (product?.name ?? shop.name)}
@@ -942,11 +1123,33 @@ export function OrderNotice({
   )
 }
 
+/**
+ * The phone's lock screen with the notification on it (the laptop's phone at step 5): what reaches the seller "even
+ * when Shopi is closed". The clock matches the frame's.
+ */
+export function LockScreen({ children }: { children: ReactNode }) {
+  const lang = useLang()
+  const date = new Date().toLocaleDateString(lang === 'sw' ? 'sw-TZ' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Africa/Dar_es_Salaam' })
+  return (
+    <div className="flex h-full flex-col items-center px-4 pt-8 text-ink">
+      <Lock size={16} strokeWidth={1.75} className="text-ink-2" />
+      {/* Worked out on the server and again in the browser: around midnight the two may differ, and that is fine. */}
+      <p className="mt-4 text-17 text-ink-2" suppressHydrationWarning>
+        {date}
+      </p>
+      <p className="display mt-3 text-80">16:12</p>
+      <div className="mt-12 w-full">{children}</div>
+      <span className="mt-auto mb-3 h-1.5 w-32 rounded-full bg-ink/80" aria-hidden />
+    </div>
+  )
+}
+
 export function PhoneStep({
   shop,
   product,
   service,
   bills = false,
+  invoice,
   bar,
   login,
 }: {
@@ -954,6 +1157,7 @@ export function PhoneStep({
   product: SetupProduct | null
   service?: PreviewService | null
   bills?: boolean
+  invoice?: SetupInvoice | null
   bar: ReactNode
   /** The number the seller logs in with, for the ways on to another browser or the phone (they log in again there). */
   login: string
@@ -1034,14 +1238,14 @@ export function PhoneStep({
     <>
       {/* One sentence: what the seller gets. The buttons under it say the rest. */}
       {bills ? (
-        <StepHead bar={bar} title={t('Payments on your phone')} sub={t('A notification when a client opens your invoice or sends the payment SMS, even when Shopi is closed.')} />
+        <StepHead bar={bar} title={t('Payments on your phone')} sub={t('A notification when a client opens your invoice or sends the payment SMS.')} />
       ) : service !== undefined ? (
         <StepHead bar={bar} title={t('Bookings on your phone')} sub={t('A notification the moment a client books, even when Shopi is closed.')} />
       ) : (
         <StepHead bar={bar} title={t('Orders on your phone')} sub={t('A notification the moment a buyer orders, even when Shopi is closed.')} />
       )}
-      <div className="mt-6 flex justify-center rounded-20 bg-well px-4 py-6 lg:hidden">
-        <OrderNotice shop={shop} product={product} service={service} bills={bills} />
+      <div className="mt-6 rounded-20 bg-well px-3 py-5 lg:hidden">
+        <OrderNotice shop={shop} product={product} service={service} bills={bills} invoice={invoice} />
       </div>
       {status && (
         <p className="mt-6 flex items-start gap-2.5 text-15 leading-6">

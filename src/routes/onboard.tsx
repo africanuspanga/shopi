@@ -2,7 +2,7 @@ import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { Check, Link2, Loader2, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { AuthLayout, StepBar } from '#/components/auth'
-import { LivePhone, OrderNotice, PaymentStep, PhoneStep, PreviewAside, ProductStep, SetupNext, ShopCard, LiveStep, StepHead, previewShop, useMoveOn, useStepClock, type PreviewProduct, type PreviewService } from '#/components/setup'
+import { LiveShop, LiveStep, LockScreen, OrderNotice, PaymentStep, PhoneAside, PhoneStep, PreviewAside, ProductStep, SetupNext, ShopScreen, StepHead, previewShop, useMoveOn, useStepClock, type PreviewProduct, type PreviewService } from '#/components/setup'
 import { ErrorText, Field, FieldGroup, ShopAvatar, ShopLangChoice, showFirstError } from '#/components/ui'
 import { checkShopLink, checkSlug, createShop, expandSocialLink, updateSetupShop } from '#/lib/api/merchant'
 import { getSetup, type SetupShop } from '#/lib/api/setup'
@@ -120,40 +120,36 @@ function Onboard() {
   const bills = shop.kind === 'invoices'
   const services: PreviewService[] | undefined = serves ? data.services : undefined
   const label = serves ? t('Your page, as clients will see it') : t('Your shop, as buyers will see it')
+  // Laptops: one phone on the dark panel from step 1 to 5 (the looks review of 23 Nov 2026). It fills as the seller
+  // goes: the product or service being typed, the payment line, the open shop, then the first notification on its
+  // lock screen. A business that sends invoices keeps its invoice sheet for steps 2 to 4, which fills the panel well.
   const aside =
     bills && step >= 2 && step <= 4 ? (
       <PreviewAside label={t('Your invoices, as clients will see them')}>
         <InvoiceDocument doc={invoiceDraft ?? sampleDoc(shop, t)} className="max-h-[78vh] overflow-y-auto" />
       </PreviewAside>
-    ) : bills && step === 5 ? (
-      <>
-        <p className="text-15 text-white/60">{t('What a payment looks like on your phone')}</p>
-        <div className="mt-auto mb-auto flex w-full justify-center self-center">
-          <OrderNotice shop={shop} product={null} bills className="scale-[1.15]" />
-        </div>
-      </>
     ) : step === 2 ? (
-      <PreviewAside label={label}>
-        {serves ? <ShopCard shop={asShop} products={[]} services={serviceDraft ? [serviceDraft] : []} /> : <ShopCard shop={asShop} products={draft ? [draft] : []} note={t('Your products go here.')} />}
-      </PreviewAside>
+      <PhoneAside label={label}>
+        {serves ? (
+          <ShopScreen frame kind={shop.kind} shop={asShop} products={[]} services={serviceDraft ? [serviceDraft] : []} />
+        ) : (
+          <ShopScreen frame kind={shop.kind} shop={asShop} products={draft ? [draft] : []} />
+        )}
+      </PhoneAside>
     ) : step === 3 ? (
-      <PreviewAside label={label}>
-        <ShopCard shop={asShop} products={data.products} services={services} payment={serves ? undefined : payLine} />
-      </PreviewAside>
+      <PhoneAside label={label}>
+        <ShopScreen frame live kind={shop.kind} shop={asShop} products={data.products} services={services} payment={serves ? undefined : payLine} />
+      </PhoneAside>
     ) : step === 4 ? (
-      <>
-        <p className="text-15 text-white/60">{t('Open now at shopi.tz/{slug}', { slug: shop.slug })}</p>
-        <div className="mt-auto mb-auto self-center">
-          <LivePhone shop={shop} products={data.products} services={services} ai={data.ai} />
-        </div>
-      </>
+      <PhoneAside label={t('Open now at shopi.tz/{slug}', { slug: shop.slug })}>
+        <LiveShop frame shop={shop} products={data.products} services={services} ai={data.ai} />
+      </PhoneAside>
     ) : (
-      <>
-        <p className="text-15 text-white/60">{serves ? t('What a new booking looks like') : t('What a new order looks like')}</p>
-        <div className="mt-auto mb-auto flex w-full justify-center self-center">
-          <OrderNotice shop={shop} product={first} service={serves ? (data.services[0] ?? null) : undefined} className="scale-[1.15]" />
-        </div>
-      </>
+      <PhoneAside lock label={bills ? t('What a payment looks like on your phone') : serves ? t('What a new booking looks like') : t('What a new order looks like')}>
+        <LockScreen>
+          <OrderNotice shop={shop} product={bills ? null : first} service={serves ? (data.services[0] ?? null) : undefined} bills={bills} invoice={data.invoice} />
+        </LockScreen>
+      </PhoneAside>
     )
 
   return (
@@ -167,7 +163,7 @@ function Onboard() {
         ) : bills && step === 4 ? (
           <FirstInvoiceStep shop={shop} bar={bar} onDoc={onDoc} saved={data.invoice} />
         ) : bills ? (
-          <PhoneStep shop={shop} product={null} bills bar={bar} login={session.user?.phone ?? ''} />
+          <PhoneStep shop={shop} product={null} bills invoice={data.invoice} bar={bar} login={session.user?.phone ?? ''} />
         ) : step === 2 ? (
           serves ? (
             <ServiceStep shop={shop} bar={bar} onDraft={onServiceDraft} onLater={redo ? back : undefined} editing={data.services[0] ?? null} />
@@ -175,7 +171,7 @@ function Onboard() {
             <ProductStep shop={shop} ai={data.ai} bar={bar} onDraft={onDraft} onLater={redo ? back : undefined} editing={data.editing} />
           )
         ) : step === 3 ? (
-          serves ? <HoursStep shop={shop} bar={bar} services={data.services} /> : <PaymentStep shop={shop} owner={owner} bar={bar} onDraft={setPayLine} />
+          serves ? <HoursStep shop={shop} bar={bar} services={data.services} /> : <PaymentStep shop={shop} owner={owner} bar={bar} onDraft={setPayLine} products={data.products} />
         ) : step === 4 ? (
           <LiveStep
             shop={shop}
@@ -383,14 +379,16 @@ function ShopStep({
       steady
       topRight={leave}
       aside={
-        <PreviewAside label={page ? t('Your page, as clients will see it') : t('Your shop, as buyers will see it')}>
-          <ShopCard
+        <PhoneAside label={page ? t('Your page, as clients will see it') : t('Your shop, as buyers will see it')}>
+          <ShopScreen
+            frame
+            kind={kind}
             shop={{ name, slug, logo: shop?.logo_key ?? null, category, bio: shop?.bio }}
             products={kind === 'products' ? products : []}
             services={kind === 'services' ? (services ?? []) : undefined}
-            note={(kind === 'services' ? services?.length : kind === 'products' && products.length) ? undefined : kind === 'services' ? t('Your services go here. You add them next.') : t('Your products go here. You add them next.')}
+            note={kind === 'services' ? (services?.length ? undefined : t('Your services go here. You add them next.')) : kind === 'products' ? (products.length ? undefined : t('Your products go here. You add them next.')) : undefined}
           />
-        </PreviewAside>
+        </PhoneAside>
       }
     >
       <StepHead
@@ -523,7 +521,7 @@ function ShopStep({
             ))}
           </div>
         </FieldGroup>
-        <FieldGroup label={kind === 'products' ? t('What kind of products?') : t('What kind of business?')} error={missing.category}>
+        <FieldGroup label={kind === 'products' ? t('What kind of products?') : t('What kind of business?')} error={missing.category} errorFirst>
           <div className="flex flex-wrap gap-2">
             {(kind === 'services' ? SERVICE_CATEGORIES : kind === 'invoices' ? INVOICE_CATEGORIES : CATEGORIES).map((c) => (
               <button
@@ -558,7 +556,8 @@ function ShopStep({
           </div>
         ) : (
           // The number typed at sign-up, shown back: it is the login, and until changed the WhatsApp buyers message.
-          <div className="flex items-start justify-between gap-1 rounded-16 bg-well/70 py-1.5 pr-1.5 pl-4">
+          // Plain text: in a grey box it was a fifth kind of surface on this screen (the looks review of 23 Nov 2026).
+          <div className="flex items-start justify-between gap-2 border-t border-line pt-3">
             <p className="min-w-0 py-1.5 text-14 leading-5 text-ink-2">
               {sameNumber
                 ? page
@@ -569,7 +568,7 @@ function ShopStep({
                   : t('You log in with {phone}. Buyers message {whatsapp}.', { phone: localPhone(login), whatsapp: number })}
               <span className="mt-0.5 block text-13 text-muted">{page ? t('Clients see your page in {language}.', { language: langName }) : t('Buyers see your shop in {language}.', { language: langName })}</span>
             </p>
-            <button type="button" className="flex min-h-11 shrink-0 items-center px-3 text-14 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink" onClick={() => setDetails(true)}>
+            <button type="button" className="-mr-1 flex min-h-11 shrink-0 items-center px-1 text-14 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink" onClick={() => setDetails(true)}>
               {t('Change')}
             </button>
           </div>

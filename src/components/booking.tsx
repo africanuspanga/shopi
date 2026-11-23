@@ -306,7 +306,7 @@ export function ServiceForm({
         </span>
       </Field>
       {!!price && (
-        <div className="rounded-16 bg-page p-4">
+        <div className="rounded-16 bg-card px-4 py-3 shadow-[inset_0_0_0_1px_var(--color-line)]">
           <Switch label={t('The price starts from this')} sub={t('Clients see “From TSh {price}”', { price: money(price) })} checked={from} onChange={setFrom} />
         </div>
       )}

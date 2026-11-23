@@ -1,6 +1,7 @@
 import { Link, createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { AuthLayout, PasswordInput } from '#/components/auth'
+import { NewOrderRow } from '#/components/showcase'
 import { ErrorText, Field, TextLink } from '#/components/ui'
 import { signup } from '#/lib/api/session'
 import { eg, useT } from '#/lib/i18n'
@@ -38,6 +39,9 @@ function Signup() {
         </Link>
       }
     >
+      {/* Phones: what the seller is here for, as one small picture (the laptop shows the shop and this order on its
+          dark panel). Left out on a short screen, where it would push Continue under the fold. */}
+      <NewOrderRow className="mb-8 lg:hidden [@media(max-height:719px)]:hidden" />
       <h1 className="title text-32 md:text-40">{t('Open your shop')}</h1>
       <p className="mt-2 text-15 text-muted">{t('First, your account. Your shop comes next.')}</p>
       <form

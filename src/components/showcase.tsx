@@ -148,6 +148,23 @@ export function NewOrderCard({ className = '' }: { className?: string }) {
   )
 }
 
+/** The same order as one row: the small picture above the title of the sign-up screen on phones. */
+export function NewOrderRow({ className = '' }: { className?: string }) {
+  const t = useT()
+  return (
+    <div className={`flex items-center gap-3 rounded-[18px] bg-card p-2.5 pr-4 text-ink shadow-[var(--shadow-float)] ring-1 ring-line ${className}`}>
+      <img src={`${L}/jua.webp`} alt="" className="h-[52px] w-[42px] shrink-0 rounded-[8px] object-cover" />
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-2 text-[14px] font-medium">
+          <span className="signal shrink-0" /> <span className="truncate">{t('New order: {total}', { total: 'TSh 63,000' })}</span>
+        </p>
+        <p className="mt-0.5 truncate text-[12px] text-muted">Lulu Mbwambo · Gauni la Jua</p>
+      </div>
+      <p className="meta shrink-0">{t('now')}</p>
+    </div>
+  )
+}
+
 /** The signature: a receipt slip, here showing what Shopi checked in the buyer's SMS. */
 export function PaymentSlip({ className = '' }: { className?: string }) {
   const t = useT()

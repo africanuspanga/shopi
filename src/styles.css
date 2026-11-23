@@ -431,6 +431,13 @@ body {
   .input::placeholder {
     color: var(--color-faint);
   }
+  /* An example in a box for a number or a code ("e.g. 5512345") reads in the normal font: in the code font it looked
+     like code. What the seller types there stays in the code font. */
+  .input.code::placeholder {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
   /* A box the form marked as missing or wrong (`error` on Field and FieldGroup). */
   .field[data-invalid] .input {
     box-shadow: inset 0 0 0 1.5px var(--color-bad);
@@ -496,6 +503,35 @@ body {
   }
   .receipt-rule {
     border-top: 1px dashed var(--color-line-strong);
+  }
+
+  /* The setup's phone on the dark panel (laptops; SetupPhone in components/setup.tsx): its size follows the window's
+     height, and --k scales the shop drawn at a real phone's width (390) to the frame's screen: (width - 22) / 390. */
+  .setup-phone {
+    width: 232px;
+    height: 464px;
+    --k: 0.5385;
+  }
+  @media (min-height: 704px) {
+    .setup-phone {
+      width: 280px;
+      height: 560px;
+      --k: 0.6615;
+    }
+  }
+  @media (min-height: 790px) {
+    .setup-phone {
+      width: 316px;
+      height: 640px;
+      --k: 0.7538;
+    }
+  }
+  @media (min-height: 860px) {
+    .setup-phone {
+      width: 346px;
+      height: 700px;
+      --k: 0.8308;
+    }
   }
 
   /* Signal: a live orange dot for things that need the seller now */

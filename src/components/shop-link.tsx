@@ -1,6 +1,7 @@
 import { Check, Loader2, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { ErrorText, Field, Sheet } from '#/components/ui'
+import { useEffect, useState, type ReactNode } from 'react'
+import { QrCode, qrUrl } from '#/components/qr'
+import { ErrorText, Field, Sheet, ShopAvatar } from '#/components/ui'
 import { changeShopLink, checkShopLink } from '#/lib/api/merchant'
 import { slugify } from '#/lib/format'
 import { useT } from '#/lib/i18n'
@@ -126,5 +127,77 @@ export function ChangeLinkSheet({ open, onClose, slug, onChanged }: { open: bool
         </button>
       </form>
     </Sheet>
+  )
+}
+
+/**
+ * The shop's link as a dark card (the looks review of 23 Nov 2026): the logo, the name in the large shop type, the
+ * live dot, the whole link in mono and the shop's own QR code. "Your shop is live" in the setup shows it, and Home
+ * shows the same card until the first order, so a seller meets one object twice. It takes the place of the dark
+ * "Sales today" card, which a shop without orders doesn't have: there is still one dark card on a screen.
+ * Buttons on it (`children`): the main one `btn bg-white text-ink hover:bg-white/90`, the others
+ * `btn bg-white/10 hover:bg-white/15`.
+ */
+export function ShopLinkCard({
+  shop,
+  top,
+  note,
+  onQr,
+  wide = false,
+  children,
+  className = '',
+}: {
+  shop: { name: string; slug: string; logo_key: string | null }
+  /** At the right of the live dot: a link to the shop, or a quiet fact (visits). */
+  top?: ReactNode
+  /** Under the link: what to do with it (Home). */
+  note?: ReactNode
+  /** Opens the printable QR card; the code on the card is the shop's real one. */
+  onQr?: () => void
+  /** A card as wide as the page (Home, from `xl`): the sign at the left, the code, the note and the buttons at the right. */
+  wide?: boolean
+  children: ReactNode
+  className?: string
+}) {
+  const t = useT()
+  const code = <QrCode text={qrUrl(shop.slug)} label={t('QR code for {shop}', { shop: shop.name })} className="size-full rounded-8" />
+  const tile = 'size-14 shrink-0 rounded-12 bg-white p-1'
+  const qr = (show: string) =>
+    onQr ? (
+      <button type="button" className={`${tile} ${show} transition-transform active:scale-[0.97]`} aria-label={t('QR code')} onClick={onQr}>
+        {code}
+      </button>
+    ) : (
+      <span className={`${tile} ${show}`}>{code}</span>
+    )
+  return (
+    // On ink the focus ring is white (the app's is ink). The wide layout starts where the page beside the sidebar has
+    // room for two columns; under that the card stacks, as on a phone.
+    <section className={`rounded-20 bg-ink p-6 text-white md:p-7 [&_:focus-visible]:outline-white ${wide ? 'xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,440px)] xl:gap-x-12' : ''} ${className}`}>
+      <div className="min-w-0">
+        <div className="flex min-h-6 items-center justify-between gap-3">
+          <p className="flex shrink-0 items-center gap-2.5 text-13 whitespace-nowrap text-white/70">
+            <span className="signal shrink-0" aria-hidden /> {t('Live')}
+          </p>
+          {top}
+        </div>
+        <div className="mt-5 flex items-end justify-between gap-4">
+          {/* The ring gives a dark logo an edge on ink. */}
+          <ShopAvatar onDark name={shop.name} logo={shop.logo_key} className="h-14 w-14 text-17 ring-1 ring-white/20" />
+          {qr(wide ? 'block xl:hidden' : 'block')}
+        </div>
+        <p className="display mt-5 text-32 break-words md:text-40">{shop.name}</p>
+        {/* The whole link, never cut short: it is read out, typed and checked letter by letter. */}
+        <p className="code mt-2.5 text-17 break-all md:text-20">
+          <span className="text-white/50">shopi.tz/</span>
+          {shop.slug}
+        </p>
+      </div>
+      <div className={wide ? 'xl:flex xl:flex-col xl:items-end' : ''}>
+        {wide && qr('hidden xl:block')}
+        {note}
+        <div className={`mt-6 ${wide ? 'xl:w-full' : ''}`}>{children}</div>
+      </div>
+    </section>
   )
 }

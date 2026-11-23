@@ -529,6 +529,12 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
     const day = todayDay - 6 + i
     return { day: day * 86400_000, total: daily.find((d) => d.day === day)?.total ?? 0 }
   })
+  const life = await first<{ created_at: number; busy: number; booked: number }>(
+    `SELECT created_at, EXISTS (SELECT 1 FROM bookings WHERE shop_id = ?1) booked,
+       (EXISTS (SELECT 1 FROM orders WHERE shop_id = ?1) OR EXISTS (SELECT 1 FROM bookings WHERE shop_id = ?1)
+        OR EXISTS (SELECT 1 FROM invoices WHERE shop_id = ?1 AND status != 'draft')) busy FROM shops WHERE id = ?1`,
+    shop.id,
+  )
   return {
     today: { total: today?.total ?? 0, orders: today?.orders ?? 0 },
     queue: { toConfirm: queue?.to_confirm ?? 0, toSend: queue?.to_send ?? 0, onTheWay: queue?.on_the_way ?? 0 },
@@ -555,14 +561,9 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
      * Whether Home may show its rows about Shopi itself (the plan, email). A new shop first sees only what gets it
      * its first sale: they wait for the first order, booking or sent invoice, or the shop's third day.
      */
-    settled: await (async () => {
-      const life = await first<{ created_at: number; busy: number }>(
-        `SELECT created_at, (EXISTS (SELECT 1 FROM orders WHERE shop_id = ?1) OR EXISTS (SELECT 1 FROM bookings WHERE shop_id = ?1)
-           OR EXISTS (SELECT 1 FROM invoices WHERE shop_id = ?1 AND status != 'draft')) busy FROM shops WHERE id = ?1`,
-        shop.id,
-      )
-      return !!life?.busy || now() - (life?.created_at ?? 0) >= 3 * 86400_000
-    })(),
+    settled: !!life?.busy || now() - (life?.created_at ?? 0) >= 3 * 86400_000,
+    /** A client has booked here at least once: with the first order, it ends "ready for its first…" on Home. */
+    booked: !!life?.booked,
     backInStock,
     hasProducts: (productCount?.n ?? 0) > 0,
     score: scoreFacts(score!),

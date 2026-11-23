@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { ServiceForm } from '#/components/booking'
 import { SimpleHours, WeekHours, sameHours } from '#/components/hours'
-import { LaterLink, PreviewToggle, ShopCard, StepHead, previewShop, useMoveOn, usePass, useStepClock, type PreviewService } from '#/components/setup'
+import { LaterLink, PreviewFrame, PreviewToggle, ShopScreen, StepHead, previewShop, useMoveOn, usePass, useStepClock, type PreviewService } from '#/components/setup'
 import { ErrorText, showFirstError } from '#/components/ui'
 import type { SetupService, SetupShop } from '#/lib/api/setup'
 import { saveBookSettings } from '#/lib/api/services'
@@ -57,10 +57,18 @@ export function ServiceStep({
 
   return (
     <>
-      <StepHead bar={bar} title={t('Your first service')} sub={t('What clients book, how long it takes and the price. You add the rest after setup.')} />
-      <PreviewToggle shop={previewShop(shop)} title={t('Your page, as clients will see it')}>
-        <ShopCard shop={previewShop(shop)} products={[]} services={[draft]} />
-      </PreviewToggle>
+      <StepHead
+        bar={bar}
+        title={t('Your first service')}
+        sub={t('What clients book, how long it takes and the price. You add the rest after setup.')}
+        aside={
+          <PreviewToggle title={t('Your page, as clients will see it')}>
+            <PreviewFrame>
+              <ShopScreen kind="services" shop={previewShop(shop)} products={[]} services={[draft]} />
+            </PreviewFrame>
+          </PreviewToggle>
+        }
+      />
       <div className="mt-6">
         <ServiceForm
           plain
@@ -129,10 +137,18 @@ export function HoursStep({ shop, bar, services }: { shop: SetupShop; bar: React
   // shown are already a working week, so saving them is the one tap that passes this step.
   return (
     <>
-      <StepHead bar={bar} title={t('When you work')} sub={t('We filled in typical hours. Change what is different. Clients only see free times inside them.')} />
-      <PreviewToggle shop={previewShop(shop)} title={t('Your page, as clients will see it')}>
-        <ShopCard shop={previewShop(shop)} products={[]} services={services} />
-      </PreviewToggle>
+      <StepHead
+        bar={bar}
+        title={t('When you work')}
+        sub={t('Clients book only inside these hours. Change what is different.')}
+        aside={
+          <PreviewToggle title={t('Your page, as clients will see it')}>
+            <PreviewFrame>
+              <ShopScreen live kind="services" shop={previewShop(shop)} products={[]} services={services} />
+            </PreviewFrame>
+          </PreviewToggle>
+        }
+      />
       <div className="mt-6">
         {each ? (
           <>

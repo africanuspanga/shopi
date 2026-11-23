@@ -9,6 +9,7 @@ import { BioSteps } from '#/components/setup'
 import { PhoneAlertsCard } from '#/components/phone-app'
 import { EmailRow } from '#/components/email'
 import { QrSheet } from '#/components/qr-sheet'
+import { ShopLinkCard } from '#/components/shop-link'
 import { getDashboard } from '#/lib/api/merchant'
 import { shortDay, timeAgo, tzs } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
@@ -59,6 +60,9 @@ function Dashboard() {
   const bills = shop.kind === 'invoices'
   const hasProducts = serves ? (d.score.services ?? 0) > 0 || d.hasProducts : d.hasProducts
   const hasOrders = d.recent.length > 0
+  // The link card says "ready for its first order" (or booking): one of either ends it. A salon never has orders, so
+  // without this it kept the card for ever.
+  const waiting = !hasOrders && !d.booked
   const vs7 = t('vs the 7 days before')
 
   // Shares from Home count for the shop score's "Your link shared" (a seller_share event).
@@ -86,36 +90,45 @@ function Dashboard() {
     setSharedNow(true)
   }
 
-  // The link to share, for a shop that has something to order and no order yet.
+  // The link to share, for a shop that has something to order and no order yet: the same dark card the seller met on
+  // "Your shop is live" (the looks review of 23 Nov 2026). A shop without orders has no "Sales today", so there is
+  // still one dark card on the screen.
   const linkCard = (
-        <section className="card p-6 md:flex md:items-end md:justify-between md:gap-10 md:p-7">
-          <div className="min-w-0">
-            <CardHead title={shop.kind === 'services' ? t('Your page is ready for its first booking') : t('Your shop is ready for its first order')} />
-            <p className="mt-2 max-w-[52ch] text-14 leading-relaxed text-muted">
-              {shop.kind === 'services'
-                ? t('Put your link in your Instagram bio and on your WhatsApp status. Your first booking shows up here.')
-                : t('Put your link in your Instagram bio and on your WhatsApp status. Your first order shows up here.')}
-            </p>
-            <p className="code mt-4 truncate text-17">shopi.tz/{shop.slug}</p>
-            {d.visits.shop > 0 && <p className="meta mt-1">{t('{n} visits', { n: n(d.visits.shop) })} · {t('Last 7 days')}</p>}
-          </div>
-          <div className="mt-5 flex gap-2 md:mt-0 md:w-[420px] md:shrink-0">
-            <button type="button" className="btn btn-quiet flex-1 px-3" onClick={copyLink}>
-              <Copy size={16} strokeWidth={1.75} /> {t('Copy')}
-            </button>
-            <button type="button" className="btn btn-quiet flex-1 px-3" onClick={() => setQrOpen(true)}>
-              <QrCodeIcon size={16} strokeWidth={1.75} /> {t('QR code')}
-            </button>
-            <button type="button" className="btn flex-1 px-3" onClick={share}>
-              <Share2 size={16} strokeWidth={1.75} /> {t('Share')}
-            </button>
-          </div>
-          <QrSheet open={qrOpen} onClose={() => setQrOpen(false)} />
-        </section>
+    <ShopLinkCard
+      wide
+      shop={shop}
+      onQr={() => setQrOpen(true)}
+      note={
+        <div className="mt-5 border-t border-white/10 pt-5 xl:mt-auto xl:w-full xl:border-0 xl:pt-6">
+          <CardHead title={shop.kind === 'services' ? t('Your page is ready for its first booking') : t('Your shop is ready for its first order')} />
+          <p className="mt-1.5 text-14 leading-relaxed text-white/60">
+            {shop.kind === 'services'
+              ? t('Put your link in your Instagram bio and on your WhatsApp status. Your first booking shows up here.')
+              : t('Put your link in your Instagram bio and on your WhatsApp status. Your first order shows up here.')}
+          </p>
+          {/* On its own row: beside the live dot it broke in two in Swahili. */}
+          {d.visits.shop > 0 && <p className="meta mt-3 text-white/50">{t('{n} visits', { n: n(d.visits.shop) })} · {t('Last 7 days')}</p>}
+        </div>
+      }
+    >
+      <div className="flex gap-2">
+        <button type="button" className="btn flex-1 bg-white/10 px-3 hover:bg-white/15" onClick={copyLink}>
+          <Copy size={16} strokeWidth={1.75} /> {t('Copy')}
+        </button>
+        <button type="button" className="btn flex-1 bg-white/10 px-3 hover:bg-white/15" onClick={() => setQrOpen(true)}>
+          <QrCodeIcon size={16} strokeWidth={1.75} /> {t('QR code')}
+        </button>
+        <button type="button" className="btn flex-1 bg-white px-3 text-ink hover:bg-white/90" onClick={share}>
+          <Share2 size={16} strokeWidth={1.75} /> {t('Share')}
+        </button>
+      </div>
+    </ShopLinkCard>
   )
 
   return (
     <Page nav wide>
+      {/* Outside the dark card, whose white text a sheet inside it would inherit. */}
+      <QrSheet open={qrOpen} onClose={() => setQrOpen(false)} />
       <PhoneBar
         lead={<ShopAvatar name={shop.name} logo={shop.logo_key} className="h-9 w-9 text-13" />}
         title={shop.name}
@@ -162,17 +175,17 @@ function Dashboard() {
         {bills ? (
           <>
             {/* A business that bills and also lists products shares its link like any shop. */}
-            {d.hasProducts && !hasOrders && linkCard}
+            {d.hasProducts && waiting && linkCard}
             {d.settled && <PlanRow plan={d.plan} />}
-            <PhoneAlertsCard />
+            <PhoneAlertsCard kind={shop.kind} />
             {d.settled && <EmailRow state={d.email} />}
           </>
         ) : hasProducts ? (
           <>
             <ScoreCard facts={sharedNow ? { ...d.score, shared: true } : d.score} ai={d.ai} compact={hasOrders} onShare={share} onCopy={copyLink} copied={copied} />
-            {!hasOrders && linkCard}
+            {waiting && linkCard}
             {d.settled && <PlanRow plan={d.plan} />}
-            <PhoneAlertsCard />
+            <PhoneAlertsCard kind={shop.kind} />
             {d.settled && <EmailRow state={d.email} />}
           </>
         ) : (
@@ -517,6 +530,10 @@ function OwedCard({ inv }: { inv: HomeInvoices }) {
     inv.overdue ? t('{n} overdue', { n: inv.overdue }) : '',
     inv.drafts ? t(inv.drafts === 1 ? '{n} draft not sent yet' : '{n} drafts not sent yet', { n: inv.drafts }) : '',
   ].filter(Boolean)
+  // Nothing is owed yet and one invoice waits to be sent: the card leads with it ("INV-0001 is ready to send"), and
+  // the zero and the one-row list give way (the looks review of 23 Nov 2026). With several drafts the card keeps its
+  // count ("3 drafts not sent yet").
+  const readyDraft = !!draft && inv.drafts === 1 && inv.owed.length === 0 && inv.open.length === 0 && !inv.checks
   if (!inv.made) {
     return (
       <section className="card p-5 md:p-6">
@@ -537,17 +554,26 @@ function OwedCard({ inv }: { inv: HomeInvoices }) {
       <div className="px-5 pt-5 md:px-6">
         <CardHead
           icon={inv.checks > 0 ? <span className="signal" aria-hidden /> : undefined}
-          title={t('Owed to you')}
-          sub={note.length ? note.join(' · ') : inv.owed.length ? t('Sent and waiting for payment') : t('Nothing owed right now')}
+          title={readyDraft ? t('{number} is ready to send', { number: draftNumber }) : t('Owed to you')}
+          sub={readyDraft ? clientTitle(draft.client, t) : note.length ? note.join(' · ') : inv.owed.length ? t('Sent and waiting for payment') : t('Nothing owed right now')}
           right={
             <Link to="/app/invoices" className="text-13 text-muted transition-colors hover:text-ink">
               {t('All invoices')}
             </Link>
           }
         />
-        <p className="tnum mt-3 text-32 font-semibold tracking-tight">{inv.owed.length ? inv.owed.map((o) => money(o.cents, o.currency)).join(' + ') : money(0, 'TZS')}</p>
+        {/* Nothing owed yet and an invoice waits to be sent: its amount is the news, not "TSh 0". */}
+        {readyDraft ? (
+          <Link to="/app/invoices/$id" params={{ id: draft.id }} className="tnum mt-3 block text-32 font-semibold tracking-tight">
+            {money(draft.total, draft.currency)}
+          </Link>
+        ) : (
+          <p className="tnum mt-3 text-32 font-semibold tracking-tight">{inv.owed.length ? inv.owed.map((o) => money(o.cents, o.currency)).join(' + ') : money(0, 'TZS')}</p>
+        )}
       </div>
-      {inv.open.length > 0 || draft ? (
+      {readyDraft ? (
+        <div className="pb-5" />
+      ) : inv.open.length > 0 || draft ? (
         <ul className="mt-3 divide-y divide-line">
           {draft && (
             <li>

@@ -158,6 +158,9 @@ KEEP_ENGLISH = [
     (r'^\{h\} h\b|^1 h\b', 'hour and hours for a length of time (never saa, which reads as a clock time)'),
     (r'\bcharacters\b', 'tarakimu au herufi for characters (never vibambo)'),
     (r'^Send your link\b', 'Share link yako for telling a seller to share their link (never Tuma link yako)'),
+    # The founder's answers to the looks review's Swahili, 23 Nov 2026 (night).
+    (r'\bpreview', 'preview (never angalia mwonekano)'),
+    (r'^Cash on delivery is on\b', '"Cash on delivery is on." as it is, in English, at the start of this line'),
 ]
 
 

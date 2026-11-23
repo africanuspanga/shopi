@@ -48,7 +48,7 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/routes/onboard.tsx`, `src/components/setup.tsx`, `src/lib/setup.ts`, `src/lib/api/setup.ts`, `src/server/setup.ts` | The five-step setup: the route, Back and step 1; steps 2 to 5 and the shop preview; which step to show; its server functions; `passStep` (step 1 saves through `createShop` and, opened again, `updateSetupShop` in `lib/api/merchant.ts`) |
 | `src/lib/email.ts`, `src/server/email.ts`, `src/server/email-templates.ts`, `src/lib/api/email.ts`, `src/components/email.tsx`, `src/routes/email/`, `src/routes/api/email-off.ts`, `src/routes/api/admin-email-preview.ts` | Email to sellers through Resend: `EMAIL_LIVE` and the kinds; sending, confirm links, unsubscribe, receipts and the weekly summary; the templates; the seller's server functions; the Home row and Shop settings group; the stop/remove page; one-click unsubscribe; /admin previews |
 | `src/lib/staff.ts`, `src/server/staff.ts`, `src/lib/api/staff.ts`, `src/routes/app/staff.tsx`, `src/routes/join/$code.tsx`, `src/routes/paused.tsx` | Shop assistants: roles and areas (`allows`, `landing`, `areaOfPath`); invite codes and the list; the owner's and the invite page's server functions; the owner's page; the invite page; the paused page |
-| `src/components/shop-link.tsx` | `ChangeLinkSheet`: Shop settings' "Change your shop link" (see "A shop's link can change") |
+| `src/components/shop-link.tsx` | `ChangeLinkSheet`: Shop settings' "Change your shop link" (see "A shop's link can change"); `ShopLinkCard`: the shop's link as the dark card on "Your shop is live" and on Home until the first order |
 | `src/lib/score.ts`, `src/server/score.ts` | The shop score: the eight items, points and the next step (browser-safe); its facts as one SQL fragment for Home and `/admin` |
 | `src/components/showcase.tsx` | Coded product previews for the landing and auth pages (phone, mini store, order card, payment slip) |
 | `src/components/brand-icons.tsx` | One-colour social icons, plus `WhatsAppMark` (WhatsApp's green mark) |
@@ -269,12 +269,13 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
   3. **How buyers pay:** network chips, Lipa Namba or number, the name on payments (`saveSetupPayment`; a number that
      reads as a Tanzanian mobile is marked personal). "Only cash on delivery for now" passes the step on purpose.
   4. **Your shop is live:** the whole link with "Open my shop" (the real shop, a new tab); **Share on WhatsApp** as
-     the full-width black button until the seller has shared or copied, then Continue takes over (`lead` in
+     the main button until the seller has shared or copied, then Continue takes over (`lead` in
      `LiveStep`; with nothing to order yet, "Add my first product" leads and both are quiet); Copy link, QR code
-     (`QrSheet`) and the phone's own share; each tracked as `seller_share` `setup-<how>`. The shop as buyers see it
-     (`LiveCard`, `ShopCard live`: the products two across with the photo at 4:5 and Buy on it, as on the shop's own
-     page, and no empty tiles; a phone frame on desktop), where "Add a line about your shop" opens a sheet with the
-     bio and "Write it for me" (`WriteBio`); and "Put it in your Instagram bio" (`BioSteps`).
+     (`QrSheet`) and the phone's own share; each tracked as `seller_share` `setup-<how>`. All of it sits on the dark
+     link card (`ShopLinkCard`, below). The shop as buyers see it (`LiveShop`, `ShopScreen live`: one product at two
+     thirds of the width, more of them two across, the photo at 4:5 with Buy on it, and no empty tiles; under the
+     dark card on phones, in the laptop's phone on desktop), where "Add a line about your shop" opens a sheet with
+     the bio and "Write it for me" (`WriteBio`); and "Put it in your Instagram bio" (`BioSteps`).
   5. **Orders on your phone:** turn on notifications (`usePhoneApp`, a test push), install the app or the iPhone guide
      (`InstallSheet`), then "Go to Home" (for every kind of business: it opens Home). `catchInstallPrompt()` runs on
      `/onboard` too. What the screen offers follows where it is open (`where` in `PhoneStep`): inside Instagram's,
@@ -290,9 +291,11 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
     session carries it (`session.shop.setup`).
   - **Recorded:** `setup_steps` gets a row per step passed (`done` or `skip`, seconds on its screen); `/admin` Shops shows
     "The five-step setup" (passed, skipped, the median time per step, shops still in it). No personal data.
-  - Desktop: the dark panel shows the shop taking shape (`ShopCard`: name, category, the product being typed, the
-    payment line), the live shop in a phone at step 4, and a sample order notification at step 5 (`OrderNotice`).
-    Phones get the same preview as a small card that opens it (`PreviewToggle`), and step 4 shows the card inline.
+  - Desktop: the dark panel holds **one phone for all five steps** (`SetupPhone`, `PhoneAside`): the shop taking
+    shape (`ShopScreen`: the address, the bar with the logo and name, the product or service being typed, the payment
+    line), the open shop at step 4, and the first notification on its lock screen at step 5 (`LockScreen`,
+    `OrderNotice`). Phones open the same screen from "Preview" in the step bar's row (`PreviewToggle`), and step 4
+    shows it inline. See "Rules since the looks review" below.
   - **Rules since the onboarding review of 23 Nov 2026** (the founder's answers; `../design/notes/fable-onboarding-review-23nov.md`):
     - **A form says what is missing on the box itself, every box at once.** `Field` and `FieldGroup` take `error`
       (red line under the box, red outline; `showFirstError()` scrolls to the first). No setup button is greyed out
@@ -341,11 +344,62 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
       `saveShopLogo`) and the TIN gets its dashes while it is typed (`typeTin`); "Your first invoice is ready" shows
       the invoice as a receipt slip (number, client, what for, due date, amount, "See it as your client will") above
       Send on WhatsApp, Copy link and Continue, which leads once it is sent or copied.
-    - **Home on day one** (review rows 23 and 25): the shop score, then the link card ("ready for its first order"),
-      then notifications. The rows about Shopi itself (the plan, email) wait until `getDashboard().settled`: the
+    - **Home on day one** (review rows 23 and 25): the shop score, then the link card ("ready for its first order";
+      since the looks review the dark `ShopLinkCard`), then notifications. The rows about Shopi itself (the plan, email) wait until `getDashboard().settled`: the
       first order, booking or sent invoice, or the shop's third day. While an invoice is written but not sent,
       "Owed to you" lists it and its main button is **Send INV-0001 on WhatsApp** (`homeInvoices().draft`; the tap
       marks it sent), with New invoice beside it.
+  - **Rules since the looks review of 23 Nov 2026** (`../design/notes/onboarding-looks-review-23nov.md`, its "Built"
+    section; built on the founder's "get started working on it", each of its six questions on the review's
+    recommendation):
+    - **The dark link card** (`ShopLinkCard` in `components/shop-link.tsx`): the live dot, the logo (initials on
+      white: `ShopAvatar onDark`), the shop's real QR code (it opens `QrSheet`), the name in `.display`, the whole
+      link in mono, and its buttons as children (the main one `btn bg-white text-ink hover:bg-white/90`, the others
+      `btn bg-white/10 hover:bg-white/15`). "Your shop is live" shows it, and Home shows the same card until the first
+      order **or booking** (`wide`: from `xl` the sign at the left, the code, the note and the buttons at the right;
+      under that it stacks, because beside the sidebar a tablet has no room for two columns). It stands where "Sales
+      today" will: a shop never has both, so there is one dark card on a screen. The dot says "Live", not "Open
+      now": to a salon that reads as its working hours. Home ends it with `getDashboard().booked` too: a salon never
+      has orders, and kept "ready for its first booking" for ever. On ink the focus ring is white (the card sets
+      it), a logo gets a faint ring, and the row with the dot holds only short things (the visits line sits under
+      the note: beside "Inafanya kazi" it broke in two). **A sheet opened from the card is rendered outside it**
+      (Home's `QrSheet`); `Sheet` also sets `text-ink` itself, so no sheet inherits a dark parent's white text.
+    - **One phone on the laptop's panel** (`SetupPhone`): what is inside is drawn at a real phone's width (390) with
+      the app's own sizes and scaled to the frame (`transform: scale(var(--k))`; `.setup-phone` in `styles.css` sets
+      the frame and `--k` by the window's **height**: 464, 560, 640 or 700 px tall, so it fits a 1366x768 laptop's
+      641 px too; add a step there, never a fixed size). So `ShopScreen` uses the design
+      scales like any screen and is not a coded picture. **Nothing `fixed` may sit inside it** (a transformed parent
+      would hold it): `LiveShop` portals its sheet to the body. A business that sends invoices keeps its invoice
+      sheet (`PreviewAside`) for steps 2 to 4.
+    - **`ShopScreen`** replaces the old `ShopCard`: `frame` (inside the laptop's phone: fills it, scrolls, ends on a
+      drawn capsule), `bare` (only what is under the bar: on "Your shop is live" on phones, where the dark card
+      already carries the logo, name and link), `live` (no tile for what isn't added). No grey placeholder tiles:
+      before a photo there is one dashed tile "Your first product"; a salon gets a dashed row "Your first service"
+      until the service has a name; a business that sends invoices shows "Ask for a quote", as its real page does.
+    - **Phones: "Preview" is a pill in the step bar's row** (`StepHead aside`, `PreviewToggle`, `PreviewFrame`), on
+      steps 2 and 3 (and an invoice business's step 4 form). The bars of `StepBar` give way to it (flex, at most
+      28 px each); the wrapper in `StepHead` takes the `flex-1`, never `StepBar` itself (step 1 renders the bar
+      straight into `AuthLayout`'s column, where `flex-1` took its 44 px height away). The card under the title is gone from those steps; step 1 keeps its small card, which shows the
+      name and link as they are typed.
+    - **The line under a step's title is two rows at most on a 390 px phone, in Swahili too.** What didn't fit moved
+      to where it belongs: "Buyers pay you directly. Shopi never holds your money." is a line with a shield under
+      the Lipa Namba box (`DirectNote`), "Optional" is said once in the line of "How you look on invoices".
+    - **One way to say "later":** `LaterLink` on an invoice business's three steps too, and on "How buyers pay"
+      when cash on delivery is off. "Only cash on delivery for now" stays a white button: it is an answer.
+    - **Step 5's sample notification** (`OrderNotice`) is drawn at a phone's size and made of the business's own
+      things: its product, its service, or its own first invoice (`getSetup().invoice`).
+    - **"Your first invoice is ready":** "See it as your client will" is under the slip; two button styles (black
+      and white). **How clients pay you:** bank details are behind "Add bank details" (open when saved, or when Save
+      is tapped with nothing filled).
+    - **Home:** one invoice written and not sent, with nothing owed and nothing to check, leads `OwedCard`
+      (`readyDraft`: "INV-0001 is ready to send", the client, the invoice's amount; no "TSh 0"). With several
+      drafts the card keeps its old look, which says how many. The notifications
+      card speaks of bookings to a salon and of payments to a business that sends invoices (`PhoneAlertsCard kind`).
+    - **Sign-up on phones** has one small order row above the title (`NewOrderRow` in `showcase.tsx`), left out on
+      screens under 720 px high so Continue stays on the first screen.
+    - **Tested** (Playwright, 107 of 107 checks, English and Swahili, 360, 390, 820 and 1440 wide, windows from 641
+      to 1500 px high) and **reviewed by a second agent**: no handler changed; its layout and state findings
+      are the fixes named above (the list is in the note's "Built" section).
 - **The shop score** (`src/lib/score.ts`, the founder: "every shop owner reaches a 100% set-up shop"): 100 points over
   eight items: name and link 10; three shown products with a photo, a price and a description 30 (10 each); a way to be
   paid 10 (a Lipa Namba, or cash on delivery on purpose: setup step 3 passed, or a shop older than the setup); WhatsApp
@@ -718,7 +772,7 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
   - **The encoder** (`src/lib/qr.ts`): byte mode, versions 1 to 40, levels L/M/Q/H, after Nayuki's reference design; no
     package (adding one was blocked). Checked by decoding with Apple Vision (a Swift script, `VNDetectBarcodesRequest`):
     32 of 32 test codes, and every card. Re-check that way after touching it.
-  - **Sellers** (`QrSheet`, from Home's "ready for its first order" card and Shop settings > QR code): a 1200 x 1880
+  - **Sellers** (`QrSheet`, from the dark link card on "Your shop is live" and on Home, and Shop settings > QR code): a 1200 x 1880
     card drawn in the browser (`drawQrCard`): the shop's colour on top (ink when it has none) with its logo and its
     name in its own Shop look font and spacing, its location; the code on a white card with rounded dots, the finder
     eyes in the shop's colour (darkened to read), the logo in the middle (level H; a link long enough for version 7+

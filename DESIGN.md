@@ -61,9 +61,10 @@ local function named like a part); a genuine exception says why on its line or t
 | A quiet row on Home | `Notice` (`icon`, `title`, `sub`, `to`/`onClick`, `actions`, `onDismiss`, `signal`) | A card: icon (or a short figure) in a soft circle, title 15 medium, a 13 muted line; the whole row opens something (arrow) or carries buttons; "Not now" as an X. Rows stack with `space-y-3` |
 | A number with its label | `Stat` (`size` sm/md/lg, `card`, `onClick`+`on`, `badge`, `foot`); `/admin` wraps it as `Kpi` with the change chip | Label 13 muted, figure in lining figures (lg 20 → 24 from md, md 20, sm 15), a change or note at 13 |
 | Nothing to show yet | `Nothing` (one line in a soft box); `Empty` (icon, title, text, action) for a whole empty page | |
-| A sheet | `Sheet` | Title at 20 (`.title`), close at the right |
+| A sheet | `Sheet` | Title at 20 (`.title`), close at the right. It reads in ink wherever it is opened from; still render it outside a dark card |
 | One input | `Field` (`error`) | Label 14 medium, hint 13 muted. A missing or wrong answer is said under the box in `bad` at 13, with the box outlined in `bad` |
-| A group of choices (chips, colours, photos) | `FieldGroup` (`radio` for one-of-several, `error`) | The same label, hint and error line as `Field`, named for screen readers |
+| A group of choices (chips, colours, photos) | `FieldGroup` (`radio` for one-of-several, `error`, `errorFirst`) | The same label, hint and error line as `Field`, named for screen readers. `errorFirst` puts the error under the label, for a long group (thirteen chips) |
+| The shop's link as an object | `ShopLinkCard` in `components/shop-link.tsx` (`top`, `note`, `onQr`, `wide`; the buttons as children) | The dark card: a live dot, the logo, the shop's QR code, the name in `.display`, the whole link in mono. On "Your shop is live" and on Home until the first order or booking. Two columns from `xl` when `wide`; the focus ring on it is white. On it the main button is `btn bg-white text-ink hover:bg-white/90`, the others `btn bg-white/10 hover:bg-white/15` |
 | A label for an input that sits beside a button | `Label` (`htmlFor`) | |
 | A yes/no setting | `Switch` | |
 | An invoice's or quote's state | `InvoicePill` (`state`, `check`) | A quiet dot and label like an order's; a payment to check or an accepted quote waiting for its invoice in the signal colour |
@@ -90,7 +91,8 @@ line 1.6→1.75…), checked by before-and-after screenshots of 31 screens at 39
 - **Product:** an online shop in one link for Tanzanian social sellers.
 - **Character:** confident, quick, warm.
 - **World:** Dar es Salaam phone commerce. The colour comes from the sellers' own product photos; Shopi's chrome is black and white.
-- **Moments:** product photography; the dark "Sales today" card; the receipt slip on anything about money.
+- **Moments:** product photography; the one dark card on a screen ("Sales today", and before the first order the
+  shop's own link, `ShopLinkCard`: never both); the receipt slip on anything about money.
 - **Signature:** the receipt slip (`.receipt`): a torn bottom edge and mono figures, only on money (checkout total, order totals, payment checks).
 
 ### Colour (tokens in `@theme`, use the Tailwind names)
@@ -204,6 +206,9 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
   and a dark closing block that holds the footer and ends on a giant `Wordmark`.
 - **Auth:** `AuthLayout`: form on the left, dark product panel on the right (desktop only). Sign-up and log-in sit in
   the middle of the screen; the setup's steps (`steady`) all start at the same height, so the step bar never jumps.
+  In the setup the panel holds **one phone from step 1 to 5** (`SetupPhone`): the shop taking shape, the open shop,
+  then the first notification on its lock screen; never a different object per step. On phones the same screen opens
+  from a "Preview" pill in the step bar's row, never from a card that pushes the form down.
 - **Touch areas are 44 px**, also where the thing looks smaller: `.icon-btn` is 40 px to look at with a ring around it
   that takes the tap (`::after`); a text link that acts as a button gets `min-h-11` (the setup's "Change", "I’ll do
   this later", Home's "See all"); a small round X on a photo sits in a 44 px button.
@@ -227,8 +232,11 @@ to no box (the connection, a limit). An example inside a box says it is one: it 
 examples that need no translation themselves (a number, a link, a code, a name) use `eg(t, '0754 123 456')` from
 `lib/i18n.tsx`, one string for all of them; a sentence keeps its own string starting with "e.g.". A box that asks
 about money shows `0`, never a sample price, and a box that asks for the seller's own name or shop name shows nothing
-(the grey shop name in "Name on payments" read as filled in, 23 Nov 2026).
+(the grey shop name in "Name on payments" read as filled in, 23 Nov 2026). An example reads in the normal font also
+in a box whose answer is in the code font (`.input.code::placeholder`): "e.g. 5512345" in mono looked like code.
 The way past a step that matters is a text link under the form, never a second button the size of the main one.
+A preview never shows a grey empty tile: what isn't added yet is one dashed tile that says what goes there.
+The line under a setup step's title stays within two rows on a 390 px phone, in Swahili too.
 
 ### Copy
 Plain and specific, about this product. No exclamation marks, no greeting headlines (titles name the place or period),
@@ -265,7 +273,10 @@ Write English as the key: every string goes through `t()` from `src/lib/i18n.tsx
     simu), log in, log out and login (never ingia or toka), and delivery, link, status, app, bio, QR code. Since
     23 Nov (the founder's answers to the onboarding review): the kinds of business Clearing and forwarding and
     Freelance, Wholesale (the English word alone; "Wholesale / Jumla" until the founder said "keep wholesale"), and hour and hours for a length of time ("1 hour",
-    "2 hours 30 min"; never "saa 1", which reads as a clock time; minutes alone stay "dak 15").
+    "2 hours 30 min"; never "saa 1", which reads as a clock time; minutes alone stay "dak 15"). Since 23 Nov
+    (night, the founder reading the looks build's lines): **preview** stays "Preview" (never "Angalia mwonekano" or
+    "Angalia"), and the setup's line under "How buyers pay" starts in English, "Cash on delivery is on.", with
+    Swahili after it. Elsewhere cash on delivery is still "lipa ukipokea" until the founder says otherwise.
   - **Characters in a password are "tarakimu au herufi"** ("Angalau tarakimu au herufi 6"), never vibambo.
   - **Telling a seller to share their link is "Share link yako"**, also where the English says "Send your link"
     (setup step 4), never "Tuma link yako". Sending one thing to one person stays tuma ("Tuma kwa WhatsApp").

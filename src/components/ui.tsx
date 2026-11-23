@@ -306,8 +306,8 @@ export function Img({
   )
 }
 
-/** A shop's logo, or its initials on black when there is none. */
-export function ShopAvatar({ name, logo, className = 'h-10 w-10 text-14' }: { name: string; logo: string | null | undefined; className?: string }) {
+/** A shop's logo, or its initials on black when there is none (`onDark`: on white, for the dark card). */
+export function ShopAvatar({ name, logo, className = 'h-10 w-10 text-14', onDark = false }: { name: string; logo: string | null | undefined; className?: string; onDark?: boolean }) {
   if (logo) return <Img k={logo} alt={name} className={`shrink-0 rounded-full ${className}`} eager />
   const initials = name
     .split(/\s+/)
@@ -316,7 +316,7 @@ export function ShopAvatar({ name, logo, className = 'h-10 w-10 text-14' }: { na
     .map((w) => w[0]?.toUpperCase())
     .join('')
   return (
-    <span aria-hidden className={`flex shrink-0 items-center justify-center rounded-full bg-ink font-semibold text-white ${className}`}>
+    <span aria-hidden className={`flex shrink-0 items-center justify-center rounded-full font-semibold ${onDark ? 'bg-white text-ink' : 'bg-ink text-white'} ${className}`}>
       {initials || 'S'}
     </span>
   )
@@ -375,7 +375,8 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6" role="dialog" aria-modal="true" aria-label={title}>
       <button type="button" aria-label="Close" className="fade absolute inset-0 bg-ink/40" onClick={onClose} />
-      <div className="sheet-up relative max-h-[92dvh] w-full max-w-[520px] overflow-y-auto rounded-t-28 bg-card px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] md:rounded-28 md:p-6">
+      {/* Ink by itself: a sheet opened from inside a dark card would inherit its white text. */}
+      <div className="sheet-up relative max-h-[92dvh] w-full max-w-[520px] overflow-y-auto rounded-t-28 bg-card px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] text-ink md:rounded-28 md:p-6">
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-raised md:hidden" />
         {title && (
           <div className="mb-4 flex items-center justify-between gap-3">
@@ -470,6 +471,7 @@ export function FieldGroup({
   radio = false,
   className = '',
   error,
+  errorFirst = false,
 }: {
   label: string
   children: ReactNode
@@ -477,6 +479,8 @@ export function FieldGroup({
   aside?: ReactNode
   /** What is missing in this group, said under it in red. */
   error?: string
+  /** A long group (thirteen chips): the error sits under the label, where the eye starts, not under the last chip. */
+  errorFirst?: boolean
   htmlFor?: string
   /** One choice among several (role="radiogroup"); the buttons inside then carry role="radio" and aria-checked. */
   radio?: boolean
@@ -487,8 +491,13 @@ export function FieldGroup({
       <Label htmlFor={htmlFor} aside={aside}>
         {label}
       </Label>
+      {errorFirst && error && (
+        <small role="alert" className="-mt-1 mb-2.5 block text-13 leading-[18px] text-bad">
+          {error}
+        </small>
+      )}
       {children}
-      <FieldError>{error}</FieldError>
+      {!errorFirst && <FieldError>{error}</FieldError>}
       {hint && <small className="hint">{hint}</small>}
     </div>
   )
