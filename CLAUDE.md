@@ -490,8 +490,10 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
     address, email, VRN, VAT on new lines, bank details (free text: several accounts or one per currency, as WTL Africa
     needed in Ankara), payment terms, days to pay (0, 7, 14, 30), currency, language. The TIN stays in `shops.tin`, the
     Lipa Namba in `shops.lipa_*`. A new invoice copies the bank details and terms into its own fields.
-  - **The document** (`InvoiceDocument` on screen, `invoice-pdf.tsx` for A4; one `DocData`, `docOf`): written in the
-    document's own language (chosen per invoice, default the settings' or the shop's), the business's lines, Bill to,
+  - **The document** (`InvoiceDocument` on screen, `invoice-pdf.tsx` for A4; one `DocData`, `docOf`): **always printed
+    in English** (`DOC_LANG`; the founder, 23 Nov 2026), whatever the app's language; a document's `lang` ("Client's
+    language", chosen per invoice, default the settings' or the shop's) chooses only the WhatsApp message and the
+    client's page around it. The business's lines, Bill to,
     the dates, lines (a table from md, stacked rows on phones), totals, Paid and Balance due, How to pay (Lipa Namba
     and the bank text; not on a quote), payment terms, notes, terms, and last Ankara's statement in English ("THIS IS A
     COMMERCIAL INVOICE." / "THIS IS A QUOTATION."): nothing is printed after it. The PDF is Helvetica (built into every

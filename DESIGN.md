@@ -238,9 +238,15 @@ Write English as the key: every string goes through `t()` from `src/lib/i18n.tsx
   English) and its English key to `sw-unchecked.json`, then export again for the team. Match the team's words: duka, oda,
   kapu (bag), bidhaa, delivery, share (not "shiriki"), taslimu (cash), lipa ukipokea (cash on delivery), pesa kwa simu
   (mobile money), ghairi (cancel), code ya punguzo (never "kodi", which means tax), kifurushi (plan), Mwanzo (Home),
-  Mipangilio ya duka (Shop settings), Nunua (Buy), Weka notifications (Turn on notifications), Pakua Shopi app (Install
+  Settings za duka (Shop settings; **settings, never "mipangilio"**: the founder, 23 Nov), Nunua (Buy), Weka notifications (Turn on notifications), Pakua Shopi app (Install
   the app), booking and ku-book for bookings (Booking mpya, wateja wana-book, Book muda), **never "miadi"**
-  (the founder, 20 Nov: in Tanzania miadi reads as a date or a meeting agreed, not a booking), and Copy on buttons, not Nakili (the founder, 17 Nov). Short days: J2 (Sunday), J3, J4, J5, Alh, Ijm, Jmos
+  (the founder, 20 Nov: in Tanzania miadi reads as a date or a meeting agreed, not a booking), **invoice** and
+  **quotation** for invoices and quotes (Invoice mpya, invoice zako, Kubali quotation hii; **never "ankara", "nukuu" or
+  "makadirio ya bei"**: the founder, 23 Nov, after the team's review used them), and Copy on buttons, not Nakili (the founder, 17 Nov;
+  a sentence that tells someone to copy may say nakili). **Invoices and quotations are printed in English** (on screen and
+  in the PDF, `DOC_LANG` in `lib/invoice.ts`; the founder, 23 Nov): "Bill to", "Balance due" and the rest stay English
+  there, and a document's language only chooses the WhatsApp message and the client's page. The export notes each of
+  these words on its row (`KEEP_ENGLISH` in `scripts/i18n/export.py`). Short days: J2 (Sunday), J3, J4, J5, Alh, Ijm, Jmos
   (`shortDay()` in `lib/format.ts`).
 
 ### Logo

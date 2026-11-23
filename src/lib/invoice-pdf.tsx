@@ -1,7 +1,7 @@
 import { Document, Image, Page, StyleSheet, Text, View, pdf } from '@react-pdf/renderer'
 import { imgUrl } from '#/lib/format'
 import {
-  STATEMENT, computeTotals, docDate, docWords, lineTotal, money, phoneText, plain, tinText, toCents,
+  DOC_LANG, STATEMENT, computeTotals, docDate, docWords, lineTotal, money, phoneText, plain, tinText, toCents,
   type DocData,
 } from '#/lib/invoice'
 
@@ -66,7 +66,7 @@ async function asPng(url: string): Promise<string | null> {
 }
 
 function InvoicePdf({ doc, logo }: { doc: DocData; logo: string | null }) {
-  const w = docWords(doc.lang)
+  const w = docWords()
   const tr = w.tr
   const totals = computeTotals(doc.lines, doc.discount_type, doc.discount_value, doc.currency)
   const total = toCents(totals.total)
@@ -118,8 +118,8 @@ function InvoicePdf({ doc, logo }: { doc: DocData; logo: string | null }) {
             ))}
           </View>
           <View>
-            <Meta label={tr('Date')} value={docDate(doc.issue_day, doc.lang)} />
-            <Meta label={w.dueLabel(doc.kind)} value={doc.due_day ? docDate(doc.due_day, doc.lang) : doc.kind === 'quote' ? '—' : tr('On receipt')} />
+            <Meta label={tr('Date')} value={docDate(doc.issue_day, DOC_LANG)} />
+            <Meta label={w.dueLabel(doc.kind)} value={doc.due_day ? docDate(doc.due_day, DOC_LANG) : doc.kind === 'quote' ? '—' : tr('On receipt')} />
             {doc.reference ? <Meta label={tr('Reference')} value={doc.reference} /> : null}
           </View>
         </View>

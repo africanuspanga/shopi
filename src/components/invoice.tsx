@@ -3,17 +3,17 @@ import { FileDown, Loader2 } from 'lucide-react'
 import { ShopAvatar } from '#/components/ui'
 import { useT } from '#/lib/i18n'
 import {
-  STATEMENT, computeTotals, docDate, docWords, lineTotal, money, phoneText, plain, tinText, toCents,
+  DOC_LANG, STATEMENT, computeTotals, docDate, docWords, lineTotal, money, phoneText, plain, tinText, toCents,
   type DocData,
 } from '#/lib/invoice'
 
 /**
  * An invoice or quote as a page (roadmap `v-invoices`): the client's link, the business's preview while writing it,
- * and the setup's first invoice. The PDF (src/lib/invoice-pdf.tsx) draws the same document for A4. Written in the
- * document's own language, which may differ from the app's.
+ * and the setup's first invoice. The PDF (src/lib/invoice-pdf.tsx) draws the same document for A4. Always in English
+ * (`DOC_LANG`), whatever the app's language.
  */
 export function InvoiceDocument({ doc, className = '' }: { doc: DocData; className?: string }) {
-  const w = docWords(doc.lang)
+  const w = docWords()
   const tr = w.tr
   const totals = computeTotals(doc.lines, doc.discount_type, doc.discount_value, doc.currency)
   const total = toCents(totals.total)
@@ -25,7 +25,7 @@ export function InvoiceDocument({ doc, className = '' }: { doc: DocData; classNa
   const clientLines = [c.company && c.name ? c.name : '', c.address, [c.phone ? phoneText(c.phone) : '', c.email].filter(Boolean).join(' · '), c.tin ? `${tr('TIN')} ${tinText(c.tin)}` : ''].filter(Boolean)
   const pays = doc.kind === 'invoice' && (b.lipa || doc.pay_details)
   return (
-    <article lang={doc.lang} className={`card min-w-0 overflow-hidden ${className}`}>
+    <article lang={DOC_LANG} className={`card min-w-0 overflow-hidden ${className}`}>
       <div className="p-5 md:p-8">
         <header className="flex flex-col-reverse gap-6 md:flex-row md:items-start md:justify-between">
           <div className="flex min-w-0 items-start gap-3">
@@ -57,9 +57,9 @@ export function InvoiceDocument({ doc, className = '' }: { doc: DocData; classNa
           </div>
           <dl className="grid w-fit grid-cols-[auto_auto] gap-x-6 gap-y-1.5 text-14 md:justify-self-end">
             <dt className="text-muted">{tr('Date')}</dt>
-            <dd className="tnum">{docDate(doc.issue_day, doc.lang)}</dd>
+            <dd className="tnum">{docDate(doc.issue_day, DOC_LANG)}</dd>
             <dt className="text-muted">{w.dueLabel(doc.kind)}</dt>
-            <dd className="tnum">{doc.due_day ? docDate(doc.due_day, doc.lang) : doc.kind === 'quote' ? '—' : tr('On receipt')}</dd>
+            <dd className="tnum">{doc.due_day ? docDate(doc.due_day, DOC_LANG) : doc.kind === 'quote' ? '—' : tr('On receipt')}</dd>
             {doc.reference && (
               <>
                 <dt className="text-muted">{tr('Reference')}</dt>

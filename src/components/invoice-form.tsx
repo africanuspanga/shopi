@@ -319,7 +319,7 @@ export function InvoiceForm({ data, kind, onSaved }: { data: Editor; kind: Invoi
                 </p>
               )}
             </FieldGroup>
-            <FieldGroup label={t('Written in')} radio>
+            <FieldGroup label={t('Client’s language')} hint={t('For the WhatsApp message and the client’s page. Invoices and quotes print in English.')} radio>
               <div className="flex gap-2">
                 {LANGUAGES.map(([id, label]) => (
                   <button key={id} type="button" role="radio" aria-checked={lang === id} aria-pressed={lang === id} className="chip" onClick={() => setLang(id)}>

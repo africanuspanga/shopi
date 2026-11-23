@@ -118,6 +118,17 @@ def collect():
     return found
 
 
+# English words the Swahili keeps, as the founder chose: (what the English says, the word and what it never becomes).
+KEEP_ENGLISH = [
+    (r'\bbook', 'booking and ku-book (never miadi)'),
+    (r'\binvoic', 'invoice (never ankara)'),
+    (r'\bquot', 'quotation (never nukuu or makadirio ya bei)'),
+    (r'\bsettings\b', 'settings (never mipangilio)'),
+    (r'\bcodes?\b', 'code (never kodi, which is tax)'),
+    (r'^Copy\b[^.]*$', 'Copy on buttons (never Nakili)'),  # buttons only: a sentence may say nakili
+]
+
+
 def notes_for(en, screens):
     keys = re.findall(r'\{(\w+)\}', en)
     parts = [f'Keep {{{k}}} as it is ({PLACEHOLDER_NOTES.get(k, "filled in by the app")}).' for k in dict.fromkeys(keys)]
@@ -125,6 +136,10 @@ def notes_for(en, screens):
         parts.append('Legal text: the lawyer checks the English first; match its meaning exactly.')
     if 'Shopi' in en:
         parts.append('Keep Shopi, WhatsApp, Instagram, TikTok and Lipa Namba in English.')
+    # The founder's words (17, 20 and 23 Nov 2026), said on the row because the team changed some of them back.
+    keep = [word for pattern, word in KEEP_ENGLISH if re.search(pattern, en, re.I)]
+    if keep:
+        parts.append(f'Keep {", ".join(keep)} in English (the founder’s choice). Check only the grammar around them.')
     return ' '.join(parts)
 
 

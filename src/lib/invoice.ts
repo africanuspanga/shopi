@@ -359,9 +359,16 @@ export function docOf(d: DocFields, shop: DocShop): DocData {
   }
 }
 
-/** The words printed on a document, in its own language (which may differ from the app's). */
-export function docWords(lang: Lang) {
-  const tr = (en: string, vars?: Record<string, string | number>) => translate(lang, en, vars)
+/**
+ * The language every invoice and quotation is printed in, on screen and in the PDF: English, whatever the app's or the
+ * document's language (the founder, 23 Nov 2026: "all text on the invoice PDF stays in English"). A document's `lang`
+ * still chooses the WhatsApp message and the client's page around the document.
+ */
+export const DOC_LANG: Lang = 'en'
+
+/** The words printed on a document, always in `DOC_LANG`. */
+export function docWords() {
+  const tr = (en: string, vars?: Record<string, string | number>) => translate(DOC_LANG, en, vars)
   return {
     tr,
     title: (k: InvoiceKind) => (k === 'quote' ? tr('Quote') : tr('Invoice')),
