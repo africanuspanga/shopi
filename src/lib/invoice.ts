@@ -371,7 +371,8 @@ export function docWords() {
   const tr = (en: string, vars?: Record<string, string | number>) => translate(DOC_LANG, en, vars)
   return {
     tr,
-    title: (k: InvoiceKind) => (k === 'quote' ? tr('Quote') : tr('Invoice')),
+    // A quote is titled Quotation on the document (the founder, 23 Nov 2026); the app still says Quote.
+    title: (k: InvoiceKind) => (k === 'quote' ? tr('Quotation') : tr('Invoice')),
     numberLabel: (k: InvoiceKind) => (k === 'quote' ? tr('Quote no.') : tr('Invoice no.')),
     dueLabel: (k: InvoiceKind) => (k === 'quote' ? tr('Valid until') : tr('Due date')),
   }
