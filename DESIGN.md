@@ -219,7 +219,8 @@ Presses scale to about 0.97. Respect `prefers-reduced-motion`.
 A form says what is missing **on the box itself, every box at once** (`error` on `Field` and `FieldGroup`), then
 `showFirstError()` brings the first one into view. A button is never greyed out for a missing answer, because a grey
 button gives no reason; it is disabled only while saving or uploading. `ErrorText` above the button is for what belongs
-to no box (the connection, a limit). An example inside a box starts with "e.g." ("Mf."); a box that asks about money
+to no box (the connection, a limit). An example inside a box starts with "e.g." (Swahili has both "Mf." and "Mfano:" today; one form everywhere is the
+founder's to choose, review row 7); a box that asks about money
 or a name never shows an example that could pass for an answer (the grey shop name in "Name on payments" did, 23 Nov
 2026). The way past a step that matters is a text link under the form, never a second button the size of the main one.
 
