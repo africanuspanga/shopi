@@ -6,7 +6,7 @@ import { CardHead, ErrorText, Field, Img, Sheet } from '#/components/ui'
 import { askStockAlert, doneStockAlert, type StockAlert } from '#/lib/api/alerts'
 import type { PublicProduct, PublicShop } from '#/lib/api/store'
 import { imageOf, localPhone, optionText, timeAgo, waLink } from '#/lib/format'
-import { useLang, useT } from '#/lib/i18n'
+import { eg, useLang, useT } from '#/lib/i18n'
 import { useHumanCheck } from '#/lib/turnstile'
 import { useOrigin } from '#/lib/share'
 
@@ -128,7 +128,7 @@ export function NotifySheet({
           }}
         >
           <Field label={t('Your WhatsApp number')}>
-            <input className="input tnum" type="tel" inputMode="tel" autoComplete="tel" placeholder="0754 123 456" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <input className="input tnum" type="tel" inputMode="tel" autoComplete="tel" placeholder={eg(t, '0754 123 456')} value={phone} onChange={(e) => setPhone(e.target.value)} />
           </Field>
           <p className="text-13 leading-5 text-muted">
             {t('By tapping Notify me, you agree that {shop} may message you on WhatsApp about this product. Shopi deletes your number once they have, or after 90 days.', { shop: shop.name })}{' '}

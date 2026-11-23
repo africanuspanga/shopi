@@ -1,4 +1,4 @@
-import { Bell, Check, Download, EllipsisVertical, Share, Smartphone, SquarePlus } from 'lucide-react'
+import { Bell, Check, Download, EllipsisVertical, Settings, Share, SlidersHorizontal, Smartphone, SquarePlus } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { ErrorText, Notice, Sheet, Toast } from '#/components/ui'
 import { useT } from '#/lib/i18n'
@@ -243,14 +243,50 @@ export function InstallSheet({ open, onClose, app }: { open: boolean; onClose: (
   )
 }
 
+/**
+ * Notifications blocked for shopi.tz (the seller once said no): the way to allow them again, in three pictures like
+ * the install guide, because "your browser's site settings" names a place few sellers have ever opened. Chrome (phone
+ * or computer) keeps it behind the icon beside the address; an iPhone keeps it in the phone's own Settings.
+ */
+export function UnblockSteps({ apple }: { apple: boolean }) {
+  const t = useT()
+  const steps: { title: string; sub: string; art: ReactNode }[] = apple
+    ? [
+        { title: t('Open your iPhone’s Settings'), sub: t('Then tap Notifications.'), art: <MenuArt icon={<Settings size={16} strokeWidth={1.75} />} /> },
+        { title: t('Choose Shopi'), sub: t('Scroll down the list of apps.'), art: <HomeArt /> },
+        { title: t('Turn on Allow Notifications'), sub: t('Then come back to this screen.'), art: <SwitchArt /> },
+      ]
+    : [
+        { title: t('Open the icon beside the address'), sub: t('At the top of your browser, left of shopi.tz.'), art: <BarArt lead icon={<SlidersHorizontal size={16} strokeWidth={1.75} />} /> },
+        { title: t('Choose Notifications'), sub: t('On a phone it is under Permissions.'), art: <MenuArt icon={<Bell size={16} strokeWidth={1.75} />} /> },
+        { title: t('Switch them on'), sub: t('Then come back to this screen.'), art: <SwitchArt /> },
+      ]
+  return (
+    <ol className="grid gap-3">
+      {steps.map((x, i) => (
+        <li key={i} className="flex items-center gap-4 rounded-16 bg-card p-3 shadow-[inset_0_0_0_1px_var(--color-line)]">
+          {x.art}
+          <div className="min-w-0">
+            <p className="meta">{t('Step {n}', { n: i + 1 })}</p>
+            <p className="mt-0.5 text-15 leading-5 font-medium">{x.title}</p>
+            <p className="mt-1 text-13 leading-[18px] text-muted">{x.sub}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
 const ART = 'relative flex h-[84px] w-[84px] shrink-0 flex-col overflow-hidden rounded-14 bg-card ring-1 ring-line'
 
-/** A browser's bar with one control picked out: Safari's is at the bottom, Chrome's at the top. */
-function BarArt({ icon, bottom = false }: { icon: ReactNode; bottom?: boolean }) {
+/** A browser's bar with one control picked out: Safari's is at the bottom, Chrome's at the top (`lead`: before the address). */
+function BarArt({ icon, bottom = false, lead = false }: { icon: ReactNode; bottom?: boolean; lead?: boolean }) {
+  const mark = <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-white">{icon}</span>
   const bar = (
     <div className={`flex h-8 items-center gap-1.5 bg-well px-2 ${bottom ? 'justify-center' : ''}`}>
+      {lead && mark}
       {!bottom && <span className="h-3.5 flex-1 rounded-full bg-card" />}
-      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-white">{icon}</span>
+      {!lead && mark}
     </div>
   )
   const page = (
@@ -278,6 +314,21 @@ function MenuArt({ icon }: { icon: ReactNode }) {
         <span className="h-1.5 flex-1 rounded-full bg-white/70" />
       </span>
       <span className="block h-2 w-9 rounded-full bg-raised" />
+    </div>
+  )
+}
+
+/** A setting's row with its switch on. */
+function SwitchArt() {
+  return (
+    <div className={`${ART} justify-center gap-2 px-2.5`} aria-hidden>
+      <span className="block h-2 w-10 rounded-full bg-raised" />
+      <span className="flex items-center justify-between gap-2">
+        <span className="h-2 flex-1 rounded-full bg-raised" />
+        <span className="flex h-5 w-9 shrink-0 items-center justify-end rounded-full bg-ink px-0.5">
+          <span className="h-4 w-4 rounded-full bg-white" />
+        </span>
+      </span>
     </div>
   )
 }

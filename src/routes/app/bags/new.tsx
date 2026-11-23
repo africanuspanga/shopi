@@ -7,7 +7,7 @@ import { CardHead, Empty, ErrorText, Field, Img, Page, TopBar } from '#/componen
 import { createBagLink } from '#/lib/api/bags'
 import { listMyProducts, type ProductRow } from '#/lib/api/merchant'
 import { priceOf, tzs } from '#/lib/format'
-import { useT } from '#/lib/i18n'
+import { eg, useT } from '#/lib/i18n'
 
 export const Route = createFileRoute('/app/bags/new')({
   loader: () => listMyProducts(),
@@ -176,7 +176,7 @@ function NewBag() {
                 <input className="input" value={buyer.name} onChange={(e) => setBuyer({ ...buyer, name: e.target.value })} />
               </Field>
               <Field label={t('Buyer’s WhatsApp')} aside={t('Optional')}>
-                <input className="input tnum" type="tel" inputMode="tel" placeholder="0754 123 456" value={buyer.phone} onChange={(e) => setBuyer({ ...buyer, phone: e.target.value })} />
+                <input className="input tnum" type="tel" inputMode="tel" placeholder={eg(t, '0754 123 456')} value={buyer.phone} onChange={(e) => setBuyer({ ...buyer, phone: e.target.value })} />
               </Field>
             </div>
             <Field label={t('Note for the buyer')} aside={t('Optional')} hint={t('They see it on the bag. For example: as we agreed, delivery on Saturday.')}>

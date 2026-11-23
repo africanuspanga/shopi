@@ -12,6 +12,8 @@ import { shopPlan } from '#/server/plan'
 import { canPay } from '#/server/billing'
 import { FREE_PRODUCTS, can } from '#/lib/plans'
 import { TIKTOK_SHORT, readSocialLink } from '#/lib/social'
+import { inSetup } from '#/lib/setup'
+import { setupStepNow } from '#/server/setup'
 import { withReadiness, type AlertRow } from '#/server/alerts'
 import { setPick } from '#/server/picks'
 import { scoreFacts, scoreSelect, type ScoreRow } from '#/server/score'
@@ -94,8 +96,35 @@ export const checkShopLink = createServerFn({ method: 'GET' })
   })
 
 /**
+ * Moves the shop to a new link, only while that link is still free (a link another shop took a moment ago fails on the
+ * unique index). With `keep`, the link of today joins the shop's former links first, in the same batch.
+ */
+async function moveShopLink(shopId: string, slug: string, keep: boolean) {
+  const free = `NOT EXISTS (SELECT 1 FROM shops WHERE slug = ?2) AND NOT EXISTS (SELECT 1 FROM shop_links WHERE slug = ?2 AND shop_id != ?1)`
+  try {
+    const res = await db().batch([
+      ...(keep ? [db().prepare(`INSERT OR IGNORE INTO shop_links (slug, shop_id, created_at) SELECT slug, id, ?3 FROM shops WHERE id = ?1 AND slug != ?2 AND ${free}`).bind(shopId, slug, now())] : []),
+      db().prepare(`UPDATE shops SET slug = ?2 WHERE id = ?1 AND slug != ?2 AND ${free}`).bind(shopId, slug),
+      // Back to a link it had before: that one is its link of today again, not a former one.
+      db().prepare('DELETE FROM shop_links WHERE slug = ?2 AND shop_id = ?1 AND EXISTS (SELECT 1 FROM shops WHERE id = ?1 AND slug = ?2)').bind(shopId, slug),
+    ])
+    return !!res[keep ? 1 : 0].meta.changes
+  } catch {
+    return false
+  }
+}
+
+/** A link change that keeps the old link working: the limits first (former links kept, changes a day), then the move. */
+async function changeLinkKept(shopId: string, slug: string): Promise<'ok' | 'many' | 'limit' | 'taken'> {
+  const kept = await first<{ n: number }>('SELECT COUNT(*) n FROM shop_links WHERE shop_id = ? AND slug != ?', shopId, slug)
+  if ((kept?.n ?? 0) >= FORMER_LINKS_MAX) return 'many'
+  if (!(await take(`link:${shopId}`, LIMITS.shopLink))) return 'limit'
+  return (await moveShopLink(shopId, slug, true)) ? 'ok' : 'taken'
+}
+
+/**
  * Changes the shop's link. The link of today joins the shop's former links and the shop moves, in one batch, and only
- * while the new link is still free (a link another shop took a moment ago fails the batch on the unique index).
+ * while the new link is still free.
  */
 export const changeShopLink = createServerFn({ method: 'POST' })
   .validator((d: { slug: string }) => ({ slug: slugify(d.slug) }))
@@ -104,21 +133,8 @@ export const changeShopLink = createServerFn({ method: 'POST' })
     const state = await linkFor(shop.id, data.slug)
     if (state === 'same') return { ok: true as const, slug: data.slug }
     if (state !== 'free') return { error: state }
-    const kept = await first<{ n: number }>('SELECT COUNT(*) n FROM shop_links WHERE shop_id = ? AND slug != ?', shop.id, data.slug)
-    if ((kept?.n ?? 0) >= FORMER_LINKS_MAX) return { error: 'many' as const }
-    if (!(await take(`link:${shop.id}`, LIMITS.shopLink))) return { error: 'limit' as const }
-    const free = `NOT EXISTS (SELECT 1 FROM shops WHERE slug = ?2) AND NOT EXISTS (SELECT 1 FROM shop_links WHERE slug = ?2 AND shop_id != ?1)`
-    try {
-      const [, moved] = await db().batch([
-        db().prepare(`INSERT OR IGNORE INTO shop_links (slug, shop_id, created_at) SELECT slug, id, ?3 FROM shops WHERE id = ?1 AND slug != ?2 AND ${free}`).bind(shop.id, data.slug, now()),
-        db().prepare(`UPDATE shops SET slug = ?2 WHERE id = ?1 AND slug != ?2 AND ${free}`).bind(shop.id, data.slug),
-        // Back to a link it had before: that one is its link of today again, not a former one.
-        db().prepare('DELETE FROM shop_links WHERE slug = ?2 AND shop_id = ?1 AND EXISTS (SELECT 1 FROM shops WHERE id = ?1 AND slug = ?2)').bind(shop.id, data.slug),
-      ])
-      if (!moved.meta.changes) return { error: 'taken' as const }
-    } catch {
-      return { error: 'taken' as const }
-    }
+    const moved = await changeLinkKept(shop.id, data.slug)
+    if (moved !== 'ok') return { error: moved }
     return { ok: true as const, slug: data.slug }
   })
 
@@ -168,6 +184,66 @@ export const createShop = createServerFn({ method: 'POST' })
         .bind(id, 'done', data.seconds, t),
     ])
     if (!(await first('SELECT 1 FROM shops WHERE id = ?', id))) return (await first('SELECT 1 FROM shop_staff WHERE user_id = ?', user.id)) ? { error: 'staff' as const } : { error: 'slug_taken' as const }
+    return { ok: true as const, slug: data.slug }
+  })
+
+/**
+ * Step 1 of the setup opened again with Back (the onboarding review of 23 Nov 2026, row 4): the owner corrects the
+ * name, the link, what the business does and its kind, its language and WhatsApp. Only while the shop is still in the
+ * setup; afterwards Shop settings does it. `setup_step` is left alone (it never goes back).
+ *
+ * The link: while the seller has not reached "Your shop is live" (step 4, where the link is shared, opened and its QR
+ * code made) and nothing points at it yet (no visit or share recorded, no order, booking or bag link), it simply moves,
+ * a typo fixed a minute after it was made, and the old link is free again. From step 4 on the change goes the way Shop
+ * settings does it: the old link is kept and sends buyers on (`changeLinkKept`). "No visit recorded" alone would not be
+ * enough: the owner's own visits and shares from their shop page are never counted.
+ */
+export const updateSetupShop = createServerFn({ method: 'POST' })
+  .validator((d: { name: string; slug: string; category: string; kind?: string; whatsapp: string; lang: string; instagram?: string; tiktok?: string; facebook?: string }) => ({
+    kind: asShopKind(d.kind),
+    name: str(d.name, 60),
+    slug: slugify(d.slug),
+    category: ALL_CATEGORIES.some((c) => c.id === d.category) ? d.category : 'other',
+    whatsapp: normalizePhone(str(d.whatsapp)),
+    lang: d.lang === 'sw' ? 'sw' : 'en',
+    instagram: str(d.instagram, 60).replace(/^@/, ''),
+    tiktok: str(d.tiktok, 60).replace(/^@/, ''),
+    facebook: str(d.facebook, 100),
+  }))
+  .handler(async ({ data }) => {
+    const { shop, user } = await requireShop()
+    const row = await first<{ slug: string; kind: string; setup_step: number | null }>('SELECT slug, kind, setup_step FROM shops WHERE id = ?', shop.id)
+    if (!row || !inSetup(row.setup_step)) return { error: 'done' as const }
+    if (!data.name) return { error: 'name' as const }
+    if (data.slug !== row.slug) {
+      const state = await linkFor(shop.id, data.slug)
+      if (state === 'short') return { error: 'slug' as const }
+      if (state === 'taken') return { error: 'slug_taken' as const }
+      const shown = await setupStepNow(shop.id)
+      const used = await first(
+        `SELECT 1 FROM events WHERE shop_id = ?1 UNION ALL SELECT 1 FROM orders WHERE shop_id = ?1
+         UNION ALL SELECT 1 FROM bookings WHERE shop_id = ?1 UNION ALL SELECT 1 FROM bag_links WHERE shop_id = ?1 LIMIT 1`,
+        shop.id,
+      )
+      if (used || shown == null || shown >= 4) {
+        const moved = await changeLinkKept(shop.id, data.slug)
+        if (moved !== 'ok') return { error: moved === 'taken' ? ('slug_taken' as const) : moved }
+      } else {
+        if (!(await take(`setuplink:${shop.id}`, LIMITS.setupLink))) return { error: 'limit' as const }
+        if (!(await moveShopLink(shop.id, data.slug, false))) return { error: 'slug_taken' as const }
+      }
+    }
+    // Cash on delivery follows the kind as it does when the shop is made (off for a business that sends invoices),
+    // but only on a move to or from invoices: between products and services what the owner set in Shop settings stays.
+    await run(
+      `UPDATE shops SET name = ?1, category = ?2, kind = ?3, whatsapp = ?4, lang = ?5,
+         cod_enabled = CASE WHEN kind != ?3 AND (kind = 'invoices' OR ?3 = 'invoices') THEN ?6 ELSE cod_enabled END,
+         instagram = CASE WHEN ?7 != '' THEN ?7 ELSE instagram END,
+         tiktok = CASE WHEN ?8 != '' THEN ?8 ELSE tiktok END,
+         facebook = CASE WHEN ?9 != '' THEN ?9 ELSE facebook END
+       WHERE id = ?10`,
+      data.name, data.category, data.kind, data.whatsapp || user.phone, data.lang, data.kind === 'invoices' ? 0 : 1, data.instagram, data.tiktok, data.facebook, shop.id,
+    )
     return { ok: true as const, slug: data.slug }
   })
 
@@ -475,6 +551,18 @@ export const getDashboard = createServerFn({ method: 'GET' }).handler(async () =
       shares: shares.find((s) => s.product_id === p.id)?.n ?? 0,
     })),
     plan: await shopPlan(shop.id),
+    /**
+     * Whether Home may show its rows about Shopi itself (the plan, email). A new shop first sees only what gets it
+     * its first sale: they wait for the first order, booking or sent invoice, or the shop's third day.
+     */
+    settled: await (async () => {
+      const life = await first<{ created_at: number; busy: number }>(
+        `SELECT created_at, (EXISTS (SELECT 1 FROM orders WHERE shop_id = ?1) OR EXISTS (SELECT 1 FROM bookings WHERE shop_id = ?1)
+           OR EXISTS (SELECT 1 FROM invoices WHERE shop_id = ?1 AND status != 'draft')) busy FROM shops WHERE id = ?1`,
+        shop.id,
+      )
+      return !!life?.busy || now() - (life?.created_at ?? 0) >= 3 * 86400_000
+    })(),
     backInStock,
     hasProducts: (productCount?.n ?? 0) > 0,
     score: scoreFacts(score!),

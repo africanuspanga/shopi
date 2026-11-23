@@ -8,7 +8,7 @@ import { expandMapLink, placeOrder, type PublicShop } from '#/lib/api/store'
 import { track, visit } from '#/lib/analytics'
 import { cleanCode, codeKey, discountLabel, discountOff, type DiscountRule } from '#/lib/discounts'
 import { DAR_AREAS, optionText, tzs } from '#/lib/format'
-import { useT } from '#/lib/i18n'
+import { eg, useT } from '#/lib/i18n'
 import { ROUGH_M, asPin, distance, pinLink, readMapLink, type Pin } from '#/lib/location'
 import { useHumanCheck } from '#/lib/turnstile'
 
@@ -362,7 +362,7 @@ export function CheckoutView({
                         type="tel"
                         inputMode="tel"
                         autoComplete="tel"
-                        placeholder="0754 123 456"
+                        placeholder={eg(t, '0754 123 456')}
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       />
@@ -574,7 +574,7 @@ function LocationField({ pin, onPin }: { pin: Pin | null; onPin: (pin: Pin | nul
               inputMode="url"
               autoComplete="off"
               spellCheck={false}
-              placeholder="https://maps.app.goo.gl/…"
+              placeholder={eg(t, 'https://maps.app.goo.gl/…')}
               value={link}
               aria-invalid={!!linkError}
               onChange={(e) => {
@@ -691,7 +691,7 @@ function DiscountField({
           autoCapitalize="characters"
           autoComplete="off"
           spellCheck={false}
-          placeholder="EID10"
+          placeholder={eg(t, 'EID10')}
           value={value}
           aria-invalid={!!error}
           onChange={(e) => {

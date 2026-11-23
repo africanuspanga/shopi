@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { AuthLayout, PasswordInput } from '#/components/auth'
 import { ErrorText, Field, TextLink } from '#/components/ui'
 import { login } from '#/lib/api/session'
-import { useT } from '#/lib/i18n'
+import { eg, useT } from '#/lib/i18n'
 import { canonical } from '#/lib/seo'
 
 export const Route = createFileRoute('/login')({
@@ -45,7 +45,7 @@ function Login() {
         }}
       >
         <Field label={t('Phone number')}>
-          <input className="input" type="tel" inputMode="tel" autoComplete="tel" placeholder="0754 123 456" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <input className="input" type="tel" inputMode="tel" autoComplete="tel" placeholder={eg(t, '0754 123 456')} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         </Field>
         <Field label={t('Password')}>
           <PasswordInput autoComplete="current-password" value={form.password} onChange={(password) => setForm({ ...form, password })} />

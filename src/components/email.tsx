@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { ErrorText, Field, Notice, Sheet, Switch, Toast, Wordmark } from '#/components/ui'
 import { getMyEmail, removeMyEmail, setEmailPrefs, setMyEmail } from '#/lib/api/email'
 import { suggestEmail } from '#/lib/email'
-import { useT } from '#/lib/i18n'
+import { eg, useT } from '#/lib/i18n'
 
 /*
  * The seller's email (roadmap `o-email`, decision n11): optional, asked on Home and in Shop settings, never at sign-up.
@@ -60,7 +60,7 @@ export function EmailForm({ initial = '', weekly: weeklyStart = true, onSaved }:
           )
         }
       >
-        <input className="input" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="zee@gmail.com" />
+        <input className="input" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={eg(t, 'zee@gmail.com')} />
       </Field>
       <div className="rounded-16 bg-page p-4">
         <Switch label={t('A summary each Monday')} sub={t('Last week’s visits, orders and sales.')} checked={weekly} onChange={setWeekly} />

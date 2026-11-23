@@ -6,7 +6,7 @@ import { ProductPicker } from '#/components/product-picker'
 import { CardHead, ErrorText, Field, Img, Page, Switch, TopBar } from '#/components/ui'
 import { listMyProducts, recordSale, type ProductRow } from '#/lib/api/merchant'
 import { PAYMENT_LABEL, priceOf, tzs, type PaymentMethod } from '#/lib/format'
-import { useT } from '#/lib/i18n'
+import { eg, useT } from '#/lib/i18n'
 
 export const Route = createFileRoute('/app/orders/new')({
   loader: () => listMyProducts(),
@@ -180,7 +180,7 @@ function RecordSale() {
                 <input className="input" value={buyer.name} onChange={(e) => setBuyer({ ...buyer, name: e.target.value })} />
               </Field>
               <Field label={t('Buyer’s phone')} aside={t('Optional')}>
-                <input className="input tnum" type="tel" inputMode="tel" placeholder="0754 123 456" value={buyer.phone} onChange={(e) => setBuyer({ ...buyer, phone: e.target.value })} />
+                <input className="input tnum" type="tel" inputMode="tel" placeholder={eg(t, '0754 123 456')} value={buyer.phone} onChange={(e) => setBuyer({ ...buyer, phone: e.target.value })} />
               </Field>
               <Field label={t('Date of the sale')}>
                 <input className="input" type="date" max={today()} value={date} onChange={(e) => setDate(e.target.value || today())} />

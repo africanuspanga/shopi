@@ -202,7 +202,11 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
 - **Product names** in the seller's grid wrap to two lines (`line-clamp-2`); the end of a name ("(Off-shoulder)") is often what tells two products apart.
 - **Landing:** floating capsule nav (a floating menu card on phones), hero with a coded phone, sections,
   and a dark closing block that holds the footer and ends on a giant `Wordmark`.
-- **Auth:** `AuthLayout`: form on the left, dark product panel on the right (desktop only).
+- **Auth:** `AuthLayout`: form on the left, dark product panel on the right (desktop only). Sign-up and log-in sit in
+  the middle of the screen; the setup's steps (`steady`) all start at the same height, so the step bar never jumps.
+- **Touch areas are 44 px**, also where the thing looks smaller: `.icon-btn` is 40 px to look at with a ring around it
+  that takes the tap (`::after`); a text link that acts as a button gets `min-h-11` (the setup's "Change", "I’ll do
+  this later", Home's "See all"); a small round X on a photo sits in a 44 px button.
 
 ### Motion
 One easing, `--ease-out` (`cubic-bezier(0.22, 1, 0.36, 1)`): 120 to 180ms for feedback, 300 to 500ms for entrances.
@@ -219,10 +223,12 @@ Presses scale to about 0.97. Respect `prefers-reduced-motion`.
 A form says what is missing **on the box itself, every box at once** (`error` on `Field` and `FieldGroup`), then
 `showFirstError()` brings the first one into view. A button is never greyed out for a missing answer, because a grey
 button gives no reason; it is disabled only while saving or uploading. `ErrorText` above the button is for what belongs
-to no box (the connection, a limit). An example inside a box starts with "e.g." (Swahili has both "Mf." and "Mfano:" today; one form everywhere is the
-founder's to choose, review row 7); a box that asks about money
-or a name never shows an example that could pass for an answer (the grey shop name in "Name on payments" did, 23 Nov
-2026). The way past a step that matters is a text link under the form, never a second button the size of the main one.
+to no box (the connection, a limit). An example inside a box says it is one: it starts with "e.g." ("Mfano:" in Swahili, never "Mf."). For
+examples that need no translation themselves (a number, a link, a code, a name) use `eg(t, '0754 123 456')` from
+`lib/i18n.tsx`, one string for all of them; a sentence keeps its own string starting with "e.g.". A box that asks
+about money shows `0`, never a sample price, and a box that asks for the seller's own name or shop name shows nothing
+(the grey shop name in "Name on payments" read as filled in, 23 Nov 2026).
+The way past a step that matters is a text link under the form, never a second button the size of the main one.
 
 ### Copy
 Plain and specific, about this product. No exclamation marks, no greeting headlines (titles name the place or period),
@@ -258,7 +264,7 @@ Write English as the key: every string goes through `t()` from `src/lib/i18n.tsx
     tovuti), dashboard, profile, email (never barua pepe), logo (never nembo), checkout, mobile money (never pesa kwa
     simu), log in, log out and login (never ingia or toka), and delivery, link, status, app, bio, QR code. Since
     23 Nov (the founder's answers to the onboarding review): the kinds of business Clearing and forwarding and
-    Freelance, Wholesale beside its Swahili ("Wholesale / Jumla"), and hour and hours for a length of time ("1 hour",
+    Freelance, Wholesale (the English word alone; "Wholesale / Jumla" until the founder said "keep wholesale"), and hour and hours for a length of time ("1 hour",
     "2 hours 30 min"; never "saa 1", which reads as a clock time; minutes alone stay "dak 15").
   - **Characters in a password are "tarakimu au herufi"** ("Angalau tarakimu au herufi 6"), never vibambo.
   - **Telling a seller to share their link is "Share link yako"**, also where the English says "Send your link"

@@ -24,6 +24,8 @@ export const LIMITS = {
   domainAdd: { max: 5, window: 24 * 60 * MINUTE },
   // Times a shop changes its own link (changeShopLink): each change leaves a former link nobody else can take.
   shopLink: { max: 3, window: 24 * 60 * MINUTE },
+  // The setup's step 1 opened again with Back, for a shop nobody has opened yet: its link simply moves (merchant.ts).
+  setupLink: { max: 10, window: 24 * 60 * MINUTE },
   // Tembo payments (src/server/billing.ts), per shop: each start or Lipa Namba is a Selcom order, each push a PIN
   // prompt on someone's phone.
   payStart: { max: 8, window: 60 * MINUTE },

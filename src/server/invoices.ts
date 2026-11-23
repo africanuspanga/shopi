@@ -243,6 +243,9 @@ export async function homeInvoices(shopId: string, kind: string, today: string) 
     shopId,
   )
   if (!made?.n && kind !== 'invoices') return null
+  // The oldest invoice written but never sent: Home offers to send it, by its number, before writing another.
+  const waiting = made?.drafts ? await first<InvoiceRow>(`SELECT ${INVOICE_COLS} FROM invoices i WHERE i.shop_id = ? AND i.kind = 'invoice' AND i.status = 'draft' ORDER BY i.created_at LIMIT 1`, shopId) : null
+  const draft = waiting ? readInvoice(waiting) : null
   const open = rows.map((r) => ({ ...readInvoice(r), checks: r.checks })).filter((i) => owed(i) > 0)
   const by = new Map<Currency, number>()
   for (const i of open) by.set(i.currency, (by.get(i.currency) ?? 0) + owed(i))
@@ -250,6 +253,7 @@ export async function homeInvoices(shopId: string, kind: string, today: string) 
     made: made?.n ?? 0,
     /** Invoices written but not sent yet. */
     drafts: made?.drafts ?? 0,
+    draft: draft && { id: draft.id, number: draft.number, code: draft.code, client: draft.client, total: draft.total, currency: draft.currency, due_day: draft.due_day, lang: draft.lang },
     owed: [...by.entries()].map(([currency, cents]) => ({ currency, cents })),
     overdue: open.filter((i) => i.due_day && i.due_day < today).length,
     checks: open.reduce((s, i) => s + i.checks, 0),

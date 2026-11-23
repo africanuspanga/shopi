@@ -98,6 +98,8 @@ export function tinDigits(raw: string): string | null {
   return /^\d{9}$/.test(d) ? d : null
 }
 export const formatTin = (d: string) => (d.length === 9 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : d)
+/** A TIN as it is being typed: digits only, the dashes put in for the seller (123-456-789). */
+export const typeTin = (raw: string) => (raw.replace(/\D/g, '').slice(0, 9).match(/\d{1,3}/g) ?? []).join('-')
 
 /** A link tag a seller puts on a link: "Instagram bio" -> "instagram-bio", used as ?s=instagram-bio. */
 export function linkTag(s: string) {

@@ -188,7 +188,7 @@ export function Notice({
       {onDismiss && (
         <button
           type="button"
-          className={`icon-btn absolute right-3 z-10 h-9 w-9 md:right-4 ${actions ? 'top-3 md:top-1/2 md:-translate-y-1/2' : 'top-1/2 -translate-y-1/2'}`}
+          className={`icon-btn absolute right-3 z-10 h-9 w-9 after:-inset-1 md:right-4 ${actions ? 'top-3 md:top-1/2 md:-translate-y-1/2' : 'top-1/2 -translate-y-1/2'}`}
           aria-label={t('Not now')}
           onClick={onDismiss}
         >
@@ -443,7 +443,8 @@ export function Label({ children, aside, htmlFor }: { children: ReactNode; aside
   const body = (
     <>
       {children}
-      {aside && <span className="text-13 font-normal text-muted">{aside}</span>}
+      {/* One line always: in Swahili "Si lazima" used to break in two beside a long label. */}
+      {aside && <span className="shrink-0 text-13 font-normal whitespace-nowrap text-muted">{aside}</span>}
     </>
   )
   return htmlFor ? (

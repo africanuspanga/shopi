@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { AuthLayout, PasswordInput } from '#/components/auth'
 import { ErrorText, Field, TextLink } from '#/components/ui'
 import { signup } from '#/lib/api/session'
-import { useT } from '#/lib/i18n'
+import { eg, useT } from '#/lib/i18n'
 import { useHumanCheck } from '#/lib/turnstile'
 import { canonical } from '#/lib/seo'
 
@@ -62,7 +62,7 @@ function Signup() {
           <input className="input" autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </Field>
         <Field label={t('Phone number')} hint={t('You log in with this number')}>
-          <input className="input" type="tel" inputMode="tel" autoComplete="tel" placeholder="0754 123 456" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <input className="input" type="tel" inputMode="tel" autoComplete="tel" placeholder={eg(t, '0754 123 456')} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         </Field>
         <Field label={t('Password')} hint={t('At least 6 characters')}>
           <PasswordInput autoComplete="new-password" value={form.password} onChange={(password) => setForm({ ...form, password })} />

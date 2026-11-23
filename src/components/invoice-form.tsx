@@ -6,7 +6,7 @@ import { TemboPill } from '#/components/tembo'
 import { Card, ErrorText, Field, FieldGroup, Sheet } from '#/components/ui'
 import { saveInvoice, type getInvoiceEditor } from '#/lib/api/invoices'
 import { addDays } from '#/lib/booking'
-import { LANGUAGES, useT, type Lang } from '#/lib/i18n'
+import { eg, LANGUAGES, useT, type Lang } from '#/lib/i18n'
 import {
   CURRENCIES, DUE_CHOICES, EMPTY_CLIENT, QUOTE_DAYS, VAT, computeTotals, docOf, dueFor, lineTotal, money, toCents,
   type Currency, type DiscountType, type InvoiceClient, type InvoiceKind, type InvoiceLine,
@@ -146,7 +146,7 @@ export function InvoiceForm({ data, kind, onSaved }: { data: Editor; kind: Invoi
             <input className="input" value={client.company} onChange={(e) => setClient({ ...client, company: e.target.value })} placeholder={t('e.g. Bahari Logistics Ltd')} autoComplete="off" />
           </Field>
           <Field label={t('WhatsApp number')} aside={t('Optional')}>
-            <input className="input" inputMode="tel" value={client.phone} onChange={(e) => setClient({ ...client, phone: e.target.value })} placeholder="0754 123 456" autoComplete="off" />
+            <input className="input" inputMode="tel" value={client.phone} onChange={(e) => setClient({ ...client, phone: e.target.value })} placeholder={eg(t, '0754 123 456')} autoComplete="off" />
           </Field>
           {moreClient ? (
             <>
@@ -157,7 +157,7 @@ export function InvoiceForm({ data, kind, onSaved }: { data: Editor; kind: Invoi
                 <input className="input" value={client.address} onChange={(e) => setClient({ ...client, address: e.target.value })} placeholder={t('e.g. Plot 12, Kurasini, Dar es Salaam')} />
               </Field>
               <Field label={t('Client’s TIN')} aside={t('Optional')}>
-                <input className="input" inputMode="numeric" value={client.tin} onChange={(e) => setClient({ ...client, tin: e.target.value })} placeholder="123-456-789" />
+                <input className="input" inputMode="numeric" value={client.tin} onChange={(e) => setClient({ ...client, tin: e.target.value })} placeholder={eg(t, '123-456-789')} />
               </Field>
             </>
           ) : (

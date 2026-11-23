@@ -46,5 +46,12 @@ export function useT() {
 /** A translate function, as `useT()` returns it, for helpers outside components. */
 export type T = (en: string, vars?: Vars) => string
 
+/**
+ * An example inside a box, said as one ("e.g. 0754 123 456", "Mfano: 0754 123 456"): a grey number or name alone
+ * reads as an answer already given (DESIGN.md, Forms). For examples that need no translation themselves (numbers,
+ * links, codes); a sentence keeps its own string, starting with "e.g.".
+ */
+export const eg = (t: T, example: string) => t('e.g. {example}', { example })
+
 /** Marks English text kept in data (categories, statuses) so the extractor finds it. Translate with t(value) when shown. */
 export const msg = (en: string) => en

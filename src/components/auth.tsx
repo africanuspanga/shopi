@@ -1,12 +1,16 @@
 import { Link } from '@tanstack/react-router'
-import { Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { MiniStore, NewOrderCard, Phone } from '#/components/showcase'
 import { LangSwitch, Wordmark, useEntrance } from '#/components/ui'
 import { useT } from '#/lib/i18n'
 
-/** Sign-in and sign-up: the form on the left, the product on a dark panel on the right (desktop only). */
-export function AuthLayout({ children, topRight, aside }: { children: ReactNode; topRight?: ReactNode; aside?: ReactNode }) {
+/**
+ * Sign-in and sign-up: the form on the left, the product on a dark panel on the right (desktop only). `steady` is for
+ * the setup: every step starts at the same height, where a short log-in form sits in the middle of the screen (a step
+ * shorter than the phone used to start lower than the one before it, and the step bar jumped on laptops).
+ */
+export function AuthLayout({ children, topRight, aside, steady = false }: { children: ReactNode; topRight?: ReactNode; aside?: ReactNode; steady?: boolean }) {
   const rise = useEntrance()
   return (
     <div className="min-h-dvh bg-page lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -21,7 +25,7 @@ export function AuthLayout({ children, topRight, aside }: { children: ReactNode;
             <LangSwitch />
           </div>
         </header>
-        <main className={`${rise} mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-8`}>{children}</main>
+        <main className={`${rise} mx-auto flex w-full max-w-[400px] flex-1 flex-col ${steady ? 'pt-6 pb-8 md:pt-10 lg:pt-16' : 'justify-center py-8'}`}>{children}</main>
       </div>
       <aside className="sticky top-0 hidden h-dvh p-3 lg:block">
         <div className="relative flex h-full flex-col overflow-hidden rounded-32 bg-ink p-10 text-white">{aside ?? <ProductAside />}</div>
@@ -48,11 +52,16 @@ function ProductAside() {
   )
 }
 
-/** Where the seller is in the setup: a bar per step and "2 of 5". */
-export function StepBar({ step, of }: { step: number; of: number }) {
+/** Where the seller is in the setup: a bar per step and "2 of 5", and from step 2 the way back to the step before. */
+export function StepBar({ step, of, onBack }: { step: number; of: number; onBack?: () => void }) {
   const t = useT()
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex h-11 items-center gap-3">
+      {onBack && (
+        <button type="button" className="-mr-1 -ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink transition-colors hover:bg-well" aria-label={t('Back')} onClick={onBack}>
+          <ArrowLeft size={20} strokeWidth={1.75} />
+        </button>
+      )}
       <div className="flex gap-1.5" aria-hidden>
         {Array.from({ length: of }).map((_, i) => (
           <span key={i} className={`h-1 w-7 rounded-full transition-colors duration-500 ${i < step ? 'bg-ink' : 'bg-raised'}`} />

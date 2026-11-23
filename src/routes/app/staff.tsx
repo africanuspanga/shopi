@@ -6,7 +6,7 @@ import { TemboLock } from '#/components/tembo'
 import { Card, Empty, ErrorText, Field, FieldGroup, Page, Sheet, ShopAvatar, TopBar } from '#/components/ui'
 import { addStaff, getStaff, newStaffLink, removeStaff, setStaffRole } from '#/lib/api/staff'
 import { localPhone, timeAgo } from '#/lib/format'
-import { useLang, useT } from '#/lib/i18n'
+import { eg, useLang, useT } from '#/lib/i18n'
 import { useOrigin } from '#/lib/share'
 import { INVITE_DAYS, ROLE_LINES, ROLE_NAMES, STAFF_ROLES, type StaffRole } from '#/lib/staff'
 
@@ -238,10 +238,10 @@ function AddSheet({ open, onClose, onMade }: { open: boolean; onClose: () => voi
         }}
       >
         <Field label={t('Their name')}>
-          <input className="input" autoComplete="off" placeholder="Asha" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <input className="input" autoComplete="off" placeholder={eg(t, 'Asha')} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </Field>
         <Field label={t('Their phone number')} hint={t('They log in with this number and a password they choose.')}>
-          <input className="input" type="tel" inputMode="tel" autoComplete="off" placeholder="0754 123 456" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <input className="input" type="tel" inputMode="tel" autoComplete="off" placeholder={eg(t, '0754 123 456')} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         </Field>
         <RoleChoice value={form.role} onChange={(role) => setForm({ ...form, role })} />
         <ErrorText>{error}</ErrorText>

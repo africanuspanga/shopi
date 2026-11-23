@@ -7,7 +7,7 @@ import { CardHead, ErrorText, Field, Img, useEntrance } from '#/components/ui'
 import { track, visit } from '#/lib/analytics'
 import { bookService, getBookPage, getFreeTimes } from '#/lib/api/booking'
 import { dayLabel, dayText, servicePrice, timeText } from '#/lib/booking'
-import { useLang, useT } from '#/lib/i18n'
+import { eg, useLang, useT } from '#/lib/i18n'
 import { useHumanCheck } from '#/lib/turnstile'
 
 /**
@@ -212,7 +212,7 @@ function BookPage() {
                 <input className="input" autoComplete="name" maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
               </Field>
               <Field label={t('WhatsApp number')} hint={t('{shop} messages you here about your booking.', { shop: shop.name })}>
-                <input className="input" type="tel" inputMode="tel" autoComplete="tel" placeholder="0754 123 456" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                <input className="input" type="tel" inputMode="tel" autoComplete="tel" placeholder={eg(t, '0754 123 456')} value={phone} onChange={(e) => setPhone(e.target.value)} />
               </Field>
               {noting ? (
                 <Field label={t('Note for {shop}', { shop: shop.name })} aside={t('Optional')}>

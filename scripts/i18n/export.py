@@ -154,7 +154,7 @@ KEEP_ENGLISH = [
     # The founder's answers to the onboarding review, 23 Nov 2026.
     (r'\bclearing\b', 'Clearing and forwarding (never uwakala wa forodha)'),
     (r'\bfreelanc', 'Freelance (never kazi za kujitegemea)'),
-    (r'\bwholesale\b', 'Wholesale / Jumla (never uuzaji wa jumla)'),
+    (r'\bwholesale\b', 'Wholesale, the English word alone (never Jumla or uuzaji wa jumla)'),
     (r'^\{h\} h\b|^1 h\b', 'hour and hours for a length of time (never saa, which reads as a clock time)'),
     (r'\bcharacters\b', 'tarakimu au herufi for characters (never vibambo)'),
     (r'^Send your link\b', 'Share link yako for telling a seller to share their link (never Tuma link yako)'),

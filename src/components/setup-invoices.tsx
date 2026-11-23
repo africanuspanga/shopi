@@ -1,16 +1,17 @@
 import { useRouter } from '@tanstack/react-router'
-import { Check, ChevronRight, Copy } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowUpRight, Camera, Check, ChevronRight, Copy, Loader2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { InvoiceDocument } from '#/components/invoice'
 import { AmountInput } from '#/components/invoice-form'
-import { PayNames, StepHead, usePass, useStepClock } from '#/components/setup'
+import { PayNames, StepHead, useMoveOn, usePass, useStepClock } from '#/components/setup'
 import { ErrorText, Field, FieldGroup, Sheet, ShopAvatar, Switch, showFirstError } from '#/components/ui'
 import { markInvoiceSent, saveBillSettings, saveInvoice } from '#/lib/api/invoices'
-import { saveSetupPayment, type SetupShop } from '#/lib/api/setup'
+import { saveSetupPayment, saveShopLogo, type SetupInvoice, type SetupShop } from '#/lib/api/setup'
 import { dayOf } from '#/lib/booking'
-import { NETWORKS } from '#/lib/format'
-import { asLang, useT } from '#/lib/i18n'
+import { NETWORKS, typeTin } from '#/lib/format'
+import { uploadImage } from '#/lib/upload'
+import { eg, asLang, useLang, useT } from '#/lib/i18n'
 import {
   DEFAULT_BILL, DUE_CHOICES, VAT, computeTotals, displayNumber, docDate, docOf, dueFor, money, parseBill, sendText, toCents, whatsappTo,
   type BillSettings, type DocData, type InvoiceLine,
@@ -53,12 +54,11 @@ function DocToggle({ shop, doc }: { shop: SetupShop; doc: DocData }) {
       >
         <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-11 w-11 text-15" />
         <span className="min-w-0 flex-1">
+          <span className="block text-12 text-muted">{t('Preview')}</span>
           <span className="block truncate text-15 font-semibold">{shop.name}</span>
-          <span className="block truncate text-13 text-muted">{t('Your invoices, as clients will see them')}</span>
+          <span className="block text-13 leading-5 text-muted">{t('Your invoices, as clients will see them')}</span>
         </span>
-        <span className="flex shrink-0 items-center gap-1 pr-1 text-13 font-medium text-ink-2">
-          {t('Preview')} <ChevronRight size={16} strokeWidth={1.75} />
-        </span>
+        <ChevronRight size={16} strokeWidth={1.75} className="mr-1 shrink-0 text-muted" />
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title={t('Your invoices, as clients will see them')}>
         <InvoiceDocument doc={doc} className="shadow-none" />
@@ -92,15 +92,34 @@ function Skip({ step, busy, setBusy, setError }: { step: number; busy: boolean; 
 /** Step 2: the address, email, TIN and VAT registration printed under the business's name on every invoice. */
 export function BillDetailsStep({ shop, bar, onDoc }: { shop: SetupShop; bar: React.ReactNode; onDoc: (d: DocData) => void }) {
   const t = useT()
-  const router = useRouter()
+  const moveOn = useMoveOn()
   const clock = useStepClock()
+  const router = useRouter()
   const [bill, setBill] = useState<BillSettings>(parseBill(shop.bill) ?? DEFAULT_BILL)
-  const [tin, setTin] = useState(shop.tin)
+  // Shown with its dashes as it is typed (123-456-789), the way TRA prints it.
+  const [tin, setTin] = useState(typeTin(shop.tin))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const logoRef = useRef<HTMLInputElement>(null)
+  const [logoBusy, setLogoBusy] = useState(false)
   const doc = sampleDoc(shop, t, { bill, tin: tin.replace(/\D/g, '') })
-  useEffect(() => onDoc(doc), [bill, tin]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => onDoc(doc), [bill, tin, shop.logo_key]) // eslint-disable-line react-hooks/exhaustive-deps
   const set = (p: Partial<BillSettings>) => setBill((b) => ({ ...b, ...p }))
+
+  // The logo is saved the moment it is chosen (the preview shows it on the invoice at once); the rest waits for Save.
+  async function pickLogo(file: File | undefined) {
+    if (!file) return
+    setLogoBusy(true)
+    setError('')
+    try {
+      const res = await saveShopLogo({ data: { key: await uploadImage(file, 400) } })
+      if ('error' in res) throw new Error(res.error)
+      await router.invalidate()
+    } catch {
+      setError(t('The logo did not upload. Try again.'))
+    }
+    setLogoBusy(false)
+  }
 
   async function save() {
     setBusy(true)
@@ -111,8 +130,7 @@ export function BillDetailsStep({ shop, bar, onDoc }: { shop: SetupShop; bar: Re
         setBusy(false)
         return setError(res.error === 'email' ? t('That email doesn’t look right.') : res.error === 'tin' ? t('A TIN has 9 digits.') : t('Something went wrong. Try again.'))
       }
-      await router.invalidate()
-      window.scrollTo(0, 0)
+      await moveOn()
     } catch {
       setBusy(false)
       setError(t('Something went wrong. Try again.'))
@@ -124,19 +142,46 @@ export function BillDetailsStep({ shop, bar, onDoc }: { shop: SetupShop; bar: Re
       <StepHead bar={bar} title={t('How you look on invoices')} sub={t('Printed under your name on every invoice and quote. Leave out what you don’t have.')} />
       <DocToggle shop={shop} doc={doc} />
       <div className="mt-6 space-y-5">
+        <FieldGroup label={t('Logo')} aside={t('Optional')}>
+          <div className="flex items-center gap-4">
+            <button type="button" className="group relative shrink-0" onClick={() => logoRef.current?.click()} disabled={logoBusy} aria-label={shop.logo_key ? t('Change logo') : t('Add a logo')}>
+              <ShopAvatar name={shop.name} logo={shop.logo_key} className="h-16 w-16 text-20" />
+              <span className="absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white ring-4 ring-page transition-transform group-active:scale-95">
+                {logoBusy ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} strokeWidth={1.75} />}
+              </span>
+            </button>
+            <div className="min-w-0">
+              <button type="button" className="flex min-h-11 items-center text-14 font-medium underline decoration-line-strong underline-offset-4 hover:decoration-ink" onClick={() => logoRef.current?.click()} disabled={logoBusy}>
+                {logoBusy ? t('Uploading') : shop.logo_key ? t('Change logo') : t('Add a logo')}
+              </button>
+              <p className="text-13 leading-5 text-muted">{t('It prints at the top of every invoice. Without one, clients see your initials.')}</p>
+            </div>
+            <input
+              ref={logoRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                e.target.value = ''
+                pickLogo(f)
+              }}
+            />
+          </div>
+        </FieldGroup>
         <Field label={t('Address')} aside={t('Optional')}>
           <input className="input" value={bill.address} onChange={(e) => set({ address: e.target.value })} placeholder={t('e.g. Plot 12, Kurasini, Dar es Salaam')} />
         </Field>
         <Field label={t('Email')} aside={t('Optional')}>
-          <input className="input" type="email" value={bill.email} onChange={(e) => set({ email: e.target.value })} placeholder="info@yourbusiness.co.tz" />
+          <input className="input" type="email" value={bill.email} onChange={(e) => set({ email: e.target.value })} placeholder={eg(t, 'info@yourbusiness.co.tz')} />
         </Field>
         <Field label={t('TIN')} aside={t('Optional')} hint={t('Your Taxpayer Identification Number from TRA, 9 digits.')}>
-          <input className="input" inputMode="numeric" value={tin} onChange={(e) => setTin(e.target.value)} placeholder="123-456-789" />
+          <input className="input tnum" inputMode="numeric" value={tin} onChange={(e) => setTin(typeTin(e.target.value))} placeholder={eg(t, '123-456-789')} />
         </Field>
         <Switch label={t('I am registered for VAT')} sub={t('New lines start with VAT {rate}%; you can take it off any line.', { rate: VAT })} checked={bill.vat} onChange={(vat) => set({ vat })} />
         {bill.vat && (
           <Field label={t('VRN')} hint={t('Your VAT registration number.')}>
-            <input className="input" value={bill.vrn} onChange={(e) => set({ vrn: e.target.value })} placeholder="40-012345-A" />
+            <input className="input" value={bill.vrn} onChange={(e) => set({ vrn: e.target.value })} placeholder={eg(t, '40-012345-A')} />
           </Field>
         )}
       </div>
@@ -154,7 +199,7 @@ export function BillDetailsStep({ shop, bar, onDoc }: { shop: SetupShop; bar: Re
 /** Step 3: the Lipa Namba and the bank details clients pay to, and how many days they get. */
 export function BillPayStep({ shop, owner, bar, onDoc }: { shop: SetupShop; /** The owner's name from sign-up. */ owner: string; bar: React.ReactNode; onDoc: (d: DocData) => void }) {
   const t = useT()
-  const router = useRouter()
+  const moveOn = useMoveOn()
   const clock = useStepClock()
   const saved = parseBill(shop.bill) ?? DEFAULT_BILL
   const [network, setNetwork] = useState(shop.lipa_network)
@@ -205,8 +250,7 @@ export function BillPayStep({ shop, owner, bar, onDoc }: { shop: SetupShop; /** 
         setBusy(false)
         return setError(t('Something went wrong. Try again.'))
       }
-      await router.invalidate()
-      window.scrollTo(0, 0)
+      await moveOn()
     } catch {
       setBusy(false)
       setError(t('Something went wrong. Try again.'))
@@ -245,7 +289,7 @@ export function BillPayStep({ shop, owner, bar, onDoc }: { shop: SetupShop; /** 
               setNumber(e.target.value)
               setMissing((m) => ({ ...m, number: undefined }))
             }}
-            placeholder="5512345"
+            placeholder={eg(t, '5512345')}
           />
         </Field>
         {number.replace(/\D/g, '') && (
@@ -297,23 +341,40 @@ export function BillPayStep({ shop, owner, bar, onDoc }: { shop: SetupShop; /** 
 }
 
 /** Step 4: the first invoice. Who and what for; then send it on WhatsApp, and the client pays from the link. */
-export function FirstInvoiceStep({ shop, bar, onDoc }: { shop: SetupShop; bar: React.ReactNode; onDoc: (d: DocData) => void }) {
+export function FirstInvoiceStep({
+  shop,
+  bar,
+  onDoc,
+  saved,
+}: {
+  shop: SetupShop
+  bar: React.ReactNode
+  onDoc: (d: DocData) => void
+  /** The first invoice already made (the step opened again with Back, or after a reload): "ready" shows it. */
+  saved?: SetupInvoice | null
+}) {
   const t = useT()
-  const router = useRouter()
+  const appLang = useLang()
+  const moveOn = useMoveOn()
   const origin = useOrigin()
   const bill = parseBill(shop.bill) ?? DEFAULT_BILL
-  const [client, setClient] = useState('')
-  const [phone, setPhone] = useState('')
-  const [what, setWhat] = useState('')
+  const [client, setClient] = useState(saved?.client ?? '')
+  const [phone, setPhone] = useState(saved?.phone ?? '')
+  const [what, setWhat] = useState(saved?.what ?? '')
   const [amount, setAmount] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [made, setMade] = useState<{ id: string; code: string; number: number } | null>(null)
+  const [made, setMade] = useState<SetupInvoice | null>(saved ?? null)
   const [copied, setCopied] = useState(false)
+  // Sent or copied here: Continue then takes over as the main button.
+  const [sentNow, setSentNow] = useState(false)
   // What is missing, said on its own box, every box at once.
   const [missing, setMissing] = useState<{ client?: string; what?: string; amount?: string }>({})
   const price = Number(amount || 0)
-  const line: InvoiceLine = { name: what.trim() || t('Example: your work for the client'), description: '', qty: 1, unit: '', price: price || 250_000, tax: bill.vat ? VAT : 0 }
+  // The preview's one line: what is typed, with VAT for a registered business; an invoice read back (after a reload
+  // or Back) is shown by its total, VAT already in it.
+  const readBack = !!made && !price
+  const line: InvoiceLine = { name: what.trim() || t('Example: your work for the client'), description: '', qty: 1, unit: '', price: readBack ? made.total / 100 : price || 250_000, tax: readBack ? 0 : bill.vat ? VAT : 0 }
   const doc = sampleDoc(shop, t, { client: client.trim() || t('Your client'), line })
   useEffect(() => onDoc(made ? { ...doc, number: displayNumber('invoice', made.number) } : doc), [client, what, amount, made]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -335,7 +396,11 @@ export function FirstInvoiceStep({ shop, bar, onDoc }: { shop: SetupShop; bar: R
       })
       setBusy(false)
       if ('error' in res) return setError(t('Something went wrong. Try again.'))
-      setMade({ id: res.id, code: ('code' in res && res.code) || '', number: ('number' in res && res.number) || 1 })
+      setMade({
+        id: res.id, code: ('code' in res && res.code) || '', number: ('number' in res && res.number) || 1, client: client.trim(), phone, what: what.trim(),
+        total: toCents(computeTotals([{ ...line, price }], 'none', 0, 'TZS').total), currency: 'TZS', due_day: doc.due_day, lang: doc.lang, sent: false,
+      })
+      window.scrollTo(0, 0)
     } catch {
       setBusy(false)
       setError(t('Something went wrong. Try again.'))
@@ -344,13 +409,34 @@ export function FirstInvoiceStep({ shop, bar, onDoc }: { shop: SetupShop; bar: R
 
   if (made) {
     const link = `${origin}/i/${made.code}`
-    const text = sendText(doc.lang, { kind: 'invoice', client: client.trim(), business: shop.name, number: displayNumber('invoice', made.number), amount: money(toCents(computeTotals([{ ...line, price }], 'none', 0, 'TZS').total), 'TZS'), due: doc.due_day ? docDate(doc.due_day, doc.lang) : '', link })
-    const sent = () => markInvoiceSent({ data: { id: made.id } }).catch(() => {})
+    const number = displayNumber('invoice', made.number)
+    const lang = asLang(made.lang)
+    const text = sendText(lang, { kind: 'invoice', client: made.client, business: shop.name, number, amount: money(made.total, made.currency), due: made.due_day ? docDate(made.due_day, lang) : '', link })
+    const sent = () => {
+      setSentNow(true)
+      markInvoiceSent({ data: { id: made.id } }).catch(() => {})
+    }
+    const done = sentNow || made.sent
     return (
       <>
         <StepHead bar={bar} title={t('Your first invoice is ready')} sub={t('Send it on WhatsApp. Your client pays from the link, and you see when they open it.')} />
+        {/* The invoice itself, as a slip: its number, who it is for, what for, the amount and when it is due. */}
+        <div className="receipt mt-6 px-5 pt-5 pb-6">
+          <div className="flex items-center justify-between gap-3">
+            <p className="code text-13 text-muted">{number}</p>
+            <a href={`/i/${made.code}`} target="_blank" rel="noreferrer" className="-my-3 flex min-h-11 items-center gap-1 text-13 font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink">
+              {t('See it as your client will')} <ArrowUpRight size={14} strokeWidth={1.75} className="shrink-0" />
+            </a>
+          </div>
+          <p className="mt-3 text-17 font-semibold break-words">{made.client}</p>
+          {made.what && <p className="mt-0.5 text-14 leading-5 break-words text-muted">{made.what}</p>}
+          <div className="receipt-rule mt-4 flex items-baseline justify-between gap-3 pt-4">
+            <span className="text-14 text-muted">{made.due_day ? t('Due {date}', { date: docDate(made.due_day, appLang) }) : t('Due on receipt')}</span>
+            <span className="font-mono text-20 font-medium tracking-tight">{money(made.total, made.currency)}</span>
+          </div>
+        </div>
         <div className="mt-6 space-y-3">
-          <a href={whatsappTo(phone, text)} target="_blank" rel="noreferrer" className="btn btn-lg w-full" onClick={sent}>
+          <a href={whatsappTo(made.phone, text)} target="_blank" rel="noreferrer" className={`btn btn-lg w-full ${done ? 'btn-ghost' : ''}`} onClick={sent}>
             <WhatsAppMark size={18} /> {t('Send on WhatsApp')}
           </a>
           <button
@@ -369,14 +455,7 @@ export function FirstInvoiceStep({ shop, bar, onDoc }: { shop: SetupShop; bar: R
           >
             {copied ? <Check size={18} strokeWidth={2.25} /> : <Copy size={18} strokeWidth={1.75} />} {copied ? t('Link copied') : t('Copy link')}
           </button>
-          <button
-            type="button"
-            className="btn btn-lg btn-quiet w-full"
-            onClick={async () => {
-              await router.invalidate()
-              window.scrollTo(0, 0)
-            }}
-          >
+          <button type="button" className={`btn btn-lg w-full ${done ? '' : 'btn-quiet'}`} onClick={moveOn}>
             {t('Continue')}
           </button>
         </div>
@@ -386,7 +465,7 @@ export function FirstInvoiceStep({ shop, bar, onDoc }: { shop: SetupShop; bar: R
 
   return (
     <>
-      <StepHead bar={bar} title={t('Your first invoice')} sub={t('Who it’s for and what for. You add lines, VAT and terms later; this is enough to send.')} />
+      <StepHead bar={bar} title={t('Your first invoice')} sub={t('Who it’s for and what for. Try it with any client: you can delete a draft.')} />
       <DocToggle shop={shop} doc={doc} />
       <div className="mt-6 space-y-5">
         <Field label={t('Who it’s for')} error={missing.client}>
@@ -401,7 +480,7 @@ export function FirstInvoiceStep({ shop, bar, onDoc }: { shop: SetupShop; bar: R
           />
         </Field>
         <Field label={t('Their WhatsApp number')} aside={t('Optional')}>
-          <input className="input" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0754 123 456" />
+          <input className="input" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={eg(t, '0754 123 456')} />
         </Field>
         <Field label={t('What it’s for')} error={missing.what}>
           <input

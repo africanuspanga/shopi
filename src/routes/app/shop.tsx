@@ -13,7 +13,7 @@ import { CardHead, ErrorText, Field, LangSwitch, Page, ShopAvatar, ShopLangChoic
 import { getMyShop, updateShop } from '#/lib/api/merchant'
 import { logout } from '#/lib/api/session'
 import { ALL_CATEGORIES, DAR_AREAS, NETWORKS, mapsLink, tinDigits } from '#/lib/format'
-import { asLang, useT } from '#/lib/i18n'
+import { eg, asLang, useT } from '#/lib/i18n'
 import { FONTS, MOTO, asFont, cleanHex } from '#/lib/theme'
 import { uploadImage } from '#/lib/upload'
 import { ROLE_FOR_YOU, ROLE_NAMES, allows } from '#/lib/staff'
@@ -180,7 +180,7 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
                 </select>
               </Field>
               <Field label={t('Opening hours')}>
-                <input className="input" value={s.hours} onChange={set('hours')} placeholder={t('Mon to Sat, 9:00 to 19:00')} />
+                <input className="input" value={s.hours} onChange={set('hours')} placeholder={eg(t, t('Mon to Sat, 9:00 to 19:00'))} />
               </Field>
             </div>
             <Field label={t('Where you are')} hint={t('A street or a landmark buyers know')}>
@@ -191,7 +191,7 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
                 className="input"
                 value={s.maps_url ?? ''}
                 onChange={set('maps_url')}
-                placeholder="https://maps.app.goo.gl/…"
+                placeholder={eg(t, 'https://maps.app.goo.gl/…')}
                 inputMode="url"
                 autoCapitalize="none"
                 autoCorrect="off"
@@ -203,7 +203,7 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
                 className="input tnum"
                 value={s.tin ?? ''}
                 onChange={set('tin')}
-                placeholder="123-456-789"
+                placeholder={eg(t, '123-456-789')}
                 inputMode="numeric"
                 maxLength={11}
               />
@@ -266,7 +266,7 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
                 </select>
               </Field>
               <Field label={t('Lipa Namba or number')}>
-                <input className="input code" inputMode="numeric" value={s.lipa_number} onChange={set('lipa_number')} placeholder="5512345" />
+                <input className="input code" inputMode="numeric" value={s.lipa_number} onChange={set('lipa_number')} placeholder={eg(t, '5512345')} />
               </Field>
             </div>
             <Field
@@ -306,7 +306,7 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
                   className="input h-11"
                   value={a.name}
                   aria-label={t('Area')}
-                  placeholder="Mikocheni"
+                  placeholder={eg(t, 'Mikocheni')}
                   onChange={(e) => setAreas(areas.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))}
                 />
                 <button type="button" className="icon-btn" aria-label={t('Remove area')} onClick={() => setAreas(areas.filter((_, j) => j !== i))}>
@@ -359,7 +359,7 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
               <Handle value={s.tiktok} onChange={set('tiktok')} />
             </Field>
             <Field label="Facebook">
-              <input className="input" value={s.facebook} onChange={set('facebook')} placeholder="facebook.com/dukalako" autoCapitalize="none" />
+              <input className="input" value={s.facebook} onChange={set('facebook')} placeholder={eg(t, 'facebook.com/dukalako')} autoCapitalize="none" />
             </Field>
           </div>
         </Group>
@@ -507,10 +507,11 @@ function Group({ title, sub, children }: { title: string; sub: string; children:
 }
 
 function Handle({ value, onChange }: { value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
+  const t = useT()
   return (
     <span className="input flex items-center gap-1 px-4">
       <span className="text-muted">@</span>
-      <input className="min-w-0 flex-1 bg-transparent outline-none" value={value.replace(/^@/, '')} onChange={onChange} placeholder="dukalako" autoCapitalize="none" />
+      <input className="min-w-0 flex-1 bg-transparent outline-none" value={value.replace(/^@/, '')} onChange={onChange} placeholder={eg(t, 'dukalako')} autoCapitalize="none" />
     </span>
   )
 }

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Reac
 import { ErrorText, Field, Sheet } from '#/components/ui'
 import { payTembo, temboLipaNamba, temboPayment, temboPushAgain } from '#/lib/api/billing'
 import { localPhone, normalizePhone, tzs } from '#/lib/format'
-import { useLang, useT } from '#/lib/i18n'
+import { eg, useLang, useT } from '#/lib/i18n'
 import { DAY, TEMBO_PRICE } from '#/lib/plans'
 
 /**
@@ -362,7 +362,7 @@ function Flow({
           className="input font-mono"
           inputMode="tel"
           autoComplete="tel"
-          placeholder="0754 123 456"
+          placeholder={eg(t, '0754 123 456')}
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           required

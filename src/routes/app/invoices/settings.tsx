@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { TemboPill } from '#/components/tembo'
 import { Card, ErrorText, Field, FieldGroup, Page, Switch, TopBar } from '#/components/ui'
 import { getBillSettings, saveBillSettings } from '#/lib/api/invoices'
-import { LANGUAGES, useT } from '#/lib/i18n'
+import { eg, LANGUAGES, useT } from '#/lib/i18n'
 import { CURRENCIES, DUE_CHOICES, VAT, type BillSettings } from '#/lib/invoice'
 
 /**
@@ -53,15 +53,15 @@ function Settings() {
               <textarea className="input text-14" rows={2} value={v.address} onChange={(e) => set({ address: e.target.value })} placeholder={t('e.g. Plot 12, Kurasini, Dar es Salaam')} />
             </Field>
             <Field label={t('Email')} aside={t('Optional')}>
-              <input className="input" type="email" value={v.email} onChange={(e) => set({ email: e.target.value })} placeholder="info@yourbusiness.co.tz" />
+              <input className="input" type="email" value={v.email} onChange={(e) => set({ email: e.target.value })} placeholder={eg(t, 'info@yourbusiness.co.tz')} />
             </Field>
             <Field label={t('TIN')} aside={t('Optional')} hint={t('Your Taxpayer Identification Number from TRA, 9 digits.')}>
-              <input className="input" inputMode="numeric" value={tin} onChange={(e) => (setTin(e.target.value), setSaved(false))} placeholder="123-456-789" />
+              <input className="input" inputMode="numeric" value={tin} onChange={(e) => (setTin(e.target.value), setSaved(false))} placeholder={eg(t, '123-456-789')} />
             </Field>
             <Switch label={t('I am registered for VAT')} sub={t('New lines start with VAT {rate}%; you can take it off any line.', { rate: VAT })} checked={v.vat} onChange={(vat) => set({ vat })} />
             {v.vat && (
               <Field label={t('VRN')} hint={t('Your VAT registration number.')}>
-                <input className="input" value={v.vrn} onChange={(e) => set({ vrn: e.target.value })} placeholder="40-012345-A" />
+                <input className="input" value={v.vrn} onChange={(e) => set({ vrn: e.target.value })} placeholder={eg(t, '40-012345-A')} />
               </Field>
             )}
           </div>

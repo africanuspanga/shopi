@@ -1,20 +1,21 @@
 import { Link, useRouter } from '@tanstack/react-router'
-import { Bell, Check, ChevronDown, ChevronRight, Download, ImagePlus, Loader2, Plus, QrCode as QrCodeIcon, X } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { ArrowUpRight, Bell, Check, ChevronDown, ChevronRight, Download, ImagePlus, Link2, Loader2, Plus, QrCode as QrCodeIcon, Share2, X } from 'lucide-react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { WriteBio, WriteItForMe } from '#/components/ai-write'
-import { InstallSheet } from '#/components/phone-app'
+import { InstallSheet, UnblockSteps } from '#/components/phone-app'
+import { QrCode } from '#/components/qr'
 import { PriceInput } from '#/components/product-form'
 import { QrSheet } from '#/components/qr-sheet'
-import { ShareActions } from '#/components/share'
+import { WhatsAppMark } from '#/components/brand-icons'
 import { Phone } from '#/components/showcase'
 import { ErrorText, Field, FieldGroup, Img, Sheet, ShopAvatar, Toast, showFirstError } from '#/components/ui'
 import { saveProduct } from '#/lib/api/merchant'
-import { passSetupStep, saveSetupPayment, saveShopBio, type SetupProduct, type SetupShop } from '#/lib/api/setup'
+import { passSetupStep, saveSetupPayment, saveShopBio, type SetupEdit, type SetupProduct, type SetupShop } from '#/lib/api/setup'
 import { track } from '#/lib/analytics'
-import { ALL_CATEGORIES, NETWORKS, SIZE_PRESETS, tzs } from '#/lib/format'
+import { ALL_CATEGORIES, NETWORKS, SIZE_PRESETS, localPhone, tzs } from '#/lib/format'
 import { durationText, servicePrice } from '#/lib/booking'
-import { useT } from '#/lib/i18n'
-import { usePhoneApp } from '#/lib/push'
+import { eg, useT } from '#/lib/i18n'
+import { inAppBrowser, usePhoneApp } from '#/lib/push'
 import { useOrigin } from '#/lib/share'
 import { hasPage, type SetupOutcome } from '#/lib/setup'
 import { uploadImage } from '#/lib/upload'
@@ -30,15 +31,31 @@ export function useStepClock() {
   return () => Math.round((Date.now() - start.current) / 1000)
 }
 
-/** Passes a step and reloads the route, which then shows the next one. False when the connection failed. */
-export function usePass(step: number) {
+/**
+ * What the setup does after a step is saved or passed, besides reloading: a step opened again with Back moves on to
+ * the one after it (src/routes/onboard.tsx). Outside the setup it does nothing.
+ */
+export const SetupNext = createContext<() => void>(() => {})
+
+/** After a step is saved: reload the route (which shows the next step), go to the top, and tell the setup. */
+export function useMoveOn() {
   const router = useRouter()
+  const next = useContext(SetupNext)
+  return async () => {
+    await router.invalidate()
+    window.scrollTo(0, 0)
+    next()
+  }
+}
+
+/** Passes a step and moves on. False when the connection failed. */
+export function usePass(step: number) {
+  const moveOn = useMoveOn()
   const clock = useStepClock()
   return async (outcome: SetupOutcome) => {
     try {
       await passSetupStep({ data: { step, outcome, seconds: clock() } })
-      await router.invalidate()
-      window.scrollTo(0, 0)
+      await moveOn()
       return true
     } catch {
       return false
@@ -61,8 +78,11 @@ export function ShopCard({
   payment,
   bio,
   note,
+  live = false,
 }: {
   shop: PreviewShop
+  /** The shop is open ("Your shop is live"): its products as the shop shows them, and no empty tiles for ones not added yet. */
+  live?: boolean
   products: PreviewProduct[]
   /** Given for a business that sells services: its services show as rows with Book, where products show as a grid. */
   services?: PreviewService[]
@@ -71,7 +91,8 @@ export function ShopCard({
   note?: string
 }) {
   const t = useT()
-  const category = t(ALL_CATEGORIES.find((c) => c.id === shop.category)?.label ?? 'Other')
+  // Nothing is chosen for the seller at step 1, so until they tap a kind the card shows none.
+  const category = shop.category ? t(ALL_CATEGORIES.find((c) => c.id === shop.category)?.label ?? 'Other') : ''
   return (
     <div className="w-full rounded-28 bg-card p-5 text-ink sm:p-6">
       <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
@@ -86,11 +107,11 @@ export function ShopCard({
         <ShopAvatar name={shop.name || 'S'} logo={shop.logo} className="h-14 w-14 text-17" />
         <p className={`display mt-4 text-28 break-words ${shop.name ? '' : 'text-faint'}`}>{shop.name || t('Your shop')}</p>
         {bio ?? (shop.bio ? <p className="mt-2 text-14 leading-relaxed text-ink-2">{shop.bio}</p> : null)}
-        <span className="mt-3 inline-flex h-8 items-center rounded-full bg-page px-3 text-13 text-ink-2">{category}</span>
+        {category && <span className="mt-3 inline-flex h-8 items-center rounded-full bg-page px-3 text-13 text-ink-2">{category}</span>}
       </div>
       {services && (
         <ul className="mt-5 space-y-2">
-          {(services.length ? services : [{ name: '', duration: 0, price: 0, price_from: 0 }]).slice(0, 3).map((v, i) => (
+          {(services.length || live ? services : [{ name: '', duration: 0, price: 0, price_from: 0 }]).slice(0, 3).map((v, i) => (
             <li key={i} className="flex items-center gap-3 rounded-14 bg-page px-3 py-3">
               <span className="min-w-0 flex-1">
                 <span className={`block truncate text-14 font-medium ${v.name ? '' : 'text-faint'}`}>{v.name || t('Service name')}</span>
@@ -101,7 +122,23 @@ export function ShopCard({
           ))}
         </ul>
       )}
-      <div className={`mt-5 grid grid-cols-3 gap-2 ${services ? 'hidden' : ''}`}>
+      {live && !services && products.length > 0 && (
+        // As on the shop's own page: two across, the photo at 4:5 with Buy on it, then the name and the price.
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          {products.slice(0, 4).map((p, i) => (
+            <div key={i} className="min-w-0">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-16 bg-well">
+                {p.image && <Img size="thumb" k={p.image} alt="" className="h-full w-full" />}
+                <span className="absolute right-2 bottom-2 flex h-8 items-center rounded-full bg-ink px-3.5 text-13 font-medium text-white shadow-[0_0_0_2px_rgb(255_255_255/0.85)]">{t('Buy')}</span>
+              </div>
+              <p className="mt-2.5 line-clamp-2 px-0.5 text-14 leading-5">{p.name}</p>
+              <p className="tnum mt-0.5 px-0.5 text-14 font-medium">{tzs(p.price)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      {!services && !live && (
+      <div className="mt-5 grid grid-cols-3 gap-2">
         {[0, 1, 2].map((i) => {
           const p = products[i]
           return p ? (
@@ -124,6 +161,7 @@ export function ShopCard({
           )
         })}
       </div>
+      )}
       {payment && <p className="mt-4 rounded-14 bg-page px-3 py-2.5 text-13 leading-5 text-ink-2">{payment}</p>}
       {note && <p className="mt-4 text-13 text-muted">{note}</p>}
     </div>
@@ -152,13 +190,13 @@ export function PreviewToggle({ shop, children, title }: { shop: PreviewShop; ch
         className="mt-6 flex w-full items-center gap-3 rounded-16 bg-card p-3 text-left shadow-[inset_0_0_0_1px_var(--color-line)] transition-colors hover:bg-well lg:hidden"
       >
         <ShopAvatar name={shop.name || 'S'} logo={shop.logo} className="h-11 w-11 text-15" />
+        {/* The label on its own line: beside the name it cut both the name and the link short ("Zuri Fashion 8…"). */}
         <span className="min-w-0 flex-1">
+          <span className="block text-12 text-muted">{t('Preview')}</span>
           <span className="block truncate text-15 font-semibold">{shop.name}</span>
           <span className="code block truncate text-13 text-muted">shopi.tz/{shop.slug}</span>
         </span>
-        <span className="flex shrink-0 items-center gap-1 pr-1 text-13 font-medium text-ink-2">
-          {t('Preview')} <ChevronRight size={16} strokeWidth={1.75} />
-        </span>
+        <ChevronRight size={16} strokeWidth={1.75} className="mr-1 shrink-0 text-muted" />
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title={title ?? t('Your shop, as buyers will see it')}>
         <div className="rounded-28 shadow-[inset_0_0_0_1px_var(--color-line)]">{children}</div>
@@ -198,6 +236,7 @@ export function ProductStep({
   bar,
   onDraft,
   onLater,
+  editing,
 }: {
   shop: SetupShop
   ai: boolean
@@ -205,16 +244,18 @@ export function ProductStep({
   onDraft: (p: PreviewProduct) => void
   /** Opened again from "Your shop is live" by a seller who skipped it: "later" goes back there instead of passing the step. */
   onLater?: () => void
+  /** Opened again with Back: the product saved here, to correct. What this form doesn't show (stock, a was-price) is handed back as it was. */
+  editing?: SetupEdit | null
 }) {
   const t = useT()
   const pass = usePass(2)
   const fileRef = useRef<HTMLInputElement>(null)
-  const [images, setImages] = useState<string[]>([])
+  const [images, setImages] = useState<string[]>(editing?.images ?? [])
   const [uploading, setUploading] = useState(0)
-  const [name, setName] = useState('')
-  const [price, setPrice] = useState('')
-  const [description, setDescription] = useState('')
-  const [sizes, setSizes] = useState<string[] | null>(null)
+  const [name, setName] = useState(editing?.name ?? '')
+  const [price, setPrice] = useState(editing ? String(editing.price) : '')
+  const [description, setDescription] = useState(editing?.description ?? '')
+  const [sizes, setSizes] = useState<string[] | null>(editing?.sizes?.map((x) => x.label) ?? null)
   const [moreOpen, setMoreOpen] = useState(false)
   const [error, setError] = useState('')
   // What is missing, said on its own box, every box at once.
@@ -254,14 +295,20 @@ export function ProductStep({
     if (Object.keys(gaps).length) return showFirstError()
     setBusy(true)
     try {
+      // Sizes left as they were keep their stock, prices and photos (set on Products or by an import).
+      const kept = !!editing?.sizes && editing.sizes.map((x) => x.label).join('|') === (sizes ?? []).join('|')
       const res = await saveProduct({
         data: {
+          id: editing?.id,
           name,
           description,
           price,
+          compare_price: editing?.compare_price ?? null,
+          // A product without sizes keeps its own stock (an import's Stock column); left out, it would become "not counted".
+          stock: editing?.stock ?? null,
           images,
-          sizes: (sizes ?? []).map((label) => ({ label, stock: '' })),
-          option_name: 'size',
+          sizes: kept ? editing!.sizes! : (sizes ?? []).map((label) => ({ label, stock: '' })),
+          option_name: kept ? (editing!.option_name ?? 'size') : 'size',
           active: true,
         },
       })
@@ -305,13 +352,11 @@ export function ProductStep({
               <div key={k} className="relative shrink-0">
                 <Img size="thumb" k={k} alt="" className={`rounded-14 ${i === 0 ? 'h-[160px] w-[128px]' : 'h-[160px] w-[96px]'}`} />
                 {i === 0 && images.length > 1 && <span className="absolute bottom-2 left-2 rounded-full bg-ink px-2.5 py-1 text-11 font-medium text-white">{t('Main')}</span>}
-                <button
-                  type="button"
-                  aria-label={t('Remove photo')}
-                  onClick={() => setImages(images.filter((x) => x !== k))}
-                  className="absolute top-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-card/95 shadow-[0_1px_2px_rgb(10_10_10/0.15)] transition-colors hover:bg-card"
-                >
-                  <X size={14} strokeWidth={2.25} />
+                {/* 44px to touch, the 32px circle to look at. */}
+                <button type="button" aria-label={t('Remove photo')} onClick={() => setImages(images.filter((x) => x !== k))} className="group absolute top-0 right-0 flex h-11 w-11 items-center justify-center">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-card/95 shadow-[0_1px_2px_rgb(10_10_10/0.15)] transition-colors group-hover:bg-card">
+                    <X size={14} strokeWidth={2.25} />
+                  </span>
                 </button>
               </div>
             ))}
@@ -362,7 +407,7 @@ export function ProductStep({
               setPrice(v)
               setMissing((m) => ({ ...m, price: undefined }))
             }}
-            placeholder="35,000"
+            placeholder="0"
           />
         </Field>
         <div>
@@ -405,7 +450,7 @@ export function ProductStep({
           </Link>
         </p>
         {/* A link, not a button the size of the main one: the first product is what makes the shop worth sharing. */}
-        <LaterLink onClick={skip} disabled={busy} />
+        {!editing && <LaterLink onClick={skip} disabled={busy} />}
       </form>
     </>
   )
@@ -443,7 +488,7 @@ export function PayNames({ shop, owner, value, onPick }: { shop: string; owner: 
 
 export function PaymentStep({ shop, owner, bar, onDraft }: { shop: SetupShop; /** The owner's name from sign-up. */ owner: string; bar: ReactNode; onDraft: (line: string) => void }) {
   const t = useT()
-  const router = useRouter()
+  const moveOn = useMoveOn()
   const pass = usePass(3)
   const clock = useStepClock()
   const [network, setNetwork] = useState(shop.lipa_network)
@@ -481,8 +526,7 @@ export function PaymentStep({ shop, owner, bar, onDraft }: { shop: SetupShop; /*
         setMissing({ [what]: gaps[what] })
         return showFirstError()
       }
-      await router.invalidate()
-      window.scrollTo(0, 0)
+      await moveOn()
     } catch {
       setBusy(false)
       setError(t('Something went wrong. Try again.'))
@@ -536,7 +580,7 @@ export function PaymentStep({ shop, owner, bar, onDraft }: { shop: SetupShop; /*
               setNumber(e.target.value)
               setMissing((m) => ({ ...m, number: undefined }))
             }}
-            placeholder="5512345"
+            placeholder={eg(t, '5512345')}
           />
         </Field>
         <div>
@@ -605,7 +649,17 @@ export function LiveStep({
   const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const shared = (how: string) => track('seller_share', { shopId: shop.id, detail: `setup-${how}` })
+  const [native, setNative] = useState(false)
+  useEffect(() => setNative(typeof navigator !== 'undefined' && !!navigator.share), [])
+  // Sharing the link is this screen's one job, so WhatsApp is the black button until the seller has shared or
+  // copied it; then Continue takes over. With nothing to order yet, adding the first product leads instead.
+  const [sharedOnce, setSharedOnce] = useState(false)
+  const lead: 'add' | 'share' | 'go' = empty && onAddFirst ? 'add' : sharedOnce ? 'go' : 'share'
+  const shared = (how: string) => {
+    track('seller_share', { shopId: shop.id, detail: `setup-${how}` })
+    setSharedOnce(true)
+  }
+  const message = `${services ? t('You can now book with us here:') : t('My shop is open. You can order here:')}\n${url}`
 
   async function copy() {
     try {
@@ -636,22 +690,57 @@ export function LiveStep({
         }
       />
 
-      {empty && onAddFirst && (
+      {lead === 'add' && (
         <button type="button" className="btn btn-lg mt-6 w-full" onClick={onAddFirst}>
           <Plus size={18} strokeWidth={2.25} /> {services ? t('Add my first service') : t('Add my first product')}
         </button>
       )}
 
       <section className="mt-6 rounded-20 bg-card p-5 shadow-[inset_0_0_0_1px_var(--color-line)]">
-        <p className="text-13 text-muted">{page ? t('Your page link') : t('Your shop link')}</p>
-        <p className="code mt-1 truncate text-17">shopi.tz/{shop.slug}</p>
-        <div className="mt-4">
-          <ShareActions url={url} title={shop.name} text={services ? t('You can now book with us here:') : t('My shop is open. You can order here:')} onShared={shared} />
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-13 text-muted">{page ? t('Your page link') : t('Your shop link')}</p>
+          {/* The real shop, in a new tab: what a buyer who taps the link sees. */}
+          <a href={`/${shop.slug}`} target="_blank" rel="noreferrer" className="-my-3 flex min-h-11 shrink-0 items-center gap-1 text-14 font-medium text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink">
+            {page ? t('Open my page') : t('Open my shop')} <ArrowUpRight size={16} strokeWidth={1.75} className="shrink-0" />
+          </a>
         </div>
-        {/* May wrap: in Swahili the label is long ("QR code ya kuchapisha au kuweka mtandaoni"). */}
-        <button type="button" className="btn btn-ghost btn-sm mt-2 h-auto min-h-11 w-full py-2 text-center leading-5 whitespace-normal" onClick={() => setQrOpen(true)}>
-          <QrCodeIcon size={16} strokeWidth={1.75} className="shrink-0" /> {t('QR code to print or post')}
-        </button>
+        {/* The whole link, on its own line: a link cut short can't be read out or checked. */}
+        <p className="code mt-1 text-17 break-all">shopi.tz/{shop.slug}</p>
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(message)}`}
+          target="_blank"
+          rel="noreferrer"
+          className={`btn btn-lg mt-4 w-full ${lead === 'share' ? '' : 'btn-ghost'}`}
+          onClick={() => shared('whatsapp')}
+        >
+          <WhatsAppMark size={20} /> {t('Share on WhatsApp')}
+        </a>
+        <div className="mt-2 flex gap-2">
+          <button type="button" className="btn btn-ghost btn-sm h-11 min-w-0 flex-1 px-3" onClick={copy}>
+            {copied ? <Check size={16} strokeWidth={2.25} className="shrink-0" /> : <Link2 size={16} strokeWidth={1.75} className="shrink-0" />}
+            <span className="truncate">{copied ? t('Copied') : t('Copy link')}</span>
+          </button>
+          <button type="button" className="btn btn-ghost btn-sm h-11 min-w-0 flex-1 px-3" onClick={() => setQrOpen(true)}>
+            <QrCodeIcon size={16} strokeWidth={1.75} className="shrink-0" /> <span className="truncate">{t('QR code')}</span>
+          </button>
+          {native && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm h-11 w-11 shrink-0 px-0"
+              aria-label={t('More ways to share')}
+              onClick={async () => {
+                try {
+                  await navigator.share({ url, title: shop.name, text: services ? t('You can now book with us here:') : t('My shop is open. You can order here:') })
+                  shared('native')
+                } catch {
+                  /* closed */
+                }
+              }}
+            >
+              <Share2 size={16} strokeWidth={1.75} />
+            </button>
+          )}
+        </div>
       </section>
 
       <div className="mt-4 lg:hidden">
@@ -682,7 +771,7 @@ export function LiveStep({
       )}
       <button
         type="button"
-        className={`btn btn-lg mt-6 w-full ${empty && onAddFirst ? 'btn-ghost' : ''}`}
+        className={`btn btn-lg mt-6 w-full ${lead === 'go' ? '' : 'btn-ghost'}`}
         disabled={busy}
         onClick={async () => {
           setBusy(true)
@@ -746,7 +835,7 @@ export function LiveCard({ shop, products, services, ai }: { shop: SetupShop; pr
   )
   return (
     <>
-      <ShopCard shop={previewShop(shop)} products={products} services={services} bio={slot} />
+      <ShopCard live shop={previewShop(shop)} products={products} services={services} bio={slot} />
       <Sheet open={open} onClose={() => setOpen(false)} title={page ? t('A line about your business') : t('A line about your shop')}>
         <form
           onSubmit={async (e) => {
@@ -853,14 +942,46 @@ export function OrderNotice({
   )
 }
 
-export function PhoneStep({ shop, product, service, bills = false, bar }: { shop: SetupShop; product: SetupProduct | null; service?: PreviewService | null; bills?: boolean; bar: ReactNode }) {
+export function PhoneStep({
+  shop,
+  product,
+  service,
+  bills = false,
+  bar,
+  login,
+}: {
+  shop: SetupShop
+  product: SetupProduct | null
+  service?: PreviewService | null
+  bills?: boolean
+  bar: ReactNode
+  /** The number the seller logs in with, for the ways on to another browser or the phone (they log in again there). */
+  login: string
+}) {
   const t = useT()
   const router = useRouter()
   const pass = usePass(5)
   const app = usePhoneApp()
+  const origin = useOrigin()
   const [guide, setGuide] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [copied, setCopied] = useState(false)
+  // Where this screen is open decides what it can offer. An app's own browser (Instagram, TikTok, Facebook) can't
+  // show notifications or install anything, so the way out comes first: Chrome on Android (one tap, an intent link),
+  // Safari on an iPhone (copy the link). A computer can have its own notifications, and offers the phone by QR code.
+  const [where, setWhere] = useState<'phone' | 'computer' | 'in-android' | 'in-iphone'>('phone')
+  useEffect(() => {
+    const ua = navigator.userAgent
+    const iphone = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)
+    if (inAppBrowser()) setWhere(iphone ? 'in-iphone' : /Android/i.test(ua) ? 'in-android' : 'phone')
+    else if (!iphone && !/Android|Mobile/i.test(ua)) setWhere('computer')
+  }, [])
+  const computer = where === 'computer'
+  const inApp = where === 'in-android' || where === 'in-iphone'
+  // The seller is logged in only in this browser: the other one opens on the log-in screen, then comes back here.
+  const loginUrl = `${origin}/login`
+  const phone = localPhone(login)
 
   async function on() {
     setError('')
@@ -877,54 +998,105 @@ export function PhoneStep({ shop, product, service, bills = false, bar }: { shop
     setError(t('Something went wrong. Try again.'))
   }
 
-  // A salon and a business that sends invoices have a page, not a shop, and this button opens Home either way.
-  const page = bills || service !== undefined
+  async function copyLogin() {
+    try {
+      await navigator.clipboard.writeText(loginUrl)
+    } catch {
+      window.prompt('', loginUrl)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1600)
+  }
+
   // Something the seller could still do on this screen: turn notifications on, or (iPhone) install first.
-  const waiting = app.state === 'off' || app.state === 'loading' || app.state === 'ios'
-  const status =
-    app.state === 'on'
-      ? t('Notifications are on for this phone.')
+  const waiting = inApp || app.state === 'off' || app.state === 'loading' || app.state === 'ios'
+  const status = inApp
+    ? where === 'in-android'
+      ? t('This app’s own browser can’t show notifications. Open Shopi in Chrome, log in with {phone}, and turn them on there.', { phone })
+      : t('This app’s own browser can’t show notifications. Copy the link, open it in Safari, and log in with {phone}.', { phone })
+    : app.state === 'on'
+      ? computer
+        ? t('Notifications are on for this computer.')
+        : t('Notifications are on for this phone.')
       : app.state === 'ios'
         ? t('On iPhone, put Shopi on your Home Screen first. Then open it from there and turn on notifications.')
         : app.state === 'blocked'
-          ? t('Notifications are blocked for shopi.tz on this phone. Allow them in your browser’s site settings, then come back.')
+          ? computer
+            ? t('Notifications are blocked for shopi.tz on this computer. To allow them:')
+            : t('Notifications are blocked for shopi.tz on this phone. To allow them:')
           : app.state === 'unsupported'
-            ? t('This browser can’t show notifications. On Android use Chrome; on iPhone use Safari and add Shopi to your Home Screen.')
+            ? computer
+              ? t('This browser can’t show notifications. Use Chrome, Edge or Firefox, or open Shopi on your phone.')
+              : t('This browser can’t show notifications. On Android use Chrome; on iPhone use Safari and add Shopi to your Home Screen.')
             : ''
 
   return (
     <>
+      {/* One sentence: what the seller gets. The buttons under it say the rest. */}
       {bills ? (
-        <StepHead bar={bar} title={t('Payments on your phone')} sub={t('A notification when a client opens your invoice or sends the payment SMS, even when Shopi is closed. And Shopi on your Home Screen, one tap from your invoices.')} />
+        <StepHead bar={bar} title={t('Payments on your phone')} sub={t('A notification when a client opens your invoice or sends the payment SMS, even when Shopi is closed.')} />
       ) : service !== undefined ? (
-        <StepHead bar={bar} title={t('Bookings on your phone')} sub={t('A notification the moment a client books, even when Shopi is closed. And Shopi on your Home Screen, one tap from your diary.')} />
+        <StepHead bar={bar} title={t('Bookings on your phone')} sub={t('A notification the moment a client books, even when Shopi is closed.')} />
       ) : (
-        <StepHead bar={bar} title={t('Orders on your phone')} sub={t('A notification the moment a buyer orders, even when Shopi is closed. And Shopi on your Home Screen, one tap from your orders.')} />
+        <StepHead bar={bar} title={t('Orders on your phone')} sub={t('A notification the moment a buyer orders, even when Shopi is closed.')} />
       )}
       <div className="mt-6 flex justify-center rounded-20 bg-well px-4 py-6 lg:hidden">
         <OrderNotice shop={shop} product={product} service={service} bills={bills} />
       </div>
       {status && (
         <p className="mt-6 flex items-start gap-2.5 text-15 leading-6">
-          {app.state === 'on' ? <Check size={18} strokeWidth={2.25} className="mt-0.5 shrink-0 text-ok" /> : <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-faint" aria-hidden />}
+          {app.state === 'on' && !inApp ? <Check size={18} strokeWidth={2.25} className="mt-0.5 shrink-0 text-ok" /> : <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-faint" aria-hidden />}
           {status}
         </p>
       )}
+      {/* Blocked: where to allow them again, in three pictures, then one tap to try. */}
+      {!inApp && app.state === 'blocked' && (
+        <div className="mt-4">
+          <UnblockSteps apple={app.apple} />
+        </div>
+      )}
       <div className="mt-6 space-y-3">
         <ErrorText>{error}</ErrorText>
-        {(app.state === 'off' || app.state === 'loading') && (
-          <button type="button" className="btn btn-lg w-full" disabled={app.busy || app.state === 'loading'} onClick={on}>
-            <Bell size={18} strokeWidth={1.75} /> {t('Turn on notifications')}
+        {where === 'in-android' && (
+          // Asks Android for Chrome itself; a phone without Chrome opens the link in its own browser instead.
+          <a href={`intent://${loginUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(loginUrl)};end`} className="btn btn-lg w-full">
+            <ArrowUpRight size={18} strokeWidth={1.75} /> {t('Open Shopi in Chrome')}
+          </a>
+        )}
+        {where === 'in-iphone' && (
+          <button type="button" className="btn btn-lg w-full" onClick={copyLogin}>
+            {copied ? <Check size={18} strokeWidth={2.25} /> : <Link2 size={18} strokeWidth={1.75} />} {copied ? t('Link copied') : t('Copy link')}
           </button>
         )}
-        {!app.installed && app.state !== 'loading' && (
-          <button type="button" className={`btn btn-lg w-full ${app.state === 'ios' ? '' : 'btn-ghost'}`} onClick={() => (app.canInstall ? app.install() : setGuide(true))}>
-            <Download size={18} strokeWidth={1.75} /> {app.canInstall ? t('Install the app') : t('Put Shopi on your Home Screen')}
+        {!inApp && (app.state === 'off' || app.state === 'loading') && (
+          <button type="button" className="btn btn-lg w-full" disabled={app.busy || app.state === 'loading'} onClick={on}>
+            <Bell size={18} strokeWidth={1.75} className="shrink-0" /> {t('Turn on notifications')}
           </button>
+        )}
+        {!inApp && app.state === 'blocked' && (
+          <button type="button" className="btn btn-lg btn-ghost w-full" disabled={app.busy} onClick={on}>
+            {t('I allowed them. Try again')}
+          </button>
+        )}
+        {/* On a computer only where the browser offers to install; the phone is offered by the QR code below. */}
+        {!inApp && !app.installed && app.state !== 'loading' && (!computer || app.canInstall) && (
+          // The label may wrap in Swahili: the icon keeps its size and stays beside the first line.
+          <button type="button" className={`btn btn-lg h-auto min-h-14 w-full py-3 leading-5 whitespace-normal ${app.state === 'ios' ? '' : 'btn-ghost'}`} onClick={() => (app.canInstall ? app.install() : setGuide(true))}>
+            <Download size={18} strokeWidth={1.75} className="shrink-0" /> {app.canInstall ? t('Install the app') : t('Put Shopi on your Home Screen')}
+          </button>
+        )}
+        {computer && (
+          <div className="flex items-center gap-4 rounded-20 bg-card p-4 shadow-[inset_0_0_0_1px_var(--color-line)]">
+            <QrCode text={loginUrl} label={t('Open Shopi on your phone')} className="size-[104px] shrink-0 rounded-12" />
+            <div className="min-w-0">
+              <p className="text-15 font-medium">{t('Open Shopi on your phone')}</p>
+              <p className="mt-1 text-13 leading-5 text-muted">{t('Point your phone’s camera at the code and log in with {phone}. Notifications reach you there, wherever you are.', { phone })}</p>
+            </div>
+          </div>
         )}
         {/* Main once there is nothing left to turn on here (on, blocked, or a browser without notifications). */}
         <button type="button" className={`btn btn-lg w-full ${waiting ? 'btn-ghost' : ''}`} disabled={busy} onClick={finish}>
-          {waiting ? (page ? t('Not now, go to Home') : t('Not now, go to my shop')) : page ? t('Go to Home') : t('Go to my shop')}
+          {waiting ? t('Not now, go to Home') : t('Go to Home')}
         </button>
       </div>
       <InstallSheet open={guide} onClose={() => setGuide(false)} app={app} />

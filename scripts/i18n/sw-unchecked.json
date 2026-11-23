@@ -1,5 +1,4 @@
 [
-  "1 h {n} min",
   "3 services clients can book",
   "90 days, where your buyers come from, the steps from visit to order, your busiest hours, your buyers with downloads, and tagged links that show which post sells.",
   "A back-in-stock request: it is deleted once the seller has messaged you, or after 90 days. To remove it sooner, write to hello@shopi.tz with your number and the shop.",
@@ -512,8 +511,6 @@
   "logged in {when}",
   "online, last {n} days",
   "owed",
-  "{h} h",
-  "{h} h {n} min",
   "{n} booking",
   "{n} booking coming",
   "{n} booking to confirm",

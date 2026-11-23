@@ -1,8 +1,10 @@
-import { Link, createFileRoute, redirect, useRouteContext } from '@tanstack/react-router'
+import { Link, createFileRoute, redirect, useRouteContext, useRouter } from '@tanstack/react-router'
 import { ArrowRight, ArrowUpRight, ChartColumn, Check, ChevronRight, Copy, FilePlus2, FileSpreadsheet, Gem, Plus, QrCode as QrCodeIcon, ReceiptText, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import { CardHead, Delta, Empty, Img, InvoicePill, LangSwitch, Money, Notice, Page, PageHead, PhoneBar, scrubIndex, Sheet, ShopAvatar, Stat, StatusPill, Toast, useEntrance } from '#/components/ui'
-import { clientTitle, displayNumber, docDate, money } from '#/lib/invoice'
+import { clientTitle, displayNumber, docDate, money, sendText, whatsappTo } from '#/lib/invoice'
+import { markInvoiceSent } from '#/lib/api/invoices'
+import { WhatsAppMark } from '#/components/brand-icons'
 import { BioSteps } from '#/components/setup'
 import { PhoneAlertsCard } from '#/components/phone-app'
 import { EmailRow } from '#/components/email'
@@ -84,6 +86,34 @@ function Dashboard() {
     setSharedNow(true)
   }
 
+  // The link to share, for a shop that has something to order and no order yet.
+  const linkCard = (
+        <section className="card p-6 md:flex md:items-end md:justify-between md:gap-10 md:p-7">
+          <div className="min-w-0">
+            <CardHead title={shop.kind === 'services' ? t('Your page is ready for its first booking') : t('Your shop is ready for its first order')} />
+            <p className="mt-2 max-w-[52ch] text-14 leading-relaxed text-muted">
+              {shop.kind === 'services'
+                ? t('Put your link in your Instagram bio and on your WhatsApp status. Your first booking shows up here.')
+                : t('Put your link in your Instagram bio and on your WhatsApp status. Your first order shows up here.')}
+            </p>
+            <p className="code mt-4 truncate text-17">shopi.tz/{shop.slug}</p>
+            {d.visits.shop > 0 && <p className="meta mt-1">{t('{n} visits', { n: n(d.visits.shop) })} · {t('Last 7 days')}</p>}
+          </div>
+          <div className="mt-5 flex gap-2 md:mt-0 md:w-[420px] md:shrink-0">
+            <button type="button" className="btn btn-quiet flex-1 px-3" onClick={copyLink}>
+              <Copy size={16} strokeWidth={1.75} /> {t('Copy')}
+            </button>
+            <button type="button" className="btn btn-quiet flex-1 px-3" onClick={() => setQrOpen(true)}>
+              <QrCodeIcon size={16} strokeWidth={1.75} /> {t('QR code')}
+            </button>
+            <button type="button" className="btn flex-1 px-3" onClick={share}>
+              <Share2 size={16} strokeWidth={1.75} /> {t('Share')}
+            </button>
+          </div>
+          <QrSheet open={qrOpen} onClose={() => setQrOpen(false)} />
+        </section>
+  )
+
   return (
     <Page nav wide>
       <PhoneBar
@@ -120,28 +150,35 @@ function Dashboard() {
         }
       />
 
-      {/* What to do next, as one stack: the shop score (or the first product), then the quiet rows (Notice). */}
+      {/*
+        What to do next, as one stack. Until the first order: the shop score (or the first product), then the link to
+        share, then notifications. The rows about Shopi itself (the plan, email) wait until the shop is `settled`: its
+        first order, booking or sent invoice, or its third day (the review of 23 Nov 2026, row 23).
+      */}
       <div className={`${rise} space-y-3`}>
         {/* A business that sends invoices reads what it is owed first; any shop with unpaid invoices sees them too. */}
         {d.invoices && (bills || d.invoices.owed.length > 0) && <OwedCard inv={d.invoices} />}
         {d.diary && hasProducts && <DiaryCard diary={d.diary} />}
         {bills ? (
           <>
-            <PlanRow plan={d.plan} />
+            {/* A business that bills and also lists products shares its link like any shop. */}
+            {d.hasProducts && !hasOrders && linkCard}
+            {d.settled && <PlanRow plan={d.plan} />}
             <PhoneAlertsCard />
-            <EmailRow state={d.email} />
+            {d.settled && <EmailRow state={d.email} />}
           </>
         ) : hasProducts ? (
           <>
             <ScoreCard facts={sharedNow ? { ...d.score, shared: true } : d.score} ai={d.ai} compact={hasOrders} onShare={share} onCopy={copyLink} copied={copied} />
-            <PlanRow plan={d.plan} />
+            {!hasOrders && linkCard}
+            {d.settled && <PlanRow plan={d.plan} />}
             <PhoneAlertsCard />
-            <EmailRow state={d.email} />
+            {d.settled && <EmailRow state={d.email} />}
           </>
         ) : (
           <>
             {serves ? <FirstServiceCard score={shopScore(d.score).score} /> : <FirstProductCard score={shopScore(d.score).score} />}
-            <PlanRow plan={d.plan} />
+            {d.settled && <PlanRow plan={d.plan} />}
           </>
         )}
       </div>
@@ -163,33 +200,6 @@ function Dashboard() {
               </li>
             ))}
           </ul>
-        </section>
-      )}
-
-      {hasProducts && !hasOrders && (
-        <section className={`${rise2} card mt-6 p-6 md:mt-8 md:flex md:items-end md:justify-between md:gap-10 md:p-7`}>
-          <div className="min-w-0">
-            <CardHead title={shop.kind === 'services' ? t('Your page is ready for its first booking') : t('Your shop is ready for its first order')} />
-            <p className="mt-2 max-w-[52ch] text-14 leading-relaxed text-muted">
-              {shop.kind === 'services'
-                ? t('Put your link in your Instagram bio and on your WhatsApp status. Your first booking shows up here.')
-                : t('Put your link in your Instagram bio and on your WhatsApp status. Your first order shows up here.')}
-            </p>
-            <p className="code mt-4 truncate text-17">shopi.tz/{shop.slug}</p>
-            {d.visits.shop > 0 && <p className="meta mt-1">{t('{n} visits', { n: n(d.visits.shop) })} · {t('Last 7 days')}</p>}
-          </div>
-          <div className="mt-5 flex gap-2 md:mt-0 md:w-[420px] md:shrink-0">
-            <button type="button" className="btn btn-quiet flex-1 px-3" onClick={copyLink}>
-              <Copy size={16} strokeWidth={1.75} /> {t('Copy')}
-            </button>
-            <button type="button" className="btn btn-quiet flex-1 px-3" onClick={() => setQrOpen(true)}>
-              <QrCodeIcon size={16} strokeWidth={1.75} /> {t('QR code')}
-            </button>
-            <button type="button" className="btn flex-1 px-3" onClick={share}>
-              <Share2 size={16} strokeWidth={1.75} /> {t('Share')}
-            </button>
-          </div>
-          <QrSheet open={qrOpen} onClose={() => setQrOpen(false)} />
         </section>
       )}
 
@@ -490,6 +500,18 @@ type HomeInvoices = NonNullable<Awaited<ReturnType<typeof getDashboard>>['invoic
 function OwedCard({ inv }: { inv: HomeInvoices }) {
   const t = useT()
   const lang = useLang()
+  const router = useRouter()
+  const origin = useOrigin()
+  const { shop } = useRouteContext({ from: '/app' })
+  // An invoice written but never sent (the setup's first one, most often): sending it comes before writing another.
+  const draft = inv.draft
+  const draftNumber = draft ? displayNumber('invoice', draft.number) : ''
+  const draftText = draft
+    ? sendText(draft.lang, {
+        kind: 'invoice', client: draft.client.name, business: shop.name, number: draftNumber, amount: money(draft.total, draft.currency),
+        due: draft.due_day ? docDate(draft.due_day, draft.lang) : '', link: `${origin}/i/${draft.code}`,
+      })
+    : ''
   const note = [
     inv.checks ? t(inv.checks === 1 ? '{n} payment to check' : '{n} payments to check', { n: inv.checks }) : '',
     inv.overdue ? t('{n} overdue', { n: inv.overdue }) : '',
@@ -525,8 +547,22 @@ function OwedCard({ inv }: { inv: HomeInvoices }) {
         />
         <p className="tnum mt-3 text-32 font-semibold tracking-tight">{inv.owed.length ? inv.owed.map((o) => money(o.cents, o.currency)).join(' + ') : money(0, 'TZS')}</p>
       </div>
-      {inv.open.length > 0 ? (
+      {inv.open.length > 0 || draft ? (
         <ul className="mt-3 divide-y divide-line">
+          {draft && (
+            <li>
+              <Link to="/app/invoices/$id" params={{ id: draft.id }} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-page md:px-6">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-15 font-medium">{clientTitle(draft.client, t)}</span>
+                  <span className="flex items-center gap-2 text-13 text-muted">
+                    <InvoicePill state="draft" />
+                    <span className="truncate">{draftNumber}</span>
+                  </span>
+                </span>
+                <span className="tnum shrink-0 text-15">{money(draft.total, draft.currency)}</span>
+              </Link>
+            </li>
+          )}
           {inv.open.map((i) => (
             <li key={i.id}>
               <Link to="/app/invoices/$id" params={{ id: i.id }} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-page md:px-6">
@@ -546,7 +582,23 @@ function OwedCard({ inv }: { inv: HomeInvoices }) {
         <div className="pb-5" />
       )}
       <div className="flex flex-wrap gap-2 border-t border-line px-5 py-3 md:px-6">
-        <Link to="/app/invoices/new" className="btn btn-sm h-9">
+        {draft && (
+          <a
+            href={whatsappTo(draft.client.phone, draftText)}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-sm h-11 max-sm:w-full"
+            onClick={() => {
+              // Sent from here: it leaves the drafts and joins what is owed.
+              markInvoiceSent({ data: { id: draft.id } })
+                .then(() => router.invalidate())
+                .catch(() => {})
+            }}
+          >
+            <WhatsAppMark size={16} /> {t('Send {number} on WhatsApp', { number: draftNumber })}
+          </a>
+        )}
+        <Link to="/app/invoices/new" className={`btn btn-sm ${draft ? 'btn-ghost h-11 max-sm:flex-1' : 'h-9'}`}>
           <FilePlus2 size={16} strokeWidth={1.75} /> {t('New invoice')}
         </Link>
         {inv.more > 0 && (
@@ -748,7 +800,7 @@ function ScoreCard({
       <CardHead
         title={title(score)}
         right={
-          <button type="button" className="-my-2 shrink-0 py-2 text-13 text-muted transition-colors hover:text-ink" aria-expanded={all} onClick={() => setAll(!all)}>
+          <button type="button" className="-my-3 -mr-2 flex min-h-11 shrink-0 items-center px-2 text-13 text-muted transition-colors hover:text-ink" aria-expanded={all} onClick={() => setAll(!all)}>
             {all ? t('Hide') : t('See all')}
           </button>
         }

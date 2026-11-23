@@ -1,4 +1,5 @@
 import { Minus, Plus } from 'lucide-react'
+import { useState } from 'react'
 import { FieldGroup, Switch } from '#/components/ui'
 import { AHEAD_CHOICES, SEATS_MAX, readTime, timeText, weekdayName, type BookSettings } from '#/lib/booking'
 import { useLang, useT } from '#/lib/i18n'
@@ -11,15 +12,15 @@ import { useLang, useT } from '#/lib/i18n'
 /** Monday first, the way a week is read here; the settings keep Sunday first (getUTCDay). */
 const WEEK = [1, 2, 3, 4, 5, 6, 0]
 
-/** A time field. An end time of 00:00 means midnight at the end of the day. */
-function TimeInput({ value, onChange, label, end = false, disabled = false }: { value: number; onChange: (min: number) => void; label: string; end?: boolean; disabled?: boolean }) {
+/** A time field. An end time of 00:00 means midnight at the end of the day. `wide` fills its column (the setup's one pair of hours). */
+function TimeInput({ value, onChange, label, end = false, disabled = false, wide = false }: { value: number; onChange: (min: number) => void; label: string; end?: boolean; disabled?: boolean; wide?: boolean }) {
   return (
     <input
       type="time"
       step={900}
       aria-label={label}
       disabled={disabled}
-      className="input tnum h-11 w-[84px] px-2 text-center text-15 disabled:text-faint sm:w-[104px] max-sm:[&::-webkit-calendar-picker-indicator]:hidden"
+      className={`input tnum disabled:text-faint max-sm:[&::-webkit-calendar-picker-indicator]:hidden ${wide ? 'w-full px-4 text-17' : 'h-11 w-[84px] px-2 text-center text-15 sm:w-[104px]'}`}
       value={timeText(value % (24 * 60))}
       onChange={(e) => {
         const min = readTime(e.target.value)
@@ -29,8 +30,52 @@ function TimeInput({ value, onChange, label, end = false, disabled = false }: { 
   )
 }
 
-/** The seven days: a switch each, and the hours of the days it is on. */
-export function WeekHours({ value, onChange }: { value: BookSettings; onChange: (next: BookSettings) => void }) {
+/** Whether every working day keeps the same hours, so the week can be shown as days and one pair of times. */
+export function sameHours(b: BookSettings) {
+  const on = b.days.filter((d) => !!d)
+  return on.every((d) => d!.open === on[0]!.open && d!.close === on[0]!.close)
+}
+
+/**
+ * The working week in one look (the setup, after the onboarding review of 23 Nov 2026: seven rows and fourteen time
+ * boxes were one decision asked fourteen times): a button per day, on or off, and one opening and one closing time
+ * for all of them. A business whose days differ opens the full list (`WeekHours`).
+ */
+export function SimpleHours({ value, onChange, error }: { value: BookSettings; onChange: (next: BookSettings) => void; /** No day is on. */ error?: string }) {
+  const t = useT()
+  const lang = useLang()
+  // The hours stay while every day is switched off and one is switched back on.
+  const [kept, setKept] = useState(() => value.days.find(Boolean) ?? { open: 9 * 60, close: 18 * 60 })
+  const hours = value.days.find(Boolean) ?? kept
+  const setHours = (next: { open: number; close: number }) => {
+    setKept(next)
+    onChange({ ...value, days: value.days.map((d) => (d ? { ...next } : null)) })
+  }
+  return (
+    <div className="space-y-6">
+      <FieldGroup label={t('Days you work')} error={error}>
+        <div className="flex flex-wrap gap-2">
+          {WEEK.map((d) => (
+            <button key={d} type="button" className="chip" aria-pressed={!!value.days[d]} onClick={() => onChange({ ...value, days: value.days.map((x, i) => (i === d ? (x ? null : { ...hours }) : x)) })}>
+              {weekdayName(lang, d)}
+            </button>
+          ))}
+        </div>
+      </FieldGroup>
+      <div className="grid grid-cols-2 gap-3">
+        <FieldGroup label={t('You open at')}>
+          <TimeInput wide label={t('You open at')} value={hours.open} onChange={(open) => open < 24 * 60 - 15 && setHours({ open, close: Math.max(hours.close, open + 15) })} />
+        </FieldGroup>
+        <FieldGroup label={t('You close at')}>
+          <TimeInput wide end label={t('You close at')} value={hours.close} onChange={(close) => close > hours.open && setHours({ open: hours.open, close })} />
+        </FieldGroup>
+      </div>
+    </div>
+  )
+}
+
+/** The seven days: a switch each, and the hours of the days it is on. `full`: the day's whole name on phones too (the setup, where it fits). */
+export function WeekHours({ value, onChange, full = false }: { value: BookSettings; onChange: (next: BookSettings) => void; full?: boolean }) {
   const t = useT()
   const lang = useLang()
   const setDay = (d: number, hours: BookSettings['days'][number]) => onChange({ ...value, days: value.days.map((x, i) => (i === d ? hours : x)) })
@@ -49,10 +94,16 @@ export function WeekHours({ value, onChange }: { value: BookSettings; onChange: 
                 <span className="h-7 w-12 rounded-full bg-raised transition-colors duration-200 peer-checked:bg-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink" />
                 <span className="absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgb(10_10_10/0.2)] transition-transform duration-200 ease-[var(--ease-out)] peer-checked:translate-x-5" />
               </span>
-              {/* Phones get the short name, so a day and its hours stay on one line. */}
+              {/* Phones get the short name, so a day and its hours stay on one line; the setup's list has room for the whole name. */}
               <span className={`text-15 font-medium ${hours ? '' : 'text-muted'}`}>
-                <span className="sm:hidden">{weekdayName(lang, d, false)}</span>
-                <span className="hidden sm:inline">{name}</span>
+                {full ? (
+                  name
+                ) : (
+                  <>
+                    <span className="sm:hidden">{weekdayName(lang, d, false)}</span>
+                    <span className="hidden sm:inline">{name}</span>
+                  </>
+                )}
               </span>
             </label>
             {hours ? (

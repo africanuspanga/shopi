@@ -7,7 +7,7 @@ import { deleteDiscount, listDiscounts, saveDiscount, setDiscountActive, type Di
 import { track } from '#/lib/analytics'
 import { cleanCode, dayOf, discountLabel, type DiscountKind } from '#/lib/discounts'
 import { tzs } from '#/lib/format'
-import { useLang, useT } from '#/lib/i18n'
+import { eg, useLang, useT } from '#/lib/i18n'
 import { useOrigin } from '#/lib/share'
 
 export const Route = createFileRoute('/app/discounts')({
@@ -205,7 +205,7 @@ function EditSheet({ code, onClose }: { code: DiscountRow | null; onClose: () =>
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck={false}
-            placeholder="EID10"
+            placeholder={eg(t, 'EID10')}
             value={form.code}
             onChange={(e) => setForm({ ...form, code: cleanCode(e.target.value) })}
           />
@@ -229,7 +229,7 @@ function EditSheet({ code, onClose }: { code: DiscountRow | null; onClose: () =>
               className="tnum min-w-0 flex-1 bg-transparent outline-none"
               inputMode="numeric"
               aria-label={form.kind === 'percent' ? t('Percent off') : t('Shillings off')}
-              placeholder={form.kind === 'percent' ? '10' : '5,000'}
+              placeholder="0"
               value={form.kind === 'percent' ? form.value : money(form.value)}
               onChange={(e) => setForm({ ...form, value: digits(e.target.value, form.kind === 'percent' ? 3 : 9) })}
             />
@@ -243,7 +243,7 @@ function EditSheet({ code, onClose }: { code: DiscountRow | null; onClose: () =>
               <input
                 className="tnum min-w-0 flex-1 bg-transparent outline-none"
                 inputMode="numeric"
-                placeholder="50,000"
+                placeholder="0"
                 value={money(form.min_order)}
                 onChange={(e) => setForm({ ...form, min_order: digits(e.target.value) })}
               />

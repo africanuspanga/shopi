@@ -5,7 +5,7 @@ import { ErrorText, Field, FieldGroup, Img, Switch, showFirstError } from '#/com
 import type { PublicService } from '#/lib/api/booking'
 import { deleteService, saveService, type MyService } from '#/lib/api/services'
 import { DURATIONS, DURATION_MAX, addDays, dayOf, durationText, monthText, servicePrice, timeText, weekdayName, weekdayOf } from '#/lib/booking'
-import { useLang, useT } from '#/lib/i18n'
+import { eg, useLang, useT } from '#/lib/i18n'
 import { uploadImage } from '#/lib/upload'
 
 /*
@@ -255,7 +255,7 @@ export function ServiceForm({
       <Field label={t('Service')} error={noName ? t('Give the service a name.') : undefined}>
         <input
           className="input"
-          placeholder={t('Haircut, braids, massage, consultation')}
+          placeholder={eg(t, t('Haircut, braids, massage, consultation'))}
           value={name}
           maxLength={80}
           onChange={(e) => {
@@ -302,7 +302,7 @@ export function ServiceForm({
       <Field label={t('Price')} aside={t('Optional')} hint={t('Leave it empty if you agree the price with each client.')}>
         <span className="input flex items-center gap-2 px-4">
           <span className="text-14 text-muted">TSh</span>
-          <input className="tnum min-w-0 flex-1 bg-transparent outline-none" inputMode="numeric" placeholder="15,000" value={money(price)} onChange={(e) => setPrice(digits(e.target.value))} />
+          <input className="tnum min-w-0 flex-1 bg-transparent outline-none" inputMode="numeric" placeholder="0" value={money(price)} onChange={(e) => setPrice(digits(e.target.value))} />
         </span>
       </Field>
       {!!price && (
@@ -317,7 +317,7 @@ export function ServiceForm({
             <textarea className="input min-h-24 py-3 leading-relaxed" maxLength={600} placeholder={t('What is included, what the client should bring')} value={description} onChange={(e) => setDescription(e.target.value)} />
           </Field>
           <Field label={t('Who does it')} aside={t('Optional')}>
-            <input className="input" maxLength={40} placeholder="Asha" value={by} onChange={(e) => setBy(e.target.value)} />
+            <input className="input" maxLength={40} placeholder={eg(t, 'Asha')} value={by} onChange={(e) => setBy(e.target.value)} />
           </Field>
           <FieldGroup label={t('Photo')} aside={t('Optional')}>
             {images[0] ? (

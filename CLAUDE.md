@@ -44,8 +44,8 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/lib/host.ts`, `src/server/domains.ts`, `src/server/cloudflare.ts` | Shops' own domains: the address rewrite (`shopRewrite`), domain lookup and status, Cloudflare's API (custom hostnames, the Turnstile widget's hostnames) |
 | `src/routes/app/domain.tsx`, `src/lib/api/domains.ts` | "Your own domain": connect, the CNAME to add, status, disconnect |
 | `src/routes/app/look.tsx`, `src/components/look.tsx`, `src/lib/api/look.ts` | Shop look: cover, colour (logo suggestions, tested, own), style of the name, live preview; `saveShopLook` |
-| `src/components/auth.tsx` | `AuthLayout` (form left, dark product panel right), `StepBar` ("2 of 5"), `PasswordInput` |
-| `src/routes/onboard.tsx`, `src/components/setup.tsx`, `src/lib/setup.ts`, `src/lib/api/setup.ts`, `src/server/setup.ts` | The five-step setup: the route and step 1; steps 2 to 5 and the shop preview; which step to show; its server functions; `passStep` |
+| `src/components/auth.tsx` | `AuthLayout` (form left, dark product panel right; `steady` for the setup), `StepBar` ("2 of 5", with Back from step 2), `PasswordInput` |
+| `src/routes/onboard.tsx`, `src/components/setup.tsx`, `src/lib/setup.ts`, `src/lib/api/setup.ts`, `src/server/setup.ts` | The five-step setup: the route, Back and step 1; steps 2 to 5 and the shop preview; which step to show; its server functions; `passStep` (step 1 saves through `createShop` and, opened again, `updateSetupShop` in `lib/api/merchant.ts`) |
 | `src/lib/email.ts`, `src/server/email.ts`, `src/server/email-templates.ts`, `src/lib/api/email.ts`, `src/components/email.tsx`, `src/routes/email/`, `src/routes/api/email-off.ts`, `src/routes/api/admin-email-preview.ts` | Email to sellers through Resend: `EMAIL_LIVE` and the kinds; sending, confirm links, unsubscribe, receipts and the weekly summary; the templates; the seller's server functions; the Home row and Shop settings group; the stop/remove page; one-click unsubscribe; /admin previews |
 | `src/lib/staff.ts`, `src/server/staff.ts`, `src/lib/api/staff.ts`, `src/routes/app/staff.tsx`, `src/routes/join/$code.tsx`, `src/routes/paused.tsx` | Shop assistants: roles and areas (`allows`, `landing`, `areaOfPath`); invite codes and the list; the owner's and the invite page's server functions; the owner's page; the invite page; the paused page |
 | `src/components/shop-link.tsx` | `ChangeLinkSheet`: Shop settings' "Change your shop link" (see "A shop's link can change") |
@@ -257,20 +257,32 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
   (name, phone, password; no step bar), `/onboard` runs five screens, one decision each, with a bar and "2 of 5"
   (`StepBar`). Rules in `src/lib/setup.ts`, step 1 and the route in `src/routes/onboard.tsx`, steps 2 to 5 and the
   preview in `src/components/setup.tsx`, server functions in `src/lib/api/setup.ts`.
-  1. **Your shop:** paste an Instagram/TikTok/WhatsApp link (below) or type the name; the link is claimed under it
-     (`checkSlug`); what it sells (one chip). The shop's language (the app's) and WhatsApp (the sign-up number) are one
-     quiet line with Change, which opens `ShopLangChoice` and the number. `createShop` sets `setup_step = 1`.
+  1. **Your shop:** the name, with a quiet row under it to paste an Instagram or TikTok link instead (it gives the
+     name; below); the link, claimed as it is typed (`checkSlug`); "How do customers buy from you?" (They order
+     products, They book a time, I send them an invoice) and the kind of business as chips, **nothing chosen for the
+     seller** (a tap on the button with none chosen marks the group). The login number, the shop's WhatsApp and its
+     language are one quiet line ("You log in with 0719 800 000 and buyers message it.") with Change, which opens
+     `ShopLangChoice` and the number. `createShop` sets `setup_step = 1`.
   2. **Your first product:** photos (one required to save), name, price, description with "Write it for me" (`ai`
      only), and a folded "Buyers choose a size" with the size presets. Save goes through `saveProduct`/`cleanProduct`.
      "I’ll do this later" skips; "Import them from a sheet" goes to the import (products then answer this step).
   3. **How buyers pay:** network chips, Lipa Namba or number, the name on payments (`saveSetupPayment`; a number that
      reads as a Tanzanian mobile is marked personal). "Only cash on delivery for now" passes the step on purpose.
-  4. **Your shop is live:** the link with WhatsApp, Copy and native share (`ShareActions`, tracked as `seller_share`
-     `setup-<how>`), the QR card (`QrSheet`), the shop as buyers see it (`LiveCard`; a phone frame on desktop) where
-     "Add a line about your shop" opens a sheet with the bio and "Write it for me" (`WriteBio`), and "Put it in your
-     Instagram bio" (`BioSteps`: Edit profile, Links, Add external link; TikTok: Edit profile, Website).
+  4. **Your shop is live:** the whole link with "Open my shop" (the real shop, a new tab); **Share on WhatsApp** as
+     the full-width black button until the seller has shared or copied, then Continue takes over (`lead` in
+     `LiveStep`; with nothing to order yet, "Add my first product" leads and both are quiet); Copy link, QR code
+     (`QrSheet`) and the phone's own share; each tracked as `seller_share` `setup-<how>`. The shop as buyers see it
+     (`LiveCard`, `ShopCard live`: the products two across with the photo at 4:5 and Buy on it, as on the shop's own
+     page, and no empty tiles; a phone frame on desktop), where "Add a line about your shop" opens a sheet with the
+     bio and "Write it for me" (`WriteBio`); and "Put it in your Instagram bio" (`BioSteps`).
   5. **Orders on your phone:** turn on notifications (`usePhoneApp`, a test push), install the app or the iPhone guide
-     (`InstallSheet`), then "Go to my shop". `catchInstallPrompt()` runs on `/onboard` too.
+     (`InstallSheet`), then "Go to Home" (for every kind of business: it opens Home). `catchInstallPrompt()` runs on
+     `/onboard` too. What the screen offers follows where it is open (`where` in `PhoneStep`): inside Instagram's,
+     TikTok's or Facebook's own browser, which can show no notification, the main button is the way out (**Open Shopi
+     in Chrome**, an Android `intent:` link to `/login` with the plain link as fallback; on an iPhone **Copy link**
+     and "open it in Safari"; the seller logs in again there and lands back on this step); on a computer it says
+     "this computer" and shows a QR code of `/login`, "Open Shopi on your phone"; when notifications are blocked,
+     `UnblockSteps` (`phone-app.tsx`) shows where to allow them in three pictures, with "I allowed them. Try again".
   - **Resumable:** `shops.setup_step` keeps the furthest step passed (`passStep` in `src/server/setup.ts`, never back);
     the step shown is the next one, skipping 2 when the shop has a product and 3 when it has a Lipa Namba
     (`nextSetupStep`). Home (`/app/` index) sends a shop with `setup_step` 1 to 4 back to `/onboard`; other seller pages
@@ -302,6 +314,38 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
       "Shop settings" still say Shop for everyone.
     - **The invoice preview on the black panel** reads in ink: `InvoiceDocument` sets `text-ink` itself (the panel
       sets white text, and the card printed its main lines white on white until 23 Nov).
+    - **Back** (review row 4; `seen` in `onboard.tsx`): from step 2 on, an arrow beside the step bar (`StepBar
+      onBack`) opens the step before **with what was saved**, and saving or passing it moves on to the step after
+      (`SetupNext`, `useMoveOn` in `setup.tsx`: every step calls it after it saves). Nothing is stored and
+      `setup_step` never goes back, so a reload shows the shop's own step. Step 1 opened again saves with
+      `updateSetupShop` (owner, only while in the setup): name, kind, what it sells, language, WhatsApp, and the
+      link. **The link simply moves, and the mistyped one is free again, only before "Your shop is live" has been
+      reached** (`setupStepNow` under 4) and while nothing points at it (no visit or share recorded, no order, booking
+      or bag link; `LIMITS.setupLink`). From step 4 on, where the link is shared, opened and its QR code made, the
+      change goes the way Shop settings does it: the old link kept and forwarding. ("No visit recorded" alone is not
+      enough: the owner's own visits and shares from the shop page are never counted.) A change of kind moves cash on
+      delivery only to or from `invoices`. Step 2 edits the newest product (`getSetup().editing`: what the form
+      doesn't show, a was-price, the stock, stock per size, is handed back untouched) or the first service; the
+      hours, the payment and the invoice steps start from what is saved; a business that made its first invoice sees
+      "Your first invoice is ready" again (`getSetup().invoice`). The detour from "Your shop is live" to add a first
+      product (`again`) is separate: it works from step 4 however the seller got there, its Back and its save return
+      to step 4, and while it is open saving moves nothing on (`stay`).
+    - **Every step starts at the same height** (`AuthLayout steady`): a short step used to sit in the middle of the
+      screen, so the title and the step bar jumped between steps. Sign-up and log-in keep the centred form.
+    - **Working hours in one look** (`SimpleHours` in `hours.tsx`): a chip per day (Monday to Saturday on) and one
+      opening and one closing time for all of them, with "Different hours on some days" opening the list of seven
+      (`WeekHours full`: whole day names on phones too) and "The same hours every day" coming back. A break and
+      clients at the same time are not asked here (one line says they are in Working hours); `/app/hours` keeps
+      everything. Hours already saved with different days open as the list.
+    - **A business that sends invoices:** "How you look on invoices" starts with the logo (saved at once,
+      `saveShopLogo`) and the TIN gets its dashes while it is typed (`typeTin`); "Your first invoice is ready" shows
+      the invoice as a receipt slip (number, client, what for, due date, amount, "See it as your client will") above
+      Send on WhatsApp, Copy link and Continue, which leads once it is sent or copied.
+    - **Home on day one** (review rows 23 and 25): the shop score, then the link card ("ready for its first order"),
+      then notifications. The rows about Shopi itself (the plan, email) wait until `getDashboard().settled`: the
+      first order, booking or sent invoice, or the shop's third day. While an invoice is written but not sent,
+      "Owed to you" lists it and its main button is **Send INV-0001 on WhatsApp** (`homeInvoices().draft`; the tap
+      marks it sent), with New invoice beside it.
 - **The shop score** (`src/lib/score.ts`, the founder: "every shop owner reaches a 100% set-up shop"): 100 points over
   eight items: name and link 10; three shown products with a photo, a price and a description 30 (10 each); a way to be
   paid 10 (a Lipa Namba, or cash on delivery on purpose: setup step 3 passed, or a shop older than the setup); WhatsApp
@@ -547,11 +591,12 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
   sentence in the shop's language from its name, category, location and product names; what the seller typed is taken
   as facts; no delivery, price or quality claims. `BIO_MONTH` = 10 a month on any plan, counted in `ai_uses` as `bio`
   (not against the 10 descriptions). In setup step 4 and under Shop settings' Short bio. Privacy names Groq.
-- Setup's "Your Instagram, TikTok or WhatsApp link" (`src/lib/social.ts`, `readSocialLink`): a pasted profile link fills
-  a first shop name and link (`nameFromHandle`), that social handle (saved by `createShop`; Shop settings shows it), or
-  the WhatsApp number (shown under the field; the quiet line opens to change it). Nothing is fetched from Meta; only a TikTok short link (vm.tiktok.com) is opened on the server
-  (`expandSocialLink`, TikTok hosts only, the redirect alone is read). A `wa.me/message/…` link hides the number, so the
-  seller is asked to type it.
+- Setup's "Paste your Instagram or TikTok link" (`src/lib/social.ts`, `readSocialLink`; one quiet row under the shop
+  name that opens to paste, and says what the link is used for): a pasted profile link gives a first shop name and
+  link when none is typed (`nameFromHandle`) and that social handle (saved by `createShop`; Shop settings shows it);
+  a WhatsApp link gives the number (shown under the field; the quiet line opens to change it). Nothing is fetched from
+  Meta; only a TikTok short link (vm.tiktok.com) is opened on the server (`expandSocialLink`, TikTok hosts only, the
+  redirect alone is read). A `wa.me/message/…` link hides the number, so the seller is asked to type it.
 - **A shop's link can change** (the founder, 23 Nov 2026: "why can't we allow them to change … as long as it's
   available"; migration `0031_shop_links.sql`). Shop settings > Shop link > **Change link** (`ChangeLinkSheet`, the
   owner's alone): the new link is checked as it is typed (`checkShopLink`) and saved by `changeShopLink`, one batch

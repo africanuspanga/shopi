@@ -7,7 +7,7 @@ import { BookingPill, ErrorText, Field, FieldGroup, Label, Sheet, Switch } from 
 import { addBooking, addTimeOff, getDayTimes, moveBooking, setBookingStatus, type DiaryBooking } from '#/lib/api/services'
 import { DURATIONS, dayOf, dayText, durationText, readTime, servicePrice, timeText, type BookingStatus } from '#/lib/booking'
 import { localPhone, waLink } from '#/lib/format'
-import { asLang, translate, useLang, useT } from '#/lib/i18n'
+import { eg, asLang, translate, useLang, useT } from '#/lib/i18n'
 import { SHOPI_ORIGIN } from '#/lib/host'
 
 /*
@@ -265,7 +265,7 @@ function AddBooking({ day: firstDay, services, onClose }: { day: string; service
         <input className="input" maxLength={60} autoComplete="off" value={customer} onChange={(e) => setCustomer(e.target.value)} />
       </Field>
       <Field label={t('Client’s WhatsApp number')} aside={t('Optional')} hint={t('With a number you can send a reminder the day before.')}>
-        <input className="input" type="tel" inputMode="tel" autoComplete="off" placeholder="0754 123 456" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <input className="input" type="tel" inputMode="tel" autoComplete="off" placeholder={eg(t, '0754 123 456')} value={phone} onChange={(e) => setPhone(e.target.value)} />
       </Field>
       <Field label={t('Note')} aside={t('Optional')}>
         <input className="input" maxLength={300} value={note} onChange={(e) => setNote(e.target.value)} />
@@ -360,7 +360,7 @@ function TimeOff({ day: firstDay, onClose, onSaved }: { day?: string; onClose: (
         </div>
       )}
       <Field label={t('Note')} aside={t('Optional')} hint={t('Only you see it.')}>
-        <input className="input" maxLength={80} placeholder={t('Holiday, training, a family day')} value={note} onChange={(e) => setNote(e.target.value)} />
+        <input className="input" maxLength={80} placeholder={eg(t, t('Holiday, training, a family day'))} value={note} onChange={(e) => setNote(e.target.value)} />
       </Field>
       <ErrorText>{error}</ErrorText>
       <button className="btn btn-lg w-full" disabled={busy}>

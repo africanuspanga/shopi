@@ -6,7 +6,7 @@ import { TemboLock, useCan } from '#/components/tembo'
 import { CardHead, ErrorText, Field, Page, TopBar } from '#/components/ui'
 import { addDomain, checkDomain, getMyDomain, removeDomain } from '#/lib/api/domains'
 import { splitDomain } from '#/lib/host'
-import { useT } from '#/lib/i18n'
+import { eg, useT } from '#/lib/i18n'
 
 export const Route = createFileRoute('/app/domain')({
   loader: () => getMyDomain(),
@@ -114,7 +114,7 @@ function DomainPage() {
                 }}
               >
                 <Field label={t('Your domain')} hint={t('Use the www. version. We show you how to send the bare name to it.')}>
-                  <input className="input code" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="www.yourshop.co.tz" autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="url" />
+                  <input className="input code" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={eg(t, 'www.yourshop.co.tz')} autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="url" />
                 </Field>
                 <button className="btn mt-4" disabled={!typed.trim() || !!busy}>
                   {busy === 'add' && <Loader2 size={16} className="animate-spin" />} {t('Connect')}

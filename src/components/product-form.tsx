@@ -224,7 +224,7 @@ export function ProductForm({ product, title, back, top, picks = [] }: { product
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label={t('Price')}>
-                  <PriceInput value={form.price} onValue={(v) => setForm({ ...form, price: v })} placeholder="35,000" />
+                  <PriceInput value={form.price} onValue={(v) => setForm({ ...form, price: v })} placeholder="0" />
                 </Field>
                 <Field label={t('Was')} aside={t('For a sale')}>
                   <PriceInput value={form.compare_price} onValue={(v) => setForm({ ...form, compare_price: v })} placeholder={t('Optional')} />
