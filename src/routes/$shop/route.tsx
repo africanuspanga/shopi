@@ -1,6 +1,7 @@
 import { Outlet, createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { DemoBanner } from '#/components/shop'
+import { AssistantHost } from '#/components/assistant'
 import { ignoreShop } from '#/lib/analytics'
 import { getStorefront, movedShopLink } from '#/lib/api/store'
 import { cleanCode, codeKey } from '#/lib/discounts'
@@ -59,7 +60,7 @@ export const Route = createFileRoute('/$shop')({
 
 function ShopLayout() {
   const { session } = Route.useRouteContext()
-  const { shop } = Route.useLoaderData()
+  const { shop, products, services, assistant } = Route.useLoaderData()
   // Set during render, before the pages below send their first event. Idempotent.
   if (session.shop?.id === shop.id) ignoreShop(shop.id)
   useEffect(() => {
@@ -79,6 +80,8 @@ function ShopLayout() {
       <div className="contents" style={themeStyle(shop.theme_color)}>
         {shop.status === 'demo' && <DemoBanner shopSlug={shop.slug} />}
         <Outlet />
+        {/* The AI assistant: nothing shows until the buyer taps Ask somewhere on the shop's pages. */}
+        {assistant && <AssistantHost shop={shop} products={products} services={services} />}
       </div>
     </LangProvider>
   )

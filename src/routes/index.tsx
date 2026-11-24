@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { ArrowRight, Banknote, BellRing, ChartColumn, Check, ChevronDown, CircleCheck, CircleHelp, Footprints, Languages, Link2, MapPin, Palette, Plus, QrCode, Ruler, ShieldCheck, Smartphone, Star, Tag, Wallet } from 'lucide-react'
+import { ArrowRight, Banknote, BellRing, ChartColumn, Check, ChevronDown, CircleCheck, CircleHelp, Footprints, Languages, Link2, MapPin, MessageCircleQuestion, Palette, Plus, QrCode, Ruler, ShieldCheck, Smartphone, Star, Tag, Wallet } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { WhatsAppIcon } from '#/components/brand-icons'
 import { FloatingNav, NavCenter, NavTab } from '#/components/floating-nav'
@@ -363,8 +363,8 @@ function Features() {
   const items = [
     [Link2, t('Your own link'), 'shopi.tz/dukalako'],
     [Ruler, t('Sizes and stock'), t('Buyers pick a size, sold out shows by itself')],
-    [Smartphone, 'Lipa Namba', t('With a check of the payment SMS')],
-    [Banknote, t('Cash on delivery'), t('Turn it on or off')],
+    [Smartphone, 'Lipa Namba', t('With a check of the payment SMS, or cash on delivery')],
+    [MessageCircleQuestion, t('AI assistant for buyers'), t('Answers “bei gani?” and “size gani?” from your shop’s details, when a buyer asks')],
     [MapPin, t('Delivery'), t('The buyer’s location for your rider, fees agreed on WhatsApp')],
     [WhatsAppIcon, 'WhatsApp', t('Every buyer one tap away')],
     [QrCode, t('QR code'), t('A card to print or post. Buyers scan it and your shop opens')],
@@ -389,7 +389,7 @@ function Features() {
             </div>
           ))}
         </div>
-        <p className="mt-8 text-14 text-muted">{t('Coming next: Shopi AI, which answers your buyers’ questions like “bei gani?” and “size gani?”, and an assistant that helps you run your shop.')}</p>
+        <p className="mt-8 text-14 text-muted">{t('Coming next: an AI assistant that helps you run your shop.')}</p>
       </Container>
     </section>
   )

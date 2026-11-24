@@ -55,6 +55,11 @@ function Privacy() {
               'If you ask to hear when a sold-out product is back: your WhatsApp number and what you asked for. It goes to that seller only, so they can message you.',
             )}
           </li>
+          <li>
+            {t(
+              'If you ask a shop’s AI assistant a question: what you type, what it answers, and the product you were looking at. Phone numbers you type are hidden before anything is kept or sent. That seller can read the chat. It is deleted 90 days after your last message.',
+            )}
+          </li>
           <li>{t('On your phone only: your bag, and your name, number, area, note for the rider, location and way to pay, so the next checkout is quicker. They stay in your browser.')}</li>
         </ul>
       </Section>
@@ -76,7 +81,7 @@ function Privacy() {
           <li>{t('A seller’s shop assistants see what their role needs: those who handle orders see buyers’ order details; only a Manager sees the shop’s sales figures.')}</li>
           <li>
             {t(
-              'Companies that run parts of Shopi for us, only for that purpose: Cloudflare (hosting, database, photo storage, and the check that keeps bots out of sign-up, checkout and back-in-stock requests), Selcom (sellers’ Tembo payments by mobile money), and, when you use them, Google (maps), Meta (WhatsApp and Instagram), Groq (writing a product description or a shop’s line when a seller asks; it gets the shop’s and product’s details, never buyers’), Resend (email to sellers who added an address), and your phone’s notification service (Google, Apple or Mozilla), which carries notifications it cannot read.',
+              'Companies that run parts of Shopi for us, only for that purpose: Cloudflare (hosting, database, photo storage, and the check that keeps bots out of sign-up, checkout, back-in-stock requests and the AI assistant), Selcom (sellers’ Tembo payments by mobile money), and, when you use them, Google (maps), Meta (WhatsApp and Instagram), Groq (writing a product description or a shop’s line when a seller asks, and answering the questions buyers ask a shop’s AI assistant; it gets the shop’s and its products’ details and the question, never a buyer’s name or phone number), Resend (email to sellers who added an address), and your phone’s notification service (Google, Apple or Mozilla), which carries notifications it cannot read.',
             )}
           </li>
           <li>{t('Authorities, when Tanzanian law requires it.')}</li>
@@ -98,6 +103,7 @@ function Privacy() {
           )}
         </p>
         <p>{t('Opening Shopi from a shop’s “Open your own shop” link sets a cookie for 30 days that names that shop, so the shop is credited if you sign up.')}</p>
+        <p>{t('A chat with a shop’s AI assistant is also kept in your browser, until you close the page.')}</p>
       </Section>
 
       <Section title={t('How long we keep it')}>
@@ -107,6 +113,7 @@ function Privacy() {
           <li>{t('Visit data: up to 13 months, then it is deleted or kept only as totals.')}</li>
           <li>{t('Back-in-stock requests: deleted once the seller has messaged you, and after 90 days at most.')}</li>
           <li>{t('Bookings: about 13 months after the day of the booking, then they are deleted.')}</li>
+          <li>{t('Chats with a shop’s AI assistant: 90 days after the last message, then they are deleted.')}</li>
           <li>{t('Invoices, quotes, their payments and the client list: as long as the business’s account is open and the law requires for business records.')}</li>
           <li>{t('A delivery location (map point) on an order: 90 days, then it is deleted. The area and the note stay with the order.')}</li>
           <li>{t('Tembo payments: as long as the law requires for business records.')}</li>

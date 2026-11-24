@@ -36,6 +36,7 @@ import { Route as ApiSelcomRouteImport } from './routes/api/selcom'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppAnalyticsRouteImport } from './routes/app/analytics'
+import { Route as AppAssistantRouteImport } from './routes/app/assistant'
 import { Route as AppBookingsRouteImport } from './routes/app/bookings'
 import { Route as AppClientsRouteImport } from './routes/app/clients'
 import { Route as AppDiscountsRouteImport } from './routes/app/discounts'
@@ -209,6 +210,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppAssistantRoute = AppAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppBookingsRoute = AppBookingsRouteImport.update({
@@ -432,6 +438,7 @@ export interface FileRoutesByFullPath {
   '/api/selcom': typeof ApiSelcomRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/assistant': typeof AppAssistantRoute
   '/app/bookings': typeof AppBookingsRoute
   '/app/clients': typeof AppClientsRoute
   '/app/discounts': typeof AppDiscountsRoute
@@ -497,6 +504,7 @@ export interface FileRoutesByTo {
   '/api/selcom': typeof ApiSelcomRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/assistant': typeof AppAssistantRoute
   '/app/bookings': typeof AppBookingsRoute
   '/app/clients': typeof AppClientsRoute
   '/app/discounts': typeof AppDiscountsRoute
@@ -566,6 +574,7 @@ export interface FileRoutesById {
   '/api/selcom': typeof ApiSelcomRoute
   '/api/upload': typeof ApiUploadRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/assistant': typeof AppAssistantRoute
   '/app/bookings': typeof AppBookingsRoute
   '/app/clients': typeof AppClientsRoute
   '/app/discounts': typeof AppDiscountsRoute
@@ -636,6 +645,7 @@ export interface FileRouteTypes {
     | '/api/selcom'
     | '/api/upload'
     | '/app/analytics'
+    | '/app/assistant'
     | '/app/bookings'
     | '/app/clients'
     | '/app/discounts'
@@ -701,6 +711,7 @@ export interface FileRouteTypes {
     | '/api/selcom'
     | '/api/upload'
     | '/app/analytics'
+    | '/app/assistant'
     | '/app/bookings'
     | '/app/clients'
     | '/app/discounts'
@@ -769,6 +780,7 @@ export interface FileRouteTypes {
     | '/api/selcom'
     | '/api/upload'
     | '/app/analytics'
+    | '/app/assistant'
     | '/app/bookings'
     | '/app/clients'
     | '/app/discounts'
@@ -1032,6 +1044,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics'
       fullPath: '/app/analytics'
       preLoaderRoute: typeof AppAnalyticsRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/assistant': {
+      id: '/app/assistant'
+      path: '/assistant'
+      fullPath: '/app/assistant'
+      preLoaderRoute: typeof AppAssistantRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/app/bookings': {
@@ -1350,6 +1369,7 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 
 interface AppRouteRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppAssistantRoute: typeof AppAssistantRoute
   AppBookingsRoute: typeof AppBookingsRoute
   AppClientsRoute: typeof AppClientsRoute
   AppDiscountsRoute: typeof AppDiscountsRoute
@@ -1383,6 +1403,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
+  AppAssistantRoute: AppAssistantRoute,
   AppBookingsRoute: AppBookingsRoute,
   AppClientsRoute: AppClientsRoute,
   AppDiscountsRoute: AppDiscountsRoute,

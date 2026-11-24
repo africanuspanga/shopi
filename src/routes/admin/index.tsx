@@ -3,11 +3,12 @@ import { Bell, Download, Globe, Palette, Search, Smartphone } from 'lucide-react
 import { useState, type ReactNode } from 'react'
 import { BarList, Card, Change, DayChart, Gauge, Kpi, KpiMoney, Nothing, ProductTable, Row, WeekdayBars, num, pct, useDates } from '#/components/admin'
 import { WhatsAppIcon } from '#/components/brand-icons'
-import { Money, ShopAvatar, StatusPill } from '#/components/ui'
+import { Money, ShopAvatar, StatusPill, Switch } from '#/components/ui'
 import { SHOP_FILTERS, asAdminDays, asAdminTab, shopMatches, type AdminDays, type AdminShop, type AdminTab, type ShopFilter } from '#/lib/admin'
 import { getOwnerDashboard, type OwnerSection } from '#/lib/api/admin'
 import { recheckTemboPayment } from '#/lib/api/billing'
 import { sendTestEmail } from '#/lib/api/email'
+import { setAssistantEverywhere } from '#/lib/api/assistant'
 import { EMAIL_KINDS, type EmailKind } from '#/lib/email'
 import { ALL_CATEGORIES, localPhone, timeAgo, waLink, type OrderStatus } from '#/lib/format'
 import { useLang, useT } from '#/lib/i18n'
@@ -705,6 +706,11 @@ function Health({ d }: { d: OwnerSection<'health'> }) {
     'unchecked-signup': t('Sign-ups let through without the bot check'),
     'unchecked-order': t('Orders let through without the bot check'),
     'unchecked-alert': t('Stock requests let through without the bot check'),
+    'unchecked-ask': t('Chats with the AI assistant started without the bot check'),
+    'ask-ip': t('Questions to a shop’s AI assistant, per connection'),
+    'ask-ip-all': t('Questions to the AI assistant across Shopi, per connection'),
+    'ask-shop': t('Questions to one shop’s AI assistant'),
+    'ask-all': t('Questions to the AI assistant, all shops together'),
     login: t('Wrong passwords'),
     'login-ip': t('Log-in tries'),
     'signup-ip': t('Sign-up tries'),
@@ -767,6 +773,7 @@ function Health({ d }: { d: OwnerSection<'health'> }) {
         </div>
       </Card>
       <EmailCard e={d.email} days={d.days} className="lg:col-span-12" />
+      <AssistantCard a={d.assistant} days={d.days} className="lg:col-span-6" />
       <Card title={t('Own domains')} sub={t('Shops’ own addresses and where each one stands.')} className="lg:col-span-6">
         {d.domains.length ? (
           <ul className="divide-y divide-line">
@@ -878,6 +885,58 @@ function SetupCards({ d }: { d: OwnerSection<'shops'> }) {
  * Email (o-email): whether Resend is set up and email is open to sellers, what went out, and every kind of email to
  * preview or send to an address the founder types, so they see each one land before sellers get it.
  */
+/**
+ * The AI assistant for buyers (roadmap `ai-buyer`): Shopi's switch for every shop at once (no deploy needed), and what
+ * it did in the range. "Changed by a check" counts answers the checks after the model rewrote (a price, a material,
+ * a card): read those chats on the shop's own page to see why.
+ */
+function AssistantCard({ a, days, className = '' }: { a: OwnerSection<'health'>['assistant']; days: number; className?: string }) {
+  const t = useT()
+  const router = useRouter()
+  const lang = useLang()
+  const [busy, setBusy] = useState(false)
+  // Moves at once; back if the save fails.
+  const [off, setOff] = useState(a.off)
+  async function flip(on: boolean) {
+    setBusy(true)
+    setOff(!on)
+    try {
+      await setAssistantEverywhere({ data: { off: !on } })
+      await router.invalidate()
+    } catch {
+      setOff(on)
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <Card title={t('AI assistant for buyers')} sub={t('The last {n} days. Shops’ own switches are in their settings.', { n: days })} className={className}>
+      {a.ready ? (
+        <div className="mb-3 rounded-16 bg-page p-4">
+          <Switch label={t('On for every shop')} sub={off ? t('Off: no shop shows Ask.') : t('Turn it off here to stop it everywhere at once.')} checked={!off} disabled={busy} onChange={flip} />
+        </div>
+      ) : (
+        <Nothing>{t('No AI key is saved, so no shop shows Ask.')}</Nothing>
+      )}
+      {a.restUntil && (
+        <p className="mb-3 rounded-14 bg-page px-4 py-3 text-14 text-ink-2">
+          {t('Resting until {time}: the AI provider said its limit was reached. No shop shows Ask until then.', {
+            time: new Date(a.restUntil).toLocaleTimeString(lang === 'sw' ? 'sw-TZ' : 'en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Dar_es_Salaam' }),
+          })}
+        </p>
+      )}
+      <Row label={t('Questions the AI answered')} value={num(a.use.n)} />
+      <Row label={t('Shops it answered for')} value={num(a.use.shops)} />
+      <Row label={t('Chats with buyers')} value={num(a.chats.chats)} />
+      <Row label={t('Chats where the buyer took the bag offer')} value={num(a.chats.bag)} />
+      <Row label={t('Answers changed by a check')} value={num(a.chats.fired)} />
+      <Row label={t('Answers that failed')} value={num(a.chats.failed)} />
+      <Row label={t('Shops that turned it off')} value={num(a.shopsOff)} />
+      <Row label={t('Tokens')} value={num(a.use.tokens)} />
+    </Card>
+  )
+}
+
 function EmailCard({ e, days, className = '' }: { e: OwnerSection<'health'>['email']; days: number; className?: string }) {
   const t = useT()
   const lang = useLang()

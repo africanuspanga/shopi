@@ -1,5 +1,5 @@
 import { Link, createFileRoute, useBlocker, useRouter } from '@tanstack/react-router'
-import { Camera, Check, ChevronRight, Copy, Globe, LogOut, Palette, Plus, QrCode as QrCodeIcon, TicketPercent, UsersRound, X } from 'lucide-react'
+import { Camera, Check, ChevronRight, Copy, Globe, LogOut, MessageCircleQuestion, Palette, Plus, QrCode as QrCodeIcon, TicketPercent, UsersRound, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { useHideFloatingNav } from '#/components/floating-nav'
 import { WriteBio } from '#/components/ai-write'
@@ -367,6 +367,12 @@ function ShopSettings({ data }: { data: Awaited<ReturnType<typeof getMyShop>> })
         <Group title={t('Discount codes')} sub={t('Codes buyers type at checkout for money off, like EID10. Share them in your status.')}>
           <Link to="/app/discounts" className="btn btn-ghost">
             <TicketPercent size={16} strokeWidth={1.75} /> {t('Discount codes')} <ChevronRight size={16} strokeWidth={1.75} />
+          </Link>
+        </Group>
+
+        <Group title={t('AI assistant')} sub={t('Answers buyers’ questions from your shop’s details, day and night. You can read every chat.')}>
+          <Link to="/app/assistant" className="btn btn-ghost">
+            <MessageCircleQuestion size={16} strokeWidth={1.75} /> {t('AI assistant')} <ChevronRight size={16} strokeWidth={1.75} />
           </Link>
         </Group>
 

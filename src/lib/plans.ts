@@ -25,6 +25,14 @@ export const FREE_PRODUCTS = 300
 export const FREE_AI_MONTH = 10
 /** Tembo's AI is unlimited, with this quiet daily cap so a runaway script can't run up the bill. */
 export const TEMBO_AI_DAY = 50
+/**
+ * The AI assistant for buyers (roadmap `ai-buyer`, the founder's decision of 18 Nov): a free shop's assistant answers
+ * about this many questions a calendar month in Dar (questions the model answers; the tap-chips and order codes are
+ * answered from the shop's data and cost nothing). Tembo is unlimited.
+ */
+export const FREE_ASSISTANT_MONTH = 100
+/** A quiet daily cap on every shop's assistant (Tembo and demo too), so a flood can't run up the bill. */
+export const ASSISTANT_DAY = 300
 /** Shops that used fonts or their own domain before Tembo existed keep them until the end of 31 Dec 2026 in Dar. */
 export const GRACE_UNTIL = Date.parse('2026-12-31T21:00:00Z')
 
@@ -46,6 +54,7 @@ export const PLANS: { id: PlanId; name: string; price: number; lead: string; ite
       { text: msg('Your colour and cover photo') },
       { text: msg('Analytics for 7 and 30 days') },
       { text: msg('Invoices and quotes in TSh, sent on WhatsApp') },
+      { text: msg('An AI assistant that answers buyers: 100 questions a month') },
     ],
   },
   {
@@ -61,6 +70,7 @@ export const PLANS: { id: PlanId; name: string; price: number; lead: string; ite
       { text: msg('Full analytics: 90 days, channels, buyers and downloads') },
       { text: msg('Up to 2 shop assistants, each with their own login') },
       { text: msg('Unlimited AI product descriptions') },
+      { text: msg('Unlimited questions to your AI assistant') },
       { text: msg('Invoices and quotes in US dollars') },
       { text: msg('Recurring invoices and automatic reminders'), soon: true },
       { text: msg('500 SMS a year to your buyers, many sent automatically'), soon: true },

@@ -56,6 +56,15 @@ export const LIMITS = {
   invoicePageIp: { max: 120, window: 10 * MINUTE },
   invoiceProofIp: { max: 20, window: 60 * MINUTE },
   invoiceProofDoc: { max: 5, window: 60 * MINUTE },
+  // The AI assistant for buyers (src/server/assistant.ts): questions per IP to one shop and across Shopi (carrier IPs
+  // are shared, so these only stop floods), a backstop per shop, and chats the bot check couldn't vouch for per shop.
+  askIp: { max: 40, window: 60 * MINUTE },
+  askIpAll: { max: 150, window: 60 * MINUTE },
+  askShop: { max: 150, window: 60 * MINUTE },
+  // Across Shopi, every shop's assistant together: a backstop on the bill and on Groq's limits, which the sellers'
+  // "Write it for me" shares.
+  askAll: { max: 600, window: 60 * MINUTE },
+  uncheckedAsk: { max: 10, window: 60 * MINUTE },
 } as const
 
 /** The visitor's IP as Cloudflare saw it. */

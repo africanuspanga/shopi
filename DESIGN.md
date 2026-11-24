@@ -61,7 +61,7 @@ local function named like a part); a genuine exception says why on its line or t
 | A quiet row on Home | `Notice` (`icon`, `title`, `sub`, `to`/`onClick`, `actions`, `onDismiss`, `signal`) | A card: icon (or a short figure) in a soft circle, title 15 medium, a 13 muted line; the whole row opens something (arrow) or carries buttons; "Not now" as an X. Rows stack with `space-y-3` |
 | A number with its label | `Stat` (`size` sm/md/lg, `card`, `onClick`+`on`, `badge`, `foot`); `/admin` wraps it as `Kpi` with the change chip | Label 13 muted, figure in lining figures (lg 20 → 24 from md, md 20, sm 15), a change or note at 13 |
 | Nothing to show yet | `Nothing` (one line in a soft box); `Empty` (icon, title, text, action) for a whole empty page | |
-| A sheet | `Sheet` | Title at 20 (`.title`), close at the right. It reads in ink wherever it is opened from; still render it outside a dark card |
+| A sheet | `Sheet` (`tall`, `head`) | Title at 20 (`.title`), close at the right. It reads in ink wherever it is opened from; still render it outside a dark card. `tall`: a fixed height whose content scrolls inside it with something pinned at the bottom (the AI assistant's chat); `head`: a line under the title that stays put |
 | One input | `Field` (`error`) | Label 14 medium, hint 13 muted. A missing or wrong answer is said under the box in `bad` at 13, with the box outlined in `bad` |
 | A group of choices (chips, colours, photos) | `FieldGroup` (`radio` for one-of-several, `error`, `errorFirst`) | The same label, hint and error line as `Field`, named for screen readers. `errorFirst` puts the error under the label, for a long group (thirteen chips) |
 | The shop's link as an object | `ShopLinkCard` in `components/shop-link.tsx` (`top`, `note`, `onQr`, `wide`; the buttons as children) | The dark card: a live dot, the logo, the shop's QR code, the name in `.display`, the whole link in mono. On "Your shop is live" and on Home until the first order or booking. Two columns from `xl` when `wide`; the focus ring on it is white. On it the main button is `btn bg-white text-ink hover:bg-white/90`, the others `btn bg-white/10 hover:bg-white/15` |
@@ -209,6 +209,11 @@ green. Never make a green button. Quiet icon rows may use the one-colour `WhatsA
   In the setup the panel holds **one phone from step 1 to 5** (`SetupPhone`): the shop taking shape, the open shop,
   then the first notification on its lock screen; never a different object per step. On phones the same screen opens
   from a "Preview" pill in the step bar's row, never from a card that pushes the form down.
+- **The AI assistant never asks for attention** (the founder, 23 Nov 2026): it opens only from Ask in the shop's
+  header, the quiet link on a product, the Info sheet's row or the Search sheet's row once the buyer typed. No
+  floating bubble, no pop-up, no greeting that appears on its own, nothing over the products. Its sheet is `Sheet
+  tall`: grey bubbles for its answers, ink for the buyer's, cards as list rows, and what it offers (the bag,
+  WhatsApp, an order) as a button the buyer taps.
 - **Touch areas are 44 px**, also where the thing looks smaller: `.icon-btn` is 40 px to look at with a ring around it
   that takes the tap (`::after`); a text link that acts as a button gets `min-h-11` (the setup's "Change", "I’ll do
   this later", Home's "See all"); a small round X on a photo sits in a 44 px button.

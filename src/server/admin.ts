@@ -1,4 +1,5 @@
 import { env } from 'cloudflare:workers'
+import { aiReady } from '#/server/ai'
 import type { AdminDays, AdminShop, DayPoint } from '#/lib/admin'
 import { TEMBO_PRICE, planState } from '#/lib/plans'
 import { SESSION_DAYS } from '#/server/auth'
@@ -427,7 +428,7 @@ export async function useData(days: AdminDays) {
          ${shop('push_subscriptions')} push,
          (SELECT COUNT(*) FROM shops s JOIN users u ON u.id = s.owner_id WHERE s.status != 'demo' AND u.app_seen_at IS NOT NULL) installed,
          ${shop('domains', `status = 'active'`)} domain,
-         ${shop('ai_uses')} ai,
+         ${shop('ai_uses', "kind NOT LIKE 'assistant%'")} ai,
          ${shop('shop_staff', 'user_id IS NOT NULL')} staff,
          ${own(`kind = 'services'`)} serves,
          ${shop('services')} services,
@@ -463,7 +464,7 @@ export async function useData(days: AdminDays) {
 
 export async function healthData(days: AdminDays) {
   const { t, from } = windowOf(days)
-  const [waiting, problems, limits, domains, counts, oldest, mails, emails, mailFail] = await db().batch([
+  const [waiting, problems, limits, domains, counts, oldest, mails, emails, mailFail, askUse, askChats, askOff] = await db().batch([
     waitingProofs(t),
     problemProofs(from),
     // What the limits table saw in the last 24 hours, by kind (the part of the key before the first colon).
@@ -491,6 +492,20 @@ export async function healthData(days: AdminDays) {
       `SELECT COALESCE(SUM(email IS NOT NULL), 0) added, COALESCE(SUM(email IS NOT NULL AND email_weekly = 1), 0) weekly FROM users WHERE is_admin = 0`,
     ),
     q(`SELECT kind, error, created_at FROM email_log WHERE status = 'failed' ORDER BY created_at DESC LIMIT 1`),
+    // The AI assistant for buyers (ai-buyer): questions the model answered and the shops it answered for, the chats,
+    // answers a check changed or that failed, Shopi's switch and the shops that turned theirs off.
+    q(`SELECT COUNT(*) n, COUNT(DISTINCT shop_id) shops, COALESCE(SUM(tokens), 0) tokens FROM ai_uses WHERE kind = 'assistant' AND created_at >= ?`, from),
+    q(
+      `SELECT (SELECT COUNT(*) FROM chats WHERE own = 0 AND questions > 0 AND created_at >= ?1) chats,
+         (SELECT COUNT(*) FROM chats WHERE own = 0 AND bag = 1 AND created_at >= ?1) bag,
+         (SELECT COUNT(*) FROM chat_messages WHERE role = 'assistant' AND created_at >= ?1 AND data LIKE '%"fired"%') fired,
+         (SELECT COUNT(*) FROM chat_messages WHERE role = 'assistant' AND created_at >= ?1 AND data LIKE '%"how":"failed"%') failed`,
+      from,
+    ),
+    q(
+      `SELECT (SELECT value FROM settings WHERE key = 'assistant_off') off, (SELECT value FROM settings WHERE key = 'assistant_rest_until') rest,
+         (SELECT COUNT(*) FROM shops WHERE status = 'active' AND assistant = 0) shopsOff`,
+    ),
   ])
   // The weekly backup in the private bucket: the newest file's age is what matters.
   let backup: { key: string; size: number; at: number; kept: number } | null = null
@@ -519,6 +534,15 @@ export async function healthData(days: AdminDays) {
       log: rows<{ kind: string; status: string; n: number }>(mails),
       sellers: one<{ added: number; weekly: number }>(emails),
       lastFailure: rows<{ kind: string; error: string | null; created_at: number }>(mailFail)[0] ?? null,
+    },
+    assistant: {
+      ready: aiReady(),
+      off: one<{ off: string | null }>(askOff).off === '1',
+      // Resting after the provider's limit (src/server/assistant.ts): until when, if still.
+      restUntil: Number(one<{ rest: string | null }>(askOff).rest ?? 0) > t ? Number(one<{ rest: string | null }>(askOff).rest) : null,
+      shopsOff: one<{ shopsOff: number }>(askOff).shopsOff,
+      use: one<{ n: number; shops: number; tokens: number }>(askUse),
+      chats: one<{ chats: number; bag: number; fired: number; failed: number }>(askChats),
     },
   }
 }

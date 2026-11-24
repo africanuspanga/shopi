@@ -18,6 +18,9 @@ function read(shopId: string): Lines {
   }
 }
 
+/** Told to every `useCart` of a shop in this tab when one of them changes the bag. */
+const CART_EVENT = 'shopi:cart'
+
 export type Cart = ReturnType<typeof useCart>
 
 export function useCart(shopId: string) {
@@ -28,8 +31,14 @@ export function useCart(shopId: string) {
     setCart(read(shopId))
     setReady(true)
     const onStorage = (e: StorageEvent) => e.key === key(shopId) && setCart(read(shopId))
+    // The same tab: the AI assistant's sheet puts a product in the bag while the page's own bag count is showing.
+    const onSame = (e: Event) => (e as CustomEvent<string>).detail === shopId && setCart(read(shopId))
     window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
+    window.addEventListener(CART_EVENT, onSame)
+    return () => {
+      window.removeEventListener('storage', onStorage)
+      window.removeEventListener(CART_EVENT, onSame)
+    }
   }, [shopId])
 
   const update = useCallback(
@@ -38,6 +47,7 @@ export function useCart(shopId: string) {
       setCart(clean)
       try {
         localStorage.setItem(key(shopId), JSON.stringify(clean))
+        window.dispatchEvent(new CustomEvent(CART_EVENT, { detail: shopId }))
       } catch {
         /* private mode: the cart still works for this visit */
       }

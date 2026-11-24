@@ -1,10 +1,11 @@
 import { Link } from '@tanstack/react-router'
-import { CalendarPlus, Info, Search, Share2, ShoppingBag, Store } from 'lucide-react'
+import { CalendarPlus, ChevronRight, Info, MessageCircleQuestion, Search, Share2, ShoppingBag, Store } from 'lucide-react'
 import { useState } from 'react'
 import { WhatsAppIcon } from '#/components/brand-icons'
 import { FloatingNav, NavCenter, NavCount, NavTab } from '#/components/floating-nav'
 import { Price, ShopFacts, SocialLinks, onSale, Tag, discount, matchesSearch, shownPrice } from '#/components/shop'
 import { ShopQr } from '#/components/qr'
+import { openAssistant } from '#/components/assistant'
 import { openWhatsApp } from '#/components/whatsapp'
 import { Img, Sheet, ShopAvatar } from '#/components/ui'
 import { track } from '#/lib/analytics'
@@ -29,6 +30,7 @@ export function ShopNav({
   count,
   onShare,
   away = false,
+  ask = false,
 }: {
   shop: PublicShop
   areas: Area[]
@@ -38,6 +40,8 @@ export function ShopNav({
   count: number
   onShare: () => void
   away?: boolean
+  /** The shop's AI assistant can be asked: Info and Search offer it (it never opens by itself). */
+  ask?: boolean
 }) {
   const t = useT()
   const [sheet, setSheet] = useState<'search' | 'info' | null>(null)
@@ -75,13 +79,27 @@ export function ShopNav({
         )}
         <NavTab icon={Info} label={t('Info')} active={sheet === 'info'} onClick={() => setSheet('info')} />
       </FloatingNav>
-      <SearchSheet open={sheet === 'search'} onClose={() => setSheet(null)} shop={shop} products={products} services={services} />
-      <InfoSheet open={sheet === 'info'} onClose={() => setSheet(null)} shop={shop} areas={areas} onShare={onShare} />
+      <SearchSheet open={sheet === 'search'} onClose={() => setSheet(null)} shop={shop} products={products} services={services} ask={ask} />
+      <InfoSheet open={sheet === 'info'} onClose={() => setSheet(null)} shop={shop} areas={areas} onShare={onShare} ask={ask} />
     </>
   )
 }
 
-function SearchSheet({ open, onClose, shop, products, services }: { open: boolean; onClose: () => void; shop: PublicShop; products: PublicProduct[]; services: PublicService[] }) {
+function SearchSheet({
+  open,
+  onClose,
+  shop,
+  products,
+  services,
+  ask,
+}: {
+  open: boolean
+  onClose: () => void
+  shop: PublicShop
+  products: PublicProduct[]
+  services: PublicService[]
+  ask: boolean
+}) {
   const t = useT()
   const [q, setQ] = useState('')
   const needle = q.trim()
@@ -140,11 +158,30 @@ function SearchSheet({ open, onClose, shop, products, services }: { open: boolea
           ))}
         </ul>
       )}
+      {ask && needle && (
+        // What the buyer typed, asked of the AI assistant: only when they tap it.
+        <button
+          type="button"
+          className="mt-3 flex w-full items-center gap-3 rounded-16 px-4 py-3 text-left shadow-[inset_0_0_0_1px_var(--color-line)] transition-colors hover:bg-page"
+          onClick={() => {
+            onClose()
+            setQ('')
+            openAssistant({ text: needle })
+          }}
+        >
+          <MessageCircleQuestion size={18} strokeWidth={1.75} className="shrink-0" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-15 font-medium">{t('Ask the AI assistant')}</span>
+            <span className="block truncate text-13 text-muted">“{needle}”</span>
+          </span>
+          <ChevronRight size={16} strokeWidth={1.75} className="shrink-0 text-muted" />
+        </button>
+      )}
     </Sheet>
   )
 }
 
-function InfoSheet({ open, onClose, shop, areas, onShare }: { open: boolean; onClose: () => void; shop: PublicShop; areas: Area[]; onShare: () => void }) {
+function InfoSheet({ open, onClose, shop, areas, onShare, ask }: { open: boolean; onClose: () => void; shop: PublicShop; areas: Area[]; onShare: () => void; ask: boolean }) {
   const t = useT()
   return (
     <Sheet open={open} onClose={onClose} title={t('About this shop')}>
@@ -159,6 +196,23 @@ function InfoSheet({ open, onClose, shop, areas, onShare }: { open: boolean; onC
       <div className="mt-5 rounded-16 bg-page p-4">
         <ShopFacts shop={shop} areas={areas} short />
       </div>
+      {ask && (
+        <button
+          type="button"
+          className="mt-3 flex w-full items-center gap-3 rounded-16 px-4 py-3 text-left shadow-[inset_0_0_0_1px_var(--color-line)] transition-colors hover:bg-page"
+          onClick={() => {
+            onClose()
+            openAssistant()
+          }}
+        >
+          <MessageCircleQuestion size={18} strokeWidth={1.75} className="shrink-0" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-15 font-medium">{t('Ask a question')}</span>
+            <span className="block text-13 text-muted">{t('The AI assistant answers from this shop’s details.')}</span>
+          </span>
+          <ChevronRight size={16} strokeWidth={1.75} className="shrink-0 text-muted" />
+        </button>
+      )}
       <ShopQr shop={shop} className="mt-4" />
       {areas.length > 0 && (
         <div className="mt-6">

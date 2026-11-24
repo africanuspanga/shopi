@@ -1,4 +1,6 @@
-import { can, planState } from '#/lib/plans'
+import { FREE_ASSISTANT_MONTH, can, planState } from '#/lib/plans'
+import { assistantOpen, offNow } from '#/server/assistant'
+import { monthStart } from '#/server/ai'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequestUrl } from '@tanstack/react-start/server'
 import { all, db, first, newId, now, orderCode, run } from '#/server/db'
@@ -78,7 +80,7 @@ export type PublicCollection = { id: string; slug: string; name: string; descrip
 
 const SHOP_COLS = `id, slug, name, bio, category, logo_key, whatsapp, instagram, tiktok, facebook, location, maps_url, tin, hours,
   lipa_number, lipa_name, lipa_network, cod_enabled, status, lang, theme_color, theme_font, cover_key, hide_badge, plan, paid_until,
-  ships_regions, regions_note, kind, book`
+  ships_regions, regions_note, kind, book, assistant`
 
 /**
  * A shop that changed its link (`shop_links`, migration 0031): where an old link leads today, or null. The `$shop`
@@ -104,7 +106,7 @@ export const getStorefront = createServerFn({ method: 'GET' })
     // Every query finds the shop by its slug itself instead of waiting for the shop's row.
     const shopId = `(SELECT id FROM shops WHERE slug = ?1 AND status IN ('active', 'demo'))`
     const q = (sql: string, ...params: unknown[]) => db().prepare(sql).bind(data.slug, ...params)
-    const [shopRows, productRows, areaRows, discountRows, collectionRows, memberRows, serviceRows] = await db().batch([
+    const [shopRows, productRows, areaRows, discountRows, collectionRows, memberRows, serviceRows, offRows, askRows] = await db().batch([
       q(`SELECT ${SHOP_COLS} FROM shops WHERE slug = ?1 AND status IN ('active', 'demo')`),
       q(
         `SELECT id, slug, name, description, price, compare_price, stock, sizes, option_name, images, created_at, pick_rank FROM products
@@ -118,15 +120,30 @@ export const getStorefront = createServerFn({ method: 'GET' })
          WHERE c.shop_id = ${shopId} ORDER BY cp.sort`,
       ),
       q(`SELECT id, name, description, duration, price, price_from, by_name, images FROM services WHERE shop_id = ${shopId} AND active = 1 ORDER BY sort, created_at`),
+      // The AI assistant (src/server/assistant.ts): Shopi's switch, and the questions a free shop's assistant answered this month.
+      db().prepare(`SELECT key, value FROM settings WHERE key IN ('assistant_off', 'assistant_rest_until')`),
+      // Counted only for a free shop (CASE reads the count only in that branch); Tembo and demo have no monthly limit.
+      q(
+        `SELECT CASE WHEN s.status = 'demo' OR (s.plan = 'tembo' AND s.paid_until > ?3) THEN 0
+           ELSE (SELECT COUNT(*) FROM ai_uses WHERE shop_id = s.id AND kind = 'assistant' AND created_at >= ?2) END n
+         FROM shops s WHERE s.slug = ?1`,
+        monthStart(),
+        now(),
+      ),
     ])
-    const row = shopRows.results[0] as (Omit<PublicShop, 'badge' | 'open_days' | 'serves'> & { hide_badge: number; plan: string; paid_until: number | null; book: string | null }) | undefined
+    const row = shopRows.results[0] as
+      | (Omit<PublicShop, 'badge' | 'open_days' | 'serves'> & { hide_badge: number; plan: string; paid_until: number | null; book: string | null; assistant: number })
+      | undefined
     if (!row) return null
-    const { hide_badge, plan, paid_until, book, ...rest } = row
+    const { hide_badge, plan, paid_until, book, assistant, ...rest } = row
+    const planNow = planState({ status: rest.status, plan, paid_until })
+    const asked = (askRows.results[0] as { n: number } | undefined)?.n ?? 0
+    const off = offNow(offRows.results as { key: string; value: string }[])
     // Services show once the business has set its working hours: before that no time could be booked.
     const settings = parseBook(book)
     const bookable = opensSomeDay(settings)
     const services = bookable ? (serviceRows.results as (Omit<PublicService, 'images'> & { images: string })[]) : []
-    const shop: PublicShop = { ...rest, open_days: bookable && services.length ? settings!.days : null, serves: services.length > 0 && productRows.results.length === 0, badge: !(hide_badge && can(planState({ status: rest.status, plan, paid_until }), 'hideBadge')) }
+    const shop: PublicShop = { ...rest, open_days: bookable && services.length ? settings!.days : null, serves: services.length > 0 && productRows.results.length === 0, badge: !(hide_badge && can(planNow, 'hideBadge')) }
     const products = productRows.results as (Omit<PublicProduct, 'images' | 'sizes'> & { images: string; sizes: string | null; pick_rank: number | null })[]
     const areas = areaRows.results as { id: string; name: string; fee: number }[]
     const discount = discountRows.results[0]
@@ -136,6 +153,14 @@ export const getStorefront = createServerFn({ method: 'GET' })
     return {
       shop,
       areas,
+      /**
+       * Buyers may ask the shop's AI assistant: the seller's switch and Shopi's are on, AI is set up, and a free shop
+       * has questions left this month. Ask only shows where this is true; it never opens by itself.
+       */
+      // A page with nothing listed (a business that only sends invoices) gives it nothing to answer from.
+      assistant:
+        (productRows.results.length > 0 || services.length > 0) &&
+        assistantOpen({ assistant }, off, { left: planNow.kind === 'free' ? Math.max(0, FREE_ASSISTANT_MONTH - asked) : null, busy: false }),
       /** The shop has a discount code buyers can use, so checkout shows the field. */
       hasDiscounts: !!discount,
       /** Every collection, with only the products buyers can see; the shop's chips leave out empty ones. */

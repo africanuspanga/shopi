@@ -34,6 +34,11 @@ function DataDeletion() {
           </li>
           <li>
             {t(
+              'A chat with a shop’s AI assistant: it is deleted 90 days after your last message. It keeps no name or phone number. To remove it sooner, write to hello@shopi.tz with the shop, the day and what you asked.',
+            )}
+          </li>
+          <li>
+            {t(
               'Your orders: write to hello@shopi.tz with your phone number and the order code (it looks like #AB12CD). We remove your name, number and address from those orders within 30 days, and tell the seller.',
             )}
           </li>

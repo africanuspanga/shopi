@@ -59,7 +59,7 @@ function CollectionNotFound() {
 function CollectionPage() {
   const rise = useEntrance()
   const t = useT()
-  const { shop, products, areas, collections } = parent.useLoaderData()
+  const { shop, products, areas, collections, assistant } = parent.useLoaderData()
   const { collection: c } = Route.useLoaderData()
   const cart = useCart(shop.id)
   const [copied, setCopied] = useState(false)
@@ -143,7 +143,7 @@ function CollectionPage() {
       </main>
 
       <ShopFooter shop={shop} />
-      <ShopNav shop={shop} areas={areas} products={products} count={cart.count} onShare={share} away />
+      <ShopNav shop={shop} areas={areas} products={products} count={cart.count} onShare={share} away ask={assistant} />
       <Toast show={copied}>{t('Link copied')}</Toast>
     </div>
   )

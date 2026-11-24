@@ -77,8 +77,102 @@ export async function complete(system: string, user: string, opts: { maxTokens?:
   }
 }
 
+export type ChatMessage =
+  | { role: 'system' | 'user'; content: string }
+  | { role: 'assistant'; content: string; tool_calls?: { id: string; type: 'function'; function: { name: string; arguments: string } }[] }
+  | { role: 'tool'; tool_call_id: string; content: string }
+
+export type ToolCall = { name: string; args: Record<string, unknown> }
+
+/**
+ * One turn of a conversation with tools (the buyer assistant, src/server/assistant.ts): the reply's text and the tools
+ * it called. Throws on errors and after about 25 seconds.
+ *
+ * Groq refuses an answer whose tool call doesn't match the tools (`tool_use_failed`: Qwen misspelt a tool's name, or
+ * left out a field, in 5 of 34 answers on 19 Nov), and sends the text it generated with the refusal. That text was
+ * right every time, so: ask once more, and if it is refused again, use that text with no tool, keeping the name the
+ * model tried (`tried`) so the caller can still offer the button it meant.
+ */
+export async function chatTurn(messages: ChatMessage[], tools: unknown[], opts: { maxTokens?: number } = {}) {
+  const started = Date.now()
+  let waited = false
+  let refused = 0
+  let emptied = false
+  for (;;) {
+    const res = await fetch(`${base()}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key()}` },
+      body: JSON.stringify({
+        model: model(),
+        messages,
+        tools,
+        tool_choice: 'auto',
+        temperature: refused || emptied ? 0.4 : 0.2,
+        // Qwen's unseen thinking counts against this cap.
+        max_completion_tokens: opts.maxTokens ?? 1200,
+        ...(model().includes('gpt-oss') ? { reasoning_effort: 'medium' } : {}),
+        ...(groq() && model().includes('qwen') ? { reasoning_format: 'hidden' } : {}),
+      }),
+      signal: AbortSignal.timeout(Math.max(5_000, 25_000 - (Date.now() - started))),
+    })
+    if (res.status === 429 && !waited) {
+      const wait = Math.ceil(Number(res.headers.get('retry-after')) || 3)
+      if (wait <= 8) {
+        waited = true
+        await res.body?.cancel()
+        await sleep(wait * 1000 + 250)
+        continue
+      }
+    }
+    if (res.status === 400) {
+      const body = (await res.json().catch(() => null)) as { error?: { code?: string; message?: string; failed_generation?: string } } | null
+      if (body?.error?.code === 'tool_use_failed') {
+        refused++
+        if (refused < 2 && Date.now() - started < 12_000) continue
+        const tried = /tool '([^']+)'/.exec(body.error.message ?? '')?.[1] ?? /parameters for tool (\w+)/.exec(body.error.message ?? '')?.[1] ?? null
+        return { text: stripToolMarkup(body.error.failed_generation ?? ''), calls: [] as ToolCall[], tokens: null, refused, tried }
+      }
+      throw new Error(`AI 400: ${JSON.stringify(body).slice(0, 200)}`)
+    }
+    if (!res.ok) throw new Error(`AI ${res.status}: ${(await res.text()).slice(0, 200)}`)
+    const data = (await res.json()) as {
+      choices?: { message?: { content?: string | null; tool_calls?: { function?: { name?: string; arguments?: string } }[] } }[]
+      usage?: { total_tokens?: number }
+    }
+    const m = data.choices?.[0]?.message ?? {}
+    const calls: ToolCall[] = (m.tool_calls ?? []).map((c) => {
+      let args: Record<string, unknown> = {}
+      try {
+        const parsed = JSON.parse(c.function?.arguments || '{}') as unknown
+        if (parsed && typeof parsed === 'object') args = parsed as Record<string, unknown>
+      } catch {
+        /* a garbled argument list: the call is kept by name and checked by the caller */
+      }
+      return { name: String(c.function?.name ?? ''), args }
+    })
+    const text = stripToolMarkup(m.content ?? '')
+    // Nothing at all: Qwen sometimes ends before its first word (19 Nov). Once more, a little warmer.
+    if (!text && !calls.length && !emptied && Date.now() - started < 12_000) {
+      emptied = true
+      continue
+    }
+    return { text, calls, tokens: data.usage?.total_tokens ?? null, refused, tried: null as string | null }
+  }
+}
+
+/** A reply's text without a tool call the model wrote into it (Qwen's `<tool_call>` blocks, a bare JSON call). */
+function stripToolMarkup(s: string) {
+  return s
+    .replace(/<tool_call>[\s\S]*?(<\/tool_call>|$)/g, '')
+    .replace(/<function[\s\S]*?(<\/function>|$)/g, '')
+    .replace(/\[?\s*\{\s*"name"\s*:[\s\S]*$/, '')
+    .replace(/\[\s*$/, '')
+    .replace(/<think>[\s\S]*?(<\/think>|$)/g, '')
+    .trim()
+}
+
 /** The start of this calendar month in Dar (UTC+3), in ms. */
-function monthStart(t = now()) {
+export function monthStart(t = now()) {
   const d = new Date(t + 3 * 3600_000)
   return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) - 3 * 3600_000
 }
@@ -93,7 +187,8 @@ export async function aiAllowance(shopId: string, plan: PlanState | null): Promi
     const left = Math.max(0, FREE_AI_MONTH - (row?.n ?? 0))
     return { ready, limit: FREE_AI_MONTH, left, busy: false }
   }
-  const row = await first<{ n: number }>(`SELECT COUNT(*) n FROM ai_uses WHERE shop_id = ? AND created_at >= ?`, shopId, now() - DAY)
+  // The buyer assistant has its own allowance (src/server/assistant.ts): a busy shop's buyers never use up its writes.
+  const row = await first<{ n: number }>(`SELECT COUNT(*) n FROM ai_uses WHERE shop_id = ? AND kind NOT LIKE 'assistant%' AND created_at >= ?`, shopId, now() - DAY)
   return { ready, limit: null, left: null, busy: (row?.n ?? 0) >= TEMBO_AI_DAY }
 }
 
@@ -287,5 +382,5 @@ export async function writeBio(d: BioInput) {
 
 /** Uses per shop for /admin: descriptions written in the last `days`. */
 export function aiUseCounts(from: number) {
-  return all<{ shop_id: string; n: number }>(`SELECT shop_id, COUNT(*) n FROM ai_uses WHERE created_at >= ? GROUP BY shop_id`, from)
+  return all<{ shop_id: string; n: number }>(`SELECT shop_id, COUNT(*) n FROM ai_uses WHERE kind NOT LIKE 'assistant%' AND created_at >= ? GROUP BY shop_id`, from)
 }

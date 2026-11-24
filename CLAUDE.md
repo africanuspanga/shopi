@@ -71,7 +71,8 @@ TanStack Start (React 19) on one Cloudflare Worker, D1 (SQLite), R2 for photos, 
 | `src/components/phone-app.tsx` | The seller's phone: `PhoneAlertsCard` (Home) and `PhoneAppSettings` (Shop settings) for notifications and installing |
 | `src/lib/push.ts`, `src/server/push.ts`, `public/sw.js` | Web push: `usePhoneApp` and the install offer (browser), `notifySeller` (server), the service worker that shows them |
 | `src/lib/discounts.ts` | Discount rules shared by checkout and the server: `discountOff()`, `cleanCode()`, `codeKey()` |
-| `src/server/ai.ts`, `src/lib/api/ai.ts`, `src/components/ai-write.tsx` | AI for sellers: the OpenAI-compatible client (Groq live), the allowance (`ai_uses`), "Write it for me" under a product's description |
+| `src/server/ai.ts`, `src/lib/api/ai.ts`, `src/components/ai-write.tsx` | AI for sellers: the OpenAI-compatible client (Groq live; `complete`, and `chatTurn` for tools), the allowance (`ai_uses`), "Write it for me" under a product's description |
+| `src/lib/assistant.ts`, `src/server/assistant.ts`, `src/lib/api/assistant.ts`, `src/components/assistant.tsx`, `src/routes/app/assistant.tsx` | The AI assistant for buyers (roadmap `ai-buyer`): shared rules (tap-chips, order words, `hidePhones`); the shop's facts, the prompt, the checks after the model, chats; the server functions (buyer's question, seller's page, `/admin` switch); `AssistantHost`, the chat sheet and the ways in (`AskButton`, `AskLink`, `openAssistant`); the seller's page |
 | `src/lib/qr.ts`, `src/lib/qr-card.ts`, `src/components/qr.tsx`, `src/components/qr-sheet.tsx` | The shop's QR code: the encoder (no library), the printable card drawn on a canvas, `QrCode`/`ShopQr` for buyers, `QrSheet` for sellers |
 | `src/server/selcom.ts`, `src/server/billing.ts`, `src/lib/api/billing.ts`, `src/components/pay-tembo.tsx`, `src/routes/api/selcom.ts` | Tembo billing through Selcom: the proxy client, payments (start, Lipa Namba, complete once, re-check, reminders), the seller's server functions, the payment sheet, Selcom's callback |
 | `src/lib/booking.ts`, `src/server/bookings.ts`, `src/lib/api/booking.ts`, `src/lib/api/services.ts` | Shopi for services: the rules (hours, free times, days and times in Tanzania time); the guarded insert and move; the public server functions (book, the client's page, cancel, move); the business's (services, hours, time off, the diary) |
@@ -767,6 +768,89 @@ patterns, motion, copy and the logo. `npm run check:design` enforces the scales.
   - **The form:** "Write it for me" (or "Write it from my notes" when the field has text) replaces the description;
     Undo puts the seller's words back while the AI text is untouched; "{n} left this month" for free shops.
   - `/admin` Product use counts shops that used it, and shops that downloaded or shared their QR code.
+- **The AI assistant for buyers** (roadmap `ai-buyer`, built 23 Nov 2026; migration `0032_assistant.sql`; tests in
+  `../design/notes/buyer-ai-tests-23nov/`). **The founder's rule: it is only an assistant and must not be invasive.**
+  It never opens by itself, never pops up, nudges or covers the products: it opens only from something the buyer
+  taps, it answers from the shop's own facts, and the buyer confirms anything it does. Never add an auto-open, a
+  floating bubble, a greeting that appears on its own, a `?ask=1` link that opens it, or a "Need help?" nudge.
+  - **The ways in** (all call `openAssistant({ product?, text? })`; `AssistantHost` in `$shop/route.tsx` holds the
+    chat, so it survives moving between the shop's pages, and sessionStorage keeps it for the visit): **Ask** beside
+    WhatsApp and Share in the shop's header (`AskButton`); **Ask the AI assistant** beside "Ask about this on
+    WhatsApp" on a product (`AskLink`, opens about that product); a row in the capsule's **Info** sheet; and in the
+    **Search** sheet, once the buyer has typed, a row that asks what they typed. Nothing else. They show only where
+    `getStorefront().assistant` is true: the seller's switch (`shops.assistant`, on by default) and Shopi's
+    (`settings.assistant_off`, /admin) are on, an AI key is set (`aiReady`), a free shop has questions left this
+    month, and the shop lists a product or a service (an invoice-only page has nothing to answer from).
+  - **The sheet** (`Sheet tall`: the messages scroll, the box stays at the bottom; the chat lives in `AssistantHost`,
+    so an answer that comes after the sheet closed is there on reopening, and "New chat" drops an answer still on
+    its way): title "AI assistant", "Answers
+    from {shop}'s details. It isn't the seller." (the business, for a salon), tap-chips before the first question,
+    "About {product}" above the box when opened on a product (X asks about the whole shop), "New chat", and "AI can
+    be wrong. The seller confirms every order." The send button never greys out for an empty box (DESIGN.md); a new
+    chat runs the bot check (`useHumanCheck('ask')`).
+  - **How a question is answered, cheapest first** (`answer` in `src/server/assistant.ts`):
+    1. **Tap-chips** (`quickAnswer`, in the shop's language): where it delivers (the areas, and the same "other
+       regions" lines as the Info sheet), how to pay, hours or where it is, a product's options with what is left,
+       "Is it in stock?", "Where is my order?". From the shop's data; never counted.
+    2. **An order code** in the question (`codesIn`: 6 order-code characters with a digit, in capitals, after "#",
+       or in any case when the question talks about an order): the order's status **at this shop** in its own page's
+       words (`orderWords`, the same strings as `/o/<code>`) and "Open your order"; a code that looks sure but isn't
+       there says so. "Where is my order?" with no code asks for it (`MY_ORDER`; round 4's model muddled that one).
+       No personal data. Never counted.
+    3. **The model** (Groq's Qwen, `chatTurn`): the rules, the shop's facts, its services and products (all of them
+       up to 30, else the 20 closest to the question plus the one being looked at: `pickProducts`), one worked
+       example turn, the chat's last six messages, and the reply language chosen in code from the buyer's words
+       (`buyerLang`; round 2 answered in the wrong language). Tools, every field optional (Groq refuses a call that
+       misses a required one): `show_products`, `add_to_bag` (only offered), `contact_seller` (not "open_whatsapp":
+       Qwen misspelt that 3 times in 34). Groq's `tool_use_failed` is asked once more, then its `failed_generation`
+       text is used, and a misspelt WhatsApp tool still gives the button (`tried`).
+  - **The checks after the model** (`checkReply`; each one that changes an answer is kept in the message's `data`
+    as `fired`, with the model's own text). Any of these → "That isn't written in the shop's details" and WhatsApp:
+    a phone number (`hasPhone`: dots, slashes, brackets, landlines, a mobile without its 0); an amount (any "TSh",
+    "45k", "1.5k", "/=" or bare figure of four digits or with a thousands comma, years aside) that isn't a price of
+    what the reply is about (the open product and the ones it names, whole words; every price when it names none),
+    a few of one or two together (only for what it names), something the seller wrote (bio, descriptions), or the
+    buyer's own figure **only as a budget** ("chini ya 100k"; "nipe kwa 30k?" → "Sawa, TSh 30,000" is refused); a
+    percentage that isn't a sale's own or the seller's ("Pamba 100%"); a code like EID10 nobody wrote; a yes/no on a
+    material (Swahili and English pairs: pamba/cotton…; words with a second meaning left out) that none of the
+    products it is about states. Cards only for real products or services the reply names as whole words (the
+    longest name wins; everyday words like "kapu" need the whole name), never the one being looked at; products it
+    names without showing get cards. The bag only for a real product in stock and an option in stock (one option
+    is taken as given); a sold-out product → "{product} is sold out for now" and WhatsApp; an option it didn't know
+    → "{product} comes in S, M. Which one would you like?"; a size for a product with no options (shoes whose sizes
+    are only written) → the offer stays and the buyer is told to write it in the note for the seller; "I put it in
+    your bag" is never let through. WhatsApp only when the shop has a number. Links, emails, emoji, markdown and "!"
+    are stripped; Swahili gets the seller's spelling back (`sellerSpelling`). Reviewed 23 Nov by a second agent (no
+    access hole); each of its findings is tried the way it failed in the session's `flow4` test.
+  - **The buyer confirms:** the bag is a card with **Put it in my bag** (then In your bag and Checkout; `useCart`
+    now tells the page's other bag counts in the same tab, `shopi:cart`); WhatsApp opens with the buyer's question
+    written under the usual hello (left out when a number in it was hidden). Events `add_to_cart` and
+    `whatsapp_click` with detail `assistant`; the chat's row records `bag` and `whatsapp` (`noteChat`).
+  - **Privacy:** phone numbers a buyer types are hidden before anything is stored or sent (`hidePhones`, "[number
+    hidden]" in the shop's language). Chats (`chats`, `chat_messages`) keep the visitor id, the product, the
+    questions and answers; the nightly job deletes them 90 days after the last message (`purgeChats`, `CHAT_DAYS`).
+    The Privacy page names Groq for buyers' questions, what is kept and for how long.
+  - **Allowance and limits:** Free `FREE_ASSISTANT_MONTH` = 100 model answers a calendar month (Dar), Tembo and demo
+    unlimited; every shop has a quiet `ASSISTANT_DAY` = 300. Counted in `ai_uses` as `assistant`; the shop's own
+    tries (`chats.own`, its owner or assistants logged in) as `assistant_own`, not counted against the month (both
+    kept out of the seller AI's Tembo day and `/admin`'s AI-writing counts). Per IP: 40 an hour to one shop, 150
+    across Shopi; 150 an hour per shop; 600 an hour for all shops together (`askAll`: Groq's limits are shared with
+    "Write it for me"). **The bot check** starts every chat and runs again every `RECHECK_EVERY` = 8 questions; a
+    chat begun without a real token (`checked_q` NULL: Cloudflare unreachable, an old phone; 10 such chats an hour
+    per shop) gets `UNCHECKED_QUESTIONS` = 3 before it must pass one (the server answers `check`, the sheet fetches
+    a token and asks again). `CHAT_QUESTIONS` = 20 per chat, then "New chat". When a free shop's 100 are used, Ask
+    disappears until the 1st (a chat already open says so and offers WhatsApp). The shop page counts the month only
+    for a free shop.
+  - **The seller** (`/app/assistant`, `manage`: owner and Manager; Shop settings > AI assistant): the switch (saves
+    at once), "Questions this month" (of 100 on Free), what it does and doesn't, "Try it on your shop", and every
+    chat newest first (first question, how many, the product, "Put in bag", WhatsApp, "You" for the shop's own
+    tries), each opening read-only with what was shown or offered.
+  - **/admin > Health > AI assistant for buyers:** **On for every shop** (writes `settings.assistant_off`, logged in
+    `admin_log`; no deploy needed), questions the AI answered, shops, chats, chats where the buyer took the bag offer,
+    answers a check changed, answers that failed, shops that turned it off, tokens.
+  - **Not built:** telling buyers about discount codes (decision 5: only if the seller turns that on; it never sees
+    them), the seller replying from Shopi, the assistant on WhatsApp (`ai-buyer` phase 2, needs Meta), streaming
+    (answers take about a second), bargaining.
 - **QR code** (18 Nov 2026, the founder): every shop has one; it opens `shopi.tz/<shop>?s=qr` (`qrUrl`), the address
   that never changes (not an own domain, which can lapse on a printed sticker), tagged so Analytics counts scans as `qr`.
   - **The encoder** (`src/lib/qr.ts`): byte mode, versions 1 to 40, levels L/M/Q/H, after Nayuki's reference design; no

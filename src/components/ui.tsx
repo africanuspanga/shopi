@@ -359,7 +359,25 @@ export function Delta({ now, before, label }: { now: number; before: number; lab
   )
 }
 
-export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title?: string; children: ReactNode }) {
+/**
+ * `tall`: a fixed height whose content arranges its own scrolling (the AI assistant's chat: the messages scroll, the
+ * box to type in stays at the bottom). `head`: something under the title row that stays put, like the title itself.
+ */
+export function Sheet({
+  open,
+  onClose,
+  title,
+  children,
+  tall = false,
+  head,
+}: {
+  open: boolean
+  onClose: () => void
+  title?: string
+  children: ReactNode
+  tall?: boolean
+  head?: ReactNode
+}) {
   useEffect(() => {
     if (!open) return
     const prev = document.body.style.overflow
@@ -376,17 +394,22 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
     <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6" role="dialog" aria-modal="true" aria-label={title}>
       <button type="button" aria-label="Close" className="fade absolute inset-0 bg-ink/40" onClick={onClose} />
       {/* Ink by itself: a sheet opened from inside a dark card would inherit its white text. */}
-      <div className="sheet-up relative max-h-[92dvh] w-full max-w-[520px] overflow-y-auto rounded-t-28 bg-card px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] text-ink md:rounded-28 md:p-6">
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-raised md:hidden" />
+      <div
+        className={`sheet-up relative w-full max-w-[520px] rounded-t-28 bg-card px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] text-ink md:rounded-28 md:p-6 ${
+          tall ? 'flex h-[88dvh] flex-col overflow-hidden md:h-[min(720px,88dvh)]' : 'max-h-[92dvh] overflow-y-auto'
+        }`}
+      >
+        <div className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-raised md:hidden" />
         {title && (
-          <div className="mb-4 flex items-center justify-between gap-3">
+          <div className={`flex items-center justify-between gap-3 ${head ? '' : 'mb-4'} ${tall ? 'shrink-0' : ''}`}>
             <h2 className="title text-20">{title}</h2>
             <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
               <X size={18} strokeWidth={1.75} />
             </button>
           </div>
         )}
-        {children}
+        {head && <div className="mb-4 shrink-0">{head}</div>}
+        {tall ? <div className="flex min-h-0 flex-1 flex-col">{children}</div> : children}
       </div>
     </div>
   )

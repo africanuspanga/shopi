@@ -3,6 +3,7 @@ import { Bell, Check, Minus, Plus, Share2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { WhatsAppMark } from '#/components/brand-icons'
 import { ShareActions } from '#/components/share'
+import { AskLink } from '#/components/assistant'
 import { BagButton, OptionChip, Price, ProductCard, ShopFooter, ShopTopBar, Tag, shownPrice } from '#/components/shop'
 import { NotFound } from '#/components/not-found'
 import { NotifySheet, useAsked } from '#/components/stock-alerts'
@@ -69,7 +70,7 @@ const parent = getRouteApi('/$shop')
 function ProductPage() {
   const rise = useEntrance()
   const t = useT()
-  const { shop, products, areas } = parent.useLoaderData()
+  const { shop, products, areas, assistant } = parent.useLoaderData()
   const { product: p, collection } = Route.useLoaderData()
   const cart = useCart(shop.id)
   const origin = useOrigin()
@@ -319,18 +320,24 @@ function ProductPage() {
               </Detail>
             </dl>
 
-            {shop.whatsapp && (
+            {(shop.whatsapp || assistant) && (
               <div className="mt-6">
-                <a
-                  className="inline-flex items-center gap-2 text-14 font-medium underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink"
-                  href={waLink(shop.whatsapp, ask)}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={chat.onClick}
-                >
-                  <WhatsAppMark size={18} /> {t('Ask about this on WhatsApp')}
-                </a>
-                <WhatsAppHelp show={chat.tapped} phone={shop.whatsapp} text={ask} />
+                {/* Two quiet ways to ask: the seller on WhatsApp, or the AI assistant, which opens only from here. */}
+                <div className="flex flex-wrap items-center gap-x-6">
+                  {shop.whatsapp && (
+                    <a
+                      className="inline-flex min-h-11 items-center gap-2 text-14 font-medium underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink"
+                      href={waLink(shop.whatsapp, ask)}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={chat.onClick}
+                    >
+                      <WhatsAppMark size={18} /> {t('Ask about this on WhatsApp')}
+                    </a>
+                  )}
+                  {assistant && <AskLink product={p.id} />}
+                </div>
+                {shop.whatsapp && <WhatsAppHelp show={chat.tapped} phone={shop.whatsapp} text={ask} />}
               </div>
             )}
 

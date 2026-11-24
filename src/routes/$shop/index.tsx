@@ -6,6 +6,7 @@ import { BagButton, FactPills, MIN_PICKS, ProductGrid, ShopFacts, ShopFooter, Sh
 import { ShopQr } from '#/components/qr'
 import { ServiceList } from '#/components/booking'
 import { ShopNav } from '#/components/shop-nav'
+import { AskButton } from '#/components/assistant'
 import { WhatsAppHelp, useWhatsApp } from '#/components/whatsapp'
 import { Chips, Empty, Img, ShopAvatar, Toast, useEntrance } from '#/components/ui'
 import { track } from '#/lib/analytics'
@@ -42,7 +43,7 @@ function Storefront() {
   const rise = useEntrance()
   const rise2 = useEntrance('rise-2')
   const t = useT()
-  const { shop, products, areas, collections, picks, services } = parent.useLoaderData()
+  const { shop, products, areas, collections, picks, services, assistant } = parent.useLoaderData()
   const cart = useCart(shop.id)
   // 'all', 'new', 'sale', or a collection's id.
   const [filter, setFilter] = useState('all')
@@ -244,6 +245,7 @@ function Storefront() {
                   <span className="hidden sm:inline">{t('Message on WhatsApp')}</span>
                 </a>
               )}
+              {assistant && <AskButton />}
               <button type="button" className="btn btn-ghost btn-sm h-10 px-4" onClick={share}>
                 <Share2 size={16} strokeWidth={1.75} /> {t('Share')}
               </button>
@@ -268,7 +270,7 @@ function Storefront() {
       </main>
 
       <ShopFooter shop={shop} />
-      <ShopNav shop={shop} areas={areas} products={products} services={services} count={cart.count} onShare={share} />
+      <ShopNav shop={shop} areas={areas} products={products} services={services} count={cart.count} onShare={share} ask={assistant} />
       <Toast show={copied}>{t('Link copied')}</Toast>
     </div>
   )

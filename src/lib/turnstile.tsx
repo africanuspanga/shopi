@@ -47,7 +47,7 @@ function load() {
  * check can't run on this phone (the server lets a few of those through), and gives `null` the first time the box is
  * waiting for a tap, so the form can ask for it. Tokens work once, so each call starts a fresh check for the next try.
  */
-export function useHumanCheck(action: 'signup' | 'order' | 'alert' | 'book', active = true) {
+export function useHumanCheck(action: 'signup' | 'order' | 'alert' | 'book' | 'ask', active = true) {
   const slots = useRef(new Set<HTMLDivElement>())
   const state = useRef({ on: false, id: '', token: '', failed: false, tap: false, asked: false, waiting: [] as ((token: string) => void)[] })
 
